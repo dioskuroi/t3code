@@ -30,7 +30,7 @@ export class DesktopUpdatePolicy extends Context.Service<DesktopUpdatePolicy, Up
 ) {}
 
 export const unmanagedUpdatePolicy: UpdatePolicy = {
-  mode: "auto",
+  mode: "off",
   feedUrl: undefined,
   allowNightly: true,
   message: null,
