@@ -3,14 +3,10 @@ import { OmpSettings } from "../settings.ts";
 import { resolveSpawnCommand } from "@t3tools/shared/shell";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Fiber from "effect/Fiber";
 import * as Option from "effect/Option";
-import * as Queue from "effect/Queue";
 import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 import {
   buildServerProvider,
@@ -19,14 +15,11 @@ import {
   spawnAndCollect,
   type ProviderProbeResult,
 } from "@t3tools/provider-core/server/snapshotProbe";
-import { collectStreamAsString } from "@t3tools/provider-core/server/snapshotProbe";
-import {
-  isOmpReadyFrame,
-  isOmpResponseFrame,
-  ompSupportsProtocolV2,
-  parseOmpRpcFrame,
-  type OmpRpcFrame,
-} from "./rpc/frames.ts";
+import { makeOmpRpcClient } from "./rpc/client.ts";
+import { OmpProtocolUnsupportedError } from "./rpc/frames.ts";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+
+export { OmpProtocolUnsupportedError } from "./rpc/frames.ts";
 
 const OMP_PRESENTATION = {
   displayName: "omp",
@@ -39,22 +32,6 @@ const OMP_PRESENTATION = {
 const OMP_VERSION_TIMEOUT_MS = 8_000;
 const OMP_RPC_READY_TIMEOUT_MS = 15_000;
 const OMP_RPC_REQUEST_TIMEOUT_MS = 30_000;
-
-export class OmpProtocolUnsupportedError extends Schema.TaggedError<OmpProtocolUnsupportedError>()(
-  "OmpProtocolUnsupportedError",
-  {
-    operation: Schema.Literals(["negotiate_protocol"]),
-    supportedProtocolVersions: Schema.Array(Schema.Number),
-  },
-) {
-  override get message(): string {
-    const versions = this.supportedProtocolVersions.join(", ") || "none";
-    return (
-      `omp does not support RPC protocol v2 (supported versions: ${versions}). ` +
-      "Upgrade the omp CLI to the latest version and refresh the provider status."
-    );
-  }
-}
 
 class OmpRpcProbeError extends Schema.TaggedError<OmpRpcProbeError>()("OmpRpcProbeError", {
   operation: Schema.String,
@@ -102,10 +79,18 @@ const readyModelsSnapshot = Effect.fn("OmpProviderStatus.readyModelsSnapshot")(f
   });
 });
 
+const describeProbeFailure = (failure: unknown): string => {
+  const message = (failure as { message?: unknown } | null | undefined)?.message;
+  return typeof message === "string" && message.trim() !== "" ? message : String(failure);
+};
+
+const isProtocolUnsupported = Schema.is(OmpProtocolUnsupportedError);
+
 /**
- * Spec §5.3 (migration notes §7): the client must keep reading stdout after closing stdin, or the
- * child can hang on backpressure. The reader fiber below runs until EOF, so the final exit await
- * is a real drain, not a guess.
+ * Short-lived status probe (spec §5.3): `omp --mode rpc --no-session`, ready → negotiate →
+ * get_available_models → close stdin and drain to EOF. Uses the same RPC client module as the
+ * long-lived session path so drain/timeout/protocol semantics never diverge. Fails with
+ * OmpProtocolUnsupportedError untouched so the upgrade hint reaches the user.
  */
 const probeOmpModelCatalog = Effect.fn("OmpProviderStatus.probeOmpModelCatalog")(function* (input: {
   readonly command: string;
@@ -113,115 +98,48 @@ const probeOmpModelCatalog = Effect.fn("OmpProviderStatus.probeOmpModelCatalog")
   readonly shell: boolean | undefined;
   readonly environment: NodeJS.ProcessEnv | undefined;
   readonly cwd: string | undefined;
-}) {
+}): Effect.fn.Return<
+  ReadonlyArray<ServerProviderModel>,
+  OmpRpcProbeError | OmpProtocolUnsupportedError,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
   return yield* Effect.gen(function* () {
-    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-    const child = yield* spawner.spawn(
-      ChildProcess.make(input.command, [...input.spawnArgs], {
-        env: input.environment,
-        extendEnv: true,
-        ...(input.shell !== undefined ? { shell: input.shell } : {}),
-        ...(input.cwd !== undefined ? { cwd: input.cwd } : {}),
-        stdin: { stream: "pipe" },
-      }),
-    );
-
-    const frames = yield* Queue.unbounded<OmpRpcFrame>();
-    // Reader lives until stdout EOF — this is the post-close drain the protocol requires.
-    yield* child.stdout.pipe(
-      Stream.decodeText(),
-      Stream.splitLines,
-      Stream.runForEach((line) =>
-        Effect.gen(function* () {
-          const frame = parseOmpRpcFrame(line);
-          if (frame !== undefined) yield* Queue.offer(frames, frame);
-        }),
-      ),
-      Effect.ignore,
-      Effect.forkScoped,
-    );
-    const stderrFiber = yield* collectStreamAsString(child.stderr).pipe(Effect.forkScoped);
-    const exitFiber = yield* child.exitCode.pipe(Effect.map(Number), Effect.forkScoped);
-
-    // Outgoing queue: shutting it down completes the writer, which ends stdin (endOnDone default).
-    const encoder = new TextEncoder();
-    const outgoing = yield* Queue.unbounded<Uint8Array>();
-    yield* Stream.fromQueue(outgoing).pipe(
-      Stream.run(child.stdin),
-      Effect.ignore,
-      Effect.forkScoped,
-    );
-    const closeStdin = Queue.shutdown(outgoing);
-
-    let nextRequestId = 0;
-    const takeResponse = Effect.fn("OmpProviderStatus.takeResponse")(function* (id: string) {
-      while (true) {
-        const frame = yield* Queue.take(frames);
-        if (isOmpResponseFrame(frame) && frame.id === id) return frame;
-      }
-    });
-    const request = (type: string, params: Record<string, unknown> = {}) => {
-      const id = `t3-status-${nextRequestId++}`;
-      const payload = encoder.encode(JSON.stringify({ id, type, ...params }) + "\n");
-      return Effect.gen(function* () {
-        yield* Queue.offer(outgoing, payload);
-        const response = yield* takeResponse(id);
-        if (!response.success) {
-          return yield* new OmpRpcProbeError({
-            operation: type,
-            detail: typeof response.error === "string" ? response.error : "request failed",
-          });
-        }
-        return response.data;
-      }).pipe(
-        Effect.timeoutOrElse({
-          duration: OMP_RPC_REQUEST_TIMEOUT_MS,
-          orElse: () =>
-            new OmpRpcProbeError({
-              operation: type,
-              detail: `Timed out after ${OMP_RPC_REQUEST_TIMEOUT_MS}ms`,
-            }),
-        }),
-      );
-    };
-
-    const ready = yield* Effect.gen(function* () {
-      while (true) {
-        const frame = yield* Queue.take(frames);
-        if (isOmpReadyFrame(frame)) return frame;
-      }
+    const client = yield* makeOmpRpcClient({
+      command: input.command,
+      args: input.spawnArgs,
+      ...(input.shell !== undefined ? { shell: input.shell } : {}),
+      ...(input.cwd !== undefined ? { cwd: input.cwd } : {}),
+      env: input.environment,
+      readyTimeoutMs: OMP_RPC_READY_TIMEOUT_MS,
+      requestTimeoutMs: OMP_RPC_REQUEST_TIMEOUT_MS,
     }).pipe(
-      Effect.timeoutOrElse({
-        duration: OMP_RPC_READY_TIMEOUT_MS,
-        orElse: () =>
-          new OmpRpcProbeError({
-            operation: "ready",
-            detail: `No ready frame within ${OMP_RPC_READY_TIMEOUT_MS}ms`,
-          }),
-      }),
+      Effect.mapError((cause) =>
+        isProtocolUnsupported(cause)
+          ? cause
+          : new OmpRpcProbeError({ operation: "spawn", detail: describeProbeFailure(cause) }),
+      ),
     );
-
-    if (!ompSupportsProtocolV2(ready)) {
-      return yield* new OmpProtocolUnsupportedError({
-        operation: "negotiate_protocol",
-        supportedProtocolVersions: [...ready.supportedProtocolVersions],
-      });
-    }
-    yield* request("negotiate_protocol", { protocolVersion: 2 });
-    const catalog = (yield* request("get_available_models")) as { models?: unknown } | undefined;
-
+    const catalog = yield* client.request("get_available_models").pipe(
+      Effect.mapError(
+        (cause) =>
+          new OmpRpcProbeError({
+            operation: "get_available_models",
+            detail: describeProbeFailure(cause),
+          }),
+      ),
+    );
     // Close stdin: omp drains accepted work, flushes stdout, exits 0 (notes §7).
-    yield* closeStdin;
-
-    const stderr = yield* Fiber.join(stderrFiber);
-    const exitCode = yield* Fiber.join(exitFiber);
+    const exitCode = yield* client.close;
     if (exitCode !== 0) {
       return yield* new OmpRpcProbeError({
         operation: "exit",
-        detail: `omp exited with code ${exitCode}${stderr.trim() ? `: ${stderr.trim()}` : ""}`,
+        detail: `omp exited with code ${String(exitCode)}`,
       });
     }
-    return parseOmpModels(catalog);
+    const parsed = parseOmpModels(catalog);
+    return yield* Result.isSuccess(parsed)
+      ? Effect.succeed(parsed.success)
+      : Effect.fail(parsed.failure);
   }).pipe(Effect.scoped);
 });
 
@@ -363,7 +281,7 @@ export const checkOmpProviderStatus = Effect.fn("checkOmpProviderStatus")(functi
   }
 
   // Short-lived `omp --mode rpc --no-session`: no login, no MCP startup side effects, no session.
-  const probeOutcome = yield* probeOmpModelCatalog({
+  const catalog = yield* probeOmpModelCatalog({
     command: spawnCommand.success.command,
     spawnArgs: spawnCommand.success.args,
     shell: spawnCommand.success.shell,
@@ -371,7 +289,7 @@ export const checkOmpProviderStatus = Effect.fn("checkOmpProviderStatus")(functi
     cwd,
   }).pipe(Effect.result);
 
-  if (Result.isFailure(probeOutcome)) {
+  if (Result.isFailure(catalog)) {
     return buildServerProvider({
       presentation: OMP_PRESENTATION,
       enabled: true,
@@ -382,28 +300,12 @@ export const checkOmpProviderStatus = Effect.fn("checkOmpProviderStatus")(functi
         version,
         status: "error",
         auth: { status: "unknown" },
-        message: probeOutcome.failure.message,
-      },
-    });
-  }
-  const modelsResult = probeOutcome.success;
-  if (Result.isFailure(modelsResult)) {
-    return buildServerProvider({
-      presentation: OMP_PRESENTATION,
-      enabled: true,
-      checkedAt,
-      models: [],
-      probe: {
-        installed: true,
-        version,
-        status: "error",
-        auth: { status: "unknown" },
-        message: modelsResult.failure.message,
+        message: catalog.failure.message,
       },
     });
   }
   return yield* readyModelsSnapshot(
     { installed: true, version, status: "ready", auth: { status: "unknown" } },
-    modelsResult.success,
+    catalog.success,
   );
 });
