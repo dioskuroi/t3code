@@ -76,6 +76,10 @@ const respond = (request) => {
     return;
   }
   if (type === "set_event_filter" || type === "set_subagent_subscription") {
+    if (type === "set_event_filter" && !("events" in request)) {
+      send({ id: request.id, type: "response", command: type, success: false, error: "events must be null or an array of non-empty event type strings" });
+      return;
+    }
     send({ id: request.id, type: "response", command: type, success: true, data: {} });
     return;
   }

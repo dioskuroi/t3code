@@ -72,6 +72,8 @@ it.layer(NodeServices.layer)("omp RPC client", (it) => {
         (request: Record<string, unknown>) => request["type"] === "set_event_filter",
       );
       expect(eventFilter?.["messageUpdates"]).toBe("delta");
+      // Real omp requires the events key; null subscribes to every event type (omp 18.18.1).
+      expect(eventFilter?.["events"]).toBeNull();
       const subagentSubscription = requests.find(
         (request: Record<string, unknown>) => request["type"] === "set_subagent_subscription",
       );

@@ -344,7 +344,8 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
     });
   }
   // Event subscriptions (spec §5.2): delta message updates + full subagent event feed.
-  yield* request("set_event_filter", { messageUpdates: "delta" });
+  // Real omp requires the `events` key (null = all events); verified against omp 18.18.1.
+  yield* request("set_event_filter", { events: null, messageUpdates: "delta" });
   yield* request("set_subagent_subscription", { level: "events" });
 
   const close: Effect.Effect<number | null> = Effect.suspend(() =>
