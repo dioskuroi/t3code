@@ -94,6 +94,13 @@ export interface OmpThreadProjectionState {
    * their selection until omp itself fails the restore, which surfaces fail-closed).
    */
   appliedModel: OmpModelRef | null;
+  /**
+   * The thinking level the omp process currently runs on (#21). Written only after omp
+   * confirmed `set_thinking_level`; `null` = omp's own baseline. Kept beside #17's
+   * appliedModel in projection state — the nativeMetadata schema is outside this ticket's
+   * reach (contracts), and omp persists the level in its own session across respawns.
+   */
+  appliedThinking: string | null;
 }
 
 export interface OmpThreadProjection {
@@ -114,6 +121,8 @@ export interface OmpThreadProjection {
   ) => Effect.Effect<void>;
   /** Records an applied model in thread metadata (nativeMetadata.modelSelection) and emits. */
   readonly applyModel: (model: OmpModelRef) => Effect.Effect<void>;
+  /** Records a confirmed thinking level (#21) so the next turn skips a redundant dispatch. */
+  readonly applyThinking: (level: string) => Effect.Effect<void>;
 }
 
 const driverRef = (
@@ -594,6 +603,11 @@ export const createOmpThreadProjection = (input: {
     });
   });
 
+  const applyThinking = (level: string): Effect.Effect<void> =>
+    Effect.sync(() => {
+      state.appliedThinking = level;
+    });
+
   const handleFrame = (frame: OmpRpcFrame): Effect.Effect<void> => {
     const type = frameString(frame, "type");
     switch (type) {
@@ -676,5 +690,6 @@ export const createOmpThreadProjection = (input: {
     finalizeTurn,
     markThreadStatus: (status: OrchestrationV2ProviderThread["status"]) => updateThread({ status }),
     applyModel,
+    applyThinking,
   };
 };

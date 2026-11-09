@@ -20,6 +20,7 @@ import * as Stream from "effect/Stream";
 import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import { turnScopedSelectionTransition } from "@t3tools/provider-core/server/selectionTransition";
+import { getModelSelectionStringOptionValue } from "@t3tools/shared/model";
 import { makeOmpRpcClient, type OmpRpcClient } from "./rpc/client.ts";
 import {
   createOmpThreadProjection,
@@ -210,6 +211,21 @@ const modelRestoreError = (what: string, model: OmpModelRef | null, cause: unkno
   );
 };
 
+/**
+ * Fail-closed thinking guidance (#21): mirrors modelRestoreError — omp's raw error plus an
+ * explicit re-selection hint, never a silent fallback to another level.
+ */
+const thinkingRestoreError = (level: string, cause: unknown) => {
+  const message = (cause as { message?: unknown } | null | undefined)?.message;
+  const detail =
+    typeof message === "string" && message.trim() !== "" ? message : "omp request failed";
+  return protocolError(
+    `omp could not apply thinking level ${level}: ${detail}. ` +
+      "Re-select a thinking level from the refreshed provider catalog; T3 never falls back to another level.",
+    cause,
+  );
+};
+
 export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: {
   readonly instanceId: ProviderAdapter.ProviderAdapterV2["Service"]["instanceId"];
   /** Resolved executable; defaults to `omp` (PATH discovery, spec §5.3). */
@@ -308,6 +324,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           orphanFrames: [],
           nativeSession: null,
           appliedModel: null,
+          appliedThinking: null,
         };
         const projection = createOmpThreadProjection({
           driver: OMP_PROVIDER,
@@ -480,6 +497,22 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           );
       });
 
+      // Thinking level passthrough (#21, spec §6): runs at the same idle window as
+      // applyTurnModel — startTurn's active-turn guard is structural, so a mid-turn switch
+      // can never reach omp. Confirmed selections are remembered so unchanged levels are
+      // not re-sent; failures fail the turn start (no silent level fallback).
+      const applyTurnThinking = Effect.fn("OmpAdapter.applyTurnThinking")(function* (
+        thread: OmpThreadState,
+        modelSelection: ProviderAdapter.ProviderAdapterV2TurnInput["modelSelection"],
+      ) {
+        const level = getModelSelectionStringOptionValue(modelSelection, "thinking");
+        if (level === undefined || level === thread.projection.state.appliedThinking) return;
+        yield* thread.client.client!.request("set_thinking_level", { level }).pipe(
+          Effect.tap(() => thread.projection.applyThinking(level)),
+          Effect.mapError((cause) => thinkingRestoreError(level, cause)),
+        );
+      });
+
       const runtime: ProviderAdapter.ProviderAdapterV2SessionRuntime = {
         instanceId: input.instanceId,
         driver: OMP_PROVIDER,
@@ -560,6 +593,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           // omp's set_model window — a mid-turn switch cannot reach the process (the turn
           // guard above rejects a second start, and no other path mutates the model).
           yield* applyTurnModel(thread, turnInput.modelSelection);
+          yield* applyTurnThinking(thread, turnInput.modelSelection);
           thread.projection.beginTurn({ providerTurn, turnInput });
           // Contract: provider_turn.updated(running, runAttemptId) lands before any projected
           // frame (orphan replay included), so the orchestrator always sees the turn first.

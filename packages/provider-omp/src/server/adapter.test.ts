@@ -948,6 +948,202 @@ describe("omp adapter session runtime", () => {
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
+  // Thinking level (#21, spec §6/§7): the descriptor choice rides the turn's modelSelection
+  // options ("thinking"); dispatch mirrors #17's idle-window model passthrough exactly —
+  // startTurn's structural guard makes mid-turn switches unreachable, and a failed
+  // set_thinking_level fails the turn start fail-closed, never a silent level fallback.
+  const thinkingSelection = (instanceId: ProviderInstanceId, level: string) =>
+    decodeModelSelection({
+      instanceId,
+      model: "zai/glm-5.3",
+      options: [{ id: "thinking", value: level }],
+    });
+
+  live("applies the selected thinking level with set_thinking_level before the prompt", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-thinking-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-thinking", sessionFile: "/tmp/fake-thinking.jsonl" },
+            },
+            set_thinking_level: { data: { level: "high" } },
+          },
+          events: [
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("thinking");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("hello omp"),
+        modelSelection: thinkingSelection(ids.instanceId, "high"),
+        runtimePolicy,
+      });
+      yield* waitFor(harness, "turn.terminal");
+      const requests = yield* readRequestLog(requestLog);
+      const setThinking = requests.find((request) => request["type"] === "set_thinking_level");
+      expect(setThinking).toEqual({
+        id: expect.any(String),
+        type: "set_thinking_level",
+        level: "high",
+      });
+      // Idle-window dispatch: the level lands in omp before the prompt, in the same window
+      // as #17's set_model (before beginTurn flips the thread to running).
+      const setThinkingIndex = requests.indexOf(setThinking!);
+      const promptIndex = requests.findIndex((request) => request["type"] === "prompt");
+      expect(promptIndex).toBeGreaterThan(setThinkingIndex);
+      expect(
+        harness.events.some(
+          (event) =>
+            event.type === "provider_turn.updated" && event.providerTurn.status === "running",
+        ),
+      ).toBe(true);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("keeps the applied thinking level across turns and only sends it again on a change", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-thinkkeep-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-thinkkeep", sessionFile: "/tmp/fake-thinkkeep.jsonl" },
+            },
+          },
+          eventsPerRequest: {
+            prompt: [
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              {
+                delayMs: 20,
+                frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+              },
+            ],
+          },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("thinkkeep");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      const startTurnWith = (selection: typeof ids.modelSelection, runOrdinal: number) =>
+        harness.runtime.startTurn({
+          appThread: appThreadFor(ids.threadId),
+          threadId: ids.threadId,
+          runId: ids.runId,
+          runOrdinal,
+          providerTurnOrdinal: runOrdinal,
+          attemptId: ids.attemptId,
+          rootNodeId: ids.rootNodeId,
+          providerThread,
+          message: turnMessage(`turn ${runOrdinal}`),
+          modelSelection: selection,
+          runtimePolicy,
+        });
+      yield* startTurnWith(thinkingSelection(ids.instanceId, "high"), 1);
+      yield* waitFor(harness, "turn.terminal");
+      // Same selection again: no redundant set_thinking_level.
+      yield* startTurnWith(thinkingSelection(ids.instanceId, "high"), 2);
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 2);
+      // A different level switches again.
+      yield* startTurnWith(thinkingSelection(ids.instanceId, "off"), 3);
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 3);
+      const setThinkings = (yield* readRequestLog(requestLog)).filter(
+        (request) => request["type"] === "set_thinking_level",
+      );
+      expect(setThinkings).toEqual([
+        { id: expect.any(String), type: "set_thinking_level", level: "high" },
+        { id: expect.any(String), type: "set_thinking_level", level: "off" },
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("fails the turn start fail-closed when omp rejects the thinking level", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-thinkfail-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-thinkfail", sessionFile: "/tmp/fake-thinkfail.jsonl" },
+            },
+            set_thinking_level: { success: false, error: "Unknown thinking level: xhigh" },
+          },
+          events: [],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("thinkfail");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      // The prompt is never admitted and the omp error surfaces with re-selection guidance.
+      const failure = yield* harness.runtime
+        .startTurn({
+          appThread: appThreadFor(ids.threadId),
+          threadId: ids.threadId,
+          runId: ids.runId,
+          runOrdinal: 1,
+          providerTurnOrdinal: 1,
+          attemptId: ids.attemptId,
+          rootNodeId: ids.rootNodeId,
+          providerThread,
+          message: turnMessage("hello omp"),
+          modelSelection: thinkingSelection(ids.instanceId, "xhigh"),
+          runtimePolicy,
+        })
+        .pipe(Effect.flip);
+      if (failure._tag !== "ProviderAdapterProtocolError")
+        throw new Error(`expected protocol error, got ${failure._tag}`);
+      expect(failure.detail).toContain("thinking level xhigh");
+      expect(failure.detail).toContain("Unknown thinking level: xhigh");
+      expect(failure.detail).toContain("Re-select a thinking level");
+      const requests = yield* readRequestLog(requestLog);
+      expect(requests.some((request) => request["type"] === "prompt")).toBe(false);
+      // Exactly one dispatch attempt: no silent retry with a different level.
+      expect(requests.filter((request) => request["type"] === "set_thinking_level")).toHaveLength(
+        1,
+      );
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
   live("restores the thread model through switch_session on recovery", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

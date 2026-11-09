@@ -88,6 +88,75 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
     }),
   );
 
+  it.effect(
+    "attaches a reasoning thinking-level descriptor from get_available_thinking_levels",
+    () =>
+      Effect.gen(function* () {
+        const { command } = yield* writeFakeOmpIntoTemp({
+          responses: {
+            get_available_models: {
+              data: {
+                models: [{ provider: "zai", id: "glm-5.3", name: "GLM-5.3", reasoning: true }],
+              },
+            },
+            get_available_thinking_levels: {
+              // Measured omp 18.18.1 shape (migration notes rpc-protocol.md).
+              data: { levels: ["off", "low", "high", "max"] },
+            },
+          },
+        });
+        const snapshot = yield* checkOmpProviderStatus(
+          decodeOmpSettings({}),
+          { ...process.env },
+          undefined,
+          command,
+        );
+        expect(snapshot.status).toBe("ready");
+        const descriptor = snapshot.models[0]?.capabilities?.optionDescriptors?.[0];
+        if (descriptor === undefined) throw new Error("expected a thinking-level descriptor");
+        expect(descriptor).toEqual({
+          id: "thinking",
+          label: "Thinking",
+          type: "select",
+          role: "reasoning",
+          options: [
+            { id: "off", label: "Off" },
+            { id: "low", label: "Low" },
+            { id: "high", label: "High" },
+            { id: "max", label: "Max" },
+          ],
+        });
+        // The runtime-level control attaches to every catalog entry.
+        expect(snapshot.models.map((model) => model.capabilities?.optionDescriptors?.[0])).toEqual([
+          descriptor,
+        ]);
+      }),
+  );
+
+  it.effect("omits the thinking descriptor when omp reports no thinking levels", () =>
+    Effect.gen(function* () {
+      const { command } = yield* writeFakeOmpIntoTemp({
+        responses: {
+          get_available_models: {
+            data: {
+              models: [{ provider: "zai", id: "glm-5.3", name: "GLM-5.3", reasoning: true }],
+            },
+          },
+          get_available_thinking_levels: { data: { levels: [] } },
+        },
+      });
+      const snapshot = yield* checkOmpProviderStatus(
+        decodeOmpSettings({}),
+        { ...process.env },
+        undefined,
+        command,
+      );
+      expect(snapshot.status).toBe("ready");
+      // Spec §7 default rule: unmapped means unpresented.
+      expect(snapshot.models[0]?.capabilities).toBeNull();
+    }),
+  );
+
   it.effect("fails closed with an upgrade hint when omp does not support protocol v2", () =>
     Effect.gen(function* () {
       const { command } = yield* writeFakeOmpIntoTemp({ supportedProtocolVersions: [1] });
