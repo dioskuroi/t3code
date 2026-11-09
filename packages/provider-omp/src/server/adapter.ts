@@ -9,9 +9,12 @@ import type {
   OrchestrationV2ProviderTurn,
 } from "@t3tools/contracts";
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Queue from "effect/Queue";
 import * as Scope from "effect/Scope";
@@ -162,12 +165,16 @@ interface OmpClientHolder {
   scope: Scope.Closeable | null;
   /** Set while an orderly drain (session teardown) is in flight, so exits stay silent. */
   closing: boolean;
+  /** True once the child exited for any reason; a dead client must never be reused. */
+  exited: boolean;
 }
 
 interface OmpThreadState {
   readonly projection: OmpThreadProjection;
   readonly client: OmpClientHolder;
   broken: boolean;
+  /** Armed idle-reclaim timer fiber (spec §5.6); null when no timer is pending. */
+  idleReclaimFiber: Fiber.Fiber<void> | null;
 }
 
 /** Frames forwarded to the projection before their turn went active (fake-harness races). */
@@ -186,10 +193,18 @@ const protocolError = (detail: string, cause?: unknown, reason?: "previous_turn_
     ...(reason === undefined ? {} : { reason }),
   });
 
+// Spec §5.6: the omp child is reclaimed after 5 idle minutes past the last settled turn.
+// Inject an `idleTimeoutMs`/`clock` into makeOmpAdapterV2 to tune or fast-forward the timer.
+export const OMP_IDLE_RECLAIM_TIMEOUT_MS = 5 * 60_000;
+
 export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: {
   readonly instanceId: ProviderAdapter.ProviderAdapterV2["Service"]["instanceId"];
   /** Resolved executable; defaults to `omp` (PATH discovery, spec §5.3). */
   readonly command?: string | undefined;
+  /** Idle window before the omp child is reclaimed; defaults to OMP_IDLE_RECLAIM_TIMEOUT_MS. */
+  readonly idleTimeoutMs?: number | undefined;
+  /** Clock driving the idle-reclaim timer; defaults to the ambient Clock (tests inject one). */
+  readonly clock?: Clock.Clock | undefined;
 }) {
   // The spawner is captured once at driver creation; the session runtime supplies it to each
   // omp process spawn (spec §5.2: cwd = project root, env inherited from the server process).
@@ -224,6 +239,15 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         ProviderAdapter.ProviderAdapterV2Error | Cause.Done
       >();
       const threads = new Map<string, OmpThreadState>();
+      // Reclaim timers fork into the session scope so teardown interrupts them (#18).
+      const sessionScope = yield* Effect.scope;
+      const idleTimeoutMs = input.idleTimeoutMs ?? OMP_IDLE_RECLAIM_TIMEOUT_MS;
+      const idleSleep =
+        input.clock === undefined
+          ? Effect.sleep(Duration.millis(idleTimeoutMs))
+          : Effect.sleep(Duration.millis(idleTimeoutMs)).pipe(
+              Effect.provideService(Clock.Clock, input.clock),
+            );
 
       const emit = (event: ProviderAdapter.ProviderAdapterV2Event) =>
         Queue.offer(events, event).pipe(Effect.asVoid);
@@ -289,11 +313,32 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           instanceId: input.instanceId,
           providerSessionId: sessionInput.providerSessionId,
           state: projectionState,
-          emit,
+          // Arm the idle-reclaim timer before the terminal reaches the events queue: any
+          // cancel (a follow-up prompt) is then causally ordered after the arm (#18).
+          emit: (event) =>
+            event.type === "turn.terminal"
+              ? Effect.andThen(
+                  Effect.suspend(() => {
+                    const thread = threads.get(providerThread.id);
+                    return thread === undefined ? Effect.void : armIdleReclaim(thread);
+                  }),
+                  emit(event),
+                )
+              : emit(event),
           updateSession,
         });
-        const client: OmpClientHolder = { client: null, scope: null, closing: false };
-        threads.set(providerThread.id, { projection, client, broken: false });
+        const client: OmpClientHolder = {
+          client: null,
+          scope: null,
+          closing: false,
+          exited: false,
+        };
+        threads.set(providerThread.id, {
+          projection,
+          client,
+          broken: false,
+          idleReclaimFiber: null,
+        });
         yield* emit({
           type: "provider_thread.updated",
           driver: OMP_PROVIDER,
@@ -309,11 +354,60 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           : ["--mode", "rpc", "--approval-mode", approvalMode];
       };
 
+      // Orderly child disposal (spec §5.6 / #15 deadlock pattern): close stdin, keep reading
+      // stdout to EOF, then close the child's dedicated scope. Uninterruptible so a racing
+      // prompt cancellation cannot strand a half-drained child.
+      const disposeClient = (thread: OmpThreadState): Effect.Effect<number | null> =>
+        Effect.uninterruptible(
+          Effect.gen(function* () {
+            const holder = thread.client;
+            if (holder.client === null) return null;
+            holder.closing = true;
+            const exitCode = yield* holder.client.close;
+            if (holder.scope !== null) {
+              yield* Scope.close(holder.scope, Exit.succeed(undefined)).pipe(Effect.ignore);
+            }
+            holder.client = null;
+            holder.scope = null;
+            holder.closing = false;
+            return exitCode;
+          }),
+        );
+
+      const cancelIdleReclaim = Effect.fn("OmpAdapter.cancelIdleReclaim")(function* (
+        thread: OmpThreadState,
+      ) {
+        const fiber = thread.idleReclaimFiber;
+        thread.idleReclaimFiber = null;
+        if (fiber !== null) yield* Fiber.interrupt(fiber);
+      });
+
+      const armIdleReclaim = Effect.fn("OmpAdapter.armIdleReclaim")(function* (
+        thread: OmpThreadState,
+      ) {
+        yield* cancelIdleReclaim(thread);
+        thread.idleReclaimFiber = yield* Effect.gen(function* () {
+          yield* idleSleep;
+          const holder = thread.client;
+          if (holder.client === null) return;
+          const threadId = thread.projection.state.providerThread.id;
+          const exitCode = yield* disposeClient(thread);
+          yield* Effect.logInfo(
+            `omp process for provider thread ${threadId} reclaimed after ${String(idleTimeoutMs)}ms idle (exit ${String(exitCode)})`,
+          );
+        }).pipe(Effect.forkIn(sessionScope));
+      });
+
       const ensureClient = Effect.fn("OmpAdapter.ensureClient")(function* (
         thread: OmpThreadState,
         runtimePolicy: ProviderAdapter.ProviderAdapterV2RuntimePolicy,
       ) {
-        if (thread.client.client !== null) return;
+        if (thread.client.client !== null) {
+          // A crashed or reclaimed-away child is never reused: drain whatever is left of it
+          // and respawn below (crash recovery, spec §5.6 D7).
+          if (!thread.broken && !thread.client.exited) return;
+          yield* disposeClient(thread);
+        }
         const state = thread.projection.state;
         const sessionPath = state.providerThread.nativeThreadRef?.nativeId ?? null;
         thread.client.closing = false;
@@ -324,14 +418,23 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           command: input.command ?? "omp",
           args: spawnArgs(runtimePolicy),
           cwd,
+          // Child stderr goes to the T3 server log (spec §5.2, #18).
+          onStderr: (chunk) => {
+            const text = chunk.trim();
+            if (text === "") return;
+            Effect.runForkWith(services)(
+              Effect.logWarning(`omp stderr [${state.providerThread.id}]: ${text}`),
+            );
+          },
           onEvent: (frame) => {
             Effect.runForkWith(services)(routeFrame(thread, frame));
           },
           onExit: (exit) => {
+            thread.client.exited = true;
             if (thread.client.closing) return;
-            // Crash reporting must not be silent (spec §5.6); idle reclamation / respawn
-            // polish lands with #18 — for now the thread goes broken and the active turn
-            // (if any) ends interrupted so the orchestrator sees a terminal.
+            // Crash reporting must not be silent (spec §5.6): the thread disconnects and the
+            // active turn (if any) ends interrupted so the orchestrator sees a terminal. The
+            // next prompt respawns onto the same session via switch_session.
             thread.broken = true;
             Effect.runForkWith(services)(
               Effect.gen(function* () {
@@ -357,6 +460,8 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         );
         thread.client.client = client;
         thread.client.scope = clientScope;
+        // A successful spawn clears the disconnect from a previous crash.
+        thread.broken = false;
         if (sessionPath === null) {
           const opened = (yield* client
             .request("open_session", {})
@@ -434,6 +539,8 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           });
           const thread = threads.get(providerThread.id);
           if (thread === undefined) return providerThread;
+          // An explicit resume is prompt-like activity: it cancels any pending reclaim.
+          yield* cancelIdleReclaim(thread);
           // ensureClient switches to the explicit sessionPath when the thread has one
           // (fail-closed recovery, spec §3/§5.4); a thread without a session only respawns.
           yield* ensureClient(thread, threadInput.runtimePolicy ?? sessionInput.runtimePolicy).pipe(
@@ -461,6 +568,9 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
               "previous_turn_active",
             );
           }
+          // A new prompt is exactly the activity the idle reclaim waits for: cancel it
+          // before reusing/respawning the child (spec §5.6).
+          yield* cancelIdleReclaim(thread);
           const startedAt = yield* DateTime.now;
           const nativeTurnId = `${turnInput.providerThread.id}:t${turnInput.providerTurnOrdinal}:r${turnInput.runOrdinal}`;
           const providerTurn: OrchestrationV2ProviderTurn = {
@@ -606,17 +716,12 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
       yield* Effect.addFinalizer(
         Effect.fn("OmpAdapter.sessionFinalizer")(function* () {
           for (const thread of threads.values()) {
-            thread.client.closing = true;
-            if (thread.client.client !== null) {
-              // Close stdin and drain stdout to EOF (notes §7); ignore drain failures so one
-              // crashed child cannot wedge the session teardown.
-              yield* thread.client.client.close.pipe(Effect.ignore);
-              if (thread.client.scope !== null) {
-                yield* Scope.close(thread.client.scope, Exit.succeed(undefined)).pipe(
-                  Effect.ignore,
-                );
-              }
-            }
+            // Stop reclaim timers first: teardown owns the drain from here (spec §5.6).
+            yield* cancelIdleReclaim(thread);
+            // Close stdin and drain stdout to EOF (notes §7); ignore drain failures so one
+            // crashed child cannot wedge the session teardown. Drain must fully finish before
+            // the child scope closes (#15 deadlock).
+            yield* disposeClient(thread).pipe(Effect.ignore);
           }
           yield* Queue.end(events);
         }),

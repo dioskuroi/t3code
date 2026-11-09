@@ -21,4 +21,6 @@ export {
   writeFakeOmp,
   type FakeOmpProgram,
   type FakeOmpResponseSpec,
+  type FakeOmpTimedFrame,
+  type FakeOmpTimedStderr,
 } from "./server/rpc/fakeOmp.ts";
