@@ -1625,7 +1625,7 @@ describe("omp adapter session runtime", () => {
             event.type === "provider_turn.updated" && event.providerTurn.status === "running",
         ),
       ).toBe(true);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("keeps the applied thinking level across turns and only sends it again on a change", () =>
@@ -1689,7 +1689,7 @@ describe("omp adapter session runtime", () => {
         { id: expect.any(String), type: "set_thinking_level", level: "high" },
         { id: expect.any(String), type: "set_thinking_level", level: "off" },
       ]);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("fails the turn start fail-closed when omp rejects the thinking level", () =>
@@ -1744,7 +1744,7 @@ describe("omp adapter session runtime", () => {
       expect(requests.filter((request) => request["type"] === "set_thinking_level")).toHaveLength(
         1,
       );
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("restores the thread model through switch_session on recovery", () =>
@@ -2668,7 +2668,7 @@ describe("omp adapter session runtime", () => {
         { id: "u3", type: "extension_ui_response", value: "Deny" },
         { id: "u4", type: "extension_ui_response", cancelled: true },
       ]);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
   live("queues a runtime-mode switch until the turn settles, then respawns (D4)", () =>
     Effect.gen(function* () {
@@ -2771,7 +2771,7 @@ describe("omp adapter session runtime", () => {
         const requests = yield* readRequestLog(requestLog);
         expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("maps runtime modes onto --approval-mode spawn argv (spec §6)", () =>
@@ -2837,6 +2837,6 @@ describe("omp adapter session runtime", () => {
           expect(lines[index]).toEqual(argv);
         }
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 });
