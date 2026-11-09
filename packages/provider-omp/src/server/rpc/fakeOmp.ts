@@ -26,6 +26,12 @@ export interface FakeOmpTimedFrame {
   readonly frame: Record<string, unknown>;
 }
 
+/** A scripted stderr chunk written after the ready frame (#18 stderr wiring tests). */
+export interface FakeOmpTimedStderr {
+  readonly delayMs?: number;
+  readonly text: string;
+}
+
 export interface FakeOmpProgram {
   readonly supportedProtocolVersions?: ReadonlyArray<number>;
   readonly maxFrameBytes?: number;
@@ -34,6 +40,18 @@ export interface FakeOmpProgram {
   readonly refuseNegotiation?: boolean;
   /** Frames emitted after the ready frame (in order, optional delays). */
   readonly events?: ReadonlyArray<FakeOmpTimedFrame>;
+  /**
+   * Scripted event sequences replayed per prompt request: the nth `prompt` request flushes
+   * the nth sequence (multi-turn driving for lifecycle tests, #18).
+   */
+  readonly eventsOnPrompt?: ReadonlyArray<ReadonlyArray<FakeOmpTimedFrame>>;
+  /** stderr chunks written after the ready frame (stderr wiring, #18). */
+  readonly stderrOnReady?: ReadonlyArray<FakeOmpTimedStderr>;
+  /**
+   * Frames emitted on every request of the given command type (optional delays) — drives
+   * repeatable same-process turn completions (e.g. prompt → agent_end + prompt_result).
+   */
+  readonly eventsPerRequest?: Record<string, ReadonlyArray<FakeOmpTimedFrame>>;
   /** Response behavior per command type; unlisted commands answer success with `data`. */
   readonly responses?: Record<string, FakeOmpResponseSpec>;
   /** Frames flushed after stdin EOF, before exit — proves the caller kept draining stdout. */
@@ -71,6 +89,15 @@ send({
     ? { maxReassembledFrameBytes: program.maxReassembledFrameBytes }
     : {}),
 });
+for (const timed of program.stderrOnReady ?? []) {
+  if (timed.delayMs !== undefined) await sleep(timed.delayMs);
+  process.stderr.write(timed.text);
+}
+if (process.env.FAKE_OMP_EXIT_LOG) {
+  const exitLog = process.env.FAKE_OMP_EXIT_LOG;
+  process.on("exit", () => appendFileSync(exitLog, String(process.exitCode ?? 0)));
+}
+let promptCount = 0;
 const respond = (request) => {
   const type = typeof request.type === "string" ? request.type : "";
   if (type === "negotiate_protocol") {
@@ -91,6 +118,15 @@ const respond = (request) => {
   }
   const spec = (program.responses ?? {})[type] ?? { success: true, data: {} };
   if (spec.never === true) return;
+  if (type === "prompt" && Array.isArray(program.eventsOnPrompt)) {
+    const sequence = program.eventsOnPrompt[promptCount];
+    promptCount += 1;
+    if (sequence !== undefined) {
+      for (const timed of sequence) {
+        setTimeout(() => send(timed.frame), timed.delayMs ?? 0);
+      }
+    }
+  }
   const payload = JSON.stringify({
     id: request.id,
     type: "response",
@@ -133,6 +169,15 @@ const releaseHeld = (requestType) => {
     setTimeout(() => send(timed.frame), timed.delayMs ?? 0);
   }
 };
+const emitPerRequest = (requestType) => {
+  const timeds = (program.eventsPerRequest ?? {})[requestType];
+  if (timeds === undefined) return;
+  let cumulativeDelay = 0;
+  for (const timed of timeds) {
+    cumulativeDelay += timed.delayMs ?? 0;
+    setTimeout(() => send(timed.frame), cumulativeDelay);
+  }
+};
 if (program.crash !== undefined) {
   setTimeout(() => process.exit(program.crash.exitCode), program.crash.delayMs);
 }
@@ -154,6 +199,7 @@ process.stdin.on("data", (chunk) => {
     if (requestLog) appendFileSync(requestLog, JSON.stringify(request) + "\\n");
     respond(request);
     releaseHeld(request.type);
+    emitPerRequest(request.type);
   }
 });
 process.stdin.on("end", () => {
