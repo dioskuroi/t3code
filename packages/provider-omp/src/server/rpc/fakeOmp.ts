@@ -34,6 +34,11 @@ export interface FakeOmpProgram {
   readonly refuseNegotiation?: boolean;
   /** Frames emitted after the ready frame (in order, optional delays). */
   readonly events?: ReadonlyArray<FakeOmpTimedFrame>;
+  /**
+   * Frames emitted on every request of the given command type (optional delays) — drives
+   * repeatable same-process turn completions (e.g. prompt → agent_end + prompt_result).
+   */
+  readonly eventsPerRequest?: Record<string, ReadonlyArray<FakeOmpTimedFrame>>;
   /** Response behavior per command type; unlisted commands answer success with `data`. */
   readonly responses?: Record<string, FakeOmpResponseSpec>;
   /** Frames flushed after stdin EOF, before exit — proves the caller kept draining stdout. */
@@ -133,6 +138,15 @@ const releaseHeld = (requestType) => {
     setTimeout(() => send(timed.frame), timed.delayMs ?? 0);
   }
 };
+const emitPerRequest = (requestType) => {
+  const timeds = (program.eventsPerRequest ?? {})[requestType];
+  if (timeds === undefined) return;
+  let cumulativeDelay = 0;
+  for (const timed of timeds) {
+    cumulativeDelay += timed.delayMs ?? 0;
+    setTimeout(() => send(timed.frame), cumulativeDelay);
+  }
+};
 if (program.crash !== undefined) {
   setTimeout(() => process.exit(program.crash.exitCode), program.crash.delayMs);
 }
@@ -154,6 +168,7 @@ process.stdin.on("data", (chunk) => {
     if (requestLog) appendFileSync(requestLog, JSON.stringify(request) + "\\n");
     respond(request);
     releaseHeld(request.type);
+    emitPerRequest(request.type);
   }
 });
 process.stdin.on("end", () => {

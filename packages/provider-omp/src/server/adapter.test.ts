@@ -721,4 +721,550 @@ describe("omp adapter session runtime", () => {
       expect(steer?.["message"]).toBe("focus on the tests");
     }).pipe(Effect.provide(NodeServices.layer)),
   );
+
+  live(
+    "applies the selected model with set_model before the prompt and stores it in metadata",
+    () =>
+      Effect.gen(function* () {
+        const { harness, requestLog } = yield* startDrivenTurn(
+          {
+            responses: {
+              open_session: {
+                data: { sessionId: "s-model", sessionFile: "/tmp/fake-model.jsonl" },
+              },
+              set_model: { data: { id: "glm-5.3", provider: "zai" } },
+            },
+            events: [
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              {
+                delayMs: 20,
+                frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+              },
+            ],
+          },
+          "model",
+        );
+        yield* waitFor(harness, "turn.terminal");
+        const requests = yield* readRequestLog(requestLog);
+        const setModel = requests.find((request) => request["type"] === "set_model");
+        // The thread idle-switches onto the turn's selection with omp's exact parameter names.
+        expect(setModel).toEqual({
+          id: expect.any(String),
+          type: "set_model",
+          provider: "zai",
+          modelId: "glm-5.3",
+        });
+        const setModelIndex = requests.indexOf(setModel!);
+        const promptIndex = requests.findIndex((request) => request["type"] === "prompt");
+        expect(promptIndex).toBeGreaterThan(setModelIndex);
+        // The applied model lands in thread metadata so recovery can restore it.
+        const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
+        expect(storedThread?.nativeMetadata?.modelSelection?.model).toBe("zai/glm-5.3");
+      }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("keeps the applied model across turns and only switches on a change", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-switch-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-switch", sessionFile: "/tmp/fake-switch.jsonl" },
+            },
+          },
+          eventsPerRequest: {
+            prompt: [
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              {
+                delayMs: 20,
+                frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+              },
+            ],
+          },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("switch");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      const moonshotSelection = decodeModelSelection({
+        instanceId: ids.instanceId,
+        model: "moonshot/kimi-k2",
+      });
+      const startTurnWith = (selection: typeof ids.modelSelection, runOrdinal: number) =>
+        harness.runtime.startTurn({
+          appThread: appThreadFor(ids.threadId),
+          threadId: ids.threadId,
+          runId: ids.runId,
+          runOrdinal,
+          providerTurnOrdinal: runOrdinal,
+          attemptId: ids.attemptId,
+          rootNodeId: ids.rootNodeId,
+          providerThread,
+          message: turnMessage(`turn ${runOrdinal}`),
+          modelSelection: selection,
+          runtimePolicy,
+        });
+      yield* startTurnWith(ids.modelSelection, 1);
+      yield* waitFor(harness, "turn.terminal");
+      // Same selection again: no redundant set_model.
+      yield* startTurnWith(ids.modelSelection, 2);
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 2);
+      // A different selection switches again with the new pair.
+      yield* startTurnWith(moonshotSelection, 3);
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 3);
+      const setModels = (yield* readRequestLog(requestLog)).filter(
+        (request) => request["type"] === "set_model",
+      );
+      expect(setModels).toEqual([
+        { id: expect.any(String), type: "set_model", provider: "zai", modelId: "glm-5.3" },
+        { id: expect.any(String), type: "set_model", provider: "moonshot", modelId: "kimi-k2" },
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("follows omp's own resolution for the default selection: no modelId anywhere", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-default-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-default", sessionFile: "/tmp/fake-default.jsonl" },
+            },
+          },
+          events: [
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("default");
+      const defaultSelection = decodeModelSelection({
+        instanceId: ids.instanceId,
+        model: "default",
+      });
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: defaultSelection,
+        runtimePolicy,
+      });
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("hello omp"),
+        modelSelection: defaultSelection,
+        runtimePolicy,
+      });
+      yield* waitFor(harness, "turn.terminal");
+      const requests = yield* readRequestLog(requestLog);
+      expect(requests.some((request) => request["type"] === "set_model")).toBe(false);
+      expect(requests.find((request) => request["type"] === "open_session")).toEqual({
+        id: expect.any(String),
+        type: "open_session",
+      });
+      // A default thread stores no model metadata — omp keeps resolving on its own.
+      const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
+      expect(storedThread?.nativeMetadata?.modelSelection).toBeUndefined();
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("fails the turn start fail-closed when omp cannot select the model", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-notfound-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-notfound", sessionFile: "/tmp/fake-notfound.jsonl" },
+            },
+            set_model: { success: false, error: "Model not found: zai/ghost-model" },
+          },
+          events: [],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("notfound");
+      const ghostSelection = decodeModelSelection({
+        instanceId: ids.instanceId,
+        model: "zai/ghost-model",
+      });
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ghostSelection,
+        runtimePolicy,
+      });
+      // The prompt is never admitted and the omp error surfaces with re-selection guidance.
+      const failure = yield* harness.runtime
+        .startTurn({
+          appThread: appThreadFor(ids.threadId),
+          threadId: ids.threadId,
+          runId: ids.runId,
+          runOrdinal: 1,
+          providerTurnOrdinal: 1,
+          attemptId: ids.attemptId,
+          rootNodeId: ids.rootNodeId,
+          providerThread,
+          message: turnMessage("hello omp"),
+          modelSelection: ghostSelection,
+          runtimePolicy,
+        })
+        .pipe(Effect.flip);
+      if (failure._tag !== "ProviderAdapterProtocolError")
+        throw new Error(`expected protocol error, got ${failure._tag}`);
+      expect(failure.detail).toContain("Model not found: zai/ghost-model");
+      expect(failure.detail).toContain("Re-select a model");
+      const requests = yield* readRequestLog(requestLog);
+      expect(requests.some((request) => request["type"] === "prompt")).toBe(false);
+      const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
+      // No silent rewrite: the metadata never claims the ghost model was applied.
+      expect(storedThread?.nativeMetadata?.modelSelection).toBeUndefined();
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("restores the thread model through switch_session on recovery", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-restore-" });
+      const sessionFile = `${directory}/sessions/restore.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      void writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: { data: { sessionId: "s-restore", sessionFile } },
+            switch_session: { data: { sessionId: "s-restore", sessionFile, resumed: true } },
+          },
+          events: [
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("restore");
+      const command = `${directory}/omp`;
+      let storedThread: OrchestrationV2ProviderThread | undefined;
+      yield* Effect.gen(function* () {
+        const first = yield* openHarness(ids, command);
+        const providerThread = yield* first.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        yield* first.runtime.startTurn({
+          appThread: appThreadFor(ids.threadId),
+          threadId: ids.threadId,
+          runId: ids.runId,
+          runOrdinal: 1,
+          providerTurnOrdinal: 1,
+          attemptId: ids.attemptId,
+          rootNodeId: ids.rootNodeId,
+          providerThread,
+          message: turnMessage("first"),
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        yield* waitFor(first, "turn.terminal");
+        storedThread = eventsOf(first, "provider_thread.updated").at(-1)?.providerThread;
+      }).pipe(Effect.scoped);
+      // Fresh session runtime (process teardown): the metadata model must ride switch_session.
+      yield* Effect.gen(function* () {
+        const adapter = yield* makeOmpAdapterV2({ instanceId: ids.instanceId, command });
+        const runtime2 = yield* adapter.openSession({
+          threadId: ids.threadId,
+          providerSessionId: ids.providerSessionId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        yield* runtime2.resumeThread({
+          providerThread: storedThread as OrchestrationV2ProviderThread,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        const switches = (yield* readRequestLog(requestLog)).filter(
+          (request) => request["type"] === "switch_session",
+        );
+        expect(switches).toEqual([
+          {
+            id: expect.any(String),
+            type: "switch_session",
+            sessionPath: sessionFile,
+            provider: "zai",
+            modelId: "glm-5.3",
+          },
+        ]);
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("fails recovery closed when omp cannot restore the thread model", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-ghost-" });
+      const sessionFile = `${directory}/sessions/ghost.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      void writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: { data: { sessionId: "s-ghost", sessionFile } },
+            // omp's fail-closed restore error: the saved model vanished from the catalog.
+            switch_session: { success: false, error: "Could not restore model moonshot/kimi-k2" },
+          },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("ghost");
+      const command = `${directory}/omp`;
+      // Well-formed base thread from a throwaway runtime, then a fresh session runtime for the
+      // recovery (production shape: resumeThread always lands on a runtime that never
+      // registered the thread, so the stored identity is honored verbatim).
+      let baseThread: OrchestrationV2ProviderThread | undefined;
+      yield* Effect.gen(function* () {
+        const first = yield* openHarness(ids, command);
+        baseThread = yield* first.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+      }).pipe(Effect.scoped);
+      // A thread whose selected model disappeared from the catalog keeps its selection;
+      // recovery passes it verbatim and omp's restore failure surfaces — never a fallback.
+      const ghostThread = {
+        ...baseThread,
+        nativeThreadRef: { driver: OMP_PROVIDER, nativeId: sessionFile, strength: "strong" },
+        nativeMetadata: {
+          modelSelection: { instanceId: ids.instanceId, model: "moonshot/kimi-k2" },
+        },
+      } as OrchestrationV2ProviderThread;
+      yield* Effect.gen(function* () {
+        const adapter = yield* makeOmpAdapterV2({ instanceId: ids.instanceId, command });
+        const runtime = yield* adapter.openSession({
+          threadId: ids.threadId,
+          providerSessionId: ids.providerSessionId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        const failure = yield* runtime
+          .resumeThread({
+            providerThread: ghostThread,
+            modelSelection: ids.modelSelection,
+            runtimePolicy,
+          })
+          .pipe(Effect.flip);
+        if (failure._tag !== "ProviderAdapterResumeThreadError")
+          throw new Error(`expected resume error, got ${failure._tag}`);
+        const cause = failure.cause as { _tag?: string; detail?: string } | undefined;
+        expect(cause?._tag).toBe("ProviderAdapterProtocolError");
+        expect(cause?.detail).toContain("Could not restore model moonshot/kimi-k2");
+        expect(cause?.detail).toContain("Re-select a model");
+        const requests = yield* readRequestLog(requestLog);
+        const switchRequest = requests.find((request) => request["type"] === "switch_session");
+        // The vanished model rides the restore request verbatim — no dropping, no defaulting.
+        expect(switchRequest).toEqual({
+          id: expect.any(String),
+          type: "switch_session",
+          sessionPath: sessionFile,
+          provider: "moonshot",
+          modelId: "kimi-k2",
+        });
+        expect(requests.some((request) => request["type"] === "prompt")).toBe(false);
+        expect(requests.some((request) => request["type"] === "set_model")).toBe(false);
+        expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("rejects a model switch while a turn is active", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-busy-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-busy", sessionFile: "/tmp/fake-busy.jsonl" },
+            },
+          },
+          events: [
+            messageUpdate(20, { type: "text_delta", delta: "slow", contentIndex: 0 }),
+            // Hold the terminal until abort: the first turn stays active for the probe.
+            {
+              afterRequestType: "abort",
+              frame: { type: "prompt_result", agentInvoked: true, status: "aborted" },
+            },
+          ],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("busy");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("first"),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      const moonshotSelection = decodeModelSelection({
+        instanceId: ids.instanceId,
+        model: "moonshot/kimi-k2",
+      });
+      // While the first turn runs, a second start (with a different model) is rejected.
+      const failure = yield* harness.runtime
+        .startTurn({
+          appThread: appThreadFor(ids.threadId),
+          threadId: ids.threadId,
+          runId: decodeRunId("run-busy-2"),
+          runOrdinal: 2,
+          providerTurnOrdinal: 2,
+          attemptId: decodeRunAttemptId("attempt-busy-2"),
+          rootNodeId: decodeNodeId("node-busy-2"),
+          providerThread,
+          message: turnMessage("second"),
+          modelSelection: moonshotSelection,
+          runtimePolicy,
+        })
+        .pipe(Effect.flip);
+      if (failure._tag !== "ProviderAdapterProtocolError")
+        throw new Error(`expected protocol error, got ${failure._tag}`);
+      expect(failure.reason).toBe("previous_turn_active");
+      yield* harness.runtime.interruptTurn({
+        providerThread,
+        providerTurnId: IdAllocator.derive.providerTurn({
+          driver: OMP_PROVIDER,
+          nativeTurnId: `${providerThread.id}:t1:r1`,
+        }),
+      });
+      yield* waitFor(harness, "turn.terminal", (event) => event.status === "interrupted");
+      const setModels = (yield* readRequestLog(requestLog)).filter(
+        (request) => request["type"] === "set_model",
+      );
+      // The rejected turn never reached omp: only the admitted turn's set_model exists.
+      expect(setModels).toEqual([
+        { id: expect.any(String), type: "set_model", provider: "zai", modelId: "glm-5.3" },
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("syncs model_changed frames into thread metadata without a redundant set_model", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-changed-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-changed", sessionFile: "/tmp/fake-changed.jsonl" },
+            },
+          },
+          eventsPerRequest: {
+            prompt: [
+              { delayMs: 20, frame: { type: "model_changed", model: "moonshot/kimi-k2" } },
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              {
+                delayMs: 20,
+                frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+              },
+            ],
+          },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("changed");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("first"),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* waitFor(harness, "turn.terminal");
+      // omp switched models underneath us (e.g. cycle_model): metadata follows the report,
+      // unfiltered — even a slug outside the current catalog keeps the thread's selection.
+      const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
+      expect(storedThread?.nativeMetadata?.modelSelection?.model).toBe("moonshot/kimi-k2");
+      // The next turn on the reported model must not re-issue what omp already applied.
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 2,
+        providerTurnOrdinal: 2,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread: storedThread as OrchestrationV2ProviderThread,
+        message: turnMessage("second"),
+        modelSelection: decodeModelSelection({
+          instanceId: ids.instanceId,
+          model: "moonshot/kimi-k2",
+        }),
+        runtimePolicy,
+      });
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 2);
+      const setModels = (yield* readRequestLog(requestLog)).filter(
+        (request) => request["type"] === "set_model",
+      );
+      expect(setModels).toEqual([
+        { id: expect.any(String), type: "set_model", provider: "zai", modelId: "glm-5.3" },
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
 });

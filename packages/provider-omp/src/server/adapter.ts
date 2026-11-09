@@ -1,7 +1,7 @@
-// omp adapter lifeline (spec §5.4/5.5/5.6, ticket #15): one t3code thread drives exactly one
-// `omp --mode rpc` child; lazy spawn at the first prompt, recovery always via explicit
-// sessionPath. Frames project onto ProviderAdapterV2Events in projection.ts; approvals (#16),
-// idle reclamation / respawn polish (#18) and model catalog (#19) land in their own tickets.
+// omp adapter lifeline (spec §5.4/5.5/5.6, tickets #15/#17): one t3code thread drives exactly
+// one `omp --mode rpc` child; lazy spawn at the first prompt, recovery always via explicit
+// sessionPath. Frames project onto ProviderAdapterV2Events in projection.ts; approvals (#16)
+// and idle reclamation / respawn polish (#18) land in their own tickets.
 import type {
   OrchestrationV2ProviderCapabilities,
   OrchestrationV2ProviderSession,
@@ -21,7 +21,13 @@ import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter"
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import { turnScopedSelectionTransition } from "@t3tools/provider-core/server/selectionTransition";
 import { makeOmpRpcClient, type OmpRpcClient } from "./rpc/client.ts";
-import { createOmpThreadProjection, type OmpThreadProjection } from "./projection.ts";
+import {
+  createOmpThreadProjection,
+  OMP_INHERIT_MODEL_SLUG,
+  parseOmpModelSlug,
+  type OmpModelRef,
+  type OmpThreadProjection,
+} from "./projection.ts";
 import { OMP_PROVIDER } from "./kind.ts";
 
 // Spec §7 (ADR-0004): subagents true/closable but not forkable/waitable, reasoning streams,
@@ -186,6 +192,23 @@ const protocolError = (detail: string, cause?: unknown, reason?: "previous_turn_
     ...(reason === undefined ? {} : { reason }),
   });
 
+/**
+ * Fail-closed model guidance (#17): omp's raw error plus an explicit re-selection hint. Shared
+ * by set_model selections and switch_session restores so both surface the same contract.
+ */
+const modelRestoreError = (what: string, model: OmpModelRef | null, cause: unknown) => {
+  const message = (cause as { message?: unknown } | null | undefined)?.message;
+  const detail =
+    typeof message === "string" && message.trim() !== "" ? message : "omp request failed";
+  return protocolError(
+    model === null
+      ? what
+      : `omp could not apply model ${model.slug}: ${detail}. ` +
+          "Re-select a model from the refreshed provider catalog; T3 never falls back to a default model.",
+    cause,
+  );
+};
+
 export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: {
   readonly instanceId: ProviderAdapter.ProviderAdapterV2["Service"]["instanceId"];
   /** Resolved executable; defaults to `omp` (PATH discovery, spec §5.3). */
@@ -283,6 +306,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           active: null,
           orphanFrames: [],
           nativeSession: null,
+          appliedModel: null,
         };
         const projection = createOmpThreadProjection({
           driver: OMP_PROVIDER,
@@ -390,12 +414,56 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           return;
         }
         // Fail-closed recovery: always the explicit sessionPath, never "continue latest".
+        // A thread that selected a model carries it in thread metadata (#17): pass the
+        // provider+modelId pair so omp restores exactly that model — an unknown pair fails the
+        // restore (surfaced fail-closed), never a silent default fallback.
+        const restoreModel =
+          sessionPath === null
+            ? null
+            : parseOmpModelSlug(state.providerThread.nativeMetadata?.modelSelection?.model ?? "");
         yield* client
-          .request("switch_session", { sessionPath })
+          .request(
+            "switch_session",
+            restoreModel === null
+              ? { sessionPath }
+              : { sessionPath, provider: restoreModel.provider, modelId: restoreModel.modelId },
+          )
           .pipe(
-            Effect.mapError((cause) =>
-              protocolError(`switch_session failed for ${sessionPath}`, cause),
+            Effect.tap(() =>
+              restoreModel === null
+                ? Effect.void
+                : Effect.sync(() => {
+                    state.appliedModel = restoreModel;
+                  }),
             ),
+            Effect.mapError((cause) =>
+              modelRestoreError(`switch_session failed for ${sessionPath}`, restoreModel, cause),
+            ),
+          );
+      });
+
+      const applyTurnModel = Effect.fn("OmpAdapter.applyTurnModel")(function* (
+        thread: OmpThreadState,
+        modelSelection: ProviderAdapter.ProviderAdapterV2TurnInput["modelSelection"],
+      ) {
+        const state = thread.projection.state;
+        const slug = modelSelection.model;
+        // "default" never drives set_model: a fresh thread follows omp's own resolution, and
+        // omp exposes no unset-model RPC, so a later default pick cannot restore that state.
+        if (slug === OMP_INHERIT_MODEL_SLUG || slug === state.appliedModel?.slug) return;
+        const parsed = parseOmpModelSlug(slug);
+        if (parsed === null) {
+          return yield* protocolError(`omp model '${slug}' must use provider/model format`);
+        }
+        yield* thread.client
+          .client!.request("set_model", {
+            provider: parsed.provider,
+            modelId: parsed.modelId,
+          })
+          .pipe(
+            // Applied model lands in thread metadata only after omp confirmed the selection.
+            Effect.tap(() => thread.projection.applyModel(parsed)),
+            Effect.mapError((cause) => modelRestoreError("set_model failed", parsed, cause)),
           );
       });
 
@@ -475,6 +543,10 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             completedAt: null,
           };
           yield* ensureClient(thread, turnInput.runtimePolicy);
+          // Model passthrough (#17): startTurn only runs on an idle thread, which is exactly
+          // omp's set_model window — a mid-turn switch cannot reach the process (the turn
+          // guard above rejects a second start, and no other path mutates the model).
+          yield* applyTurnModel(thread, turnInput.modelSelection);
           thread.projection.beginTurn({ providerTurn, turnInput });
           // Contract: provider_turn.updated(running, runAttemptId) lands before any projected
           // frame (orphan replay included), so the orchestrator always sees the turn first.
