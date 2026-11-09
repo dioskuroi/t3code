@@ -721,4 +721,135 @@ describe("omp adapter session runtime", () => {
       expect(steer?.["message"]).toBe("focus on the tests");
     }).pipe(Effect.provide(NodeServices.layer)),
   );
+
+  live("refreshes the slash-command directory from available_commands_update (D11)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-slash-" });
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-slash", sessionFile: "/tmp/fake-slash.jsonl" },
+            },
+          },
+          events: [
+            {
+              delayMs: 20,
+              frame: {
+                type: "available_commands_update",
+                commands: [
+                  { name: "plan", description: "Toggle plan mode", source: "builtin" },
+                  {
+                    name: "compact",
+                    description: "Summarize the conversation",
+                    input: { hint: "Optional instructions" },
+                  },
+                  { name: "review", source: "skill" },
+                ],
+              },
+            },
+            // Full replacement: review disappears, description-less entries stay valid.
+            {
+              delayMs: 20,
+              frame: {
+                type: "available_commands_update",
+                commands: [
+                  { name: "plan" },
+                  { name: "compact", input: { hint: "Optional instructions" } },
+                ],
+              },
+            },
+            // Empty catalog is a valid full replacement, never an error (spec §5.5).
+            { delayMs: 20, frame: { type: "available_commands_update", commands: [] } },
+            // Malformed frame (no commands array): tolerated, no refresh, no error.
+            { delayMs: 20, frame: { type: "available_commands_update" } },
+          ],
+        },
+      });
+      const ids = makeIds("slash");
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(ids, command);
+        const providerThread = yield* harness.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        // Lazy spawn via resume: the startup catalog must land without any turn (spec §7).
+        yield* harness.runtime.resumeThread({
+          providerThread,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        const refreshes = () => eventsOf(harness, "provider_slash_commands.updated");
+        // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the fake omp child delivers its milestone frames on real time; there is no in-runtime event to await.
+        for (let attempt = 0; attempt < 500 && refreshes().length < 3; attempt += 1) {
+          // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- the fake omp child delivers its frames on real time; the events collector is a passive drain, not a scheduler wait.
+          yield* Effect.sleep(10);
+        }
+        expect(refreshes()).toHaveLength(3);
+        expect(refreshes()[0]?.driver).toBe(OMP_PROVIDER);
+        expect(refreshes()[0]?.providerThreadId).toBe(providerThread.id);
+        // Contract shape {name, description?, input?{hint}}; omp-only fields (source) dropped.
+        expect(refreshes()[0]?.slashCommands).toEqual([
+          { name: "plan", description: "Toggle plan mode" },
+          {
+            name: "compact",
+            description: "Summarize the conversation",
+            input: { hint: "Optional instructions" },
+          },
+          { name: "review" },
+        ]);
+        expect(refreshes()[1]?.slashCommands).toEqual([
+          { name: "plan" },
+          { name: "compact", input: { hint: "Optional instructions" } },
+        ]);
+        expect(refreshes()[2]?.slashCommands).toEqual([]);
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("passes slash-command prompts through to omp verbatim (D11)", () =>
+    Effect.gen(function* () {
+      const { harness, requestLog, ids, providerThread, turnId } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-plan", sessionFile: "/tmp/fake-plan.jsonl" },
+            },
+            steer: { data: { queued: true } },
+          },
+          events: [
+            messageUpdate(20, { type: "text_delta", delta: "planning", contentIndex: 0 }),
+            { afterRequestType: "steer", frame: { type: "agent_end", isTerminal: true } },
+            {
+              afterRequestType: "steer",
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        "plan",
+        { message: "/plan draft the migration plan" },
+      );
+      // No catalog frame was pushed: empty directory, no refresh event, no error.
+      expect(eventsOf(harness, "provider_slash_commands.updated")).toHaveLength(0);
+      yield* harness.runtime.steerTurn({
+        threadId: ids.threadId,
+        runId: ids.runId,
+        providerThread,
+        providerTurnId: turnId,
+        message: turnMessage("/compact keep the summary"),
+      });
+      yield* waitFor(harness, "turn.terminal");
+      const requests = yield* readRequestLog(requestLog);
+      // Slash commands are prompt text: neither /plan nor /compact is intercepted or parsed.
+      expect(requests.find((request) => request["type"] === "prompt")?.["message"]).toBe(
+        "/plan draft the migration plan",
+      );
+      expect(requests.find((request) => request["type"] === "steer")?.["message"]).toBe(
+        "/compact keep the summary",
+      );
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
 });
