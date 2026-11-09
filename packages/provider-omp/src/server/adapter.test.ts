@@ -802,6 +802,7 @@ describe("omp adapter session runtime", () => {
               delayMs: 20,
               frame: { type: "subagent_lifecycle", subagentId: "sub-1", status: "running" },
             },
+            { delayMs: 20, frame: { type: "auto_compaction_start" } },
             { delayMs: 20, frame: { type: "notice", message: "hi" } },
             { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
             {
@@ -1158,6 +1159,190 @@ describe("omp adapter session runtime", () => {
       }).pipe(Effect.provide(NodeServices.layer)),
   );
 
+  live("projects subagent lifecycle frames into subagent.updated (running→completed)", () =>
+    Effect.gen(function* () {
+      const { harness } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-sub", sessionFile: "/tmp/fake-sub.jsonl" },
+            },
+          },
+          events: [
+            {
+              delayMs: 20,
+              frame: {
+                type: "subagent_lifecycle",
+                subagentId: "sub-1",
+                status: "running",
+                title: "researcher",
+                prompt: "look into the flaky test",
+                model: "zai/glm-5.3",
+              },
+            },
+            {
+              delayMs: 20,
+              frame: {
+                type: "subagent_lifecycle",
+                subagentId: "sub-1",
+                status: "completed",
+                result: "the flaky test was a race",
+              },
+            },
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        "sublife",
+      );
+      const terminal = yield* waitFor(harness, "turn.terminal");
+      expect(terminal.status).toBe("completed");
+      const updates = eventsOf(harness, "subagent.updated");
+      expect(updates).toHaveLength(2);
+      // One stable contract identity across the lifecycle, derived from the native id.
+      expect(updates[0]?.subagent.id).toBe(updates[1]?.subagent.id);
+      expect(updates[0]?.subagent.status).toBe("running");
+      expect(updates[0]?.subagent.title).toBe("researcher");
+      expect(updates[0]?.subagent.prompt).toBe("look into the flaky test");
+      expect(updates[0]?.subagent.model).toBe("zai/glm-5.3");
+      expect(updates[0]?.subagent.startedAt).not.toBeNull();
+      expect(updates[0]?.subagent.completedAt).toBeNull();
+      expect(updates[0]?.subagent.nativeTaskRef).toEqual({
+        driver: "omp",
+        nativeId: "sub-1",
+        strength: "strong",
+      });
+      // Final value wins: completed with a result and a completion timestamp.
+      expect(updates[1]?.subagent.status).toBe("completed");
+      expect(updates[1]?.subagent.result).toBe("the flaky test was a race");
+      expect(updates[1]?.subagent.completedAt).not.toBeNull();
+      expect(updates[1]?.subagent.title).toBe("researcher");
+      // Bound to the driving turn / thread context.
+      expect(updates[0]?.subagent.threadId).toBeDefined();
+      expect(updates[0]?.subagent.providerThreadId).toBeDefined();
+      expect(updates[0]?.subagent.origin).toBe("provider_native");
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("projects subagent progress frames into the progress field", () =>
+    Effect.gen(function* () {
+      const { harness } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-subp", sessionFile: "/tmp/fake-subp.jsonl" },
+            },
+          },
+          events: [
+            {
+              delayMs: 20,
+              frame: { type: "subagent_lifecycle", subagentId: "sub-p", status: "running" },
+            },
+            {
+              delayMs: 20,
+              frame: { type: "subagent_progress", subagentId: "sub-p", progress: "scanning 42%" },
+            },
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        "subprog",
+      );
+      yield* waitFor(harness, "turn.terminal");
+      const updates = eventsOf(harness, "subagent.updated");
+      expect(updates).toHaveLength(2);
+      expect(updates[0]?.subagent.progress).toBeUndefined();
+      expect(updates[1]?.subagent.progress).toBe("scanning 42%");
+      // Progress never flips the status away from what lifecycle reported.
+      expect(updates[1]?.subagent.status).toBe("running");
+      expect(updates[1]?.subagent.completedAt).toBeNull();
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("passes subagent_event payloads through on the subagent record", () =>
+    Effect.gen(function* () {
+      const { harness } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-sube", sessionFile: "/tmp/fake-sube.jsonl" },
+            },
+          },
+          events: [
+            {
+              delayMs: 20,
+              frame: { type: "subagent_lifecycle", subagentId: "sub-e", status: "running" },
+            },
+            {
+              delayMs: 20,
+              frame: {
+                type: "subagent_event",
+                subagentId: "sub-e",
+                event: { kind: "tool_execution_start", toolName: "grep" },
+              },
+            },
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        "subevent",
+      );
+      yield* waitFor(harness, "turn.terminal");
+      const updates = eventsOf(harness, "subagent.updated");
+      expect(updates).toHaveLength(2);
+      const progress = updates[1]?.subagent.progress ?? "";
+      // Transparent passthrough: the inner event is reachable verbatim on the record.
+      expect(progress).toContain("tool_execution_start");
+      expect(progress).toContain("grep");
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("closes a subagent through cancel_subagent (stopSubagent, D12)", () =>
+    Effect.gen(function* () {
+      const { harness, requestLog, providerThread } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-cancel", sessionFile: "/tmp/fake-cancel.jsonl" },
+            },
+            cancel_subagent: { data: { cancelled: true } },
+          },
+          events: [
+            {
+              delayMs: 20,
+              frame: { type: "subagent_lifecycle", subagentId: "sub-x", status: "running" },
+            },
+            { delayMs: 40, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        "subcancel",
+      );
+      yield* waitFor(harness, "subagent.updated");
+      const stopSubagent = harness.runtime.stopSubagent;
+      if (stopSubagent === undefined) throw new Error("omp runtime must expose stopSubagent");
+      // Idempotent close: omp answers cancelled:false for a dead id without erroring.
+      yield* stopSubagent({ providerThread, nativeTaskId: "sub-x" });
+      yield* stopSubagent({ providerThread, nativeTaskId: "sub-gone" });
+      yield* waitFor(harness, "turn.terminal");
+      const requests = yield* readRequestLog(requestLog);
+      const cancels = requests.filter((request) => request["type"] === "cancel_subagent");
+      expect(cancels.map((request) => request["subagentId"])).toEqual(["sub-x", "sub-gone"]);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
   live("exposes the capability truth table and one shared capabilities object", () =>
     Effect.gen(function* () {
       const ids = makeIds("cap");
@@ -1179,6 +1364,17 @@ describe("omp adapter session runtime", () => {
       ] as const) {
         expect(Object.keys(capabilities[group]).length).toBeGreaterThan(0);
       }
+      // Spec §7 truth table final values (#23): true = supports/emits/closable; everything
+      // else (ids, fork, wait, approvals origin) stays false.
+      expect(capabilities.subagents).toEqual({
+        supportsSubagents: true,
+        exposesSubagentThreadIds: false,
+        emitsSubagentLifecycle: true,
+        canWaitForSubagents: false,
+        canCloseSubagents: true,
+        canForkSubagentThread: false,
+      });
+      expect(capabilities.approvals.approvalsCanOriginateFromSubagents).toBe(false);
       yield* Effect.gen(function* () {
         const scope = yield* Effect.scope;
         const runtime = yield* adapter.openSession({
