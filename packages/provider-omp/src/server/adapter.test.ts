@@ -23,12 +23,15 @@ import {
   ThreadId,
 } from "@t3tools/contracts";
 import * as DateTime from "effect/DateTime";
+import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
+import * as Logger from "effect/Logger";
 import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
 
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
-import { makeOmpAdapterV2 } from "./adapter.ts";
+import { makeOmpAdapterV2, OMP_IDLE_RECLAIM_TIMEOUT_MS } from "./adapter.ts";
 import { OMP_PROVIDER } from "./kind.ts";
-import { writeFakeOmp, type FakeOmpProgram } from "../testing.ts";
+import { writeFakeOmp, type FakeOmpProgram, type FakeOmpTimedFrame } from "../testing.ts";
 
 const decodeThreadId = Schema.decodeSync(ThreadId);
 const decodeMessageId = Schema.decodeSync(MessageId);
@@ -94,13 +97,119 @@ const appThreadFor = (threadId: ThreadId) =>
     ProviderAdapter.ProviderAdapterV2SessionRuntime["startTurn"]
   >[0]["appThread"];
 
+/**
+ * Advanceable manual Clock (#18): the adapter's idle-reclaim timer sleeps on this clock and
+ * only fires when the test calls advance(), so the 5-minute reclaim runs with zero real wait.
+ */
+const makeManualIdleClock = (): { clock: Clock.Clock; advance: (ms: number) => void } => {
+  let nowMs = 0;
+  let waiters: Array<{ atMs: number; resume: () => void }> = [];
+  const nanos = () => BigInt(nowMs) * 1_000_000n;
+  const clock: Clock.Clock = {
+    currentTimeMillisUnsafe: () => nowMs,
+    currentTimeMillis: Effect.sync(() => nowMs),
+    currentTimeNanosUnsafe: () => nanos(),
+    currentTimeNanos: Effect.sync(nanos),
+    monotonicTimeNanosUnsafe: () => nanos(),
+    monotonicTimeNanos: Effect.sync(nanos),
+    sleep: (duration) =>
+      Effect.callback<void>((resume) => {
+        waiters.push({
+          atMs: nowMs + Duration.toMillis(duration),
+          resume: () => resume(Effect.void),
+        });
+      }),
+  };
+  return {
+    clock,
+    advance: (ms: number) => {
+      nowMs += ms;
+      const due = waiters.filter((waiter) => waiter.atMs <= nowMs);
+      waiters = waiters.filter((waiter) => waiter.atMs > nowMs);
+      for (const waiter of due) waiter.resume();
+    },
+  };
+};
+
+/** One full scripted turn ending in a completed terminal (multi-turn driving, #18). */
+const completedTurnEvents = (delta: string): ReadonlyArray<FakeOmpTimedFrame> => [
+  {
+    delayMs: 10,
+    frame: {
+      type: "message_update",
+      assistantMessageEvent: { type: "text_start", contentIndex: 0 },
+    },
+  },
+  {
+    delayMs: 10,
+    frame: {
+      type: "message_update",
+      assistantMessageEvent: { type: "text_delta", delta, contentIndex: 0 },
+    },
+  },
+  {
+    delayMs: 10,
+    frame: { type: "message_update", assistantMessageEvent: { type: "text_end", contentIndex: 0 } },
+  },
+  { delayMs: 10, frame: { type: "agent_end", isTerminal: true } },
+  { delayMs: 10, frame: { type: "prompt_result", agentInvoked: true, status: "completed" } },
+];
+
+/** Starts the nth turn on an already-registered provider thread (ordinals aligned to n). */
+const driveTurn = Effect.fn("adapterTest.driveTurn")(function* (
+  harness: Harness,
+  ids: ReturnType<typeof makeIds>,
+  providerThread: OrchestrationV2ProviderThread,
+  ordinal: number,
+) {
+  const suffix = `${ids.threadId}-t${ordinal}`;
+  yield* harness.runtime.startTurn({
+    appThread: appThreadFor(ids.threadId),
+    threadId: ids.threadId,
+    runId: decodeRunId(`run-${suffix}`),
+    runOrdinal: ordinal,
+    providerTurnOrdinal: ordinal,
+    attemptId: decodeRunAttemptId(`attempt-${suffix}`),
+    rootNodeId: ids.rootNodeId,
+    providerThread,
+    message: turnMessage(`prompt ${ordinal}`),
+    modelSelection: ids.modelSelection,
+    runtimePolicy,
+  });
+});
+
+/**
+ * Bounded real-time poll for a file the fake omp child writes on real time (drain marker);
+ * the child's stdin-end handler is the only place the marker can appear.
+ */
+const waitForFile = (path: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the fake omp child writes the marker on real time; there is no in-runtime event to await.
+    for (let attempt = 0; attempt < 500; attempt += 1) {
+      if (yield* fs.exists(path)) return;
+      // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- the fake omp child writes the marker on real time; the poll bounds scheduling slack, not the reclaim timeout.
+      yield* Effect.sleep(10);
+    }
+    throw new Error(`expected file never appeared: ${path}`);
+  });
+
 /** Opens a session, starts eagerly collecting events, and returns the runtime harness. */
 const openHarness = Effect.fn("adapterTest.openHarness")(function* (
   ids: ReturnType<typeof makeIds>,
   command: string,
+  options: {
+    readonly idleTimeoutMs?: number | undefined;
+    readonly clock?: Clock.Clock | undefined;
+  } = {},
 ) {
   const scope = yield* Effect.scope;
-  const adapter = yield* makeOmpAdapterV2({ instanceId: ids.instanceId, command });
+  const adapter = yield* makeOmpAdapterV2({
+    instanceId: ids.instanceId,
+    command,
+    ...(options.idleTimeoutMs === undefined ? {} : { idleTimeoutMs: options.idleTimeoutMs }),
+    ...(options.clock === undefined ? {} : { clock: options.clock }),
+  });
   const runtime = yield* adapter.openSession({
     threadId: ids.threadId,
     providerSessionId: ids.providerSessionId,
@@ -719,6 +828,418 @@ describe("omp adapter session runtime", () => {
       const requests = yield* readRequestLog(requestLog);
       const steer = requests.find((request) => request["type"] === "steer");
       expect(steer?.["message"]).toBe("focus on the tests");
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("reclaims an idle process after the timeout and revives it on the next prompt", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-idle-" });
+      const sessionFile = `${directory}/sessions/idle.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      const drainMarker = `${directory}/drain-marker`;
+      const exitLog = `${directory}/exit.log`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: { open_session: { data: { sessionId: "s-idle", sessionFile } } },
+          eventsOnPrompt: [
+            completedTurnEvents("first"),
+            completedTurnEvents("second"),
+            completedTurnEvents("third"),
+          ],
+          framesOnStdinEnd: [{ type: "session_settled" }],
+          exitCodeOnStdinEnd: 0,
+        },
+        env: {
+          FAKE_OMP_REQUEST_LOG: requestLog,
+          FAKE_OMP_DRAIN_MARKER: drainMarker,
+          FAKE_OMP_EXIT_LOG: exitLog,
+        },
+      });
+      const manualClock = makeManualIdleClock();
+      const ids = makeIds("idle");
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(ids, command, {
+          idleTimeoutMs: OMP_IDLE_RECLAIM_TIMEOUT_MS,
+          clock: manualClock.clock,
+        });
+        const providerThread = yield* harness.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        yield* driveTurn(harness, ids, providerThread, 1);
+        yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 1);
+        // The settle arms the reclaim timer on the manual clock. Give the forked timer a
+        // moment to register its sleep (scheduling slack, not the idle timeout), then prove
+        // 1ms short of the timeout does not reclaim.
+        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- bounding the forked timer's scheduling slack; the reclaim timeout itself runs on the injected manual clock.
+        yield* Effect.sleep(100);
+        manualClock.advance(OMP_IDLE_RECLAIM_TIMEOUT_MS - 1_000);
+        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- proving non-reclamation needs a bounded observation window on real time.
+        yield* Effect.sleep(150);
+        expect(yield* fs.exists(drainMarker)).toBe(false);
+        let requests = yield* readRequestLog(requestLog);
+        expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
+          1,
+        );
+
+        // A prompt inside the window cancels the reclaim and reuses the same process.
+        yield* driveTurn(harness, ids, providerThread, 2);
+        yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 2);
+        requests = yield* readRequestLog(requestLog);
+        expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
+          1,
+        );
+        expect(requests.filter((request) => request["type"] === "switch_session")).toHaveLength(0);
+        expect(yield* fs.exists(drainMarker)).toBe(false);
+
+        // Idle past the full timeout with no prompt: stdin closes, stdout drains to EOF, exit 0.
+        manualClock.advance(OMP_IDLE_RECLAIM_TIMEOUT_MS);
+        yield* waitForFile(drainMarker);
+        expect(yield* fs.readFileString(exitLog)).toBe("0");
+        // The reclaim stays silent: the thread keeps its idle status and session reference.
+        const threadEvents = eventsOf(harness, "provider_thread.updated").map(
+          (event) => event.providerThread,
+        );
+        expect(threadEvents.at(-1)?.status).toBe("idle");
+        expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(sessionFile);
+
+        // The T3 snapshot survives the reclaim untouched.
+        const snapshot = yield* harness.runtime.readThreadSnapshot({ providerThread });
+        expect(snapshot.providerTurns).toHaveLength(2);
+        expect(snapshot.providerThread.status).toBe("idle");
+
+        // Revival: the next prompt respawns and switches back to the same session path.
+        yield* driveTurn(harness, ids, providerThread, 3);
+        yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 3);
+        requests = yield* readRequestLog(requestLog);
+        const switches = requests.filter((request) => request["type"] === "switch_session");
+        expect(switches).toHaveLength(1);
+        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
+        // First spawn legitimately used open_session; only the revival respawns.
+        expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
+        expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
+          2,
+        );
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("does not reclaim the process while a turn is active", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-active-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const drainMarker = `${directory}/drain-marker`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-active", sessionFile: "/tmp/fake-active.jsonl" },
+            },
+          },
+          eventsOnPrompt: [
+            [
+              {
+                delayMs: 10,
+                frame: {
+                  type: "message_update",
+                  assistantMessageEvent: { type: "text_delta", delta: "ongoing", contentIndex: 0 },
+                },
+              },
+            ],
+          ],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog, FAKE_OMP_DRAIN_MARKER: drainMarker },
+      });
+      const manualClock = makeManualIdleClock();
+      const ids = makeIds("active");
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(ids, command, {
+          idleTimeoutMs: OMP_IDLE_RECLAIM_TIMEOUT_MS,
+          clock: manualClock.clock,
+        });
+        const providerThread = yield* harness.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        yield* driveTurn(harness, ids, providerThread, 1);
+        yield* waitFor(
+          harness,
+          "turn_item.updated",
+          (event) => event.turnItem.type === "assistant_message",
+        );
+        // Twice the idle timeout elapses while the turn is still open: no reclaim.
+        manualClock.advance(2 * OMP_IDLE_RECLAIM_TIMEOUT_MS);
+        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- proving non-reclamation needs a bounded observation window on real time.
+        yield* Effect.sleep(150);
+        expect(yield* fs.exists(drainMarker)).toBe(false);
+        const requests = yield* readRequestLog(requestLog);
+        expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
+          1,
+        );
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("recovers from a crash by respawning onto the same session on the next prompt", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-crash2-" });
+      const sessionFile = `${directory}/sessions/crashy.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      // Phase 1: the child turns partial output and then crashes mid-turn.
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: { open_session: { data: { sessionId: "s-crash2", sessionFile } } },
+          eventsOnPrompt: [
+            [
+              {
+                delayMs: 10,
+                frame: {
+                  type: "message_update",
+                  assistantMessageEvent: { type: "text_delta", delta: "partial", contentIndex: 0 },
+                },
+              },
+            ],
+          ],
+          crash: { delayMs: 300, exitCode: 3 },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("crash2");
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(ids, command);
+        const providerThread = yield* harness.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        yield* driveTurn(harness, ids, providerThread, 1);
+        // Crash mid-turn: the active turn ends interrupted and the thread disconnects.
+        yield* waitFor(
+          harness,
+          "turn.terminal",
+          (event) => event.runOrdinal === 1 && event.status === "interrupted",
+        );
+        yield* waitFor(
+          harness,
+          "provider_thread.updated",
+          (event) => event.providerThread.status === "error",
+        );
+        const storedSession = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread
+          .nativeThreadRef?.nativeId;
+        expect(storedSession).toBe(sessionFile);
+        // Phase 2: same fake path, healthy behavior — models the operator fixing the crash.
+        writeFakeOmp({
+          directory,
+          program: {
+            responses: { open_session: { data: { sessionId: "s-crash2", sessionFile } } },
+            eventsOnPrompt: [completedTurnEvents("revived")],
+          },
+          env: { FAKE_OMP_REQUEST_LOG: requestLog },
+        });
+        // The next prompt respawns and switches explicitly back to the same session.
+        yield* driveTurn(harness, ids, providerThread, 2);
+        yield* waitFor(
+          harness,
+          "turn.terminal",
+          (event) => event.runOrdinal === 2 && event.status === "completed",
+        );
+        const requests = yield* readRequestLog(requestLog);
+        const switches = requests.filter((request) => request["type"] === "switch_session");
+        expect(switches).toHaveLength(1);
+        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
+        expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
+        expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
+          2,
+        );
+        const threadEvents = eventsOf(harness, "provider_thread.updated").map(
+          (event) => event.providerThread,
+        );
+        expect(threadEvents.at(-1)?.status).toBe("idle");
+        expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(sessionFile);
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("wires child stderr into the server log", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-stderr-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const stderrText = "warn: model catalog refresh failed";
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-stderr", sessionFile: "/tmp/fake-stderr.jsonl" },
+            },
+          },
+          eventsOnPrompt: [completedTurnEvents("logged")],
+          stderrOnReady: [{ delayMs: 20, text: `${stderrText}\n` }],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const loggedLines: Array<string> = [];
+      const captureLogger = Logger.make(({ message }) => {
+        loggedLines.push(typeof message === "string" ? message : JSON.stringify(message));
+      });
+      const ids = makeIds("stderr");
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(ids, command);
+        const providerThread = yield* harness.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        yield* driveTurn(harness, ids, providerThread, 1);
+        yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 1);
+        expect(
+          loggedLines.some((line) => line.includes(stderrText)),
+          `expected stderr in server log, got ${JSON.stringify(loggedLines)}`,
+        ).toBe(true);
+      }).pipe(
+        Effect.scoped,
+        Effect.provide(Logger.layer([captureLogger], { mergeWithExisting: true })),
+      );
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("refreshes the slash-command directory from available_commands_update (D11)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-slash-" });
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-slash", sessionFile: "/tmp/fake-slash.jsonl" },
+            },
+          },
+          events: [
+            {
+              delayMs: 20,
+              frame: {
+                type: "available_commands_update",
+                commands: [
+                  { name: "plan", description: "Toggle plan mode", source: "builtin" },
+                  {
+                    name: "compact",
+                    description: "Summarize the conversation",
+                    input: { hint: "Optional instructions" },
+                  },
+                  { name: "review", source: "skill" },
+                ],
+              },
+            },
+            // Full replacement: review disappears, description-less entries stay valid.
+            {
+              delayMs: 20,
+              frame: {
+                type: "available_commands_update",
+                commands: [
+                  { name: "plan" },
+                  { name: "compact", input: { hint: "Optional instructions" } },
+                ],
+              },
+            },
+            // Empty catalog is a valid full replacement, never an error (spec §5.5).
+            { delayMs: 20, frame: { type: "available_commands_update", commands: [] } },
+            // Malformed frame (no commands array): tolerated, no refresh, no error.
+            { delayMs: 20, frame: { type: "available_commands_update" } },
+          ],
+        },
+      });
+      const ids = makeIds("slash");
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(ids, command);
+        const providerThread = yield* harness.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        // Lazy spawn via resume: the startup catalog must land without any turn (spec §7).
+        yield* harness.runtime.resumeThread({
+          providerThread,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        const refreshes = () => eventsOf(harness, "provider_slash_commands.updated");
+        // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the fake omp child delivers its milestone frames on real time; there is no in-runtime event to await.
+        for (let attempt = 0; attempt < 500 && refreshes().length < 3; attempt += 1) {
+          // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- the fake omp child delivers its frames on real time; the events collector is a passive drain, not a scheduler wait.
+          yield* Effect.sleep(10);
+        }
+        expect(refreshes()).toHaveLength(3);
+        expect(refreshes()[0]?.driver).toBe(OMP_PROVIDER);
+        expect(refreshes()[0]?.providerThreadId).toBe(providerThread.id);
+        // Contract shape {name, description?, input?{hint}}; omp-only fields (source) dropped.
+        expect(refreshes()[0]?.slashCommands).toEqual([
+          { name: "plan", description: "Toggle plan mode" },
+          {
+            name: "compact",
+            description: "Summarize the conversation",
+            input: { hint: "Optional instructions" },
+          },
+          { name: "review" },
+        ]);
+        expect(refreshes()[1]?.slashCommands).toEqual([
+          { name: "plan" },
+          { name: "compact", input: { hint: "Optional instructions" } },
+        ]);
+        expect(refreshes()[2]?.slashCommands).toEqual([]);
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("passes slash-command prompts through to omp verbatim (D11)", () =>
+    Effect.gen(function* () {
+      const { harness, requestLog, ids, providerThread, turnId } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-plan", sessionFile: "/tmp/fake-plan.jsonl" },
+            },
+            steer: { data: { queued: true } },
+          },
+          events: [
+            messageUpdate(20, { type: "text_delta", delta: "planning", contentIndex: 0 }),
+            { afterRequestType: "steer", frame: { type: "agent_end", isTerminal: true } },
+            {
+              afterRequestType: "steer",
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        "plan",
+        { message: "/plan draft the migration plan" },
+      );
+      // No catalog frame was pushed: empty directory, no refresh event, no error.
+      expect(eventsOf(harness, "provider_slash_commands.updated")).toHaveLength(0);
+      yield* harness.runtime.steerTurn({
+        threadId: ids.threadId,
+        runId: ids.runId,
+        providerThread,
+        providerTurnId: turnId,
+        message: turnMessage("/compact keep the summary"),
+      });
+      yield* waitFor(harness, "turn.terminal");
+      const requests = yield* readRequestLog(requestLog);
+      // Slash commands are prompt text: neither /plan nor /compact is intercepted or parsed.
+      expect(requests.find((request) => request["type"] === "prompt")?.["message"]).toBe(
+        "/plan draft the migration plan",
+      );
+      expect(requests.find((request) => request["type"] === "steer")?.["message"]).toBe(
+        "/compact keep the summary",
+      );
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
@@ -1461,137 +1982,6 @@ describe("omp adapter session runtime", () => {
       expect(setModels).toEqual([
         { id: expect.any(String), type: "set_model", provider: "zai", modelId: "glm-5.3" },
       ]);
-    }).pipe(Effect.provide(NodeServices.layer)),
-  );
-
-  live("refreshes the slash-command directory from available_commands_update (D11)", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-slash-" });
-      const command = writeFakeOmp({
-        directory,
-        program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-slash", sessionFile: "/tmp/fake-slash.jsonl" },
-            },
-          },
-          events: [
-            {
-              delayMs: 20,
-              frame: {
-                type: "available_commands_update",
-                commands: [
-                  { name: "plan", description: "Toggle plan mode", source: "builtin" },
-                  {
-                    name: "compact",
-                    description: "Summarize the conversation",
-                    input: { hint: "Optional instructions" },
-                  },
-                  { name: "review", source: "skill" },
-                ],
-              },
-            },
-            // Full replacement: review disappears, description-less entries stay valid.
-            {
-              delayMs: 20,
-              frame: {
-                type: "available_commands_update",
-                commands: [
-                  { name: "plan" },
-                  { name: "compact", input: { hint: "Optional instructions" } },
-                ],
-              },
-            },
-            // Empty catalog is a valid full replacement, never an error (spec §5.5).
-            { delayMs: 20, frame: { type: "available_commands_update", commands: [] } },
-            // Malformed frame (no commands array): tolerated, no refresh, no error.
-            { delayMs: 20, frame: { type: "available_commands_update" } },
-          ],
-        },
-      });
-      const ids = makeIds("slash");
-      yield* Effect.gen(function* () {
-        const harness = yield* openHarness(ids, command);
-        const providerThread = yield* harness.runtime.ensureThread({
-          threadId: ids.threadId,
-          modelSelection: ids.modelSelection,
-          runtimePolicy,
-        });
-        // Lazy spawn via resume: the startup catalog must land without any turn (spec §7).
-        yield* harness.runtime.resumeThread({
-          providerThread,
-          modelSelection: ids.modelSelection,
-          runtimePolicy,
-        });
-        const refreshes = () => eventsOf(harness, "provider_slash_commands.updated");
-        // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the fake omp child delivers its milestone frames on real time; there is no in-runtime event to await.
-        for (let attempt = 0; attempt < 500 && refreshes().length < 3; attempt += 1) {
-          // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- the fake omp child delivers its frames on real time; the events collector is a passive drain, not a scheduler wait.
-          yield* Effect.sleep(10);
-        }
-        expect(refreshes()).toHaveLength(3);
-        expect(refreshes()[0]?.driver).toBe(OMP_PROVIDER);
-        expect(refreshes()[0]?.providerThreadId).toBe(providerThread.id);
-        // Contract shape {name, description?, input?{hint}}; omp-only fields (source) dropped.
-        expect(refreshes()[0]?.slashCommands).toEqual([
-          { name: "plan", description: "Toggle plan mode" },
-          {
-            name: "compact",
-            description: "Summarize the conversation",
-            input: { hint: "Optional instructions" },
-          },
-          { name: "review" },
-        ]);
-        expect(refreshes()[1]?.slashCommands).toEqual([
-          { name: "plan" },
-          { name: "compact", input: { hint: "Optional instructions" } },
-        ]);
-        expect(refreshes()[2]?.slashCommands).toEqual([]);
-      }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
-  );
-
-  live("passes slash-command prompts through to omp verbatim (D11)", () =>
-    Effect.gen(function* () {
-      const { harness, requestLog, ids, providerThread, turnId } = yield* startDrivenTurn(
-        {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-plan", sessionFile: "/tmp/fake-plan.jsonl" },
-            },
-            steer: { data: { queued: true } },
-          },
-          events: [
-            messageUpdate(20, { type: "text_delta", delta: "planning", contentIndex: 0 }),
-            { afterRequestType: "steer", frame: { type: "agent_end", isTerminal: true } },
-            {
-              afterRequestType: "steer",
-              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
-            },
-          ],
-        },
-        "plan",
-        { message: "/plan draft the migration plan" },
-      );
-      // No catalog frame was pushed: empty directory, no refresh event, no error.
-      expect(eventsOf(harness, "provider_slash_commands.updated")).toHaveLength(0);
-      yield* harness.runtime.steerTurn({
-        threadId: ids.threadId,
-        runId: ids.runId,
-        providerThread,
-        providerTurnId: turnId,
-        message: turnMessage("/compact keep the summary"),
-      });
-      yield* waitFor(harness, "turn.terminal");
-      const requests = yield* readRequestLog(requestLog);
-      // Slash commands are prompt text: neither /plan nor /compact is intercepted or parsed.
-      expect(requests.find((request) => request["type"] === "prompt")?.["message"]).toBe(
-        "/plan draft the migration plan",
-      );
-      expect(requests.find((request) => request["type"] === "steer")?.["message"]).toBe(
-        "/compact keep the summary",
-      );
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 });
