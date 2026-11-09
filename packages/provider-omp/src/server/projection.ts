@@ -119,6 +119,13 @@ export interface OmpThreadProjectionState {
   appliedModel: OmpModelRef | null;
   /** Approval dialogs (spec §6) keyed by their omp request id; audit lives here too. */
   runtimeRequests: Map<string, OmpPendingRuntimeRequest>;
+  /**
+   * The thinking level the omp process currently runs on (#21). Written only after omp
+   * confirmed `set_thinking_level`; `null` = omp's own baseline. Kept beside #17's
+   * appliedModel in projection state — the nativeMetadata schema is outside this ticket's
+   * reach (contracts), and omp persists the level in its own session across respawns.
+   */
+  appliedThinking: string | null;
 }
 
 export interface OmpThreadProjection {
@@ -139,6 +146,8 @@ export interface OmpThreadProjection {
   ) => Effect.Effect<void>;
   /** Records an applied model in thread metadata (nativeMetadata.modelSelection) and emits. */
   readonly applyModel: (model: OmpModelRef) => Effect.Effect<void>;
+  /** Records a confirmed thinking level (#21) so the next turn skips a redundant dispatch. */
+  readonly applyThinking: (level: string) => Effect.Effect<void>;
 }
 
 const isOmpApprovalRequestFrame = (frame: OmpRpcFrame): boolean =>
@@ -699,6 +708,8 @@ export const createOmpThreadProjection = (input: {
       driver,
       providerThread: state.providerThread,
     });
+  });
+
   const runtimeRequestIdFromNative = (nativeRequestId: string): RuntimeRequestId =>
     // Pure derive (spec §5.5): deterministic, so a duplicate omp dialog id maps to one request.
     // Mirrors the joinId shape of IdAllocatorV2.allocate.runtimeRequest.
@@ -799,6 +810,11 @@ export const createOmpThreadProjection = (input: {
     yield* input.emit({ type: "turn_item.updated", driver, turnItem: item });
   });
 
+  const applyThinking = (level: string): Effect.Effect<void> =>
+    Effect.sync(() => {
+      state.appliedThinking = level;
+    });
+
   const handleFrame = (frame: OmpRpcFrame): Effect.Effect<void> => {
     const type = frameString(frame, "type");
     switch (type) {
@@ -847,11 +863,10 @@ export const createOmpThreadProjection = (input: {
           pending,
         });
       }
-// Tolerated for later tickets (#20/#21…): compaction, subagent presentation, thinking-level
-// sync. Ignored, never an error (spec §5.5). model_changed projects in this switch (#17);
-// extension_ui_request projects in this switch (#16); available_commands_update is projected
-// into the slash-command directory at the adapter's frame entry (#19), before turn scoping,
-// so it never reaches this switch.
+      // Tolerated for later tickets (#20…): compaction, subagent presentation. Ignored, never
+      // an error (spec §5.5). model_changed (#17) and extension_ui_request (#16) project in
+      // this switch; available_commands_update is projected at the adapter's frame entry (#19),
+      // before turn scoping, so it never reaches this switch.
       default:
         return Effect.void;
     }
@@ -889,5 +904,6 @@ export const createOmpThreadProjection = (input: {
     finalizeTurn,
     markThreadStatus: (status: OrchestrationV2ProviderThread["status"]) => updateThread({ status }),
     applyModel,
+    applyThinking,
   };
 };
