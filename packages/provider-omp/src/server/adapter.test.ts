@@ -802,7 +802,6 @@ describe("omp adapter session runtime", () => {
               delayMs: 20,
               frame: { type: "subagent_lifecycle", subagentId: "sub-1", status: "running" },
             },
-            { delayMs: 20, frame: { type: "auto_compaction_start" } },
             { delayMs: 20, frame: { type: "notice", message: "hi" } },
             { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
             {
@@ -816,6 +815,347 @@ describe("omp adapter session runtime", () => {
       const terminal = yield* waitFor(harness, "turn.terminal");
       expect(terminal.status).toBe("completed");
     }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("carries turn tokenUsage from usage frames and refreshes the meter at terminal (D9)", () =>
+    Effect.gen(function* () {
+      const { harness } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-usage", sessionFile: "/tmp/fake-usage.jsonl" },
+            },
+            get_state: {
+              data: {
+                isSettled: true,
+                contextUsage: { tokens: 140, contextWindow: 2048, percent: 6.8 },
+              },
+            },
+          },
+          events: [
+            messageUpdate(20, { type: "text_start", contentIndex: 0 }),
+            messageUpdate(20, { type: "text_delta", delta: "answer", contentIndex: 0 }),
+            messageUpdate(20, { type: "text_end", contentIndex: 0 }),
+            {
+              delayMs: 20,
+              frame: {
+                type: "message_end",
+                message: {
+                  role: "assistant",
+                  usage: {
+                    input: 100,
+                    output: 20,
+                    cacheRead: 10,
+                    cacheWrite: 0,
+                    totalTokens: 130,
+                    contextTokens: 150,
+                    reasoningTokens: 8,
+                  },
+                },
+              },
+            },
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        "usage",
+      );
+      yield* waitFor(harness, "turn.terminal");
+      const turns = eventsOf(harness, "provider_turn.updated").map((event) => event.providerTurn);
+      // Live usage from message_end: omp Usage → turn tokenUsage (contextTokens drives usedTokens).
+      const liveUsage = turns[1]?.tokenUsage;
+      expect(liveUsage).toEqual({
+        usedTokens: 150,
+        inputTokens: 100,
+        cachedInputTokens: 10,
+        outputTokens: 20,
+        reasoningOutputTokens: 8,
+        updatedAt: expect.any(String),
+      });
+      // Terminal get_state reading wins on usedTokens/maxTokens and lands on the final turn.
+      expect(turns.at(-1)?.status).toBe("completed");
+      expect(turns.at(-1)?.tokenUsage).toEqual({
+        usedTokens: 140,
+        maxTokens: 2048,
+        inputTokens: 100,
+        cachedInputTokens: 10,
+        outputTokens: 20,
+        reasoningOutputTokens: 8,
+        updatedAt: expect.any(String),
+      });
+      // Meter: the thread contextUsage snapshot mirrors the get_state reading with the
+      // truth-table bit for native auto-compaction set (spec §7).
+      const thread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
+      expect(thread?.contextUsage).toEqual({
+        usedTokens: 140,
+        maxTokens: 2048,
+        compactsAutomatically: true,
+      });
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live(
+    "projects compaction frames into hint lines and meter updates without rewriting the transcript (D9)",
+    () =>
+      Effect.gen(function* () {
+        const { harness } = yield* startDrivenTurn(
+          {
+            responses: {
+              open_session: {
+                data: { sessionId: "s-compact", sessionFile: "/tmp/fake-compact.jsonl" },
+              },
+              get_state: {
+                data: {
+                  isSettled: true,
+                  contextUsage: { tokens: 120, contextWindow: 1000, percent: 12 },
+                },
+              },
+            },
+            events: [
+              {
+                delayMs: 20,
+                frame: {
+                  type: "available_commands_update",
+                  commands: [
+                    {
+                      name: "compact",
+                      description: "Summarize the conversation so far",
+                      input: { hint: "Optional focus" },
+                    },
+                    { name: "plan", description: "Toggle plan mode" },
+                  ],
+                },
+              },
+              messageUpdate(20, { type: "text_start", contentIndex: 0 }),
+              messageUpdate(20, { type: "text_delta", delta: "pre-compaction", contentIndex: 0 }),
+              messageUpdate(20, { type: "text_end", contentIndex: 0 }),
+              {
+                delayMs: 20,
+                frame: {
+                  type: "message_end",
+                  message: {
+                    role: "assistant",
+                    usage: { input: 90, output: 15, cacheRead: 5, cacheWrite: 0, totalTokens: 110 },
+                  },
+                },
+              },
+              // Auto compaction: full lifecycle with a committed result.
+              {
+                delayMs: 20,
+                frame: {
+                  type: "auto_compaction_start",
+                  reason: "threshold",
+                  action: "context-full",
+                },
+              },
+              {
+                delayMs: 20,
+                frame: {
+                  type: "auto_compaction_end",
+                  action: "context-full",
+                  result: { summary: "Old context summarized", tokensBefore: 900 },
+                  aborted: false,
+                  willRetry: false,
+                },
+              },
+              // Manual compaction: the /compact RPC path, same projection.
+              { delayMs: 20, frame: { type: "manual_compaction_start", mode: "accurate" } },
+              {
+                delayMs: 20,
+                frame: {
+                  type: "manual_compaction_end",
+                  result: { summary: "Manual summary", tokensBefore: 300 },
+                  aborted: false,
+                },
+              },
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              {
+                delayMs: 20,
+                frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+              },
+            ],
+          },
+          "compact",
+        );
+        yield* waitFor(harness, "turn.terminal");
+        const items = eventsOf(harness, "turn_item.updated").map((event) => event.turnItem);
+        const compactions = items.filter((item) => item.type === "compaction");
+        // Hint lines: running → completed per compaction, contract shape with omp details.
+        expect(
+          compactions.map((item) => (item.type === "compaction" ? item.status : null)),
+        ).toEqual(["running", "completed", "running", "completed"]);
+        expect(compactions[0]?.title).toBe("Compacting context...");
+        const firstDone = compactions[1];
+        expect(firstDone?.type === "compaction" ? firstDone.title : null).toBe("Context compacted");
+        expect(firstDone?.type === "compaction" ? firstDone.summary : null).toBe(
+          "Old context summarized",
+        );
+        expect(firstDone?.type === "compaction" ? firstDone.beforeTokenCount : null).toBe(900);
+        expect(firstDone?.type === "compaction" ? firstDone.driver : null).toBe(OMP_PROVIDER);
+        const secondDone = compactions[3];
+        expect(secondDone?.type === "compaction" ? secondDone.summary : null).toBe(
+          "Manual summary",
+        );
+        expect(secondDone?.type === "compaction" ? secondDone.beforeTokenCount : null).toBe(300);
+        // Hint lines own system nodes that never count for the run.
+        const systemNodes = eventsOf(harness, "node.updated").filter(
+          (event) => event.node.kind === "system",
+        );
+        expect(systemNodes.map((event) => event.node.status)).toEqual([
+          "running",
+          "completed",
+          "running",
+          "completed",
+        ]);
+        expect(systemNodes.every((event) => event.node.countsForRun === false)).toBe(true);
+        // Transcript invariant: after the first compaction hint line no assistant message is
+        // re-emitted, and the final message history is byte-identical (append-only store).
+        const firstCompactionIndex = harness.events.findIndex(
+          (event) => event.type === "turn_item.updated" && event.turnItem.type === "compaction",
+        );
+        expect(
+          harness.events
+            .slice(firstCompactionIndex)
+            .filter(
+              (event) =>
+                event.type === "turn_item.updated" && event.turnItem.type === "assistant_message",
+            ),
+        ).toHaveLength(0);
+        const finalMessageTexts = (events: Harness["events"]) =>
+          events.flatMap((event) =>
+            event.type === "message.updated" && !event.message.streaming
+              ? [event.message.text]
+              : [],
+          );
+        expect(finalMessageTexts(harness.events)).toEqual(
+          finalMessageTexts(harness.events.slice(0, firstCompactionIndex)),
+        );
+        expect(finalMessageTexts(harness.events)).toEqual(["pre-compaction"]);
+        // Meter: refreshed from get_state after compaction and again at terminal; the snapshot
+        // carries the compactsAutomatically truth-table bit.
+        const thread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
+        expect(thread?.contextUsage).toEqual({
+          usedTokens: 120,
+          maxTokens: 1000,
+          compactsAutomatically: true,
+        });
+        // Terminal tokenUsage merges the live usage with the fresh get_state reading.
+        const turns = eventsOf(harness, "provider_turn.updated").map((event) => event.providerTurn);
+        expect(turns.at(-1)?.tokenUsage).toEqual({
+          usedTokens: 120,
+          maxTokens: 1000,
+          inputTokens: 90,
+          cachedInputTokens: 5,
+          outputTokens: 15,
+          updatedAt: expect.any(String),
+        });
+        // §7: the declared slash-command directory carries the compact entry (passthrough, #19).
+        const directory = eventsOf(harness, "provider_slash_commands.updated").at(-1);
+        expect(directory?.slashCommands).toContainEqual({
+          name: "compact",
+          description: "Summarize the conversation so far",
+          input: { hint: "Optional focus" },
+        });
+      }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live(
+    "projects aborted, skipped, and failed compaction outcomes without inventing meter readings",
+    () =>
+      Effect.gen(function* () {
+        const { harness } = yield* startDrivenTurn(
+          {
+            responses: {
+              open_session: {
+                data: {
+                  sessionId: "s-compact-outcome",
+                  sessionFile: "/tmp/fake-compact-outcome.jsonl",
+                },
+              },
+              // No contextUsage in get_state: no meter reading may be fabricated.
+              get_state: { data: { isSettled: true } },
+            },
+            events: [
+              { delayMs: 20, frame: { type: "manual_compaction_start", mode: "fast" } },
+              { delayMs: 20, frame: { type: "manual_compaction_end", aborted: true } },
+              { delayMs: 20, frame: { type: "manual_compaction_start" } },
+              {
+                delayMs: 20,
+                frame: {
+                  type: "manual_compaction_end",
+                  aborted: false,
+                  skipped: true,
+                  errorMessage: "Nothing to compact yet",
+                },
+              },
+              {
+                delayMs: 20,
+                frame: { type: "auto_compaction_start", reason: "overflow", action: "remote" },
+              },
+              {
+                delayMs: 20,
+                frame: {
+                  type: "auto_compaction_end",
+                  action: "remote",
+                  result: undefined,
+                  aborted: false,
+                  willRetry: true,
+                  errorMessage: "remote compaction unavailable",
+                },
+              },
+              // Left open on purpose: the turn terminal must close it as cancelled.
+              {
+                delayMs: 20,
+                frame: {
+                  type: "auto_compaction_start",
+                  reason: "threshold",
+                  action: "context-full",
+                },
+              },
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              {
+                delayMs: 20,
+                frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+              },
+            ],
+          },
+          "compact-outcome",
+        );
+        yield* waitFor(harness, "turn.terminal");
+        const compactions = eventsOf(harness, "turn_item.updated")
+          .map((event) => event.turnItem)
+          .filter((item) => item.type === "compaction");
+        expect(
+          compactions.map((item) => (item.type === "compaction" ? item.status : null)),
+        ).toEqual([
+          "running",
+          "cancelled",
+          "running",
+          "completed",
+          "running",
+          "failed",
+          "running",
+          "cancelled",
+        ]);
+        expect(compactions[1]?.title).toBe("Context compaction stopped");
+        expect(compactions[2]?.title).toBe("Compacting context...");
+        const skipped = compactions[3];
+        expect(skipped?.type === "compaction" ? skipped.summary : null).toBe(
+          "Nothing to compact yet",
+        );
+        expect(compactions[5]?.title).toBe("Context compaction failed");
+        expect(compactions[5]?.type === "compaction" ? compactions[5].summary : null).toBe(
+          "remote compaction unavailable",
+        );
+        // No contextUsage anywhere in the frames: the meter stays null, never fabricated.
+        const thread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
+        expect(thread?.contextUsage ?? null).toBeNull();
+        const turns = eventsOf(harness, "provider_turn.updated").map((event) => event.providerTurn);
+        expect(turns.at(-1)?.tokenUsage).toBeUndefined();
+      }).pipe(Effect.provide(NodeServices.layer)),
   );
 
   live("exposes the capability truth table and one shared capabilities object", () =>

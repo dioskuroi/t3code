@@ -359,9 +359,6 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           runtimeRequests: new Map<string, OmpPendingRuntimeRequest>(),
           appliedThinking: null,
         };
-        // Late-bound: the projection outlives this closure's construction and the thread state
-        // is assembled right below.
-        let threadState: OmpThreadState | undefined;
         const projection = createOmpThreadProjection({
           driver: OMP_PROVIDER,
           instanceId: input.instanceId,
@@ -384,6 +381,13 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             const self = threadState;
             return self === undefined ? Effect.void : applyQueuedApprovalMode(self);
           },
+          // Transport only: meter reads (D9) cap at 2s and swallow failures inside the
+          // projection — a dead process must never fail a turn finalization.
+          readSessionState: Effect.suspend(() => {
+            const self = threadState;
+            const rpc = self === undefined ? null : self.client.client;
+            return rpc === null ? Effect.void : rpc.request("get_state");
+          }),
         });
         const thread: OmpThreadState = {
           projection,
