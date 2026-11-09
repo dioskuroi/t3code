@@ -433,9 +433,13 @@ export function materializeOmpReplayWorkspace(
     if (!isRecord(value)) return value;
     return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, walk(entry)]));
   };
+  const metadata =
+    transcript.metadata === undefined
+      ? undefined
+      : (walk(transcript.metadata) as typeof transcript.metadata);
   return {
     ...transcript,
-    ...(transcript.metadata === undefined ? {} : { metadata: walk(transcript.metadata) }),
+    ...(metadata === undefined ? {} : { metadata }),
     entries: transcript.entries.map((entry) =>
       entry.type === "runtime_exit" ? entry : { ...entry, frame: walk(entry.frame) },
     ),
