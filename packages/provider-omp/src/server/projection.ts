@@ -8,11 +8,13 @@ import type {
   OrchestrationV2ProviderSession,
   OrchestrationV2ProviderThread,
   OrchestrationV2ProviderTurn,
+  OrchestrationV2ProviderTurnTokenUsage,
   OrchestrationV2TurnItem,
   ProviderDriverKind,
   ProviderInstanceId,
   ProviderSessionId,
   ServerProviderSlashCommand,
+  ThreadTokenUsageSnapshot,
 } from "@t3tools/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -47,15 +49,31 @@ interface OmpToolItem {
 }
 
 export interface OmpActiveTurn {
-  readonly providerTurn: OrchestrationV2ProviderTurn;
+  providerTurn: OrchestrationV2ProviderTurn;
   readonly turnInput: ProviderAdapter.ProviderAdapterV2TurnInput;
   readonly nativeTurnId: string;
   readonly streamItems: Map<string, OmpStreamItem>;
   readonly tools: Map<string, OmpToolItem>;
+  /** Compaction hint line currently open (start frame seen, end frame pending). */
+  activeCompaction: OmpCompactionItem | null;
   /** An agent_end with isTerminal:false arrived; terminal waits for the next real agent_end. */
   awaitingAgentEnd: boolean;
   deferredPromptResult: OmpRpcFrame | null;
   nextItemOrdinal: number;
+}
+
+/** One transcript compaction hint line (omp auto/manual_compaction_start). */
+interface OmpCompactionItem {
+  readonly nativeItemId: string;
+  readonly ordinal: number;
+  readonly startedAt: DateTime.Utc;
+}
+
+/** ContextWindowMeter reading parsed from omp `get_state` (SessionState.contextUsage). */
+export interface OmpContextUsageReading {
+  readonly usedTokens: number;
+  /** `null` when omp could not report the model context window. */
+  readonly maxTokens: number | null;
 }
 
 export interface OmpThreadProjectionState {
@@ -141,6 +159,91 @@ const failureFromPromptError = (error: Record<string, unknown>): OrchestrationV2
   return { class: "provider_error", message, code, retryable };
 };
 
+const nonNegativeInteger = (value: unknown): number | undefined =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : undefined;
+
+const positiveInteger = (value: unknown): number | undefined => {
+  const parsed = nonNegativeInteger(value);
+  return parsed !== undefined && parsed > 0 ? parsed : undefined;
+};
+
+/**
+ * omp `get_state` → SessionState.contextUsage (`{ tokens, contextWindow, percent }`) — the
+ * ContextWindowMeter reading. Undefined when the session reports no usage yet; readings are
+ * never fabricated.
+ */
+const ompContextUsageFromState = (
+  data: unknown,
+): OmpContextUsageReading | undefined => {
+  if (typeof data !== "object" || data === null) return undefined;
+  const usage = frameRecord(data as OmpRpcFrame, "contextUsage");
+  if (usage === undefined) return undefined;
+  const usedTokens = nonNegativeInteger(usage["tokens"]);
+  if (usedTokens === undefined) return undefined;
+  const contextWindow = positiveInteger(usage["contextWindow"]);
+  return { usedTokens, maxTokens: contextWindow ?? null };
+};
+
+/**
+ * omp `Usage` (attached to every assistant message, delivered by `message_end`) → the live
+ * turn tokenUsage. `contextTokens` (context size incl. system prompt) is the meter number and
+ * falls back to the request total; `maxTokens` arrives only from get_state readings.
+ */
+const liveTurnTokenUsage = (
+  message: Record<string, unknown>,
+  updatedAt: DateTime.Utc,
+): OrchestrationV2ProviderTurnTokenUsage | undefined => {
+  const usage = frameRecord(message, "usage");
+  if (usage === undefined) return undefined;
+  const inputTokens = nonNegativeInteger(usage["input"]);
+  const cachedInputTokens = nonNegativeInteger(usage["cacheRead"]);
+  const outputTokens = nonNegativeInteger(usage["output"]);
+  const reasoningOutputTokens = nonNegativeInteger(usage["reasoningTokens"]);
+  const cacheWriteTokens = nonNegativeInteger(usage["cacheWrite"]);
+  const summedRequestTokens =
+    inputTokens === undefined || outputTokens === undefined
+      ? undefined
+      : inputTokens + outputTokens + (cachedInputTokens ?? 0) + (cacheWriteTokens ?? 0);
+  const usedTokens =
+    nonNegativeInteger(usage["contextTokens"]) ??
+    nonNegativeInteger(usage["totalTokens"]) ??
+    summedRequestTokens;
+  if (usedTokens === undefined) return undefined;
+  return {
+    usedTokens,
+    ...(inputTokens === undefined ? {} : { inputTokens }),
+    ...(cachedInputTokens === undefined ? {} : { cachedInputTokens }),
+    ...(outputTokens === undefined ? {} : { outputTokens }),
+    ...(reasoningOutputTokens === undefined ? {} : { reasoningOutputTokens }),
+    updatedAt: DateTime.formatIso(updatedAt),
+  };
+};
+
+/** Terminal get_state reading wins on usedTokens/maxTokens; live counters ride along. */
+const mergeTurnTokenUsage = (
+  live: OrchestrationV2ProviderTurnTokenUsage | undefined,
+  reading: OmpContextUsageReading,
+  updatedAt: DateTime.Utc,
+): OrchestrationV2ProviderTurnTokenUsage => ({
+  ...live,
+  usedTokens: reading.usedTokens,
+  ...(reading.maxTokens === null ? {} : { maxTokens: reading.maxTokens }),
+  updatedAt: DateTime.formatIso(updatedAt),
+});
+
+function compactionTitle(status: "running" | "completed" | "failed" | "cancelled"): string {
+  switch (status) {
+    case "running":
+      return "Compacting context...";
+    case "completed":
+      return "Context compacted";
+    case "failed":
+      return "Context compaction failed";
+    case "cancelled":
+      return "Context compaction stopped";
+  }
+}
+
 export const createOmpThreadProjection = (input: {
   readonly driver: ProviderDriverKind;
   readonly instanceId: ProviderInstanceId;
@@ -151,6 +254,8 @@ export const createOmpThreadProjection = (input: {
     status: OrchestrationV2ProviderSession["status"],
     lastError?: string | null,
   ) => Effect.Effect<void>;
+  /** Raw omp `get_state` data for meter readings; failures are swallowed by the projection. */
+  readonly readSessionState: Effect.Effect<unknown, unknown>;
 }): OmpThreadProjection => {
   const { driver, state } = input;
 
@@ -167,7 +272,7 @@ export const createOmpThreadProjection = (input: {
   const emitNode = Effect.fnUntraced(function* (
     turn: OmpActiveTurn,
     nativeItemId: string,
-    kind: "assistant_message" | "reasoning" | "tool_call",
+    kind: "assistant_message" | "reasoning" | "tool_call" | "system",
     itemStatus: OrchestrationV2TurnItem["status"],
     startedAt: DateTime.Utc,
     completedAt: DateTime.Utc | null,
@@ -301,6 +406,137 @@ export const createOmpThreadProjection = (input: {
     });
   });
 
+  const compactionItemFor = (turn: OmpActiveTurn, startedAt: DateTime.Utc): OmpCompactionItem => {
+    const ordinal = turn.nextItemOrdinal++;
+    return { nativeItemId: `${turn.nativeTurnId}:compaction:${ordinal}`, ordinal, startedAt };
+  };
+
+  const emitCompactionItem = Effect.fnUntraced(function* (
+    turn: OmpActiveTurn,
+    item: OmpCompactionItem,
+    status: "running" | "completed" | "failed" | "cancelled",
+    details: {
+      readonly summary?: string;
+      readonly beforeTokenCount?: number;
+    } = {},
+  ) {
+    const emittedAt = yield* DateTime.now;
+    const completedAt = status === "running" ? null : emittedAt;
+    yield* emitNode(turn, item.nativeItemId, "system", status, item.startedAt, completedAt);
+    yield* input.emit({
+      type: "turn_item.updated",
+      driver,
+      turnItem: {
+        ...itemBase(turn, item),
+        status,
+        title: compactionTitle(status),
+        startedAt: item.startedAt,
+        completedAt,
+        updatedAt: emittedAt,
+        type: "compaction",
+        driver,
+        ...details,
+      } satisfies OrchestrationV2TurnItem,
+    });
+  });
+
+  const readContextUsage: Effect.Effect<OmpContextUsageReading | undefined> = Effect.suspend(() =>
+    input.readSessionState.pipe(
+      // Meter reads are best-effort and never block the lifeline: cap at 2s, swallow every
+      // failure (pi does the same for its stats probe). No response, no fabricated reading.
+      Effect.timeout("2 seconds"),
+      Effect.orElseSucceed(() => undefined),
+      Effect.map(ompContextUsageFromState),
+    ),
+  );
+
+  const contextUsageSnapshot = (reading: OmpContextUsageReading): ThreadTokenUsageSnapshot => ({
+    usedTokens: reading.usedTokens,
+    ...(reading.maxTokens === null ? {} : { maxTokens: reading.maxTokens }),
+    // omp compacts natively when the context fills (spec §7); the meter bit reflects that.
+    compactsAutomatically: true,
+  });
+
+  const refreshContextUsageMeter = Effect.suspend(() =>
+    Effect.flatMap(readContextUsage, (reading) =>
+      reading === undefined
+        ? Effect.void
+        : updateThread({ contextUsage: contextUsageSnapshot(reading) }),
+    ),
+  );
+
+  /** Live turn tokenUsage from an omp `message_end` message (omp Usage → meter reading). */
+  const applyLiveTurnUsage = Effect.fnUntraced(function* (
+    turn: OmpActiveTurn,
+    message: Record<string, unknown> | undefined,
+  ) {
+    const tokenUsage = message === undefined ? undefined : liveTurnTokenUsage(message, yield* DateTime.now);
+    if (tokenUsage === undefined) return;
+    turn.providerTurn = { ...turn.providerTurn, tokenUsage };
+    yield* input.emit({
+      type: "provider_turn.updated",
+      driver,
+      threadId: turn.turnInput.threadId,
+      providerTurn: turn.providerTurn,
+    });
+  });
+
+  // Top-level authoritative message_end (omp wire MessageEndEvent): its AgentMessage carries
+  // the full omp Usage — the meter's live reading source.
+  const handleMessageEndFrame = Effect.fnUntraced(function* (frame: OmpRpcFrame) {
+    const turn = state.active;
+    if (turn === null) return;
+    yield* completeOpenStreamItems(turn);
+    yield* applyLiveTurnUsage(turn, frameRecord(frame, "message"));
+  });
+
+  const handleCompactionStart = Effect.fnUntraced(function* (_frame: OmpRpcFrame) {
+    const turn = state.active;
+    if (turn === null) return;
+    // A still-open compaction (its end frame never landed) closes as cancelled before the
+    // next one begins — the transcript never shows two open hint lines.
+    if (turn.activeCompaction !== null) {
+      yield* emitCompactionItem(turn, turn.activeCompaction, "cancelled");
+    }
+    const item = compactionItemFor(turn, yield* DateTime.now);
+    turn.activeCompaction = item;
+    yield* emitCompactionItem(turn, item, "running");
+  });
+
+  const handleCompactionEnd = Effect.fnUntraced(function* (frame: OmpRpcFrame) {
+    const turn = state.active;
+    if (turn === null) return;
+    const observedAt = yield* DateTime.now;
+    const item = turn.activeCompaction ?? compactionItemFor(turn, observedAt);
+    turn.activeCompaction = null;
+    const result = frameRecord(frame, "result");
+    if (result !== undefined) {
+      const summary = frameString(result, "summary");
+      const beforeTokenCount = nonNegativeInteger(result["tokensBefore"]);
+      yield* emitCompactionItem(turn, item, "completed", {
+        ...(summary === undefined ? {} : { summary }),
+        ...(beforeTokenCount === undefined ? {} : { beforeTokenCount }),
+      });
+      yield* refreshContextUsageMeter;
+      return;
+    }
+    if (frame["aborted"] === true) {
+      yield* emitCompactionItem(turn, item, "cancelled");
+      return;
+    }
+    if (frame["skipped"] === true) {
+      // Benign skip: nothing met the compaction bar; omp explains why in errorMessage.
+      yield* emitCompactionItem(turn, item, "completed", {
+        summary: frameString(frame, "errorMessage") ?? "Nothing to compact",
+      });
+      yield* refreshContextUsageMeter;
+      return;
+    }
+    yield* emitCompactionItem(turn, item, "failed", {
+      summary: frameString(frame, "errorMessage") ?? "omp context compaction failed",
+    });
+  });
+
   const streamItemFor = Effect.fnUntraced(function* (
     turn: OmpActiveTurn,
     kind: OmpStreamItem["kind"],
@@ -391,10 +627,23 @@ export const createOmpThreadProjection = (input: {
     const completedAt = yield* DateTime.now;
     yield* completeOpenStreamItems(turn);
     yield* completeOpenTools(turn);
+    // An interrupted compaction never dangles open in the transcript.
+    if (turn.activeCompaction !== null) {
+      yield* emitCompactionItem(turn, turn.activeCompaction, "cancelled");
+      turn.activeCompaction = null;
+    }
+    // D9: the terminal reading refreshes the meter and lands on the final turn event;
+    // interrupted/failed turns keep whatever live usage already projected.
+    const reading = status === "completed" ? yield* readContextUsage : undefined;
+    const tokenUsage =
+      reading === undefined
+        ? turn.providerTurn.tokenUsage
+        : mergeTurnTokenUsage(turn.providerTurn.tokenUsage, reading, completedAt);
     const finalTurn: OrchestrationV2ProviderTurn = {
       ...turn.providerTurn,
       status: status === "failed" ? "failed" : status,
       completedAt,
+      ...(tokenUsage === undefined ? {} : { tokenUsage }),
     };
     state.turns = [...state.turns, finalTurn];
     yield* input.emit({
@@ -403,7 +652,10 @@ export const createOmpThreadProjection = (input: {
       threadId: turn.turnInput.threadId,
       providerTurn: finalTurn,
     });
-    yield* updateThread({ status: status === "failed" ? "error" : "idle" });
+    yield* updateThread({
+      status: status === "failed" ? "error" : "idle",
+      ...(reading === undefined ? {} : { contextUsage: contextUsageSnapshot(reading) }),
+    });
     yield* input.updateSession(status === "failed" ? "error" : "ready", failure?.message ?? null);
     if (status === "failed") {
       const failureItemId = `terminal-failure:${turn.providerTurn.id}`;
@@ -503,6 +755,12 @@ export const createOmpThreadProjection = (input: {
       }
       case "message_end": {
         yield* completeOpenStreamItems(turn);
+        // Delta-projected message_update: usage may ride on the event's message (or the
+        // slimmed frame's); the authoritative top-level message_end is handled separately.
+        yield* applyLiveTurnUsage(
+          turn,
+          frameRecord(event, "message") ?? frameRecord(frame, "message"),
+        );
         return;
       }
       default:
@@ -551,6 +809,8 @@ export const createOmpThreadProjection = (input: {
     switch (type) {
       case "message_update":
         return handleMessageUpdate(frame);
+      case "message_end":
+        return handleMessageEndFrame(frame);
       case "tool_execution_start":
         return handleToolExecution(frame, "start");
       case "tool_execution_end":
@@ -559,6 +819,14 @@ export const createOmpThreadProjection = (input: {
         return handlePromptResult(frame);
       case "agent_end":
         return handleAgentEnd(frame);
+      // Compaction (D9): hint lines into the transcript + ContextWindowMeter refresh. Frames
+      // landing between turns are buffered above (routeFrame) and replayed at the next turn.
+      case "auto_compaction_start":
+      case "manual_compaction_start":
+        return handleCompactionStart(frame);
+      case "auto_compaction_end":
+      case "manual_compaction_end":
+        return handleCompactionEnd(frame);
       case "session_settled":
         // Turn terminal already flipped the thread to idle; this confirms no queued/background
         // work remains and the session is ready for the next turn.
@@ -576,10 +844,10 @@ export const createOmpThreadProjection = (input: {
           pending,
         });
       }
-      // Tolerated for later tickets (#16/#20/#21…): approvals, compaction, model sync,
-      // subagent presentation. Ignored, never an error (spec §5.5). available_commands_update
-      // is projected into the slash-command directory at the adapter's frame entry, before
-      // turn scoping, so it never reaches this switch.
+      // Tolerated for later tickets (#16/#21…): approvals, model sync, subagent presentation.
+      // Ignored, never an error (spec §5.5). available_commands_update is projected into the
+      // slash-command directory at the adapter's frame entry, before turn scoping, so it never
+      // reaches this switch.
       default:
         return Effect.void;
     }
@@ -602,6 +870,7 @@ export const createOmpThreadProjection = (input: {
         nativeTurnId,
         streamItems: new Map(),
         tools: new Map(),
+        activeCompaction: null,
         awaitingAgentEnd: false,
         deferredPromptResult: null,
         nextItemOrdinal: 1,

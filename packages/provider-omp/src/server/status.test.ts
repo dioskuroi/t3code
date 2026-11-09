@@ -61,8 +61,9 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
       expect(snapshot.installed).toBe(true);
       expect(snapshot.version).toBe("18.18.1");
       // Spec §7 (ADR-0004): the plan-mode interaction toggle is never presented; /plan rides
-      // the slash-command passthrough instead.
+      // the slash-command passthrough instead. Context-window metering is presented (#20).
       expect(snapshot.showInteractionModeToggle).toBe(false);
+      expect(snapshot.reportsContextWindow).toBe(true);
       expect(snapshot.models.map((model) => model.slug)).toEqual([
         "zai/glm-5.3",
         "moonshot/kimi-k3",

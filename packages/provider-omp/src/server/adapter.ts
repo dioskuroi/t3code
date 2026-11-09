@@ -288,6 +288,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           orphanFrames: [],
           nativeSession: null,
         };
+        const client: OmpClientHolder = { client: null, scope: null, closing: false };
         const projection = createOmpThreadProjection({
           driver: OMP_PROVIDER,
           instanceId: input.instanceId,
@@ -295,8 +296,13 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           state: projectionState,
           emit,
           updateSession,
+          // Transport only: meter reads (D9) cap at 2s and swallow failures inside the
+          // projection — a dead process must never fail a turn finalization.
+          readSessionState: Effect.suspend(() => {
+            const rpc = client.client;
+            return rpc === null ? Effect.void : rpc.request("get_state");
+          }),
         });
-        const client: OmpClientHolder = { client: null, scope: null, closing: false };
         threads.set(providerThread.id, { projection, client, broken: false });
         yield* emit({
           type: "provider_thread.updated",
