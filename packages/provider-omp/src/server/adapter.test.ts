@@ -149,25 +149,84 @@ const messageUpdate = (delayMs: number, event: Record<string, unknown>) => ({
   frame: { type: "message_update", assistantMessageEvent: event },
 });
 
+/** omp `select` approval dialog (notes rpc-protocol §5); labels pass through per spec §6. */
+const approvalFrame = (
+  id: string,
+  toolName: string,
+  options: ReadonlyArray<string>,
+): Record<string, unknown> => ({
+  type: "extension_ui_request",
+  id,
+  method: "select",
+  title: toolName,
+  options: [...options],
+});
+
+/** Polls a JSONL log the fake omp children append to (no in-runtime event signals it). */
+const pollLogLines = Effect.fn("adapterTest.pollLogLines")(function* (
+  path: string,
+  expectedCount: number,
+) {
+  const fs = yield* FileSystem.FileSystem;
+  // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the fake omp child writes the log on real process spawn; there is no in-runtime event to await.
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const contents = yield* fs.readFileString(path).pipe(Effect.orElseSucceed(() => ""));
+    const lines = contents
+      .split("\n")
+      .filter((line: string) => line.trim() !== "")
+      .map((line: string) => JSON.parse(line) as ReadonlyArray<string>);
+    if (lines.length >= expectedCount) return lines;
+    // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- respawn is a real child-process start; no runtime signal exists.
+    yield* Effect.sleep(10);
+  }
+  throw new Error(`expected ${expectedCount} log lines in ${path}, never arrived`);
+});
+
+/** Waits until the request log carries an entry matching the predicate (respawn is async). */
+const pollRequestLog = Effect.fn("adapterTest.pollRequestLog")(function* (
+  path: string,
+  predicate: (request: Record<string, unknown>) => boolean,
+) {
+  // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the respawned child logs its requests on real IPC; no in-runtime event signals the write.
+  for (let attempt = 0; attempt < 500; attempt += 1) {
+    const requests = yield* readRequestLog(path);
+    const matches = requests.filter(predicate);
+    if (matches.length > 0) return matches;
+    // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- the respawned child needs real time to reach switch_session after boot.
+    yield* Effect.sleep(10);
+  }
+  throw new Error(`expected a matching request in ${path}, never arrived`);
+});
+
 /** Spawns the fake omp, opens a session, registers a thread, and starts a turn. */
 const startDrivenTurn = Effect.fn("adapterTest.startDrivenTurn")(function* (
   program: FakeOmpProgram,
   suffix: string,
   options: {
     readonly message?: string;
+    readonly runtimePolicy?: ProviderAdapter.ProviderAdapterV2RuntimePolicy;
+    readonly env?: Readonly<Record<string, string>>;
   } = {},
 ) {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: `omp-adapter-${suffix}-` });
   const requestLog = `${directory}/requests.jsonl`;
-  const command = writeFakeOmp({ directory, program, env: { FAKE_OMP_REQUEST_LOG: requestLog } });
+  const command = writeFakeOmp({
+    directory,
+    program,
+    env: {
+      FAKE_OMP_REQUEST_LOG: requestLog,
+      ...options.env,
+    },
+  });
   void command;
   const ids = makeIds(suffix);
   const harness = yield* openHarness(ids, command);
+  const turnPolicy = options.runtimePolicy ?? runtimePolicy;
   const providerThread = yield* harness.runtime.ensureThread({
     threadId: ids.threadId,
     modelSelection: ids.modelSelection,
-    runtimePolicy,
+    runtimePolicy: turnPolicy,
   });
   yield* harness.runtime.startTurn({
     appThread: appThreadFor(ids.threadId),
@@ -180,7 +239,7 @@ const startDrivenTurn = Effect.fn("adapterTest.startDrivenTurn")(function* (
     providerThread,
     message: turnMessage(options.message ?? "hello omp"),
     modelSelection: ids.modelSelection,
-    runtimePolicy,
+    runtimePolicy: turnPolicy,
   });
   return {
     harness,
@@ -719,6 +778,331 @@ describe("omp adapter session runtime", () => {
       const requests = yield* readRequestLog(requestLog);
       const steer = requests.find((request) => request["type"] === "steer");
       expect(steer?.["message"]).toBe("focus on the tests");
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("projects omp approval dialogs and answers the three choices (D3)", () =>
+    Effect.gen(function* () {
+      const { harness, requestLog } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-approval", sessionFile: "/tmp/fake-approval.jsonl" },
+            },
+          },
+          events: [
+            {
+              afterRequestType: "prompt",
+              frame: approvalFrame("u1", "bash", [
+                "Approve",
+                "Approve bash for this session",
+                "Deny",
+              ]),
+            },
+            {
+              afterRequestType: "prompt",
+              frame: approvalFrame("u2", "edit", [
+                "Deny",
+                "Approve",
+                "Approve edit for this session",
+              ]),
+            },
+            {
+              afterRequestType: "prompt",
+              frame: approvalFrame("u3", "bash", ["Approve once", "Deny"]),
+            },
+            {
+              afterRequestType: "prompt",
+              frame: approvalFrame("u4", "bash", [
+                "Approve",
+                "Approve bash for this session",
+                "Deny",
+              ]),
+            },
+            // Held behind the first answer so the turn cannot settle via a startup-frame
+            // replay while the dialogs are still being answered.
+            {
+              afterRequestType: "extension_ui_response",
+              delayMs: 800,
+              frame: { type: "agent_end", isTerminal: true },
+            },
+            {
+              afterRequestType: "extension_ui_response",
+              delayMs: 800,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        "approval",
+      );
+      // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the fake child emits its dialogs on real time after the prompt lands.
+      for (
+        let attempt = 0;
+        attempt < 500 && eventsOf(harness, "runtime_request.updated").length < 4;
+        attempt += 1
+      ) {
+        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- fake omp dialogs arrive on real time.
+        yield* Effect.sleep(10);
+      }
+      const requests = eventsOf(harness, "runtime_request.updated").map(
+        (event) => event.runtimeRequest,
+      );
+      expect(requests).toHaveLength(4);
+      expect(requests.map((request) => request.nativeRequestRef?.nativeId)).toEqual([
+        "u1",
+        "u2",
+        "u3",
+        "u4",
+      ]);
+      expect(
+        requests.every(
+          (request) =>
+            request.status === "pending" &&
+            request.kind === "permission" &&
+            request.providerTurnId !== null &&
+            request.responseCapability.type === "live",
+        ),
+      ).toBe(true);
+      // Approval turn item: the canonical spec §6 three-choice option set.
+      const items = eventsOf(harness, "turn_item.updated").map((event) => event.turnItem);
+      const approvals = items.filter((item) => item.type === "approval_request");
+      expect(approvals).toHaveLength(4);
+      const first = approvals[0];
+      if (first?.type !== "approval_request") throw new Error("no approval item captured");
+      expect(first.title).toBe("bash");
+      expect(first.requestKind).toBe("permission");
+      expect(first.options?.map((option) => option.label)).toEqual([
+        "Approve",
+        "Approve bash for this session",
+        "Deny",
+      ]);
+      expect(first.options?.map((option) => option.decision)).toEqual([
+        "accept",
+        "acceptForSession",
+        "decline",
+      ]);
+      expect(first.status).toBe("waiting");
+      const approvalNodes = eventsOf(harness, "node.updated").filter(
+        (event) => event.node.kind === "approval_request",
+      );
+      expect(approvalNodes).toHaveLength(4);
+      expect(approvalNodes[0]?.node.runtimeRequestId).toBe(first.requestId);
+      expect(approvalNodes[0]?.node.status).toBe("waiting");
+
+      // Three-choice pass-through: each decision answers with the omp option string.
+      yield* harness.runtime.respondToRuntimeRequest({
+        requestId: requests[0]!.id,
+        decision: "accept",
+      });
+      yield* harness.runtime.respondToRuntimeRequest({
+        requestId: requests[1]!.id,
+        decision: "acceptForSession",
+      });
+      yield* harness.runtime.respondToRuntimeRequest({
+        requestId: requests[2]!.id,
+        decision: "decline",
+      });
+      // acceptAlways is never offered by omp (spec §6): refused without touching the wire.
+      const alwaysRefused = yield* Effect.flip(
+        harness.runtime.respondToRuntimeRequest({
+          requestId: requests[3]!.id,
+          decision: "acceptAlways",
+        }),
+      );
+      expect(alwaysRefused._tag).toBe("ProviderAdapterRuntimeRequestResponseError");
+      yield* harness.runtime.respondToRuntimeRequest({
+        requestId: requests[3]!.id,
+        decision: "cancel",
+      });
+      const answeredTwice = yield* Effect.flip(
+        harness.runtime.respondToRuntimeRequest({
+          requestId: requests[3]!.id,
+          decision: "accept",
+        }),
+      );
+      expect(answeredTwice._tag).toBe("ProviderAdapterRuntimeRequestResponseError");
+
+      yield* waitFor(harness, "turn.terminal");
+      const wire = (yield* readRequestLog(requestLog)).filter(
+        (request) => request["type"] === "extension_ui_response",
+      );
+      // The envelope id IS the omp dialog id; values are the exact omp option strings.
+      expect(wire).toEqual([
+        { id: "u1", type: "extension_ui_response", value: "Approve" },
+        { id: "u2", type: "extension_ui_response", value: "Approve edit for this session" },
+        { id: "u3", type: "extension_ui_response", value: "Deny" },
+        { id: "u4", type: "extension_ui_response", cancelled: true },
+      ]);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("queues a runtime-mode switch until the turn settles, then respawns (D4)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-modeswitch-" });
+      const sessionFile = `${directory}/sessions/mode-switch.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      const argvLog = `${directory}/argv.jsonl`;
+      void writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: { data: { sessionId: "s-mode", sessionFile } },
+          },
+          events: [
+            messageUpdate(20, { type: "text_delta", delta: "long turn", contentIndex: 0 }),
+            { afterRequestType: "steer", frame: { type: "agent_end", isTerminal: true } },
+            {
+              afterRequestType: "steer",
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog, FAKE_OMP_ARGV_LOG: argvLog },
+      });
+      const ids = makeIds("modeswitch");
+      const command = `${directory}/omp`;
+      const supervised = {
+        runtimeMode: "approval-required",
+        interactionMode: "default",
+        cwd: "/tmp",
+      } satisfies ProviderAdapter.ProviderAdapterV2RuntimePolicy;
+      const fullAccess = {
+        runtimeMode: "full-access",
+        interactionMode: "default",
+        cwd: "/tmp",
+      } satisfies ProviderAdapter.ProviderAdapterV2RuntimePolicy;
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(ids, command);
+        const providerThread = yield* harness.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy: supervised,
+        });
+        yield* harness.runtime.startTurn({
+          appThread: appThreadFor(ids.threadId),
+          threadId: ids.threadId,
+          runId: ids.runId,
+          runOrdinal: 1,
+          providerTurnOrdinal: 1,
+          attemptId: ids.attemptId,
+          rootNodeId: ids.rootNodeId,
+          providerThread,
+          message: turnMessage("long running"),
+          modelSelection: ids.modelSelection,
+          runtimePolicy: supervised,
+        });
+        // Mid-turn switch request: queued, never a respawn (spec §6).
+        yield* harness.runtime.resumeThread({
+          providerThread,
+          modelSelection: ids.modelSelection,
+          runtimePolicy: fullAccess,
+        });
+        const beforeTurnEnd = yield* pollLogLines(argvLog, 1);
+        expect(beforeTurnEnd).toEqual([["--mode", "rpc", "--approval-mode", "always-ask"]]);
+        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- proving the switch did NOT fire needs a real settle window.
+        yield* Effect.sleep(150);
+        expect(yield* readRequestLog(requestLog)).toEqual(
+          expect.not.arrayContaining([expect.objectContaining({ type: "switch_session" })]),
+        );
+        const stillOneProcess = yield* pollLogLines(argvLog, 1);
+        expect(stillOneProcess).toHaveLength(1);
+
+        yield* harness.runtime.steerTurn({
+          threadId: ids.threadId,
+          runId: ids.runId,
+          providerThread,
+          providerTurnId: IdAllocator.derive.providerTurn({
+            driver: OMP_PROVIDER,
+            nativeTurnId: `${providerThread.id}:t1:r1`,
+          }),
+          message: turnMessage("finish up"),
+        });
+        const terminal = yield* waitFor(
+          harness,
+          "turn.terminal",
+          (event) => event.status === "completed",
+        );
+        expect(terminal.status).toBe("completed");
+        // The queued switch fires after the turn settles: drain → exit → respawn + switch_session.
+        const afterTurnEnd = yield* pollLogLines(argvLog, 2);
+        expect(afterTurnEnd[0]).toEqual(["--mode", "rpc", "--approval-mode", "always-ask"]);
+        expect(afterTurnEnd[1]).toEqual(["--mode", "rpc", "--approval-mode", "yolo"]);
+        const switches = yield* pollRequestLog(
+          requestLog,
+          (request) => request["type"] === "switch_session",
+        );
+        expect(switches).toHaveLength(1);
+        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
+        const requests = yield* readRequestLog(requestLog);
+        expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeServices.layer)),
+  );
+
+  live("maps runtime modes onto --approval-mode spawn argv (spec §6)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-argvmap-" });
+      const argvLog = `${directory}/argv.jsonl`;
+      void writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-argv", sessionFile: "/tmp/fake-argv.jsonl" },
+            },
+          },
+          events: [
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        env: { FAKE_OMP_ARGV_LOG: argvLog },
+      });
+      const expected: ReadonlyArray<
+        [ProviderAdapter.ProviderAdapterV2RuntimePolicy["runtimeMode"], ReadonlyArray<string>]
+      > = [
+        ["approval-required", ["--mode", "rpc", "--approval-mode", "always-ask"]],
+        ["auto-accept-edits", ["--mode", "rpc", "--approval-mode", "write"]],
+        ["full-access", ["--mode", "rpc", "--approval-mode", "yolo"]],
+        // auto never declares a native approval mode (stored auto degrades server-side).
+        ["auto", ["--mode", "rpc"]],
+      ];
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(makeIds("argvmap"), `${directory}/omp`);
+        for (const [index, [mode, argv]] of expected.entries()) {
+          const ids = makeIds(`argvmap${index}`);
+          const policy = {
+            runtimeMode: mode,
+            interactionMode: "default",
+            cwd: "/tmp",
+          } satisfies ProviderAdapter.ProviderAdapterV2RuntimePolicy;
+          const providerThread = yield* harness.runtime.ensureThread({
+            threadId: ids.threadId,
+            modelSelection: ids.modelSelection,
+            runtimePolicy: policy,
+          });
+          yield* harness.runtime.startTurn({
+            appThread: appThreadFor(ids.threadId),
+            threadId: ids.threadId,
+            runId: ids.runId,
+            runOrdinal: 1,
+            providerTurnOrdinal: 1,
+            attemptId: ids.attemptId,
+            rootNodeId: ids.rootNodeId,
+            providerThread,
+            message: turnMessage(mode),
+            modelSelection: ids.modelSelection,
+            runtimePolicy: policy,
+          });
+          const lines = yield* pollLogLines(argvLog, index + 1);
+          expect(lines[index]).toEqual(argv);
+        }
+      }).pipe(Effect.scoped);
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 });
