@@ -621,6 +621,10 @@ export const layer: Layer.Layer<
             case "command_output.delta":
               // Live output is routed to the command output hub before ingestion.
               return [];
+            // Session-scoped catalog: consumed off the runtime stream by provider snapshot
+            // code, never persisted into the thread event store.
+            case "provider_slash_commands.updated":
+              return [];
             case "turn.terminal":
               const dismissed = yield* dismissNativeUserInputs(input, input.event.providerTurnId);
               if (input.event.status !== "failed") {

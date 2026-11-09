@@ -379,6 +379,9 @@ export function routeProviderEvent(
   switch (event.type) {
     case "provider_session.updated":
       return [false, state];
+    case "provider_slash_commands.updated":
+      // Session-scoped catalog; runs never route it.
+      return [false, state];
     case "app_thread.created": {
       if (event.appThread.id === input.threadId) {
         return [true, state];

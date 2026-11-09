@@ -1,7 +1,7 @@
 // omp adapter lifeline (spec §5.4/5.5/5.6, ticket #15): one t3code thread drives exactly one
 // `omp --mode rpc` child; lazy spawn at the first prompt, recovery always via explicit
-// sessionPath. Frames project onto ProviderAdapterV2Events in projection.ts; approvals (#16),
-// idle reclamation / respawn polish (#18) and model catalog (#19) land in their own tickets.
+// sessionPath. Frames project onto ProviderAdapterV2Events in projection.ts; the slash-command
+// directory (#19) projects at the frame entry; approvals (#16) and #17/#18 have their tickets.
 import type {
   OrchestrationV2ProviderCapabilities,
   OrchestrationV2ProviderSession,
@@ -24,7 +24,11 @@ import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter"
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import { turnScopedSelectionTransition } from "@t3tools/provider-core/server/selectionTransition";
 import { makeOmpRpcClient, type OmpRpcClient } from "./rpc/client.ts";
-import { createOmpThreadProjection, type OmpThreadProjection } from "./projection.ts";
+import {
+  createOmpThreadProjection,
+  ompSlashCommandsFromFrame,
+  type OmpThreadProjection,
+} from "./projection.ts";
 import { OMP_PROVIDER } from "./kind.ts";
 
 // Spec §7 (ADR-0004): subagents true/closable but not forkable/waitable, reasoning streams,
@@ -177,7 +181,7 @@ interface OmpThreadState {
   idleReclaimFiber: Fiber.Fiber<void> | null;
 }
 
-/** Frames forwarded to the projection before their turn went active (fake-harness races). */
+/** Non-directory frames forwarded to the projection before their turn went active (fake-harness races). */
 const routeFrame = (thread: OmpThreadState, frame: Record<string, unknown>): Effect.Effect<void> =>
   thread.projection.state.active === null
     ? Effect.sync(() => {
@@ -427,7 +431,19 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             );
           },
           onEvent: (frame) => {
-            Effect.runForkWith(services)(routeFrame(thread, frame));
+            // Directory frames project immediately regardless of turn state (spec §5.5/§7):
+            // omp pushes the startup catalog right after open_session, before any turn.
+            const slashCommands = ompSlashCommandsFromFrame(frame);
+            Effect.runForkWith(services)(
+              slashCommands === undefined
+                ? routeFrame(thread, frame)
+                : emit({
+                    type: "provider_slash_commands.updated",
+                    driver: OMP_PROVIDER,
+                    providerThreadId: thread.projection.state.providerThread.id,
+                    slashCommands: [...slashCommands],
+                  }),
+            );
           },
           onExit: (exit) => {
             thread.client.exited = true;
