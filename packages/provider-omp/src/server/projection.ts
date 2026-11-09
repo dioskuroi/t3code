@@ -908,11 +908,10 @@ export const createOmpThreadProjection = (input: {
           pending,
         });
       }
-      // Tolerated for later tickets (#16 done, #21…): approvals land above this switch,
-      // subagent presentation stays ignored, never an error (spec §5.5). model_changed
-      // projects in this switch (#17); compaction projects above (D9/#20);
-      // available_commands_update is projected into the slash-command directory at the
-      // adapter's frame entry (#19), before turn scoping, so it never reaches this switch.
+      // Tolerated: subagent presentation stays ignored, never an error (spec §5.5).
+      // model_changed projects here (#17), compaction above (D9/#20);
+      // available_commands_update projects at the adapter's frame entry (#19), before turn
+      // scoping, so it never reaches this switch.
       default:
         return Effect.void;
     }
