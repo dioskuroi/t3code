@@ -26,6 +26,27 @@ export interface OmpNativeSession {
   readonly sessionFile: string;
 }
 
+/** "default" defers to omp's own resolution (settings default role → first authed provider). */
+export const OMP_INHERIT_MODEL_SLUG = "default";
+
+/** A concrete omp model: catalog slug `provider/modelId` split into its RPC pair. */
+export interface OmpModelRef {
+  readonly slug: string;
+  readonly provider: string;
+  readonly modelId: string;
+}
+
+export const parseOmpModelSlug = (slug: string): OmpModelRef | null => {
+  if (slug === OMP_INHERIT_MODEL_SLUG) return null;
+  const separator = slug.indexOf("/");
+  if (separator <= 0 || separator === slug.length - 1) return null;
+  return {
+    slug,
+    provider: slug.slice(0, separator),
+    modelId: slug.slice(separator + 1),
+  };
+};
+
 interface OmpStreamItem {
   readonly nativeItemId: string;
   readonly kind: "assistant_message" | "reasoning";
@@ -66,6 +87,13 @@ export interface OmpThreadProjectionState {
   /** Frames that landed between turns (fake-harness races); replayed at the next turn start. */
   orphanFrames: ReadonlyArray<OmpRpcFrame>;
   nativeSession: OmpNativeSession | null;
+  /**
+   * The model the omp process currently runs on (#17). Written after a successful set_model /
+   * switch_session restore and on `model_changed` frames; `null` = omp's own resolution. The
+   * thread metadata mirrors the slug verbatim (no catalog filtering — vanished models keep
+   * their selection until omp itself fails the restore, which surfaces fail-closed).
+   */
+  appliedModel: OmpModelRef | null;
 }
 
 export interface OmpThreadProjection {
@@ -84,6 +112,8 @@ export interface OmpThreadProjection {
   readonly markThreadStatus: (
     status: OrchestrationV2ProviderThread["status"],
   ) => Effect.Effect<void>;
+  /** Records an applied model in thread metadata (nativeMetadata.modelSelection) and emits. */
+  readonly applyModel: (model: OmpModelRef) => Effect.Effect<void>;
 }
 
 const driverRef = (
@@ -546,6 +576,24 @@ export const createOmpThreadProjection = (input: {
     yield* emitToolItem(turn, tool);
   });
 
+  const applyModel = Effect.fnUntraced(function* (model: OmpModelRef) {
+    state.appliedModel = model;
+    const updatedAt = yield* DateTime.now;
+    state.providerThread = {
+      ...state.providerThread,
+      nativeMetadata: {
+        ...state.providerThread.nativeMetadata,
+        modelSelection: { instanceId: input.instanceId, model: model.slug },
+      },
+      updatedAt,
+    };
+    yield* input.emit({
+      type: "provider_thread.updated",
+      driver,
+      providerThread: state.providerThread,
+    });
+  });
+
   const handleFrame = (frame: OmpRpcFrame): Effect.Effect<void> => {
     const type = frameString(frame, "type");
     switch (type) {
@@ -559,6 +607,22 @@ export const createOmpThreadProjection = (input: {
         return handlePromptResult(frame);
       case "agent_end":
         return handleAgentEnd(frame);
+      case "model_changed": {
+        // omp changed its model (spec §6: report-and-passthrough): sync thread metadata from
+        // the frame's `model` slug or `provider`+`modelId` pair; unknown shapes stay tolerated.
+        const slug =
+          frameString(frame, "model") ??
+          (() => {
+            const provider = frameString(frame, "provider");
+            const modelId = frameString(frame, "modelId");
+            return provider === undefined || modelId === undefined
+              ? undefined
+              : `${provider}/${modelId}`;
+          })();
+        if (slug === undefined || slug === state.appliedModel?.slug) return Effect.void;
+        const parsed = parseOmpModelSlug(slug);
+        return parsed === null ? Effect.void : applyModel(parsed);
+      }
       case "session_settled":
         // Turn terminal already flipped the thread to idle; this confirms no queued/background
         // work remains and the session is ready for the next turn.
@@ -576,10 +640,10 @@ export const createOmpThreadProjection = (input: {
           pending,
         });
       }
-      // Tolerated for later tickets (#16/#20/#21…): approvals, compaction, model sync,
-      // subagent presentation. Ignored, never an error (spec §5.5). available_commands_update
-      // is projected into the slash-command directory at the adapter's frame entry, before
-      // turn scoping, so it never reaches this switch.
+      // Tolerated for later tickets (#16/#20/#21…): approvals, compaction, subagent
+      // presentation. Ignored, never an error (spec §5.5). model_changed projects in this
+      // switch (#17); available_commands_update is projected into the slash-command directory
+      // at the adapter's frame entry (#19), before turn scoping, so it never reaches this switch.
       default:
         return Effect.void;
     }
@@ -611,5 +675,6 @@ export const createOmpThreadProjection = (input: {
     },
     finalizeTurn,
     markThreadStatus: (status: OrchestrationV2ProviderThread["status"]) => updateThread({ status }),
+    applyModel,
   };
 };
