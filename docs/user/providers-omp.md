@@ -1,9 +1,10 @@
 # omp
 
-T3 Code runs the [omp](https://github.com/sst/opencode) CLI (`omp`) as an agent, using the
-accounts and credentials you already configured for omp. omp is zero-config in T3 Code: there is
-no provider settings form beyond the enable switch, and the binary is discovered on the server's
-`PATH`.
+T3 Code runs the independent `omp` CLI as an agent, using the accounts and credentials you
+already configured for omp. omp is its own agent CLI — it is not opencode and unrelated to the
+separate [opencode](./providers-opencode.md) provider T3 Code also supports. omp is zero-config
+in T3 Code: there is no provider settings form beyond the enable switch, and the binary is
+discovered on the server's `PATH`.
 
 ## Set Up omp
 

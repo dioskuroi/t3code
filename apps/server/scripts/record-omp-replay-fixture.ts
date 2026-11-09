@@ -16,11 +16,11 @@ import { TestClock } from "effect/testing";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 import {
+  layer as ompAdapterV2Layer,
   makeOmpRecordingSpawner,
   materializeOmpReplayWorkspace,
   OmpOrchestratorReplayHarness,
 } from "../src/orchestration-v2/Adapters/OmpAdapterV2.testkit.ts";
-import * as OmpAdapterV2Testkit from "../src/orchestration-v2/Adapters/OmpAdapterV2.testkit.ts";
 import { OMP_PROVIDER } from "@t3tools/provider-omp/testing";
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import { provideDeterministicTestRuntime } from "../src/orchestration-v2/testkit/DeterministicRuntime.ts";
@@ -193,7 +193,7 @@ const record = Effect.gen(function* () {
         driver: OMP_PROVIDER,
         decodeTranscript: Effect.succeed,
         makeProviderAdapterRegistryLayer: () =>
-          OmpAdapterV2Testkit.layer({ scenario: fixture.name, spawner: layerRecordingSpawner }),
+          ompAdapterV2Layer({ scenario: fixture.name, spawner: layerRecordingSpawner }),
       },
       continuationOptions,
     );

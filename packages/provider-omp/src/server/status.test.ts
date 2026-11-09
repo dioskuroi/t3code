@@ -89,6 +89,56 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
   );
 
   it.effect(
+    "carries the startup slash-command directory into the provider snapshot (review #1: not a dead end)",
+    () =>
+      Effect.gen(function* () {
+        const { command } = yield* writeFakeOmpIntoTemp({
+          responses: {
+            get_available_models: {
+              data: {
+                models: [{ provider: "zai", id: "glm-5.3", name: "GLM-5.3", reasoning: true }],
+              },
+            },
+          },
+          // omp pushes the full replacement catalog right after ready — measured shape from
+          // the real 18.18.2 transcripts (fixtures/*/omp_transcript.ndjson line 6).
+          events: [
+            {
+              frame: {
+                type: "available_commands_update",
+                commands: [
+                  { name: "compact", description: "Compact the session context" },
+                  { name: "plan", description: "Plan mode", input: { hint: "what to plan" } },
+                  { description: "no name, dropped" },
+                ],
+              },
+            },
+            {
+              // A later frame is a full replacement catalog: the last one wins.
+              frame: {
+                type: "available_commands_update",
+                commands: [{ name: "compact", description: "Compact the session context" }],
+              },
+            },
+          ],
+        });
+        const snapshot = yield* checkOmpProviderStatus(
+          decodeOmpSettings({}),
+          { ...process.env },
+          undefined,
+          command,
+        );
+        expect(snapshot.status).toBe("ready");
+        // The snapshot is the real UI channel for the omp directory: the composer reads it
+        // from the provider status (same path as acp-registry/opencode), refreshed by an
+        // explicit provider-status refresh.
+        expect(snapshot.slashCommands).toEqual([
+          { name: "compact", description: "Compact the session context" },
+        ]);
+      }),
+  );
+
+  it.effect(
     "attaches a reasoning thinking-level descriptor from get_available_thinking_levels",
     () =>
       Effect.gen(function* () {

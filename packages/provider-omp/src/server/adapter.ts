@@ -32,6 +32,7 @@ import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import { turnScopedSelectionTransition } from "@t3tools/provider-core/server/selectionTransition";
 import { getModelSelectionStringOptionValue } from "@t3tools/shared/model";
 import { makeOmpRpcClient, type OmpRpcClient } from "./rpc/client.ts";
+import { ompErrorMessage } from "./ompErrors.ts";
 import {
   createOmpThreadProjection,
   OMP_INHERIT_MODEL_SLUG,
@@ -173,8 +174,12 @@ interface OmpClientHolder {
 interface OmpThreadState {
   readonly projection: OmpThreadProjection;
   readonly client: OmpClientHolder;
-  broken: boolean;
-  /** Armed idle-reclaim timer fiber (spec §5.6); null when no timer is pending. */
+  /**
+   * True once the child exited outside an orderly close (crash path, onExit with closing
+   * unset). Wider than holder.exited — an orderly drain also flips that flag — this one means
+   * "the exit was a crash": the thread is disconnected until a successful respawn clears it.
+   */
+  crashed: boolean;
   idleReclaimFiber: Fiber.Fiber<void> | null;
 }
 
@@ -203,9 +208,7 @@ export const OMP_IDLE_RECLAIM_TIMEOUT_MS = 5 * 60_000;
  * by set_model selections and switch_session restores so both surface the same contract.
  */
 const modelRestoreError = (what: string, model: OmpModelRef | null, cause: unknown) => {
-  const message = (cause as { message?: unknown } | null | undefined)?.message;
-  const detail =
-    typeof message === "string" && message.trim() !== "" ? message : "omp request failed";
+  const detail = ompErrorMessage(cause) ?? "omp request failed";
   return protocolError(
     model === null
       ? what
@@ -220,9 +223,7 @@ const modelRestoreError = (what: string, model: OmpModelRef | null, cause: unkno
  * explicit re-selection hint, never a silent fallback to another level.
  */
 const thinkingRestoreError = (level: string, cause: unknown) => {
-  const message = (cause as { message?: unknown } | null | undefined)?.message;
-  const detail =
-    typeof message === "string" && message.trim() !== "" ? message : "omp request failed";
+  const detail = ompErrorMessage(cause) ?? "omp request failed";
   return protocolError(
     `omp could not apply thinking level ${level}: ${detail}. ` +
       "Re-select a thinking level from the refreshed provider catalog; T3 never falls back to another level.",
@@ -433,7 +434,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             pendingApprovalMode: null,
             switching: false,
           },
-          broken: false,
+          crashed: false,
           idleReclaimFiber: null,
         };
         threadState = thread;
@@ -451,22 +452,27 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           ? ["--mode", "rpc"]
           : ["--mode", "rpc", "--approval-mode", approvalMode];
 
-      // Orderly child disposal (spec §5.6 / #15 deadlock pattern): close stdin, keep reading
-      // stdout to EOF, then close the child's dedicated scope. Uninterruptible so a racing
-      // prompt cancellation cannot strand a half-drained child.
+      // Shared drain (review #4): close stdin, read stdout to EOF, release the child scope
+      // (#15). Flags afterwards differ by caller — see disposeClient / recycleClient.
+      const drainClient = Effect.fn("OmpAdapter.drainClient")(function* (holder: OmpClientHolder) {
+        if (holder.client === null) return null;
+        holder.closing = true;
+        const exitCode = yield* holder.client.close;
+        if (holder.scope !== null) {
+          yield* Scope.close(holder.scope, Exit.succeed(undefined)).pipe(Effect.ignore);
+        }
+        holder.client = null;
+        holder.scope = null;
+        return exitCode;
+      });
+
+      // Orderly child disposal (spec §5.6): uninterruptible so a racing prompt cancellation
+      // cannot strand a half-drained child. closing resets: openClient also clears it.
       const disposeClient = (thread: OmpThreadState): Effect.Effect<number | null> =>
         Effect.uninterruptible(
           Effect.gen(function* () {
-            const holder = thread.client;
-            if (holder.client === null) return null;
-            holder.closing = true;
-            const exitCode = yield* holder.client.close;
-            if (holder.scope !== null) {
-              yield* Scope.close(holder.scope, Exit.succeed(undefined)).pipe(Effect.ignore);
-            }
-            holder.client = null;
-            holder.scope = null;
-            holder.closing = false;
+            const exitCode = yield* drainClient(thread.client);
+            thread.client.closing = false;
             return exitCode;
           }),
         );
@@ -510,7 +516,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         if (thread.client.client !== null) {
           // A crashed or reclaimed-away child is never reused: drain whatever is left of it
           // and respawn below (crash recovery, spec §5.6 D7).
-          if (!thread.broken && !thread.client.exited) return;
+          if (!thread.crashed && !thread.client.exited) return;
           yield* disposeClient(thread);
         }
         const state = thread.projection.state;
@@ -536,7 +542,9 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           },
           onEvent: (frame) => {
             // Directory frames project immediately regardless of turn state (spec §5.5/§7):
-            // omp pushes the startup catalog right after open_session, before any turn.
+            // omp pushes the startup catalog before any turn. Client-visible completion flows
+            // through the provider status snapshot (server/status.ts); this runtime event is
+            // for adapter-level consumers (tests, replay).
             const slashCommands = ompSlashCommandsFromFrame(frame);
             Effect.runForkWith(services)(
               slashCommands === undefined
@@ -555,7 +563,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             // Crash reporting must not be silent (spec §5.6): the thread disconnects and the
             // active turn (if any) ends interrupted so the orchestrator sees a terminal. The
             // next prompt respawns onto the same session via switch_session.
-            thread.broken = true;
+            thread.crashed = true;
             Effect.runForkWith(services)(
               Effect.gen(function* () {
                 yield* thread.projection.finalizeTurn("interrupted");
@@ -574,7 +582,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         thread.client.client = client;
         thread.client.scope = clientScope;
         // A successful spawn clears the disconnect from a previous crash.
-        thread.broken = false;
+        thread.crashed = false;
         thread.client.approvalMode = approvalMode;
         if (sessionPath === null) {
           // omp requires an explicit session directory (real omp rejects a bare open_session;
@@ -665,19 +673,12 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           );
       });
 
-      /** Orderly teardown: close stdin, drain stdout to EOF, then release the child's scope. */
+      // Orderly teardown for a mode switch (spec §6): closing stays true so an exit surfacing
+      // mid-recycle is never reported as a crash (openClient clears it on the respawn).
       const recycleClient = Effect.fn("OmpAdapter.recycleClient")(function* (
         thread: OmpThreadState,
       ) {
-        const holder = thread.client;
-        if (holder.client === null) return;
-        holder.closing = true;
-        yield* holder.client.close.pipe(Effect.ignore);
-        if (holder.scope !== null) {
-          yield* Scope.close(holder.scope, Exit.succeed(undefined)).pipe(Effect.ignore);
-        }
-        holder.client = null;
-        holder.scope = null;
+        yield* drainClient(thread.client).pipe(Effect.ignore);
       });
 
       /**
@@ -731,7 +732,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         // Spec §6: "auto" never declares a native mode (stored auto degrades server-side).
         const approvalMode = OMP_APPROVAL_MODE_BY_RUNTIME_MODE[runtimePolicy.runtimeMode] ?? null;
         if (thread.client.client !== null) {
-          if (!thread.broken && !thread.client.exited) {
+          if (!thread.crashed && !thread.client.exited) {
             if (thread.client.approvalMode === approvalMode) {
               thread.client.pendingApprovalMode = null; // the queue caught up with this policy
               return;
@@ -875,6 +876,10 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           });
           yield* updateSession("running");
           yield* thread.projection.flushOrphanFrames;
+          // Prompt ack timing (review #2, tape-verified): all three real-omp fixtures answer
+          // `prompt` on the immediately next frame, before any streamed event — the 30s
+          // fail-closed request timeout never races a long turn (asserted in
+          // OmpReplayFixtures.integration.test.ts); the turn ends later via prompt_result.
           yield* thread.client
             .client!.request("prompt", {
               message,

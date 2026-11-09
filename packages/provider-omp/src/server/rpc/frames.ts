@@ -1,6 +1,8 @@
 // omp RPC JSONL v2 frame facts (spec §5.2/5.3; see migration notes rpc-protocol.md).
 import * as Schema from "effect/Schema";
 
+import { frameNumber, frameString } from "../frameFields.ts";
+
 export class OmpProtocolUnsupportedError extends Schema.TaggedError<OmpProtocolUnsupportedError>()(
   "OmpProtocolUnsupportedError",
   {
@@ -109,11 +111,6 @@ export function makeOmpFrameDecoder(
     chunks = [];
   };
 
-  const chunkField = (frame: OmpRpcFrame, key: string): string | undefined =>
-    typeof frame[key] === "string" ? (frame[key] as string) : undefined;
-  const chunkNumber = (frame: OmpRpcFrame, key: string): number | undefined =>
-    typeof frame[key] === "number" ? (frame[key] as number) : undefined;
-
   return (frame: OmpRpcFrame): OmpFrameDecoderOutput => {
     if (frame["type"] !== "rpc_chunk") {
       if (activeChunkId !== undefined) {
@@ -124,11 +121,11 @@ export function makeOmpFrameDecoder(
       return { frames: [frame], error: undefined };
     }
 
-    const chunkId = chunkField(frame, "chunkId");
-    const index = chunkNumber(frame, "index");
-    const count = chunkNumber(frame, "count");
-    const byteLength = chunkNumber(frame, "byteLength");
-    const data = chunkField(frame, "data");
+    const chunkId = frameString(frame, "chunkId");
+    const index = frameNumber(frame, "index");
+    const count = frameNumber(frame, "count");
+    const byteLength = frameNumber(frame, "byteLength");
+    const data = frameString(frame, "data");
     if (
       chunkId === undefined ||
       index === undefined ||

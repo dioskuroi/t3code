@@ -17,8 +17,12 @@ import {
   spawnAndCollect,
   type ProviderProbeResult,
 } from "@t3tools/provider-core/server/snapshotProbe";
-import { makeOmpRpcClient } from "./rpc/client.ts";
+import { makeOmpRpcClient, OMP_READY_TIMEOUT_MS, OMP_REQUEST_TIMEOUT_MS } from "./rpc/client.ts";
 import { OmpProtocolUnsupportedError } from "./rpc/frames.ts";
+import { ompSlashCommandsFromFrame } from "./projection.ts";
+import { frameNonBlankString } from "./frameFields.ts";
+import { ompErrorMessage } from "./ompErrors.ts";
+import type { ServerProviderSlashCommand } from "@t3tools/contracts";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 export { OmpProtocolUnsupportedError } from "./rpc/frames.ts";
@@ -32,8 +36,6 @@ const OMP_PRESENTATION = {
 } as const;
 
 const OMP_VERSION_TIMEOUT_MS = 8_000;
-const OMP_RPC_READY_TIMEOUT_MS = 15_000;
-const OMP_RPC_REQUEST_TIMEOUT_MS = 30_000;
 
 class OmpRpcProbeError extends Schema.TaggedError<OmpRpcProbeError>()("OmpRpcProbeError", {
   operation: Schema.String,
@@ -63,6 +65,7 @@ export const makePendingOmpProvider = Effect.fn("makePendingOmpProvider")(functi
 const readyModelsSnapshot = Effect.fn("OmpProviderStatus.readyModelsSnapshot")(function* (
   probe: ProviderProbeResult,
   models: ReadonlyArray<ServerProviderModel>,
+  slashCommands: ReadonlyArray<ServerProviderSlashCommand>,
 ) {
   const catalog =
     models.length > 0
@@ -77,14 +80,13 @@ const readyModelsSnapshot = Effect.fn("OmpProviderStatus.readyModelsSnapshot")(f
     enabled: true,
     checkedAt: DateTime.formatIso(yield* DateTime.now),
     models,
+    slashCommands,
     probe: { ...probe, ...catalog },
   });
 });
 
-const describeProbeFailure = (failure: unknown): string => {
-  const message = (failure as { message?: unknown } | null | undefined)?.message;
-  return typeof message === "string" && message.trim() !== "" ? message : String(failure);
-};
+const describeProbeFailure = (failure: unknown): string =>
+  ompErrorMessage(failure) ?? String(failure);
 
 const isProtocolUnsupported = Schema.is(OmpProtocolUnsupportedError);
 
@@ -101,19 +103,30 @@ const probeOmpModelCatalog = Effect.fn("OmpProviderStatus.probeOmpModelCatalog")
   readonly environment: NodeJS.ProcessEnv | undefined;
   readonly cwd: string | undefined;
 }): Effect.fn.Return<
-  ReadonlyArray<ServerProviderModel>,
+  {
+    models: ReadonlyArray<ServerProviderModel>;
+    slashCommands: ReadonlyArray<ServerProviderSlashCommand>;
+  },
   OmpRpcProbeError | OmpProtocolUnsupportedError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* Effect.gen(function* () {
+    // Slash-directory capture (#review #1): omp pushes the full `available_commands_update`
+    // catalog right after ready, before any session exists — the same startup frame the
+    // session path projects. Each frame is a full replacement catalog, so the last one wins.
+    let slashCommands: ReadonlyArray<ServerProviderSlashCommand> = [];
     const client = yield* makeOmpRpcClient({
       command: input.command,
       args: input.spawnArgs,
       ...(input.shell !== undefined ? { shell: input.shell } : {}),
       ...(input.cwd !== undefined ? { cwd: input.cwd } : {}),
       env: input.environment,
-      readyTimeoutMs: OMP_RPC_READY_TIMEOUT_MS,
-      requestTimeoutMs: OMP_RPC_REQUEST_TIMEOUT_MS,
+      readyTimeoutMs: OMP_READY_TIMEOUT_MS,
+      requestTimeoutMs: OMP_REQUEST_TIMEOUT_MS,
+      onEvent: (frame) => {
+        const catalog = ompSlashCommandsFromFrame(frame);
+        if (catalog !== undefined) slashCommands = catalog;
+      },
     }).pipe(
       Effect.mapError((cause) =>
         isProtocolUnsupported(cause)
@@ -149,10 +162,16 @@ const probeOmpModelCatalog = Effect.fn("OmpProviderStatus.probeOmpModelCatalog")
     const parsed = parseOmpModels(catalog);
     if (Result.isFailure(parsed)) return yield* parsed.failure;
     const capabilities = ompThinkingCapabilities(thinkingLevels);
-    return parsed.success.map((model) => ({
-      ...model,
-      capabilities: capabilities === null ? null : createModelCapabilities(capabilities),
-    }));
+    return {
+      models: parsed.success.map((model) => ({
+        ...model,
+        capabilities: capabilities === null ? null : createModelCapabilities(capabilities),
+      })),
+      // The directory reaches the UI through the provider status snapshot (the same channel
+      // acp-registry/opencode use), refreshed by an explicit provider-status refresh — this
+      // is the real consumer of the omp slash catalog, not the orchestration event stream.
+      slashCommands,
+    };
   }).pipe(Effect.scoped);
 });
 
@@ -207,8 +226,8 @@ function parseOmpModels(
   const seen = new Set<string>();
   const parsed: Array<ServerProviderModel> = [];
   for (const model of models) {
-    const provider = recordString(model, "provider");
-    const id = recordString(model, "id");
+    const provider = frameNonBlankString(model, "provider");
+    const id = frameNonBlankString(model, "id");
     if (provider === undefined || id === undefined) {
       return Result.fail(
         new OmpRpcProbeError({
@@ -222,18 +241,13 @@ function parseOmpModels(
     seen.add(slug);
     parsed.push({
       slug,
-      name: recordString(model, "name") ?? slug,
+      name: frameNonBlankString(model, "name") ?? slug,
       subProvider: provider,
       isCustom: false,
       capabilities: null,
     });
   }
   return Result.succeed(parsed);
-}
-
-function recordString(record: unknown, key: string): string | undefined {
-  const value = (record as Record<string, unknown> | null | undefined)?.[key];
-  return typeof value === "string" && value.trim() !== "" ? value : undefined;
 }
 
 export const checkOmpProviderStatus = Effect.fn("checkOmpProviderStatus")(function* (
@@ -355,6 +369,7 @@ export const checkOmpProviderStatus = Effect.fn("checkOmpProviderStatus")(functi
   }
   return yield* readyModelsSnapshot(
     { installed: true, version, status: "ready", auth: { status: "unknown" } },
-    catalog.success,
+    catalog.success.models,
+    catalog.success.slashCommands,
   );
 });

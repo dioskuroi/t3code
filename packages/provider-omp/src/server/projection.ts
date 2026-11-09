@@ -28,6 +28,7 @@ import * as Effect from "effect/Effect";
 import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import type { OmpRpcFrame } from "./rpc/frames.ts";
+import { frameRecord, frameString } from "./frameFields.ts";
 
 export interface OmpNativeSession {
   readonly sessionId: string;
@@ -218,18 +219,6 @@ const driverRef = (
   nativeId: string,
   strength: "strong" | "weak",
 ): OrchestrationV2ProviderThread["nativeThreadRef"] => ({ driver, nativeId, strength });
-
-const frameString = (frame: OmpRpcFrame, key: string): string | undefined => {
-  const value = frame[key];
-  return typeof value === "string" ? value : undefined;
-};
-
-const frameRecord = (frame: OmpRpcFrame, key: string): Record<string, unknown> | undefined => {
-  const value = frame[key];
-  return typeof value === "object" && value !== null
-    ? (value as Record<string, unknown>)
-    : undefined;
-};
 
 /**
  * omp `available_commands_update` → the contracts slash-command catalog (spec §5.5/§7). Every
@@ -1237,6 +1226,10 @@ export const createOmpThreadProjection = (input: {
         // work remains and the session is ready for the next turn.
         return Effect.void;
       case "queue_update": {
+        // Contract limit (review #3): background_work.updated carries only `pending: boolean`
+        // — the contracts event has no slot for omp's per-queue detail, so the steering vs.
+        // followUp breakdown is deliberately collapsed. Widening requires a contracts change;
+        // until then the orchestrator only learns whether queued work exists.
         const turn = state.active;
         if (turn === null) return Effect.void;
         const steering = Array.isArray(frame["steering"]) ? frame["steering"] : [];

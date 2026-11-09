@@ -621,8 +621,10 @@ export const layer: Layer.Layer<
             case "command_output.delta":
               // Live output is routed to the command output hub before ingestion.
               return [];
-            // Session-scoped catalog: consumed off the runtime stream by provider snapshot
-            // code, never persisted into the thread event store.
+            // Session-scoped catalog: not persisted into the thread event store (runs never
+            // route it — RunExecutionService.routeProviderEvent). Clients get the directory
+            // via the provider status snapshot (driver probe → ProviderRegistry), so dropping
+            // the event here is the contract, not a gap.
             case "provider_slash_commands.updated":
               return [];
             case "turn.terminal":

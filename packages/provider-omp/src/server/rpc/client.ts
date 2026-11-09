@@ -24,9 +24,12 @@ import {
   type OmpReadyFrame,
   type OmpRpcFrame,
 } from "./frames.ts";
+import { ompErrorMessage } from "../ompErrors.ts";
 
-const OMP_READY_TIMEOUT_MS = 15_000;
-const OMP_REQUEST_TIMEOUT_MS = 30_000;
+// Shared with the short-lived status probe (server/status.ts) so both paths time out at the
+// same values — one definition, same name and value everywhere.
+export const OMP_READY_TIMEOUT_MS = 15_000;
+export const OMP_REQUEST_TIMEOUT_MS = 30_000;
 const OMP_NEGOTIATED_PROTOCOL_VERSION = 2;
 
 export class OmpRpcError extends Schema.TaggedError<OmpRpcError>()("OmpRpcError", {
@@ -102,9 +105,11 @@ interface PendingRequest {
   readonly deferred: Deferred.Deferred<unknown, OmpRpcRequestError>;
 }
 
-const errorDetail = (error: unknown): string =>
-  typeof error === "string" && error.trim() !== "" ? error : "request failed";
+const errorDetail = (error: unknown): string => ompErrorMessage(error) ?? "request failed";
 
+// fnUntraced (review #10): the client factory is a spawn-then-fork scaffold — every durable
+// operation below already carries its own named span (OmpRpc.*), so a wrapping
+// "makeOmpRpcClient" span would only duplicate the immediate child's timeline.
 export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClientSpawnOptions) {
   const scope = yield* Effect.scope;
   const requestTimeoutMs = options.requestTimeoutMs ?? OMP_REQUEST_TIMEOUT_MS;
