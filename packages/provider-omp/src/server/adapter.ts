@@ -1,7 +1,10 @@
-// omp adapter lifeline (spec §5.4/5.5/5.6, tickets #15/#17/#19): one t3code thread drives
-// exactly one `omp --mode rpc` child; lazy spawn at the first prompt, recovery always via
-// explicit sessionPath. Frames project onto ProviderAdapterV2Events in projection.ts; the
-// slash-command directory (#19) projects at the frame entry; approvals (#16) and #18 have tickets.
+// omp adapter lifeline (spec §5.4/5.5/5.6, tickets #15/#17/#19/#16/#21): one t3code thread
+// drives exactly one `omp --mode rpc` child; lazy spawn at the first prompt, recovery always
+// via explicit sessionPath. Approvals (#16) answer via extension_ui_response; runtime-mode
+// switches recycle the child when idle and queue while a turn is in flight. Frames project
+// onto ProviderAdapterV2Events in projection.ts: the slash-command directory (#19) projects
+// at the frame entry, model selection (#17) and thinking level (#21) apply in the idle
+// window before a prompt; idle reclaim + crash respawn are #18.
 import type {
   OrchestrationV2ProviderCapabilities,
   OrchestrationV2ProviderSession,
@@ -30,6 +33,8 @@ import {
   parseOmpModelSlug,
   ompSlashCommandsFromFrame,
   type OmpModelRef,
+  ompResponseValueFor,
+  type OmpPendingRuntimeRequest,
   type OmpThreadProjection,
 } from "./projection.ts";
 import { OMP_PROVIDER } from "./kind.ts";
@@ -174,6 +179,12 @@ interface OmpClientHolder {
   closing: boolean;
   /** True once the child exited for any reason; a dead client must never be reused. */
   exited: boolean;
+  /** omp --approval-mode the current child was spawned with; null = none declared. */
+  approvalMode: string | null;
+  /** Runtime-mode switch waiting for the active turn to end (spec §6 queueing). */
+  pendingApprovalMode: string | null;
+  /** Single-flight guard covering the recycle + respawn of a mode switch. */
+  switching: boolean;
 }
 
 interface OmpThreadState {
@@ -332,7 +343,19 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           orphanFrames: [],
           nativeSession: null,
           appliedModel: null,
+          runtimeRequests: new Map<string, OmpPendingRuntimeRequest>(),
         };
+        const client: OmpClientHolder = {
+          client: null,
+          scope: null,
+          closing: false,
+          approvalMode: null,
+          pendingApprovalMode: null,
+          switching: false,
+        };
+        // Late-bound: the projection outlives this closure's construction and the thread state
+        // is assembled right below.
+        let threadState: OmpThreadState | undefined;
         const projection = createOmpThreadProjection({
           driver: OMP_PROVIDER,
           instanceId: input.instanceId,
@@ -351,19 +374,27 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
                 )
               : emit(event),
           updateSession,
+          onTurnSettled: () => {
+            const self = threadState;
+            return self === undefined ? Effect.void : applyQueuedApprovalMode(self);
+          },
         });
-        const client: OmpClientHolder = {
-          client: null,
-          scope: null,
-          closing: false,
-          exited: false,
-        };
-        threads.set(providerThread.id, {
+        const thread: OmpThreadState = {
           projection,
-          client,
+          client: {
+            client: null,
+            scope: null,
+            closing: false,
+            exited: false,
+            approvalMode: null,
+            pendingApprovalMode: null,
+            switching: false,
+          },
           broken: false,
           idleReclaimFiber: null,
-        });
+        };
+        threadState = thread;
+        threads.set(providerThread.id, thread);
         yield* emit({
           type: "provider_thread.updated",
           driver: OMP_PROVIDER,
@@ -372,12 +403,10 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         return providerThread;
       });
 
-      const spawnArgs = (runtimePolicy: ProviderAdapter.ProviderAdapterV2RuntimePolicy) => {
-        const approvalMode = OMP_APPROVAL_MODE_BY_RUNTIME_MODE[runtimePolicy.runtimeMode];
-        return approvalMode === undefined
+      const argsForApprovalMode = (approvalMode: string | null): ReadonlyArray<string> =>
+        approvalMode === null
           ? ["--mode", "rpc"]
           : ["--mode", "rpc", "--approval-mode", approvalMode];
-      };
 
       // Orderly child disposal (spec §5.6 / #15 deadlock pattern): close stdin, keep reading
       // stdout to EOF, then close the child's dedicated scope. Uninterruptible so a racing
@@ -424,8 +453,17 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
       });
 
       const ensureClient = Effect.fn("OmpAdapter.ensureClient")(function* (
+      const spawnProtocolError = (sessionPath: string | null, cause: unknown) =>
+        protocolError(
+          sessionPath === null
+            ? "Failed to spawn or initialize the omp process"
+            : `Failed to respawn the omp process for session ${sessionPath}`,
+          cause,
+        );
+
+      const openClient = Effect.fn("OmpAdapter.openClient")(function* (
         thread: OmpThreadState,
-        runtimePolicy: ProviderAdapter.ProviderAdapterV2RuntimePolicy,
+        approvalMode: string | null,
       ) {
         if (thread.client.client !== null) {
           // A crashed or reclaimed-away child is never reused: drain whatever is left of it
@@ -436,12 +474,15 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         const state = thread.projection.state;
         const sessionPath = state.providerThread.nativeThreadRef?.nativeId ?? null;
         thread.client.closing = false;
+        // A freshly spawned child has not exited; the stale flag from a drained corpse (#18)
+        // must not mark the replacement dead.
+        thread.client.exited = false;
         // The child's fibers get a dedicated scope: the session scope's teardown interrupts
         // fibers before the drain-to-EOF close can finish, leaving the child's stdin open.
         const clientScope = yield* Scope.make();
         const client = yield* makeOmpRpcClient({
           command: input.command ?? "omp",
-          args: spawnArgs(runtimePolicy),
+          args: argsForApprovalMode(approvalMode),
           cwd,
           // Child stderr goes to the T3 server log (spec §5.2, #18).
           onStderr: (chunk) => {
@@ -486,19 +527,13 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         }).pipe(
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideService(Scope.Scope, clientScope),
-          Effect.mapError((cause) =>
-            protocolError(
-              sessionPath === null
-                ? "Failed to spawn or initialize the omp process"
-                : `Failed to respawn the omp process for session ${sessionPath}`,
-              cause,
-            ),
-          ),
+          Effect.mapError((cause) => spawnProtocolError(sessionPath, cause)),
         );
         thread.client.client = client;
         thread.client.scope = clientScope;
         // A successful spawn clears the disconnect from a previous crash.
         thread.broken = false;
+        thread.client.approvalMode = approvalMode;
         if (sessionPath === null) {
           const opened = (yield* client
             .request("open_session", {})
@@ -583,6 +618,93 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             Effect.tap(() => thread.projection.applyModel(parsed)),
             Effect.mapError((cause) => modelRestoreError("set_model failed", parsed, cause)),
           );
+      });
+
+      /** Orderly teardown: close stdin, drain stdout to EOF, then release the child's scope. */
+      const recycleClient = Effect.fn("OmpAdapter.recycleClient")(function* (
+        thread: OmpThreadState,
+      ) {
+        const holder = thread.client;
+        if (holder.client === null) return;
+        holder.closing = true;
+        yield* holder.client.close.pipe(Effect.ignore);
+        if (holder.scope !== null) {
+          yield* Scope.close(holder.scope, Exit.succeed(undefined)).pipe(Effect.ignore);
+        }
+        holder.client = null;
+        holder.scope = null;
+      });
+
+      /**
+       * Runtime-mode switch (spec §6): the approval mode lives in spawn argv, so a change
+       * recycles the child (drain → exit) and respawns + switch_session back onto the same
+       * session file. Single-flight: a queued application and a concurrent ensureClient race
+       * resolve to one recycle.
+       */
+      const switchApprovalMode = Effect.fn("OmpAdapter.switchApprovalMode")(function* (
+        thread: OmpThreadState,
+        approvalMode: string | null,
+      ) {
+        if (thread.client.switching) return;
+        thread.client.switching = true;
+        const switched = yield* Effect.result(
+          Effect.gen(function* () {
+            yield* recycleClient(thread);
+            yield* openClient(thread, approvalMode);
+          }),
+        );
+        thread.client.switching = false;
+        if (switched._tag === "Failure") return yield* switched.failure;
+      });
+
+      /** Applies the switch a turn queued (spec §6: never interrupt a turn for a mode change). */
+      const applyQueuedApprovalMode = Effect.fn("OmpAdapter.applyQueuedApprovalMode")(function* (
+        thread: OmpThreadState,
+      ) {
+        const pending = thread.client.pendingApprovalMode;
+        if (pending === null || thread.client.approvalMode === pending) {
+          thread.client.pendingApprovalMode = null;
+          return;
+        }
+        if (thread.client.switching) return; // an in-flight switch already carries a target
+        thread.client.pendingApprovalMode = null;
+        yield* switchApprovalMode(thread, pending).pipe(
+          Effect.tapError((cause) =>
+            Effect.logWarning(
+              `omp approval-mode switch to ${String(pending)} failed for provider thread ${thread.projection.state.providerThread.id}`,
+              cause,
+            ),
+          ),
+          Effect.ignore,
+        );
+      });
+
+      const ensureClient = Effect.fn("OmpAdapter.ensureClient")(function* (
+        thread: OmpThreadState,
+        runtimePolicy: ProviderAdapter.ProviderAdapterV2RuntimePolicy,
+      ) {
+        // Spec §6: "auto" never declares a native mode (stored auto degrades server-side).
+        const approvalMode = OMP_APPROVAL_MODE_BY_RUNTIME_MODE[runtimePolicy.runtimeMode] ?? null;
+        if (thread.client.client !== null) {
+          if (!thread.broken && !thread.client.exited) {
+            if (thread.client.approvalMode === approvalMode) {
+              thread.client.pendingApprovalMode = null; // the queue caught up with this policy
+              return;
+            }
+            if (thread.projection.state.active !== null) {
+              // Turn in flight: queue the switch, never respawn mid-turn (#16).
+              thread.client.pendingApprovalMode = approvalMode;
+              return;
+            }
+            yield* switchApprovalMode(thread, approvalMode);
+            return;
+          }
+          // Dead child (crash or idle reclaim, #18): the queue is meaningless — the respawn
+          // below already carries the current policy's argv. openClient drains-disposes the
+          // corpse before spawning (silent, spec §5.6 D7).
+          thread.client.pendingApprovalMode = null;
+        }
+        yield* openClient(thread, approvalMode);
       });
 
       const runtime: ProviderAdapter.ProviderAdapterV2SessionRuntime = {
@@ -754,7 +876,70 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           // omp confirms the stop with prompt_result(status:"aborted"), which the projection
           // finalizes as turn interrupted; nothing else to do here.
         }),
-        respondToRuntimeRequest: () => Effect.void,
+        respondToRuntimeRequest: Effect.fn("OmpAdapter.respondToRuntimeRequest")(function* (
+          requestInput: Parameters<
+            ProviderAdapter.ProviderAdapterV2SessionRuntime["respondToRuntimeRequest"]
+          >[0],
+        ) {
+          const refusal = (cause: unknown) =>
+            new ProviderAdapter.ProviderAdapterRuntimeRequestResponseError({
+              driver: OMP_PROVIDER,
+              requestId: requestInput.requestId,
+              cause,
+            });
+          let found:
+            | { readonly thread: OmpThreadState; readonly entry: OmpPendingRuntimeRequest }
+            | undefined;
+          for (const thread of threads.values()) {
+            for (const entry of thread.projection.state.runtimeRequests.values()) {
+              if (entry.request.id === requestInput.requestId) {
+                found = { thread, entry };
+                break;
+              }
+            }
+            if (found !== undefined) break;
+          }
+          if (found === undefined || found.entry.request.status !== "pending") {
+            return yield* refusal(new Error(`No pending omp approval ${requestInput.requestId}`));
+          }
+          if (found.entry.answering) {
+            return yield* refusal(new Error("This omp approval is already being answered"));
+          }
+          // Approvals always carry a decision; feedback/user-input flows do not exist in omp MVP.
+          if (requestInput.decision === undefined) {
+            return yield* refusal(new Error("omp approval requests require a decision"));
+          }
+          // Spec §6: session-scoped grants live inside the omp process; a cross-session
+          // Always is never offered and never translated (#16).
+          if (requestInput.decision === "acceptAlways") {
+            return yield* refusal(new Error("omp does not offer a cross-session Always approval"));
+          }
+          const client = found.thread.client.client;
+          if (client === null) {
+            return yield* refusal(new Error("the omp process for this thread is not running"));
+          }
+          found.entry.answering = true;
+          const params = ompResponseValueFor(found.entry, requestInput.decision);
+          const delivered = yield* Effect.result(client.request("extension_ui_response", params));
+          if (delivered._tag === "Failure") {
+            found.entry.answering = false;
+            return yield* refusal(delivered.failure);
+          }
+          // Audit only (spec §6): the orchestrator owns the resolved record and decision;
+          // the adapter's copy flips so snapshots stop listing the request as pending.
+          const now = yield* DateTime.now;
+          const decision = requestInput.decision;
+          const cancelled = decision === "cancel";
+          const entry = found.entry;
+          const status = cancelled ? ("cancelled" as const) : ("resolved" as const);
+          const itemStatus = cancelled ? ("cancelled" as const) : ("completed" as const);
+          found.thread.projection.state.runtimeRequests.set(entry.nativeRequestId, {
+            ...entry,
+            request: { ...entry.request, status, resolvedAt: now },
+            node: { ...entry.node, status: itemStatus, completedAt: now },
+            item: { ...entry.item, status: itemStatus, completedAt: now, updatedAt: now },
+          });
+        }),
         readThreadSnapshot: Effect.fn("OmpAdapter.readThreadSnapshot")(function* (snapshotInput) {
           const thread = threads.get(snapshotInput.providerThread.id);
           if (thread === undefined) {
@@ -769,7 +954,9 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             providerThread: thread.projection.state.providerThread,
             providerTurns: thread.projection.state.turns,
             messages: thread.projection.state.messages,
-            runtimeRequests: [],
+            runtimeRequests: [...thread.projection.state.runtimeRequests.values()].map(
+              (entry) => entry.request,
+            ),
           };
         }),
         rollbackThread: Effect.fn("OmpAdapter.rollbackThread")(function* (rollbackInput) {
@@ -783,6 +970,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           }
           thread.projection.state.turns = [];
           thread.projection.state.messages = [];
+          thread.projection.state.runtimeRequests.clear();
           return {
             providerThread: thread.projection.state.providerThread,
             providerTurns: [],

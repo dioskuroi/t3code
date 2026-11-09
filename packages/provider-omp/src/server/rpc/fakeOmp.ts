@@ -80,6 +80,10 @@ if (process.argv.includes("--version")) {
   process.stdout.write("omp/18.18.1\\n");
   process.exit(0);
 }
+// Adapter children log their spawn argv (approval-mode mapping assertions); --version probes skip it.
+if (process.env.FAKE_OMP_ARGV_LOG) {
+  appendFileSync(process.env.FAKE_OMP_ARGV_LOG, JSON.stringify(process.argv.slice(2)) + "\\n");
+}
 send({
   type: "ready",
   protocolVersion: 1,

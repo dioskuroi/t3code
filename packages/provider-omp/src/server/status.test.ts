@@ -63,6 +63,13 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
       // Spec §7 (ADR-0004): the plan-mode interaction toggle is never presented; /plan rides
       // the slash-command passthrough instead.
       expect(snapshot.showInteractionModeToggle).toBe(false);
+      // Spec §6: exactly three modes; "auto" is never declared (stored auto degrades server-side)
+      // and always-ask-cached is never used (ADR-0002).
+      expect(snapshot.supportedRuntimeModes).toEqual([
+        "approval-required",
+        "auto-accept-edits",
+        "full-access",
+      ]);
       expect(snapshot.models.map((model) => model.slug)).toEqual([
         "zai/glm-5.3",
         "moonshot/kimi-k3",
