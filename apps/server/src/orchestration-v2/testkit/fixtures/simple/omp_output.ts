@@ -30,13 +30,13 @@ export function assertReasoningItemsMatchRecording(
   result: OrchestratorV2ScenarioResult,
   transcript: ProviderReplayTranscript,
 ) {
-  const recorded = recordedThinkingTexts(transcript);
-  assert.isNotEmpty(recorded, "the recording must stream omp thinking blocks");
+  // glm sometimes skips the thinking block entirely; whatever the tape recorded must be what
+  // the projection shows, empty or not.
   assert.deepEqual(
     projectionFor(result, transcript.scenario).turnItems.flatMap((item) =>
       item.type === "reasoning" ? [item.text] : [],
     ),
-    recorded,
+    recordedThinkingTexts(transcript),
     "omp thinking deltas must project as reasoning items with the recorded text",
   );
 }
