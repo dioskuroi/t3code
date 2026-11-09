@@ -85,7 +85,7 @@ export const OmpDriver: ProviderDriver<OmpSettings, OmpDriverEnv> = {
           }),
       ),
     );
-    const orchestrationAdapter = makeOmpAdapterV2({ instanceId });
+    const orchestrationAdapter = yield* makeOmpAdapterV2({ instanceId });
     return {
       instanceId,
       driverKind: OMP_PROVIDER,

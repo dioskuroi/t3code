@@ -225,7 +225,9 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
             yield* dispatchFrame(decoded);
           } else {
             // Event frame: forward after reassembly; callback defects must not kill the reader.
-            yield* Effect.sync(() => options.onEvent?.(decoded)).pipe(Effect.ignore);
+            yield* Effect.sync(() => {
+              return options.onEvent?.(decoded);
+            }).pipe(Effect.ignore);
           }
         }
       }),
@@ -350,7 +352,9 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
 
   const close: Effect.Effect<number | null> = Effect.suspend(() =>
     Effect.gen(function* () {
-      if (!exitObserved) yield* Queue.shutdown(outgoing);
+      if (!exitObserved) {
+        yield* Queue.shutdown(outgoing);
+      }
       // The reader keeps draining until stdout EOF; exitDeferred resolves on real process exit.
       yield* Deferred.await(exitDeferred).pipe(Effect.ignore);
       return exitCode;

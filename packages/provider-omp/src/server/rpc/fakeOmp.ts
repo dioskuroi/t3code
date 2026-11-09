@@ -17,6 +17,12 @@ export interface FakeOmpResponseSpec {
 
 export interface FakeOmpTimedFrame {
   readonly delayMs?: number;
+  /**
+   * Hold this frame until the fake sees a request of the given command type, then send it.
+   * Deterministic turn-boundary events (prompt_result after abort, agent_end after steer)
+   * must not race the host's turn setup, which can take hundreds of ms under parallel tests.
+   */
+  readonly afterRequestType?: string;
   readonly frame: Record<string, unknown>;
 }
 
@@ -106,10 +112,27 @@ const respond = (request) => {
     send({ type: "rpc_chunk", chunkId, index, count, byteLength: bytes.byteLength, data: slice.toString("base64") });
   }
 };
+const heldEvents = [];
 for (const timed of program.events ?? []) {
+  if (timed.afterRequestType !== undefined) {
+    heldEvents.push(timed);
+    continue;
+  }
   if (timed.delayMs !== undefined) await sleep(timed.delayMs);
   send(timed.frame);
 }
+const releaseHeld = (requestType) => {
+  let index = 0;
+  while (index < heldEvents.length) {
+    const timed = heldEvents[index];
+    if (timed.afterRequestType !== requestType) {
+      index += 1;
+      continue;
+    }
+    heldEvents.splice(index, 1);
+    setTimeout(() => send(timed.frame), timed.delayMs ?? 0);
+  }
+};
 if (program.crash !== undefined) {
   setTimeout(() => process.exit(program.crash.exitCode), program.crash.delayMs);
 }
@@ -130,6 +153,7 @@ process.stdin.on("data", (chunk) => {
     }
     if (requestLog) appendFileSync(requestLog, JSON.stringify(request) + "\\n");
     respond(request);
+    releaseHeld(request.type);
   }
 });
 process.stdin.on("end", () => {
