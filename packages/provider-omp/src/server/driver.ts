@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Schema from "effect/Schema";
 import type * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -33,7 +34,10 @@ const ompMaintenance: ProviderMaintenanceCapabilities = {
   update: null,
 };
 
-export type OmpDriverEnv = ChildProcessSpawner.ChildProcessSpawner | ProviderHost.ProviderHost;
+export type OmpDriverEnv =
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | ProviderHost.ProviderHost;
 
 export const OmpDriver: ProviderDriver<OmpSettings, OmpDriverEnv> = {
   driverKind: OMP_PROVIDER,

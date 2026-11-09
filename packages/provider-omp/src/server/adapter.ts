@@ -14,12 +14,19 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import * as Fiber from "effect/Fiber";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Queue from "effect/Queue";
 import * as Scope from "effect/Scope";
 import * as Stream from "effect/Stream";
 
+import type { ChatAttachment } from "@t3tools/contracts";
+import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
+import {
+  isProviderNativeImageAttachment,
+  providerMessageTextWithAttachmentPaths,
+} from "@t3tools/provider-core/server/attachmentPrompt";
 import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import { turnScopedSelectionTransition } from "@t3tools/provider-core/server/selectionTransition";
@@ -33,6 +40,13 @@ import {
   type OmpThreadProjection,
 } from "./projection.ts";
 import { OMP_PROVIDER } from "./kind.ts";
+
+/** One `prompt.images` entry (omp rpc image part: `{ type: "image", data, mimeType }`). */
+interface OmpPromptImage {
+  readonly type: "image";
+  readonly data: string;
+  readonly mimeType: string;
+}
 
 // Spec §7 (ADR-0004): subagents true/closable but not forkable/waitable, reasoning streams,
 // everything unmapped stays unpresented (false).
@@ -137,35 +151,6 @@ const OMP_APPROVAL_MODE_BY_RUNTIME_MODE = {
   "full-access": "yolo",
 } as const;
 
-const IMAGE_DATA_URL_SEPARATOR = ",base64,";
-
-// ChatImageAttachment carries its pixels as a data: URL snapshot source; file attachments
-// degrade to a path note in the prompt text (spec §7 attachment rules).
-const turnMessageParts = (
-  message: ProviderAdapter.ProviderAdapterV2TurnMessage,
-): { message: string; images?: ReadonlyArray<{ data: string }> } => {
-  const images: Array<{ data: string }> = [];
-  let text = message.text;
-  for (const attachment of message.attachments) {
-    if (
-      attachment.type === "image" &&
-      "source" in attachment &&
-      typeof attachment.source === "object" &&
-      attachment.source !== null &&
-      "dataUrl" in attachment.source
-    ) {
-      const dataUrl: string | undefined = attachment.source.dataUrl as string | undefined;
-      const separator = dataUrl?.indexOf(IMAGE_DATA_URL_SEPARATOR) ?? -1;
-      if (dataUrl !== undefined && separator >= 0) {
-        images.push({ data: dataUrl.slice(separator + IMAGE_DATA_URL_SEPARATOR.length) });
-        continue;
-      }
-    }
-    text += `\n\n[attachment: ${attachment.name} (${attachment.mimeType})]`;
-  }
-  return images.length === 0 ? { message: text } : { message: text, images };
-};
-
 interface OmpClientHolder {
   client: OmpRpcClient | null;
   /** Dedicated child-process scope, closed after the drain-to-EOF close resolves. */
@@ -233,6 +218,50 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
   // The spawner is captured once at driver creation; the session runtime supplies it to each
   // omp process spawn (spec §5.2: cwd = project root, env inherited from the server process).
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  // Attachment resolution (#22): the host maps attachment ids to persisted files.
+  const host = yield* ProviderHost.ProviderHost;
+  const fileSystem = yield* FileSystem.FileSystem;
+
+  // Spec §7 (ADR-0004, #22): contracts give ChatImageAttachment no inline pixels — only a
+  // SnapShotSource metadata source — so images ride `prompt.images` as base64 read from the
+  // persisted attachment file (`{ type: "image", data, mimeType }`, omp rpc image schema).
+  const resolvePromptPayload = Effect.fn("OmpAdapter.resolvePromptPayload")(function* (
+    text: string,
+    attachments: ReadonlyArray<ChatAttachment>,
+  ) {
+    // Every attachment lands in the message text as a saved-path line (file attachments
+    // degrade to that line; spec §7: never an error, never a silent drop). Snapshot sources
+    // additionally embed their captured-window context JSON here.
+    const message = yield* providerMessageTextWithAttachmentPaths({
+      text,
+      attachments,
+      resolveAttachmentPath: host.resolveAttachmentPath,
+      resolveExtractedTextPath: host.resolveExtractedTextPath,
+    });
+    const images: Array<OmpPromptImage> = [];
+    for (const attachment of attachments) {
+      if (!isProviderNativeImageAttachment(attachment)) continue;
+      const path = host.resolveAttachmentPath(attachment);
+      // The path line above already tells the model the image is unavailable; nothing to attach.
+      if (path === null) continue;
+      const bytes = yield* fileSystem
+        .readFile(path)
+        .pipe(
+          Effect.mapError((cause) =>
+            protocolError(
+              `omp could not read the attached image "${attachment.name}" at ${path}`,
+              cause,
+            ),
+          ),
+        );
+      images.push({
+        type: "image",
+        data: Buffer.from(bytes).toString("base64"),
+        mimeType: attachment.mimeType,
+      });
+    }
+    return { message, images };
+  });
   return ProviderAdapter.ProviderAdapterV2.of({
     instanceId: input.instanceId,
     driver: OMP_PROVIDER,
@@ -652,6 +681,12 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           // A new prompt is exactly the activity the idle reclaim waits for: cancel it
           // before reusing/respawning the child (spec §5.6).
           yield* cancelIdleReclaim(thread);
+          // Resolve attachments (#22) before the turn goes active: an unreadable image fails
+          // startTurn outright instead of stranding a turn that never reached omp.
+          const { message, images } = yield* resolvePromptPayload(
+            turnInput.message.text,
+            turnInput.message.attachments,
+          );
           const startedAt = yield* DateTime.now;
           const nativeTurnId = `${turnInput.providerThread.id}:t${turnInput.providerTurnOrdinal}:r${turnInput.runOrdinal}`;
           const providerTurn: OrchestrationV2ProviderTurn = {
@@ -686,12 +721,11 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           });
           yield* updateSession("running");
           yield* thread.projection.flushOrphanFrames;
-          const { message, images } = turnMessageParts(turnInput.message);
           yield* thread.client
             .client!.request("prompt", {
               message,
               streamingBehavior: "followUp",
-              ...(images === undefined ? {} : { images }),
+              ...(images.length === 0 ? {} : { images }),
             })
             .pipe(
               // Ack failure never leaves the turn dangling: fail the terminal instead (#8 contract).
@@ -716,11 +750,14 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
               cause: new Error("no active omp turn to steer"),
             });
           }
-          const { message, images } = turnMessageParts(steerInput.message);
+          const { message, images } = yield* resolvePromptPayload(
+            steerInput.message.text,
+            steerInput.message.attachments,
+          );
           yield* client
             .request("steer", {
               message,
-              ...(images === undefined ? {} : { images }),
+              ...(images.length === 0 ? {} : { images }),
             })
             .pipe(
               Effect.mapError(

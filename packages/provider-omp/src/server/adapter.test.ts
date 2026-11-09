@@ -5,14 +5,17 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, live } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 
 import type {
+  ChatAttachment,
   OrchestrationV2ProviderSession,
   OrchestrationV2ProviderThread,
 } from "@t3tools/contracts";
 import {
+  ChatAttachmentId,
   MessageId,
   ModelSelection,
   NodeId,
@@ -27,6 +30,8 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Logger from "effect/Logger";
 import * as ProviderAdapter from "@t3tools/provider-core/server/ProviderAdapter";
+import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
+import * as TestProviderHost from "@t3tools/provider-testing/TestProviderHost";
 
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import { makeOmpAdapterV2, OMP_IDLE_RECLAIM_TIMEOUT_MS } from "./adapter.ts";
@@ -41,6 +46,14 @@ const decodeNodeId = Schema.decodeSync(NodeId);
 const decodeProviderSessionId = Schema.decodeSync(ProviderSessionId);
 const decodeProviderInstanceId = Schema.decodeSync(ProviderInstanceId);
 const decodeModelSelection = Schema.decodeSync(ModelSelection);
+
+// NodeServices plus a shared TestProviderHost: attachment tests (#22) resolve ids against the
+// same attachmentsDir the adapter's prompt builder sees. openHarness passes the ambient host
+// through (optionally overriding resolveAttachmentPath) so test-written pixels are visible.
+const NodeTestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  TestProviderHost.layer().pipe(Layer.provide(NodeServices.layer)),
+);
 
 const makeIds = (suffix: string) => {
   const instanceId = decodeProviderInstanceId("omp-test-instance");
@@ -79,10 +92,13 @@ interface Harness {
   readonly events: ReadonlyArray<ProviderAdapter.ProviderAdapterV2Event>;
 }
 
-const turnMessage = (text: string): ProviderAdapter.ProviderAdapterV2TurnMessage => ({
+const turnMessage = (
+  text: string,
+  attachments: ReadonlyArray<ChatAttachment> = [],
+): ProviderAdapter.ProviderAdapterV2TurnMessage => ({
   messageId: decodeMessageId(`msg-${Math.abs(text.length * 31)}`),
   text,
-  attachments: [],
+  attachments,
   createdBy: "user",
   creationSource: "web",
 });
@@ -201,15 +217,22 @@ const openHarness = Effect.fn("adapterTest.openHarness")(function* (
   options: {
     readonly idleTimeoutMs?: number | undefined;
     readonly clock?: Clock.Clock | undefined;
+    /** Overrides the ambient host's attachment resolution (e.g. simulate an unresolvable id). */
+    readonly resolveAttachmentPath?: (attachment: ChatAttachment) => string | null;
   } = {},
 ) {
   const scope = yield* Effect.scope;
+  const host = yield* ProviderHost.ProviderHost;
+  const effectiveHost =
+    options.resolveAttachmentPath === undefined
+      ? host
+      : { ...host, resolveAttachmentPath: options.resolveAttachmentPath };
   const adapter = yield* makeOmpAdapterV2({
     instanceId: ids.instanceId,
     command,
     ...(options.idleTimeoutMs === undefined ? {} : { idleTimeoutMs: options.idleTimeoutMs }),
     ...(options.clock === undefined ? {} : { clock: options.clock }),
-  });
+  }).pipe(Effect.provideService(ProviderHost.ProviderHost, effectiveHost));
   const runtime = yield* adapter.openSession({
     threadId: ids.threadId,
     providerSessionId: ids.providerSessionId,
@@ -384,7 +407,7 @@ describe("omp adapter session runtime", () => {
       const promptRequest = requests.find((request) => request["type"] === "prompt");
       expect(promptRequest?.["message"]).toBe("hello omp");
       expect(promptRequest?.["streamingBehavior"]).toBe("followUp");
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("spawns lazily: no omp process before the first prompt", () =>
@@ -408,7 +431,7 @@ describe("omp adapter session runtime", () => {
         expect(yield* readRequestLog(requestLog)).toHaveLength(0);
         expect(eventsOf(harness, "provider_thread.updated")).toHaveLength(1);
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("recovers with an explicit switch_session path, never continue-latest", () =>
@@ -480,7 +503,7 @@ describe("omp adapter session runtime", () => {
         // First spawn legitimately used open_session; recovery afterwards never does.
         expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("maps abort to an interrupted terminal", () =>
@@ -522,7 +545,7 @@ describe("omp adapter session runtime", () => {
       const items = eventsOf(harness, "turn_item.updated").map((event) => event.turnItem);
       const last = items.at(-1);
       expect(last?.type === "assistant_message" ? last.streaming : null).toBe(false);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("maps prompt_result error to the failed terminal branch", () =>
@@ -555,7 +578,7 @@ describe("omp adapter session runtime", () => {
       expect(terminal.failure.code).toBeNull();
       expect(terminal.failure.retryable).toBe(false);
       expect(terminal.failureItemOrdinal).toBeGreaterThan(0);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("streams reasoning deltas as reasoning items without message pairs", () =>
@@ -594,7 +617,7 @@ describe("omp adapter session runtime", () => {
       expect(lastReasoning?.type === "reasoning" ? lastReasoning.text : null).toBe("ponder");
       // Only the assistant_message pairs reach message.updated.
       expect(eventsOf(harness, "message.updated")).toHaveLength(2);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("projects tool_execution start/end into tool items", () =>
@@ -643,7 +666,7 @@ describe("omp adapter session runtime", () => {
       expect(finished?.type === "dynamic_tool" ? finished.toolName : null).toBe("bash");
       const nodes = eventsOf(harness, "node.updated").map((event) => event.node);
       expect(nodes.filter((node) => node.kind === "tool_call")).toHaveLength(2);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("holds the terminal behind a maintenance agent_end (isTerminal:false)", () =>
@@ -669,7 +692,7 @@ describe("omp adapter session runtime", () => {
       const terminal = yield* waitFor(harness, "turn.terminal");
       expect(terminal.status).toBe("completed");
       expect(eventsOf(harness, "turn.terminal")).toHaveLength(1);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("projects queue_update into background work pending state", () =>
@@ -696,7 +719,7 @@ describe("omp adapter session runtime", () => {
       const background = eventsOf(harness, "background_work.updated");
       expect(background).toHaveLength(1);
       expect(background[0]?.pending).toBe(true);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("reports a crashed process instead of failing silently", () =>
@@ -723,7 +746,7 @@ describe("omp adapter session runtime", () => {
       expect(eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread.status).toBe(
         "error",
       );
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("tolerates frames reserved for later tickets", () =>
@@ -756,7 +779,7 @@ describe("omp adapter session runtime", () => {
       );
       const terminal = yield* waitFor(harness, "turn.terminal");
       expect(terminal.status).toBe("completed");
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("exposes the capability truth table and one shared capabilities object", () =>
@@ -793,7 +816,7 @@ describe("omp adapter session runtime", () => {
         expect(session.capabilities).toBe(capabilities);
         void scope;
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("steers the active turn through the steer command", () =>
@@ -828,7 +851,7 @@ describe("omp adapter session runtime", () => {
       const requests = yield* readRequestLog(requestLog);
       const steer = requests.find((request) => request["type"] === "steer");
       expect(steer?.["message"]).toBe("focus on the tests");
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("reclaims an idle process after the timeout and revives it on the next prompt", () =>
@@ -924,7 +947,7 @@ describe("omp adapter session runtime", () => {
           2,
         );
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("does not reclaim the process while a turn is active", () =>
@@ -983,7 +1006,7 @@ describe("omp adapter session runtime", () => {
           1,
         );
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("recovers from a crash by respawning onto the same session on the next prompt", () =>
@@ -1065,7 +1088,7 @@ describe("omp adapter session runtime", () => {
         expect(threadEvents.at(-1)?.status).toBe("idle");
         expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(sessionFile);
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("wires child stderr into the server log", () =>
@@ -1109,7 +1132,7 @@ describe("omp adapter session runtime", () => {
         Effect.scoped,
         Effect.provide(Logger.layer([captureLogger], { mergeWithExisting: true })),
       );
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("refreshes the slash-command directory from available_commands_update (D11)", () =>
@@ -1197,7 +1220,7 @@ describe("omp adapter session runtime", () => {
         ]);
         expect(refreshes()[2]?.slashCommands).toEqual([]);
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("passes slash-command prompts through to omp verbatim (D11)", () =>
@@ -1240,7 +1263,7 @@ describe("omp adapter session runtime", () => {
       expect(requests.find((request) => request["type"] === "steer")?.["message"]).toBe(
         "/compact keep the summary",
       );
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live(
@@ -1281,7 +1304,7 @@ describe("omp adapter session runtime", () => {
         // The applied model lands in thread metadata so recovery can restore it.
         const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
         expect(storedThread?.nativeMetadata?.modelSelection?.model).toBe("zai/glm-5.3");
-      }).pipe(Effect.provide(NodeServices.layer)),
+      }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("keeps the applied model across turns and only switches on a change", () =>
@@ -1349,7 +1372,7 @@ describe("omp adapter session runtime", () => {
         { id: expect.any(String), type: "set_model", provider: "zai", modelId: "glm-5.3" },
         { id: expect.any(String), type: "set_model", provider: "moonshot", modelId: "kimi-k2" },
       ]);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("follows omp's own resolution for the default selection: no modelId anywhere", () =>
@@ -1409,7 +1432,7 @@ describe("omp adapter session runtime", () => {
       // A default thread stores no model metadata — omp keeps resolving on its own.
       const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
       expect(storedThread?.nativeMetadata?.modelSelection).toBeUndefined();
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("fails the turn start fail-closed when omp cannot select the model", () =>
@@ -1466,7 +1489,7 @@ describe("omp adapter session runtime", () => {
       const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
       // No silent rewrite: the metadata never claims the ghost model was applied.
       expect(storedThread?.nativeMetadata?.modelSelection).toBeUndefined();
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("restores the thread model through switch_session on recovery", () =>
@@ -1545,7 +1568,7 @@ describe("omp adapter session runtime", () => {
           },
         ]);
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("fails recovery closed when omp cannot restore the thread model", () =>
@@ -1623,7 +1646,7 @@ describe("omp adapter session runtime", () => {
         expect(requests.some((request) => request["type"] === "set_model")).toBe(false);
         expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
       }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("rejects a model switch while a turn is active", () =>
@@ -1708,7 +1731,7 @@ describe("omp adapter session runtime", () => {
       expect(setModels).toEqual([
         { id: expect.any(String), type: "set_model", provider: "zai", modelId: "glm-5.3" },
       ]);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("syncs model_changed frames into thread metadata without a redundant set_model", () =>
@@ -1786,6 +1809,456 @@ describe("omp adapter session runtime", () => {
       expect(setModels).toEqual([
         { id: expect.any(String), type: "set_model", provider: "zai", modelId: "glm-5.3" },
       ]);
-    }).pipe(Effect.provide(NodeServices.layer)),
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("passes image attachments as base64 prompt.images with mime preserved (D8)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const host = yield* ProviderHost.ProviderHost;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-images-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: {
+                cancelled: false,
+                resumed: false,
+                sessionId: "s-images",
+                sessionFile: "/tmp/fake-images.jsonl",
+              },
+            },
+          },
+          eventsOnPrompt: [completedTurnEvents("seen")],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("images");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      // Source variants: bare attachment (no source) and a snap-shot source with
+      // accessibleText. contracts give images no inline pixels — both read from the file.
+      const pngImage: ChatAttachment = {
+        type: "image",
+        id: ChatAttachmentId.make("img-png"),
+        name: "screen.png",
+        mimeType: "image/png",
+        sizeBytes: 3,
+      };
+      const jpegImage: ChatAttachment = {
+        type: "image",
+        id: ChatAttachmentId.make("img-jpeg"),
+        name: "photo.jpg",
+        mimeType: "image/jpeg",
+        sizeBytes: 4,
+        source: {
+          kind: "snap-shot",
+          capturedAt: "1970-01-01T00:00:00.000Z",
+          appName: "Preview",
+          windowTitle: "photo.jpg",
+          accessibleText: "a bar chart",
+        },
+      };
+      yield* fs.writeFile(host.resolveAttachmentPath(pngImage)!, new Uint8Array([1, 2, 3]));
+      yield* fs.writeFile(host.resolveAttachmentPath(jpegImage)!, new Uint8Array([4, 5, 6, 7]));
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("what do you see", [pngImage, jpegImage]),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* waitFor(harness, "turn.terminal");
+      const prompt = (yield* readRequestLog(requestLog)).find(
+        (request) => request["type"] === "prompt",
+      );
+      expect(prompt).toBeDefined();
+      expect(prompt!["images"]).toEqual([
+        { type: "image", data: "AQID", mimeType: "image/png" },
+        { type: "image", data: "BAUGBw==", mimeType: "image/jpeg" },
+      ]);
+      // Every attachment keeps a saved-path line in the message; the snapshot source adds its
+      // captured-window context.
+      const message = String(prompt!["message"]);
+      expect(message).toContain(host.resolveAttachmentPath(pngImage)!);
+      expect(message).toContain(host.resolveAttachmentPath(jpegImage)!);
+      expect(message).toContain("screen.png");
+      expect(message).toContain("Untrusted captured-window data");
+      expect(message).toContain("Preview");
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("extracts image bytes for snapshot sources with accessibility trees and app icons", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const host = yield* ProviderHost.ProviderHost;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-snap-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: {
+                cancelled: false,
+                resumed: false,
+                sessionId: "s-snap",
+                sessionFile: "/tmp/fake-snap.jsonl",
+              },
+            },
+          },
+          eventsOnPrompt: [completedTurnEvents("ok")],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("snap");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      const snapshotImage: ChatAttachment = {
+        type: "image",
+        id: ChatAttachmentId.make("img-snap"),
+        name: "window.png",
+        mimeType: "image/png",
+        sizeBytes: 3,
+        source: {
+          kind: "snap-shot",
+          capturedAt: "1970-01-01T00:00:00.000Z",
+          appName: "Finder",
+          windowTitle: "Projects",
+          appIconDataUrl: "data:image/png;base64,iVBORw0KGgo=",
+          accessibility: {
+            format: "element-tree",
+            coordinateSpace: "captured-image",
+            imageSize: { width: 200, height: 100 },
+            truncated: false,
+            root: {
+              role: "button",
+              name: "OK",
+              bounds: { x: 8, y: 8, width: 100, height: 24 },
+              children: [],
+            },
+          },
+        },
+      };
+      yield* fs.writeFile(host.resolveAttachmentPath(snapshotImage)!, new Uint8Array([1, 2, 3]));
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("describe the window", [snapshotImage]),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* waitFor(harness, "turn.terminal");
+      const prompt = (yield* readRequestLog(requestLog)).find(
+        (request) => request["type"] === "prompt",
+      );
+      expect(prompt!["images"]).toEqual([{ type: "image", data: "AQID", mimeType: "image/png" }]);
+      const message = String(prompt!["message"]);
+      expect(message).toContain("Finder");
+      expect(message).toContain("captured-image");
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("degrades file attachments to saved-path lines without image parts", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const host = yield* ProviderHost.ProviderHost;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-files-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: {
+                cancelled: false,
+                resumed: false,
+                sessionId: "s-files",
+                sessionFile: "/tmp/fake-files.jsonl",
+              },
+            },
+          },
+          eventsOnPrompt: [completedTurnEvents("read it")],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("files");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      const notesFile: ChatAttachment = {
+        type: "file",
+        id: ChatAttachmentId.make("file-notes"),
+        name: "notes.txt",
+        mimeType: "text/plain",
+        sizeBytes: 2,
+      };
+      const pastedFile: ChatAttachment = {
+        type: "file",
+        id: ChatAttachmentId.make("file-pasted"),
+        name: "snippet.md",
+        mimeType: "text/markdown",
+        sizeBytes: 1,
+        source: { _tag: "pasted-text" },
+      };
+      yield* fs.writeFile(host.resolveAttachmentPath(notesFile)!, new Uint8Array([104, 105]));
+      yield* fs.writeFile(host.resolveAttachmentPath(pastedFile)!, new Uint8Array([35]));
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("summarize these", [notesFile, pastedFile]),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      // Not an error: the turn completes.
+      yield* waitFor(harness, "turn.terminal", (event) => event.status === "completed");
+      const prompt = (yield* readRequestLog(requestLog)).find(
+        (request) => request["type"] === "prompt",
+      );
+      expect(prompt).toBeDefined();
+      // No image parts: file attachments ride the message text only.
+      expect(prompt!["images"]).toBeUndefined();
+      const message = String(prompt!["message"]);
+      expect(message).toContain('[Attached file "notes.txt" is saved at:');
+      expect(message).toContain(host.resolveAttachmentPath(notesFile)!);
+      expect(message).toContain('[Attached file "snippet.md" is saved at:');
+      expect(message).toContain(host.resolveAttachmentPath(pastedFile)!);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("lists an unresolvable image attachment in the message without failing the turn", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-missing-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: {
+                cancelled: false,
+                resumed: false,
+                sessionId: "s-missing",
+                sessionFile: "/tmp/fake-missing.jsonl",
+              },
+            },
+          },
+          eventsOnPrompt: [completedTurnEvents("noted")],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("missing");
+      const harness = yield* openHarness(ids, command, {
+        resolveAttachmentPath: () => null,
+      });
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      const missingImage: ChatAttachment = {
+        type: "image",
+        id: ChatAttachmentId.make("missing-image"),
+        name: "missing.png",
+        mimeType: "image/png",
+        sizeBytes: 0,
+      };
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("look at this", [missingImage]),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* waitFor(harness, "turn.terminal", (event) => event.status === "completed");
+      const prompt = (yield* readRequestLog(requestLog)).find(
+        (request) => request["type"] === "prompt",
+      );
+      expect(prompt!["images"]).toBeUndefined();
+      expect(String(prompt!["message"])).toContain(
+        "[Attached image \"missing.png\" is unavailable: could not resolve a saved path for attachment 'missing-image'.]",
+      );
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("fails closed with an actionable error when image prompts exceed the frame limit", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const host = yield* ProviderHost.ProviderHost;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-oversize-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: {
+                cancelled: false,
+                resumed: false,
+                sessionId: "s-big",
+                sessionFile: "/tmp/fake-big.jsonl",
+              },
+            },
+          },
+          // No events: the prompt must never reach omp.
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("big");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      // Two ~450 KiB images → ~1.2 MiB of base64: over the 1 MiB single-frame limit.
+      const bigBytes = new Uint8Array(450_000).fill(65);
+      const first: ChatAttachment = {
+        type: "image",
+        id: ChatAttachmentId.make("big-one"),
+        name: "big-one.png",
+        mimeType: "image/png",
+        sizeBytes: 450_000,
+      };
+      const second: ChatAttachment = {
+        type: "image",
+        id: ChatAttachmentId.make("big-two"),
+        name: "big-two.png",
+        mimeType: "image/png",
+        sizeBytes: 450_000,
+      };
+      yield* fs.writeFile(host.resolveAttachmentPath(first)!, bigBytes);
+      yield* fs.writeFile(host.resolveAttachmentPath(second)!, bigBytes);
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("compare these", [first, second]),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      const terminal = yield* waitFor(
+        harness,
+        "turn.terminal",
+        (event) => event.status === "failed",
+      );
+      expect(terminal.failure?.message).toContain("single-frame RPC limit");
+      expect(terminal.failure?.message).toContain("2 images");
+      expect(terminal.failure?.message).toContain("Compress the attached images");
+      // Fail closed: nothing went over the wire.
+      expect(
+        (yield* readRequestLog(requestLog)).some((request) => request["type"] === "prompt"),
+      ).toBe(false);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("carries a large in-limit image prompt through to omp", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const host = yield* ProviderHost.ProviderHost;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-nearlimit-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: {
+                cancelled: false,
+                resumed: false,
+                sessionId: "s-near",
+                sessionFile: "/tmp/fake-near.jsonl",
+              },
+            },
+          },
+          eventsOnPrompt: [completedTurnEvents("received")],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("near");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      // 700 KiB → ~933 KiB of base64: under the 1 MiB single-frame limit.
+      const image: ChatAttachment = {
+        type: "image",
+        id: ChatAttachmentId.make("near-limit"),
+        name: "near-limit.png",
+        mimeType: "image/png",
+        sizeBytes: 700_000,
+      };
+      yield* fs.writeFile(host.resolveAttachmentPath(image)!, new Uint8Array(700_000).fill(66));
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("analyze this", [image]),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* waitFor(harness, "turn.terminal", (event) => event.status === "completed");
+      const prompt = (yield* readRequestLog(requestLog)).find(
+        (request) => request["type"] === "prompt",
+      );
+      expect(prompt).toBeDefined();
+      const images = prompt!["images"] as Array<{ type: string; data: string; mimeType: string }>;
+      expect(images).toHaveLength(1);
+      expect(images[0]!.type).toBe("image");
+      expect(images[0]!.mimeType).toBe("image/png");
+      expect(images[0]!.data).toBe(
+        Buffer.from(new Uint8Array(700_000).fill(66)).toString("base64"),
+      );
+    }).pipe(Effect.provide(NodeTestLayer)),
   );
 });

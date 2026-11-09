@@ -308,11 +308,17 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
     }
     const id = `t3-${nextRequestId++}`;
     const payload = new TextEncoder().encode(JSON.stringify({ id, type, ...params }) + "\n");
-    // Fail closed over the server-advertised single-frame transport limit (notes §2).
+    // Fail closed over the server-advertised single-frame transport limit (notes §2). For
+    // image-carrying prompts (#22) the message must be readable and actionable — never a
+    // truncation, never a silent drop.
     if (payload.byteLength > maxFrameBytes) {
+      const imageCount = Array.isArray(params.images) ? params.images.length : 0;
       return yield* new OmpRpcError({
         operation: type,
-        detail: `Request of ${payload.byteLength} bytes exceeds the ${maxFrameBytes}-byte single-frame limit`,
+        detail:
+          imageCount === 0
+            ? `Request of ${payload.byteLength} bytes exceeds the ${maxFrameBytes}-byte single-frame limit`
+            : `Prompt with ${imageCount} image${imageCount === 1 ? "" : "s"} encodes to ${payload.byteLength} bytes, over the ${maxFrameBytes}-byte single-frame RPC limit (base64 inflates image bytes by ~4/3). Compress the attached images or attach fewer/smaller ones, then retry.`,
       });
     }
     const deferred = yield* Deferred.make<unknown, OmpRpcRequestError>();
