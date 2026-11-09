@@ -332,6 +332,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           orphanFrames: [],
           nativeSession: null,
           appliedModel: null,
+          subagents: new Map(),
         };
         const projection = createOmpThreadProjection({
           driver: OMP_PROVIDER,
@@ -755,6 +756,26 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           // finalizes as turn interrupted; nothing else to do here.
         }),
         respondToRuntimeRequest: () => Effect.void,
+        stopSubagent: Effect.fn("OmpAdapter.stopSubagent")(function* (stopInput) {
+          const thread = threads.get(stopInput.providerThread.id);
+          const client = thread === undefined ? undefined : thread.client.client;
+          if (client === undefined || client === null) {
+            return yield* protocolError(
+              `cancel_subagent requested for thread ${stopInput.providerThread.id} with no live omp process`,
+            );
+          }
+          // omp hard-kills the subagent without touching the parent turn and confirms via a
+          // subagent_lifecycle status:"aborted" frame, which the projection renders as the
+          // record's cancelled terminal (spec §7 canCloseSubagents). cancelled:false for an
+          // already-dead id is still a success — closing is idempotent.
+          yield* client
+            .request("cancel_subagent", { subagentId: stopInput.nativeTaskId })
+            .pipe(
+              Effect.mapError((cause) =>
+                protocolError(`cancel_subagent failed for ${stopInput.nativeTaskId}`, cause),
+              ),
+            );
+        }),
         readThreadSnapshot: Effect.fn("OmpAdapter.readThreadSnapshot")(function* (snapshotInput) {
           const thread = threads.get(snapshotInput.providerThread.id);
           if (thread === undefined) {

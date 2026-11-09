@@ -8,6 +8,7 @@ import type {
   OrchestrationV2ProviderSession,
   OrchestrationV2ProviderThread,
   OrchestrationV2ProviderTurn,
+  OrchestrationV2Subagent,
   OrchestrationV2TurnItem,
   ProviderDriverKind,
   ProviderInstanceId,
@@ -94,6 +95,8 @@ export interface OmpThreadProjectionState {
    * their selection until omp itself fails the restore, which surfaces fail-closed).
    */
   appliedModel: OmpModelRef | null;
+  /** Live subagent records by native subagentId (#23); each frame re-emits the merged record. */
+  subagents: Map<string, OrchestrationV2Subagent>;
 }
 
 export interface OmpThreadProjection {
@@ -576,6 +579,118 @@ export const createOmpThreadProjection = (input: {
     yield* emitToolItem(turn, tool);
   });
 
+  // ── Subagent projection (#23, spec §5.5/§7) ──────────────────────────────────────────
+  // The three subagent_* frames merge into one contract record per native subagentId,
+  // re-emitted as subagent.updated on every frame (final value wins, mirroring Pi).
+  // omp exposes no subagent thread ids or fork path: childThreadId stays null.
+  const OMP_SUBAGENT_PROGRESS_LIMIT = 200;
+  const OMP_SUBAGENT_RESULT_LIMIT = 10_000;
+  const OMP_SUBAGENT_EVENT_PASSTHROUGH_LIMIT = 2_000;
+
+  const ompSubagentStatusFromFrame = (
+    status: string | undefined,
+  ): OrchestrationV2Subagent["status"] =>
+    status === "completed"
+      ? "completed"
+      : status === "failed" || status === "error"
+        ? "failed"
+        : // cancel_subagent lands as lifecycle status:"aborted" (notes rpc-protocol §4);
+          // the only abort source for a headless subagent is an explicit close.
+          status === "aborted" || status === "cancelled"
+          ? "cancelled"
+          : "running";
+
+  const emitSubagent = Effect.fnUntraced(function* (
+    nativeSubagentId: string,
+    patch: {
+      readonly status: OrchestrationV2Subagent["status"];
+      readonly title?: string;
+      readonly prompt?: string;
+      readonly model?: string | null;
+      readonly progress?: string;
+      readonly result?: string | null;
+    },
+  ) {
+    const turn = state.active;
+    const threadId = turn?.turnInput.threadId ?? state.providerThread.appThreadId;
+    if (threadId === null) return;
+    const existing = state.subagents.get(nativeSubagentId);
+    const emittedAt = yield* DateTime.now;
+    const terminal = patch.status !== "running";
+    const subagent: OrchestrationV2Subagent = {
+      id:
+        existing?.id ??
+        IdAllocator.derive.nodeFromProviderItem({
+          driver,
+          nativeItemId: `subagent:${nativeSubagentId}`,
+        }),
+      threadId,
+      runId: turn?.turnInput.runId ?? existing?.runId ?? null,
+      parentNodeId:
+        turn?.turnInput.rootNodeId ??
+        existing?.parentNodeId ??
+        IdAllocator.derive.nodeFromProviderItem({
+          driver,
+          nativeItemId: `subagent-parent:${nativeSubagentId}`,
+        }),
+      origin: "provider_native",
+      createdBy: "agent",
+      driver,
+      providerInstanceId: input.instanceId,
+      providerThreadId: state.providerThread.id,
+      childThreadId: null,
+      nativeTaskRef: { driver, nativeId: nativeSubagentId, strength: "strong" },
+      prompt: patch.prompt ?? existing?.prompt ?? "",
+      title: patch.title ?? existing?.title ?? nativeSubagentId,
+      model: patch.model === undefined ? (existing?.model ?? null) : patch.model,
+      status: patch.status,
+      ...(patch.progress === undefined ? {} : { progress: patch.progress }),
+      result: patch.result === undefined ? (existing?.result ?? null) : patch.result,
+      startedAt: existing?.startedAt ?? emittedAt,
+      completedAt: terminal ? emittedAt : null,
+      updatedAt: emittedAt,
+    };
+    state.subagents.set(nativeSubagentId, subagent);
+    yield* input.emit({ type: "subagent.updated", driver, subagent });
+  });
+
+  const handleSubagentFrame = (frame: OmpRpcFrame): Effect.Effect<void> => {
+    const nativeSubagentId = frameString(frame, "subagentId");
+    if (nativeSubagentId === undefined) return Effect.void;
+    const existing = state.subagents.get(nativeSubagentId);
+    const type = frameString(frame, "type");
+    if (type === "subagent_lifecycle") {
+      const status = ompSubagentStatusFromFrame(frameString(frame, "status"));
+      const title = frameString(frame, "title") ?? frameString(frame, "agent");
+      const prompt = frameString(frame, "prompt") ?? frameString(frame, "task");
+      const model = frameString(frame, "model");
+      const result = frameString(frame, "result") ?? frameString(frame, "output");
+      return emitSubagent(nativeSubagentId, {
+        status,
+        ...(title === undefined ? {} : { title }),
+        ...(prompt === undefined ? {} : { prompt }),
+        ...(model === undefined ? {} : { model }),
+        ...(result === null || result === undefined
+          ? {}
+          : { result: result.slice(0, OMP_SUBAGENT_RESULT_LIMIT) }),
+      });
+    }
+    if (type === "subagent_progress") {
+      const progress = frameString(frame, "progress") ?? frameString(frame, "message") ?? "";
+      return emitSubagent(nativeSubagentId, {
+        status: existing?.status ?? "running",
+        ...(progress === "" ? {} : { progress: progress.slice(0, OMP_SUBAGENT_PROGRESS_LIMIT) }),
+      });
+    }
+    // subagent_event: transparent passthrough — the inner event rides along as the record's
+    // progress text (level "events" delivers the full snapshot; notes rpc-protocol §5).
+    const event = frame["event"] ?? frame;
+    return emitSubagent(nativeSubagentId, {
+      status: existing?.status ?? "running",
+      progress: JSON.stringify(event).slice(0, OMP_SUBAGENT_EVENT_PASSTHROUGH_LIMIT),
+    });
+  };
+
   const applyModel = Effect.fnUntraced(function* (model: OmpModelRef) {
     state.appliedModel = model;
     const updatedAt = yield* DateTime.now;
@@ -607,6 +722,10 @@ export const createOmpThreadProjection = (input: {
         return handlePromptResult(frame);
       case "agent_end":
         return handleAgentEnd(frame);
+      case "subagent_lifecycle":
+      case "subagent_progress":
+      case "subagent_event":
+        return handleSubagentFrame(frame);
       case "model_changed": {
         // omp changed its model (spec §6: report-and-passthrough): sync thread metadata from
         // the frame's `model` slug or `provider`+`modelId` pair; unknown shapes stay tolerated.
@@ -640,10 +759,10 @@ export const createOmpThreadProjection = (input: {
           pending,
         });
       }
-      // Tolerated for later tickets (#16/#20/#21…): approvals, compaction, subagent
-      // presentation. Ignored, never an error (spec §5.5). model_changed projects in this
-      // switch (#17); available_commands_update is projected into the slash-command directory
-      // at the adapter's frame entry (#19), before turn scoping, so it never reaches this switch.
+      // Tolerated for later tickets (#16/#20/#21…): approvals, compaction. Ignored, never
+      // an error (spec §5.5). model_changed (#17), subagent_* (#23) project in this switch;
+      // available_commands_update (#19) projects at the adapter's frame entry, before turn
+      // scoping, so it never reaches this switch.
       default:
         return Effect.void;
     }
