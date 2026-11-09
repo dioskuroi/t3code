@@ -577,8 +577,11 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         thread.broken = false;
         thread.client.approvalMode = approvalMode;
         if (sessionPath === null) {
+          // omp requires an explicit session directory (real omp rejects a bare open_session;
+          // migration notes rpc-protocol.md §4): this thread's sessions live in a t3code-owned
+          // folder under the project root, which omp creates on first open.
           const opened = (yield* client
-            .request("open_session", {})
+            .request("open_session", { sessionDir: `${cwd}/.t3code/omp-sessions` })
             .pipe(Effect.mapError((cause) => protocolError("open_session failed", cause)))) as {
             sessionId?: unknown;
             sessionFile?: unknown;

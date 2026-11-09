@@ -374,6 +374,15 @@ export const ACP_REGISTRY_MODEL_SELECTION = {
   model: "default",
 } satisfies ModelSelection;
 
+/**
+ * "default" never drives omp's set_model (OMP_INHERIT_MODEL_SLUG): recordings follow omp's own
+ * model resolution, so the tape stays independent of whichever model the CLI authenticates.
+ */
+export const OMP_MODEL_SELECTION = {
+  instanceId: ProviderInstanceId.make("omp"),
+  model: "default",
+} satisfies ModelSelection;
+
 export const READ_ONLY_ON_REQUEST_POLICY = {
   approvalPolicy: "on-request",
   sandboxPolicy: {

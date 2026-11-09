@@ -461,8 +461,12 @@ describe("omp adapter session runtime", () => {
       expect(messages.every((message) => message.role === "assistant")).toBe(true);
       const requests = yield* readRequestLog(requestLog);
       const openSessionRequest = requests.find((request) => request["type"] === "open_session");
-      // open_session with no args: first spawn lets omp create the session.
-      expect(openSessionRequest).toEqual({ id: expect.any(String), type: "open_session" });
+      // open_session carries the t3code-owned session dir: first spawn lets omp create it.
+      expect(openSessionRequest).toEqual({
+        id: expect.any(String),
+        type: "open_session",
+        sessionDir: expect.stringContaining("/.t3code/omp-sessions"),
+      });
       const promptRequest = requests.find((request) => request["type"] === "prompt");
       expect(promptRequest?.["message"]).toBe("hello omp");
       expect(promptRequest?.["streamingBehavior"]).toBe("followUp");
@@ -2023,6 +2027,7 @@ describe("omp adapter session runtime", () => {
       expect(requests.find((request) => request["type"] === "open_session")).toEqual({
         id: expect.any(String),
         type: "open_session",
+        sessionDir: expect.stringContaining("/.t3code/omp-sessions"),
       });
       // A default thread stores no model metadata — omp keeps resolving on its own.
       const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;

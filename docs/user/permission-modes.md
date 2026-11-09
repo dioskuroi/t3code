@@ -57,4 +57,12 @@ approvals for actions that support them.
 Kiro offers only **Supervised** and **Full access**. In **Supervised** Kiro also asks you to
 review a turn's file changes. See [Kiro permissions](./providers-kiro.md#permission-modes).
 
+omp enforces permissions in its own process, mapped to omp's `--approval-mode`: **Supervised**
+runs `always-ask`, **Auto-accept edits** runs `write`, and **Full access** runs `yolo`. **Auto**
+does not declare a native omp mode; a thread stored with **Auto** runs in **Supervised**. Because
+the mode lives in the process arguments, changing it takes effect when T3 Code next restarts the
+omp process for that thread — while the thread is idle, or after the current turn ends. The
+restart keeps the session, and approvals remembered "for this session" expire with the process;
+there is no cross-session **Always**. See [omp permissions](./providers-omp.md#permission-modes).
+
 See the [provider guides](./install.md#providers) for setup and provider-specific limits.

@@ -34,6 +34,7 @@ const DRIVERS_WITH_REPLAY_FIXTURE_FILES = new Set([
   "grok",
   "kiro",
   "muse",
+  "omp",
   "opencode",
   "pi",
 ]);
