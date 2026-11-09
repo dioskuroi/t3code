@@ -63,6 +63,13 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
       // Spec §7 (ADR-0004): the plan-mode interaction toggle is never presented; /plan rides
       // the slash-command passthrough instead.
       expect(snapshot.showInteractionModeToggle).toBe(false);
+      // Spec §6: exactly three modes; "auto" is never declared (stored auto degrades server-side)
+      // and always-ask-cached is never used (ADR-0002).
+      expect(snapshot.supportedRuntimeModes).toEqual([
+        "approval-required",
+        "auto-accept-edits",
+        "full-access",
+      ]);
       expect(snapshot.models.map((model) => model.slug)).toEqual([
         "zai/glm-5.3",
         "moonshot/kimi-k3",
@@ -85,6 +92,75 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
           isOmpReadyFrame(readyFrame) &&
           ompSupportsProtocolV2(readyFrame),
       ).toBe(true);
+    }),
+  );
+
+  it.effect(
+    "attaches a reasoning thinking-level descriptor from get_available_thinking_levels",
+    () =>
+      Effect.gen(function* () {
+        const { command } = yield* writeFakeOmpIntoTemp({
+          responses: {
+            get_available_models: {
+              data: {
+                models: [{ provider: "zai", id: "glm-5.3", name: "GLM-5.3", reasoning: true }],
+              },
+            },
+            get_available_thinking_levels: {
+              // Measured omp 18.18.1 shape (migration notes rpc-protocol.md).
+              data: { levels: ["off", "low", "high", "max"] },
+            },
+          },
+        });
+        const snapshot = yield* checkOmpProviderStatus(
+          decodeOmpSettings({}),
+          { ...process.env },
+          undefined,
+          command,
+        );
+        expect(snapshot.status).toBe("ready");
+        const descriptor = snapshot.models[0]?.capabilities?.optionDescriptors?.[0];
+        if (descriptor === undefined) throw new Error("expected a thinking-level descriptor");
+        expect(descriptor).toEqual({
+          id: "thinking",
+          label: "Thinking",
+          type: "select",
+          role: "reasoning",
+          options: [
+            { id: "off", label: "Off" },
+            { id: "low", label: "Low" },
+            { id: "high", label: "High" },
+            { id: "max", label: "Max" },
+          ],
+        });
+        // The runtime-level control attaches to every catalog entry.
+        expect(snapshot.models.map((model) => model.capabilities?.optionDescriptors?.[0])).toEqual([
+          descriptor,
+        ]);
+      }),
+  );
+
+  it.effect("omits the thinking descriptor when omp reports no thinking levels", () =>
+    Effect.gen(function* () {
+      const { command } = yield* writeFakeOmpIntoTemp({
+        responses: {
+          get_available_models: {
+            data: {
+              models: [{ provider: "zai", id: "glm-5.3", name: "GLM-5.3", reasoning: true }],
+            },
+          },
+          get_available_thinking_levels: { data: { levels: [] } },
+        },
+      });
+      const snapshot = yield* checkOmpProviderStatus(
+        decodeOmpSettings({}),
+        { ...process.env },
+        undefined,
+        command,
+      );
+      expect(snapshot.status).toBe("ready");
+      // Spec §7 default rule: unmapped means unpresented.
+      expect(snapshot.models[0]?.capabilities).toBeNull();
     }),
   );
 

@@ -306,7 +306,13 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
         detail: "omp RPC process has already exited",
       });
     }
-    const id = `t3-${nextRequestId++}`;
+    // omp echoes the request id. extension_ui_response carries the omp dialog id in params.id —
+    // make it the envelope id so the echoed response resolves the pending entry instead of
+    // racing a phantom t3-N id into the 30s timeout.
+    const id =
+      typeof params["id"] === "string" && params["id"] !== ""
+        ? params["id"]
+        : `t3-${nextRequestId++}`;
     const payload = new TextEncoder().encode(JSON.stringify({ id, type, ...params }) + "\n");
     // Fail closed over the server-advertised single-frame transport limit (notes §2). For
     // image-carrying prompts (#22) the message must be readable and actionable — never a

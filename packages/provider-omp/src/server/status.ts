@@ -1,4 +1,6 @@
 import { ServerProviderModel } from "@t3tools/contracts";
+import type { ProviderOptionChoice } from "@t3tools/contracts";
+import { createModelCapabilities } from "@t3tools/shared/model";
 import { OmpSettings } from "../settings.ts";
 import { resolveSpawnCommand } from "@t3tools/shared/shell";
 import * as DateTime from "effect/DateTime";
@@ -128,6 +130,14 @@ const probeOmpModelCatalog = Effect.fn("OmpProviderStatus.probeOmpModelCatalog")
           }),
       ),
     );
+    // Thinking levels (#21, spec §6/§7): one runtime-level control for every catalog entry,
+    // refreshed on each status check. A failed probe degrades to no descriptor (spec §7:
+    // unmapped means unpresented) instead of failing the whole catalog.
+    const thinkingLevels = yield* client.request("get_available_thinking_levels").pipe(
+      Effect.map((data) => parseOmpThinkingLevels(data)),
+      Effect.result,
+      Effect.map((outcome) => (Result.isSuccess(outcome) ? outcome.success : [])),
+    );
     // Close stdin: omp drains accepted work, flushes stdout, exits 0 (notes §7).
     const exitCode = yield* client.close;
     if (exitCode !== 0) {
@@ -137,11 +147,50 @@ const probeOmpModelCatalog = Effect.fn("OmpProviderStatus.probeOmpModelCatalog")
       });
     }
     const parsed = parseOmpModels(catalog);
-    return yield* Result.isSuccess(parsed)
-      ? Effect.succeed(parsed.success)
-      : Effect.fail(parsed.failure);
+    if (Result.isFailure(parsed)) return yield* parsed.failure;
+    const capabilities = ompThinkingCapabilities(thinkingLevels);
+    return parsed.success.map((model) => ({
+      ...model,
+      capabilities: capabilities === null ? null : createModelCapabilities(capabilities),
+    }));
   }).pipe(Effect.scoped);
 });
+
+/**
+ * The omp thinking-level descriptor (#21, spec §7): one `role:"reasoning"` select per model —
+ * omp's levels are runtime-wide, so the same descriptor attaches to every catalog entry. No
+ * `isDefault`/`currentValue`: omp's own baseline level is never reported to the probe.
+ */
+const ompThinkingCapabilities = (levels: ReadonlyArray<string>) =>
+  levels.length === 0
+    ? null
+    : ({
+        optionDescriptors: [
+          {
+            id: "thinking",
+            label: "Thinking",
+            type: "select" as const,
+            role: "reasoning" as const,
+            options: levels.map((level): ProviderOptionChoice => ({
+              id: level,
+              label: level.length === 0 ? level : level[0]!.toUpperCase() + level.slice(1),
+            })),
+          },
+        ],
+      } as const);
+
+const parseOmpThinkingLevels = (data: unknown): ReadonlyArray<string> => {
+  const levels = (data as { levels?: unknown } | undefined)?.levels;
+  if (!Array.isArray(levels)) return [];
+  const seen = new Set<string>();
+  const parsed: string[] = [];
+  for (const level of levels) {
+    if (typeof level !== "string" || level.trim() === "" || seen.has(level)) continue;
+    seen.add(level);
+    parsed.push(level);
+  }
+  return parsed;
+};
 
 function parseOmpModels(
   data: unknown,
