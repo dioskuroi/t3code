@@ -1,7 +1,7 @@
-// omp adapter lifeline (spec §5.4/5.5/5.6, tickets #15/#17): one t3code thread drives exactly
-// one `omp --mode rpc` child; lazy spawn at the first prompt, recovery always via explicit
-// sessionPath. Frames project onto ProviderAdapterV2Events in projection.ts; approvals (#16)
-// and idle reclamation / respawn polish (#18) land in their own tickets.
+// omp adapter lifeline (spec §5.4/5.5/5.6, tickets #15/#17/#19): one t3code thread drives
+// exactly one `omp --mode rpc` child; lazy spawn at the first prompt, recovery always via
+// explicit sessionPath. Frames project onto ProviderAdapterV2Events in projection.ts; the
+// slash-command directory (#19) projects at the frame entry; approvals (#16) and #18 have tickets.
 import type {
   OrchestrationV2ProviderCapabilities,
   OrchestrationV2ProviderSession,
@@ -25,6 +25,7 @@ import {
   createOmpThreadProjection,
   OMP_INHERIT_MODEL_SLUG,
   parseOmpModelSlug,
+  ompSlashCommandsFromFrame,
   type OmpModelRef,
   type OmpThreadProjection,
 } from "./projection.ts";
@@ -176,7 +177,7 @@ interface OmpThreadState {
   broken: boolean;
 }
 
-/** Frames forwarded to the projection before their turn went active (fake-harness races). */
+/** Non-directory frames forwarded to the projection before their turn went active (fake-harness races). */
 const routeFrame = (thread: OmpThreadState, frame: Record<string, unknown>): Effect.Effect<void> =>
   thread.projection.state.active === null
     ? Effect.sync(() => {
@@ -349,7 +350,19 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           args: spawnArgs(runtimePolicy),
           cwd,
           onEvent: (frame) => {
-            Effect.runForkWith(services)(routeFrame(thread, frame));
+            // Directory frames project immediately regardless of turn state (spec §5.5/§7):
+            // omp pushes the startup catalog right after open_session, before any turn.
+            const slashCommands = ompSlashCommandsFromFrame(frame);
+            Effect.runForkWith(services)(
+              slashCommands === undefined
+                ? routeFrame(thread, frame)
+                : emit({
+                    type: "provider_slash_commands.updated",
+                    driver: OMP_PROVIDER,
+                    providerThreadId: thread.projection.state.providerThread.id,
+                    slashCommands: [...slashCommands],
+                  }),
+            );
           },
           onExit: (exit) => {
             if (thread.client.closing) return;

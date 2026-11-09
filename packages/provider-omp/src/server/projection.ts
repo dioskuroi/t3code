@@ -12,6 +12,7 @@ import type {
   ProviderDriverKind,
   ProviderInstanceId,
   ProviderSessionId,
+  ServerProviderSlashCommand,
 } from "@t3tools/contracts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -131,6 +132,36 @@ const frameRecord = (frame: OmpRpcFrame, key: string): Record<string, unknown> |
   return typeof value === "object" && value !== null
     ? (value as Record<string, unknown>)
     : undefined;
+};
+
+/**
+ * omp `available_commands_update` → the contracts slash-command catalog (spec §5.5/§7). Every
+ * frame carries the full replacement catalog; entries without a usable name are dropped and
+ * omp-only fields (`source`, `aliases`, `subcommands`) have no contract slot. Undefined for any
+ * other frame, or a directory frame without a `commands` array (tolerated, spec §5.5).
+ */
+export const ompSlashCommandsFromFrame = (
+  frame: OmpRpcFrame,
+): ReadonlyArray<ServerProviderSlashCommand> | undefined => {
+  if (frameString(frame, "type") !== "available_commands_update") return undefined;
+  const commands = frame["commands"];
+  if (!Array.isArray(commands)) return undefined;
+  const catalog: ServerProviderSlashCommand[] = [];
+  for (const entry of commands) {
+    if (typeof entry !== "object" || entry === null) continue;
+    const record = entry as Record<string, unknown>;
+    const name = record["name"];
+    if (typeof name !== "string" || name.trim() === "") continue;
+    const description = record["description"];
+    const input = frameRecord(record, "input");
+    const hint = input === undefined ? undefined : input["hint"];
+    catalog.push({
+      name,
+      ...(typeof description === "string" && description.trim() !== "" ? { description } : {}),
+      ...(typeof hint === "string" && hint.trim() !== "" ? { input: { hint } } : {}),
+    });
+  }
+  return catalog;
 };
 
 const failureFromPromptError = (error: Record<string, unknown>): OrchestrationV2ProviderFailure => {
@@ -610,7 +641,9 @@ export const createOmpThreadProjection = (input: {
         });
       }
       // Tolerated for later tickets (#16/#20/#21…): approvals, compaction, subagent
-      // presentation, slash-command catalog. Ignored, never an error (spec §5.5).
+      // presentation. Ignored, never an error (spec §5.5). model_changed projects in this
+      // switch (#17); available_commands_update is projected into the slash-command directory
+      // at the adapter's frame entry (#19), before turn scoping, so it never reaches this switch.
       default:
         return Effect.void;
     }

@@ -31,6 +31,7 @@ import {
   RuntimeRequestId,
   RunAttemptId,
   RunId,
+  ServerProviderSlashCommand,
   ThreadId,
   TurnItemId,
 } from "@t3tools/contracts";
@@ -99,6 +100,13 @@ export const ProviderAdapterV2Event = Schema.Union([
     /** Work remaining at this point in the event stream, including native continuations. */
     pendingBackgroundWork: Schema.optional(Schema.Boolean),
     retainedNativeTurnIds: Schema.optional(Schema.Array(Schema.String)),
+  }),
+  /** Live slash-command catalog refresh from the provider process (omp `available_commands_update`). */
+  Schema.Struct({
+    type: Schema.Literal("provider_slash_commands.updated"),
+    driver: ProviderDriverKind,
+    providerThreadId: ProviderThreadId,
+    slashCommands: Schema.Array(ServerProviderSlashCommand),
   }),
   Schema.Struct({
     type: Schema.Literal("provider_turn.updated"),
