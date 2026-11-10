@@ -473,6 +473,37 @@ describe("resolveProjectProviderInstanceEnabled", () => {
     };
     expect(resolveProjectProviderInstanceEnabled(settings, projectId, instanceId)).toBe(false);
   });
+
+  it("enables an unconfigured omp instance when official presets are stored disabled", () => {
+    // Migration install: the official app presets every instance disabled and has no omp entry.
+    const codex = ProviderInstanceId.make("codex");
+    const claudeAgent = ProviderInstanceId.make("claudeAgent");
+    const settings: ServerSettings = {
+      ...DEFAULT_SERVER_SETTINGS,
+      providerInstances: {
+        [codex]: { driver: ProviderDriverKind.make("codex"), enabled: false },
+        [claudeAgent]: { driver: ProviderDriverKind.make("claudeAgent"), enabled: false },
+      },
+      projectSettingsOverrides: {},
+    };
+    expect(
+      resolveProjectProviderInstanceEnabled(settings, null, ProviderInstanceId.make("omp")),
+    ).toBe(true);
+    expect(resolveProjectProviderInstanceEnabled(settings, null, codex)).toBe(false);
+    expect(resolveProjectProviderInstanceEnabled(settings, null, claudeAgent)).toBe(false);
+  });
+
+  it("respects an explicit omp disable in stored settings", () => {
+    const omp = ProviderInstanceId.make("omp");
+    const settings: ServerSettings = {
+      ...DEFAULT_SERVER_SETTINGS,
+      providerInstances: {
+        [omp]: { driver: ProviderDriverKind.make("omp"), enabled: false },
+      },
+      projectSettingsOverrides: {},
+    };
+    expect(resolveProjectProviderInstanceEnabled(settings, null, omp)).toBe(false);
+  });
 });
 
 describe("requiredScopesForProjectMutation", () => {
