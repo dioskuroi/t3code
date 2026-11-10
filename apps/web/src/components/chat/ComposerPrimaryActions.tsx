@@ -282,16 +282,17 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
           : isRunning
             ? "Steer message"
             : "Submit message";
-  const submitStatus = isEnvironmentUnavailable
-    ? "Environment disconnected"
-    : (sendDisabledReason ??
-      (isPreparingWorktree
+  const submitStatus =
+    sendDisabledReason ??
+    (isEnvironmentUnavailable
+      ? "Environment disconnected"
+      : isPreparingWorktree
         ? "Preparing worktree"
         : isSendBusy
           ? isEditingQueuedMessage
             ? "Updating queued message"
             : "Submitting message"
-          : null));
+          : null);
   const submitTooltip =
     submitStatus ??
     (compactsBeforeSend

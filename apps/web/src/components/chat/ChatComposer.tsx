@@ -935,12 +935,16 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   );
   const sendDisabledReason =
     externalSendDisabledReason ??
+    (projectSelectionRequired ? "Choose a project above to start a thread" : null) ??
     (multipleModelSelections?.length === 0 ? "Select at least one model." : null) ??
     (activePendingProgress
       ? attachmentBlockReason
       : (attachmentBlockReason ??
         runtimeModeCeilingDenial ??
-        (multipleModelSelections === null ? providerSendBlockReason : null)));
+        (multipleModelSelections === null
+          ? (providerSendBlockReason ??
+            (noProviderAvailable ? "Enable a provider in Settings to send a message" : null))
+          : null)));
   const isSendDisabled = sendDisabledReason !== null;
   const selectedProviderStatus = selectedProviderEntry?.snapshot ?? null;
   const compactCommandAvailable = providerSupportsManualCompaction(selectedProviderEntry);
