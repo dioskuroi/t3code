@@ -649,10 +649,9 @@ export const layerWithOptions = (
       const executor = yield* OrchestrationEffectExecutorV2;
       const workerId = options.workerId ?? `orchestration-v2:${process.pid}`;
       const maxAttempts = Math.max(1, options.maxAttempts ?? 5);
-      // #38: answer delivery is single-attempt — the orchestrator resolves the request
-      // before the effect runs, so any retry re-enters respond against a resolved
-      // request and fails "request-not-ready": unsendable, pure WARN noise plus a
-      // delayed red card. First failure fails the effect and red-cards immediately.
+      // #38: answer delivery is single-attempt — dispatch resolves the request before
+      // the effect runs, so a retry would re-enter respond against a resolved request
+      // and fail "request-not-ready"; the first failure is already terminal.
       const attemptsFor = (effect: EffectOutbox.OrchestrationEffectV2) =>
         effect.request.type === "runtime-request.respond" ? 1 : maxAttempts;
       const wasCancelled = (effectId: string) =>

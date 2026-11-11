@@ -1010,9 +1010,8 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           }
           found.entry.answering = true;
           const params = ompResponseValueFor(found.entry, requestInput.decision);
-          // Fire-and-forget (#38): real omp never answers extension_ui_response (probe-
-          // verified 18.18.6/18.18.1), so waiting only manufactured a 30s timeout. Delivery
-          // success is observed through the event stream (tool execution / prompt_result).
+          // Fire-and-forget: delivery success surfaces through the event stream (tool
+          // execution / prompt_result), never through an ack (see OmpRpcClient.notify).
           const delivered = yield* Effect.result(client.notify("extension_ui_response", params));
           if (delivered._tag === "Failure") {
             found.entry.answering = false;

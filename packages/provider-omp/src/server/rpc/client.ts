@@ -95,10 +95,10 @@ export interface OmpRpcClient {
     params?: Record<string, unknown>,
   ) => Effect.Effect<unknown, OmpRpcRequestError>;
   /**
-   * Fire-and-forget send (#38): same envelope as request, no pending entry, no timeout —
-   * resolves once queued to stdin. Real omp never answers extension_ui_response, so
-   * waiting only manufactured a 30s timeout. Fails only on child-exited (OmpRpcExitError)
-   * or over-frame-limit (OmpRpcError); post-queue deaths surface via the exit watcher.
+   * Fire-and-forget send: same envelope as request, no pending entry, no timeout —
+   * resolves once queued to stdin. Used for extension_ui_response, the one method real
+   * omp never answers (#38 probe). Fails only on child-exited (OmpRpcExitError) or
+   * over-frame-limit (OmpRpcError); post-queue deaths surface via the exit watcher.
    */
   readonly notify: (
     type: string,
