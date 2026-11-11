@@ -10,7 +10,7 @@
     "身份词复数（agents/providers/threads/tokens）与品牌 ChatGPT 由 i18n-check 译文内容面回填（§3.1/§2 保留词的形态变体）。",
     "nodeSqliteClient 三条（prepare/reset 诊断 reason、BEGIN IMMEDIATE SQL）系 .ts 解析修复后暴露的禁译区串，i18n/main a6f36a2 回填。"
   ],
-  "contains": [],
+  "contains": ["/side", "@container"],
   "exact": [
     "Failed to prepare statement",
     "Failed to reset statement result mode",
@@ -204,7 +204,9 @@
     "Version value out of range",
     "Visual Studio Code",
     "Visual Studio Code - Insiders",
-    "Write-Output ''"
+    "Write-Output ''",
+    "1px",
+    "3rem"
   ],
   "globs": [
     "**/*.test.{ts,tsx,js,jsx,mjs,cjs}",
@@ -338,6 +340,13 @@
     "true",
     "utf-8",
     "wal",
-    "web"
+    "web",
+    "/side",
+    "gif",
+    "heic",
+    "heif",
+    "jpeg",
+    "png",
+    "webp"
   ]
 }
