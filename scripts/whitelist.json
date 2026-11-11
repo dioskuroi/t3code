@@ -174,6 +174,7 @@
     "Encoded",
     "Ended",
     "Error",
+    "Every ForwardCompatibleUnion member needs a string literal .",
     "Exec= %U",
     "Expected key=value but received .",
     "Failed",
@@ -621,6 +622,7 @@
     "T02 (#56): contracts 类型索引字面量（Type/Encoded/Rebuild）、IPC 协议枚举值（Alpha/Beta/Dev/Nightly/Idle/Loading）与 SSH 网关 URL 片段为协议/开发面文案，不翻译。",
     "T02 (#56)：新增 contracts 术语词（代码标识符、协议/参数名、品牌名），整词扣除。",
     "T02 (#56)：补充第二批术语词（OAuth/Git/枚举值/品牌短语），整词或短语扣除。",
-    "T02 (#56)：TaggedStruct 判别值与键位名（Schema.Literals）为协议字面量，整串豁免。"
+    "T02 (#56)：TaggedStruct 判别值与键位名（Schema.Literals）为协议字面量，整串豁免。",
+    "T02 (#56)：baseSchemas 内部 throw new Error 开发者断言，非用户可见，不翻译。"
   ]
 }
