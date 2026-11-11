@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import * as Cause from "effect/Cause";
 import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
@@ -204,24 +205,26 @@ it.each(["Success", "Failure"] as const)(
       />
     );
     await using screen = await render(harness(threadA));
-    await page.getByRole("button", { name: "Stop", exact: true }).click();
-    await expect.element(page.getByRole("button", { name: "Stopping..." })).toBeDisabled();
+    await page.getByRole("button", { name: tr("Stop"), exact: true }).click();
+    await expect.element(page.getByRole("button", { name: tr("Stopping...") })).toBeDisabled();
     await screen.rerender(harness(threadB));
-    await page.getByRole("button", { name: "Stop", exact: true }).click();
+    await page.getByRole("button", { name: tr("Stop"), exact: true }).click();
     await screen.rerender(harness(threadA));
-    await expect.element(page.getByRole("button", { name: "Stopping..." })).toBeDisabled();
+    await expect.element(page.getByRole("button", { name: tr("Stopping...") })).toBeDisabled();
     completions[0]!(
       outcome === "Success"
         ? { _tag: "Success", value: undefined }
         : { _tag: "Failure", cause: Cause.fail(new Error("stop failed")) },
     );
     if (outcome === "Success") {
-      await expect.element(page.getByRole("button", { name: "Stopping..." })).toBeDisabled();
+      await expect.element(page.getByRole("button", { name: tr("Stopping...") })).toBeDisabled();
     } else {
-      await expect.element(page.getByRole("button", { name: "Stop", exact: true })).toBeEnabled();
+      await expect
+        .element(page.getByRole("button", { name: tr("Stop"), exact: true }))
+        .toBeEnabled();
     }
     await screen.rerender(harness(threadB));
-    await expect.element(page.getByRole("button", { name: "Stopping..." })).toBeDisabled();
+    await expect.element(page.getByRole("button", { name: tr("Stopping...") })).toBeDisabled();
     expect(state.switchRef).toHaveBeenCalledTimes(2);
     completions[1]!({ _tag: "Success", value: undefined });
   },

@@ -236,7 +236,9 @@ describe("MessagesTimeline work rows", () => {
       />,
       { container },
     );
-    const heading = screen.getByRole("button", { name: /^Worked for/ });
+    const heading = screen.getByRole("button", {
+      name: new RegExp("^" + tr("Worked for {duration}", { duration: "8s" }).replace(" 8s", "")),
+    });
     // LegendList keeps rows click-through until its initial scroll settles on animation
     // frames, which the fake clock below would freeze.
     await expect.element(heading).toHaveStyle({ pointerEvents: "auto" });
@@ -324,7 +326,7 @@ describe("MessagesTimeline work rows", () => {
         expect(screen.text()).toContain("Final implementation report");
         expect(screen.text()).toContain("Follow-up explanation");
         expect(screen.text()).not.toContain("Old interrupted progress");
-        await click(screen.buttons("Open Simplify delivery")[0]!);
+        await click(screen.buttons(tr("Open {title}", { title: "Simplify delivery" }))[0]!);
         expect(onOpenThread).toHaveBeenCalledWith(childThreadId);
       } else if (source === "legacy") {
         expect(screen.text()).toContain("Old interrupted progress");
@@ -612,7 +614,7 @@ describe("MessagesTimeline usage limit notice", () => {
   it("labels the retry time with the viewer's timezone", async () => {
     await using screen = await renderTimeline(usageLimitEntries("2026-03-17T19:30:00.000Z"));
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    expect(screen.text()).toMatch(/Usage limit reached\. Retry after .+\./);
+    expect(screen.text()).toMatch(/已达用量限额。.+后重试。/);
     expect(screen.text()).toContain(`(${timeZone})`);
   });
 
@@ -757,7 +759,7 @@ describe("MessagesTimeline automation prompts", () => {
       (anchor) => anchor.textContent === "打开自动化",
     );
     expect(link?.getAttribute("href")).toContain(`taskId=${TASK_ID}`);
-    expect(screen.buttons(/copy/i)).not.toHaveLength(0);
+    expect(screen.buttons(/复制/)).not.toHaveLength(0);
   });
 
   it("falls back to the prompt's first line without a task title", async () => {
@@ -911,7 +913,7 @@ describe("MessagesTimeline attachments", () => {
         sizeBytes: attachment.sizeBytes,
       };
       await using screen = await renderTimeline([message("", { attachments: [attachment] })]);
-      expect(screen.buttons("Copy message")).toHaveLength(0);
+      expect(screen.buttons(tr("Copy message"))).toHaveLength(0);
       await screen.rerender(
         <MessagesTimeline
           {...baseProps()}
@@ -923,7 +925,7 @@ describe("MessagesTimeline attachments", () => {
           ]}
         />,
       );
-      expect(screen.buttons("Copy message")).toHaveLength(0);
+      expect(screen.buttons(tr("Copy message"))).toHaveLength(0);
       await screen.rerender(
         <MessagesTimeline
           {...baseProps()}
@@ -946,7 +948,7 @@ describe("MessagesTimeline attachments", () => {
         />,
       );
       using write = vi.spyOn(navigator.clipboard, "write").mockResolvedValue();
-      await click(screen.button("Copy message"));
+      await click(screen.button(tr("Copy message")));
       await vi.waitFor(() => expect(write).toHaveBeenCalledOnce());
       const [item] = write.mock.calls[0]![0];
       const text = await (await item!.getType("text/plain")).text();
@@ -1368,7 +1370,7 @@ describe("ChangedFilesCard", () => {
         screen.container.querySelector<HTMLButtonElement>(
           toggle === "folder"
             ? '[data-changed-file-row="src"] button'
-            : 'button[aria-label$="all folders"]',
+            : `button[aria-label$=${tr("Expand all folders")}], button[aria-label$=${tr("Collapse all folders")}]`,
         )!;
       await act(() => {
         flushSync(() => button().click());
@@ -1456,15 +1458,15 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
     />
   );
   await using screen = await renderElement(ui());
-  await expect.element(screen.getByRole("group", { name: "Command approval" })).toBeVisible();
+  await expect.element(screen.getByRole("group", { name: tr("Command approval") })).toBeVisible();
   await expect
-    .element(screen.getByRole("group", { name: "App permission approval" }))
+    .element(screen.getByRole("group", { name: tr("App permission approval") }))
     .toBeVisible();
   await expect.element(screen.getByText(approvals[0]!.detail!, { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Needs permission to run the command")).toBeVisible();
   await vi.waitFor(() => {
     expect(
-      getComputedStyle(screen.getByLabelText("Command", { exact: true }).element()).userSelect,
+      getComputedStyle(screen.getByLabelText(tr("Command"), { exact: true }).element()).userSelect,
     ).toBe("text");
     expect(
       getComputedStyle(screen.getByText("Needs permission to run the command").element())
@@ -1494,18 +1496,18 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
       ui({ timelineEntries, heldApprovalRequestIds: new Set([commandRequest]) }),
     );
     await expect
-      .element(screen.getByRole("group", { name: "Command approval" }))
+      .element(screen.getByRole("group", { name: tr("Command approval") }))
       .not.toBeInTheDocument();
     await vi.waitFor(() => expect(screen.buttons(tr("Approve"))).toHaveLength(0));
     await expect
       .element(screen.getByRole("button", { name: "Allow once", exact: true }))
       .toBeVisible();
     await screen.rerender(ui({ timelineEntries }));
-    await expect.element(screen.getByRole("group", { name: "Command approval" })).toBeVisible();
+    await expect.element(screen.getByRole("group", { name: tr("Command approval") })).toBeVisible();
     await vi.waitFor(() => expect(screen.buttons(tr("Approve"))).toHaveLength(1));
   }
   await screen.rerender(ui({ timelineEntries: [], isWorking: false }));
-  await expect.element(screen.getByRole("group", { name: "Command approval" })).toBeVisible();
+  await expect.element(screen.getByRole("group", { name: tr("Command approval") })).toBeVisible();
   await click(screen.button(tr("Approve")));
   expect(onRespondToApproval).toHaveBeenLastCalledWith(commandRequest, "accept");
   await click(screen.button("Deny"));
@@ -1518,8 +1520,8 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
     }),
   );
   await expect
-    .element(screen.getByLabelText("Command", { exact: true }))
-    .toHaveTextContent("Command approval");
+    .element(screen.getByLabelText(tr("Command"), { exact: true }))
+    .toHaveTextContent(tr("Command approval"));
   await screen.rerender(ui({ canOperateThread: false }));
   await expect
     .element(screen.getByRole("button", { name: tr("Approve"), exact: true }))
@@ -1542,14 +1544,16 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
     ui({ pendingApprovals: [{ ...approvals[0]!, responseCapability: "not_resumable" }] }),
   );
   await expect
-    .element(screen.getByText("Provider process is gone. Interrupt or restart the run to respond."))
+    .element(
+      screen.getByText(tr("Provider process is gone. Interrupt or restart the run to respond.")),
+    )
     .toBeVisible();
   await vi.waitFor(() => expect(screen.buttons(tr("Approve"))).toHaveLength(0));
   await screen.rerender(
     ui({ pendingApprovals: [], timelineEntries: entries(true), isWorking: false }),
   );
   await expect
-    .element(screen.getByRole("group", { name: "Command approval" }))
+    .element(screen.getByRole("group", { name: tr("Command approval") }))
     .not.toBeInTheDocument();
   await vi.waitFor(() => expect(screen.text()).not.toContain("Waiting for approval"));
   await screen.getByRole("button", { expanded: false }).click();

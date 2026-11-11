@@ -1,4 +1,5 @@
 import { isInSideChatPane } from "../../lib/sideChatPane";
+import { tr } from "@t3tools/shared/i18n";
 import { registerCommands } from "../../shortcuts/dispatcher";
 import {
   eventPathContainsSelector,
@@ -60,8 +61,8 @@ export interface TimelineViewport {
   readonly onFollowReleased: (listener: () => void) => () => void;
 }
 
-const UP_KEYS = new Set(["PageUp", "Home", "ArrowUp"]);
-const DOWN_KEYS = new Set(["PageDown", "End", "ArrowDown", " "]);
+const UP_KEYS = new Set(["PageUp", tr("Home"), "ArrowUp"]);
+const DOWN_KEYS = new Set(["PageDown", tr("End"), "ArrowDown", " "]);
 
 /**
  * Owns the timeline scroll node's input listeners for as long as the node is

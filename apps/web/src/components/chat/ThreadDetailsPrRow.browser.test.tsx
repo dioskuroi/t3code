@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ProjectId, ThreadId, type PullRequestCheck } from "@t3tools/contracts";
 import { DraftId } from "~/composerDraftStore";
 import { AsyncResult } from "effect/reactivity";
@@ -126,12 +127,14 @@ it("merges with the last selected merge method", async () => {
   const clickMerge = async (scope: ParentNode) =>
     await act(async () => {
       [...scope.querySelectorAll("button")]
-        .find((button) => button.textContent?.trim() === "Merge")!
+        .find((button) => button.textContent?.trim() === tr("Merge"))!
         .click();
     });
   await clickMerge(container);
   const dialog = document.querySelector('[role="alertdialog"]')!;
-  expect(dialog.textContent).toContain("using squash");
+  expect(dialog.textContent).toContain(
+    tr("This merges #{number} using {method}.", { number: "1", method: "squash" }),
+  );
   await clickMerge(dialog);
   expect(state.perform).toHaveBeenCalledWith("merge", "squash");
 });
@@ -154,7 +157,7 @@ it("requires a new merge click after passing checks become pending and pass agai
   const clickMerge = async () =>
     await act(async () => {
       [...container.querySelectorAll("button")]
-        .find((button) => button.textContent?.trim() === "Merge")!
+        .find((button) => button.textContent?.trim() === tr("Merge"))!
         .click();
     });
   const dialogs = () => [...document.querySelectorAll('[role="alertdialog"]')];

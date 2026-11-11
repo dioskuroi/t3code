@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import DocumentPages, { sanitizeDocumentHtml } from "./DocumentPages";
 import { act, render, stubGlobal, type Screen } from "../../../test/render";
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
@@ -2055,7 +2056,11 @@ describe("attachment HTML preview recovery", () => {
       />,
     );
     await toggleMode(screen, "Show HTML source");
-    await vi.waitFor(() => expect(alert(screen)?.textContent).toContain("not UTF-8"));
+    await vi.waitFor(() =>
+      expect(alert(screen)?.textContent).toContain(
+        tr("This file is not UTF-8 text. Open it in another app to view its contents."),
+      ),
+    );
 
     await toggleMode(screen, "Show rendered page");
     expect(alert(screen)).toBeNull();
@@ -2137,7 +2142,7 @@ it.each(["draft", "thread"] as const)(
     );
     await vi.waitFor(() =>
       expect(screen.container.textContent).toContain(
-        "This file contains binary data and cannot be shown as text.",
+        tr("This file contains binary data and cannot be shown as text."),
       ),
     );
     expect(fetch).toHaveBeenCalled();
@@ -2328,13 +2333,15 @@ it("toggles a Mermaid attachment between diagram and source through the lazy pre
   await vi.waitFor(() =>
     expect(screen.container.querySelector("[data-markdown-mermaid] svg path")).not.toBeNull(),
   );
-  await screen.getByRole("button", { name: "Expand diagram" }).click();
+  await screen.getByRole("button", { name: tr("Expand diagram") }).click();
   await vi.waitFor(() => {
     const image = document.querySelector<HTMLImageElement>('[role="dialog"] img');
     expect(image?.alt).toBe("Mermaid diagram");
     expect(image?.naturalWidth).toBeGreaterThan(0);
   });
-  await page.getByRole("button", { name: "Close image preview" }).click();
+  await page
+    .getByRole("button", { name: tr("Close {mediaLabel} preview", { mediaLabel: "image" }) })
+    .click();
   await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
   await screen.getByRole("button", { name: "Show Mermaid source" }).click();
   await vi.waitFor(() => expect(screen.container.querySelector("pre")?.textContent).toBe(text));

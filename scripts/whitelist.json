@@ -519,7 +519,15 @@
     "watching for changes",
     "△ 2 warnings",
     "✓ 85 passed",
-    "✗ 0 failed"
+    "✗ 0 failed",
+    "22rem",
+    ":details",
+    ":steer:",
+    "-left-1 -top-1",
+    "-bottom-1 -right-1",
+    "-left-px -top-px",
+    "-right-px -bottom-px",
+    ", [role=\"toolbar\"]"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -875,6 +883,7 @@
     "refactor",
     "return",
     "squash",
-    "vpr"
+    "vpr",
+    "csv"
   ]
 }

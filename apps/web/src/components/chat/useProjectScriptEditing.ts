@@ -4,6 +4,7 @@ import type {
   ProjectScript,
   EnvironmentId,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { AuthSettingsWriteScope, EnvironmentAuthorizationError } from "@t3tools/contracts";
 import type { UnifiedSettings } from "@t3tools/contracts/settings";
 import {
@@ -79,7 +80,7 @@ export function useProjectScriptEditing(input: {
         Cause.fail(
           new EnvironmentAuthorizationError({
             requiredScope: AuthSettingsWriteScope,
-            message: "This connection cannot change keyboard shortcuts.",
+            message: tr("This connection cannot change keyboard shortcuts."),
           }),
         ),
       );
@@ -124,8 +125,12 @@ export function useProjectScriptEditing(input: {
           new EnvironmentAuthorizationError({
             requiredScope: AuthSettingsWriteScope,
             message: isDeletingScript
-              ? "The script was deleted, but its keyboard shortcut could not be removed because permission changed."
-              : "The script was saved, but this connection can no longer change keyboard shortcuts.",
+              ? tr(
+                  "The script was deleted, but its keyboard shortcut could not be removed because permission changed.",
+                )
+              : tr(
+                  "The script was saved, but this connection can no longer change keyboard shortcuts.",
+                ),
           }),
         ),
       );
@@ -213,7 +218,7 @@ export function useProjectScriptEditing(input: {
     }
     const existingScript = scripts.find((script) => script.id === scriptId);
     if (!existingScript) {
-      return AsyncResult.failure(Cause.fail(new Error("Script not found.")));
+      return AsyncResult.failure(Cause.fail(new Error(tr("Script not found."))));
     }
 
     const updatedScript = buildProjectScript(existingScript.id, input);
@@ -251,15 +256,15 @@ export function useProjectScriptEditing(input: {
     if (result._tag === "Success") {
       toastManager.add({
         type: "success",
-        title: `Deleted action "${deletedName ?? "Unknown"}"`,
+        title: tr("Deleted action “{name}”", { name: deletedName ?? tr("Unknown") }),
       });
     } else if (!isAtomCommandInterrupted(result)) {
       const error = squashAtomCommandFailure(result);
       toastManager.add(
         stackedThreadToast({
           type: "error",
-          title: "Could not delete action",
-          description: error instanceof Error ? error.message : "An unexpected error occurred.",
+          title: tr("Could not delete action"),
+          description: error instanceof Error ? error.message : tr("An unexpected error occurred."),
         }),
       );
     }

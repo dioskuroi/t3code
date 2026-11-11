@@ -1,4 +1,5 @@
 import type { ScopedThreadRef } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import { deriveThreadTitleSeed } from "@t3tools/client-runtime/operations";
 import {
@@ -43,10 +44,10 @@ export function useSideChat(input: {
     const targetThreadId = newThreadId();
     const fork = await forkSideChat({
       environmentId: threadRef.environmentId,
-      input: { sourceThreadId: threadRef.threadId, targetThreadId, title: "Side chat" },
+      input: { sourceThreadId: threadRef.threadId, targetThreadId, title: tr("Side chat") },
     });
     if (fork._tag === "Failure") {
-      reportFailure(fork, "Could not start a side chat.");
+      reportFailure(fork, tr("Could not start a side chat."));
       return false;
     }
     // Drops the empty side chat a failed start leaves behind; one that got its message stays.
@@ -56,7 +57,7 @@ export function useSideChat(input: {
         input: { threadId: targetThreadId, onlyIfUnused: true },
       });
     if (!(await waitForThreadShell(scopeThreadRef(threadRef.environmentId, targetThreadId)))) {
-      input.onError("The side chat was created, but it did not reach this client.");
+      input.onError(tr("The side chat was created, but it did not reach this client."));
       discard();
       return false;
     }
@@ -76,7 +77,7 @@ export function useSideChat(input: {
         },
       });
       if (turn._tag === "Failure") {
-        reportFailure(turn, "Could not send the side chat message.");
+        reportFailure(turn, tr("Could not send the side chat message."));
         discard();
         return false;
       }

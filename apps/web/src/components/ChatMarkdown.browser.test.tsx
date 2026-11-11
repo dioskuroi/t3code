@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { type ReactElement } from "react";
@@ -148,7 +149,7 @@ function buttonsLabelled(container: HTMLElement, label: string) {
 it("shows unavailable audio when a workspace embed has no thread", async () => {
   setup();
   await using screen = await renderText("![recording](clip.wav)");
-  expect(screen.container.textContent).toContain("Audio unavailable");
+  expect(screen.container.textContent).toContain(tr("Audio unavailable"));
   expect(screen.container.textContent).not.toContain("Loading audio");
   expect(screen.container.querySelector("audio")).toBeNull();
 });
@@ -260,7 +261,7 @@ describe("ChatMarkdown streaming", () => {
     );
     await using screen = await render(message("```bash\necho hello\n```", true));
     const { container, rerender } = screen;
-    const runButtons = () => buttonsLabelled(container, "Run in terminal");
+    const runButtons = () => buttonsLabelled(container, tr("Run in terminal"));
     expect(runButtons()).toHaveLength(0);
 
     await rerender(message("```bash\necho hello\n```"));
@@ -387,9 +388,13 @@ describe("ChatMarkdown skill chips", () => {
       .spyOn(useRightPanelStore.getState(), "openFile")
       .mockImplementation(() => {});
 
-    await userEvent.click(screen.getByRole("button", { name: "Skill Review. Show details" }));
+    await userEvent.click(
+      screen.getByRole("button", {
+        name: `${tr("Skill {label}", { label: "Review" })}. Show details`,
+      }),
+    );
     await expect.element(page.getByText("Reviews the current branch.")).toBeVisible();
-    await userEvent.click(page.getByRole("button", { name: "View instructions" }));
+    await userEvent.click(page.getByRole("button", { name: tr("View instructions") }));
 
     expect(openFile).toHaveBeenCalledExactlyOnceWith(threadRef, "/skills/review/SKILL.md");
   });

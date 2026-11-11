@@ -1,4 +1,5 @@
 import type { ChatAttachment } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { formatAttachmentSize } from "@t3tools/client-runtime/state/attachments";
 
 import { useTheme } from "~/hooks/useTheme";
@@ -40,7 +41,7 @@ export function GuestMessageAttachments(props: {
                   <button
                     type="button"
                     className="block size-full cursor-zoom-in"
-                    aria-label={`Preview ${image.name}`}
+                    aria-label={tr("Preview {name}", { name: image.name })}
                     onClick={() => props.onOpenImage(image)}
                   >
                     {/* Isolate the thumbnail raster from nearby activity repaints in Chromium. */}
@@ -86,7 +87,7 @@ export function GuestMessageAttachments(props: {
           <button
             key={file.id}
             type="button"
-            aria-label={`Preview ${file.name}`}
+            aria-label={tr("Preview {name}", { name: file.name })}
             onClick={() => props.onOpenFile?.(file)}
             className={cn(FILE_ROW, "cursor-pointer hover:underline")}
           >

@@ -3,6 +3,7 @@ import {
   updateClientSettings,
   useClientSettings,
 } from "../../hooks/useSettings";
+import { tr } from "@t3tools/shared/i18n";
 import { MenuCheckboxItem, MenuGroup, MenuGroupLabel, MenuItem, MenuSeparator } from "../ui/menu";
 import {
   isDefaultThreadDetailsVisibility,
@@ -18,7 +19,7 @@ export function ThreadDetailsItemsMenuItems() {
   return (
     <>
       <MenuGroup>
-        <MenuGroupLabel>Show in thread details</MenuGroupLabel>
+        <MenuGroupLabel>{tr("Show in thread details")}</MenuGroupLabel>
         {THREAD_DETAILS_ITEMS.map((item) => (
           <MenuCheckboxItem
             key={item.id}
@@ -38,7 +39,7 @@ export function ThreadDetailsItemsMenuItems() {
         disabled={isDefaultThreadDetailsVisibility(visibility)}
         onClick={() => updateClientSettings(RESET_THREAD_DETAILS_ITEMS)}
       >
-        Reset to default
+        {tr("Reset to default")}
       </MenuItem>
     </>
   );

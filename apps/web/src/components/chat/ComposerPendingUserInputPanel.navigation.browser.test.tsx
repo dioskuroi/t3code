@@ -7,6 +7,7 @@ import {
   type OrchestrationV2ThreadProjection,
 } from "@t3tools/contracts";
 import { makeThreadRequestsResolvedAnnouncer } from "@t3tools/client-runtime/state/thread-requests";
+import { tr } from "@t3tools/shared/i18n";
 import { useLayoutEffect, useRef, type ComponentProps } from "react";
 import { expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
@@ -167,8 +168,8 @@ it("tells the user when an option click moves their typed answer into the hidden
   expect(toast).toHaveBeenCalledWith(
     expect.objectContaining({
       type: "info",
-      title: "Your typed text was set aside",
-      description: "It will be back in the composer once the question is answered.",
+      title: tr("Your typed text was set aside"),
+      description: tr("It will be back in the composer once the question is answered."),
       data: { threadRef: draftTarget },
     }),
   );
