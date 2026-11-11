@@ -1,4 +1,5 @@
 import { bootstrapRemoteBearerSession } from "@t3tools/client-runtime/authorization";
+import { tr } from "@t3tools/shared/i18n";
 import type { RemoteEnvironmentRequestError } from "@t3tools/client-runtime/rpc";
 import { PRIMARY_LOCAL_ENVIRONMENT_ID } from "@t3tools/contracts";
 import { currentDesktopBootstrapToken } from "@t3tools/shared/desktopBootstrapToken";
@@ -37,7 +38,7 @@ export class DesktopLocalEnvironmentAuthBackendNotConfiguredError extends Schema
   {},
 ) {
   override get message(): string {
-    return "Local backend is not configured.";
+    return tr("Local backend is not configured.");
   }
 }
 
@@ -46,7 +47,7 @@ export class DesktopLocalEnvironmentAuthSessionBootstrapError extends Schema.Tag
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Failed to create the local desktop bearer session.";
+    return tr("Failed to create the local desktop bearer session.");
   }
 }
 
@@ -101,7 +102,7 @@ export const make = Effect.gen(function* () {
           httpBaseUrl: config.httpBaseUrl.href,
           credential,
           clientMetadata: {
-            label: "T3 Code Desktop",
+            label: tr("T3 Code Desktop"),
             deviceType: "desktop",
           },
         }).pipe(

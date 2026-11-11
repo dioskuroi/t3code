@@ -1,5 +1,6 @@
 import * as MacPermissions from "../permissions/MacPermissions.ts";
 import { assert, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import {
   DEFAULT_CLIENT_SETTINGS,
   DesktopPendingSnapShot,
@@ -1786,7 +1787,7 @@ it.effect("flags revoked macOS permissions on read and re-registers once they re
       const revoked = yield* service.state;
       assert.equal(
         revoked.message,
-        "Allow Screen Recording in System Settings, then restart T3 Code.",
+        tr("Allow Screen Recording in System Settings, then restart T3 Code."),
       );
       assert.deepEqual(revoked.macPermissions, { screenRecording: false, accessibility: true });
 
@@ -1799,7 +1800,7 @@ it.effect("flags revoked macOS permissions on read and re-registers once they re
       const blocked = yield* service.state;
       assert.equal(
         blocked.message,
-        "Allow Screen Recording in System Settings, then restart T3 Code.",
+        tr("Allow Screen Recording in System Settings, then restart T3 Code."),
       );
       assert.isFalse(blocked.shortcutRegistered);
 
@@ -2101,7 +2102,10 @@ it.effect(
         assert.isTrue((yield* service.state).shortcutActionRegistered);
         const check = yield* service.checkShortcut(settings.snapShotShortcut);
         assert.isFalse(check.available);
-        assert.include(check.message, "Hyprland config");
+        assert.include(
+          check.message,
+          tr("Change the capture binding in your Hyprland config, then save it."),
+        );
         yield* service.configure({ ...settings, snapShotPlaySound: false });
         assert.lengthOf(portalShortcutInstances, 1);
         assert.lengthOf(first.close.mock.calls, 0);
@@ -2174,7 +2178,14 @@ it.effect.each([false, true])(
           assert.equal(error.reason, "setup-failed");
           assert.equal(
             error.message,
-            'Could not capture a test snapshot. Capturing the window failed. macOS grants Screen Recording and Accessibility to each app separately. In System Settings, open Privacy & Security and check that "T3 Code (Dev)" is allowed for both.',
+            tr(
+              "{summary} {failure} macOS grants Screen Recording and Accessibility to each app separately. In System Settings, open Privacy & Security and check that \u201c{appName}\u201d is allowed for both.",
+              {
+                summary: tr("Could not capture a test snapshot."),
+                failure: tr("{task} failed.", { task: tr("Capturing the window") }),
+                appName: "T3 Code (Dev)",
+              },
+            ),
           );
         } else yield* service.setup("test-mac-capture");
         assert.equal(macCaptureMock.mock.calls.length, 1);

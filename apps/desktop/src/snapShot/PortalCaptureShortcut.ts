@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Stable shortcut IDs and unique portal request tokens.
 // @effect-diagnostics globalTimers:off -- Bounded D-Bus calls and user-consent requests at the native boundary.
 import * as NodeCrypto from "node:crypto";
+import { tr } from "@t3tools/shared/i18n";
 import {
   DBusError,
   Message,
@@ -63,7 +64,9 @@ export class PortalCaptureShortcut {
   state: PortalShortcutState = {
     shortcutRegistered: false,
     shortcutPending: true,
-    shortcutMessage: "Waiting for shortcut permission. Approve the desktop prompt if one appears.",
+    shortcutMessage: tr(
+      "Waiting for shortcut permission. Approve the desktop prompt if one appears.",
+    ),
   };
   readonly ready: Promise<void>;
   private closed = false;
@@ -97,7 +100,7 @@ export class PortalCaptureShortcut {
       this.state = {
         shortcutRegistered: false,
         shortcutPending: true,
-        shortcutMessage: "Connecting to Hyprland shortcuts…",
+        shortcutMessage: tr("Connecting to Hyprland shortcuts\u2026"),
       };
     this.stopped = new Promise((_, reject) => {
       this.rejectStopped = reject;
@@ -111,7 +114,7 @@ export class PortalCaptureShortcut {
   close = () => {
     if (this.closed) return;
     this.closed = true;
-    this.rejectStopped(new Error("Capture shortcut registration closed."));
+    this.rejectStopped(new Error(tr("Capture shortcut registration closed.")));
     try {
       if (this.pending) this.closeObject(this.pending.path, REQUEST);
       if (this.session) this.closeObject(this.session, SESSION);
@@ -127,10 +130,10 @@ export class PortalCaptureShortcut {
 
   async configure() {
     if (this.managedByHyprland)
-      throw new Error("Change the capture binding in your Hyprland config, then save it.");
+      throw new Error(tr("Change the capture binding in your Hyprland config, then save it."));
     if (!this.hasSession || this.version < 2)
       throw new Error(
-        "Open your desktop's shortcut settings and allow T3 Code's capture shortcut.",
+        tr("Open your desktop's shortcut settings and allow T3 Code's capture shortcut."),
       );
     await this.call({
       destination: this.owner,
@@ -158,10 +161,12 @@ export class PortalCaptureShortcut {
       shortcutPending: false,
       shortcutCanRetry: !this.managedByHyprland,
       shortcutMessage: this.managedByHyprland
-        ? "Couldn't connect to Hyprland shortcuts. Make sure xdg-desktop-portal-hyprland is running, then restart T3 Code."
+        ? tr(
+            "Couldn't connect to Hyprland shortcuts. Make sure xdg-desktop-portal-hyprland is running, then restart T3 Code.",
+          )
         : error instanceof Error
           ? error.message
-          : "Could not register the capture shortcut.",
+          : tr("Could not register the capture shortcut."),
     });
     this.close();
   };
@@ -174,7 +179,7 @@ export class PortalCaptureShortcut {
         this.stopped,
         new Promise<never>((_, reject) => {
           timer = setTimeout(
-            () => reject(new Error("Shortcut permission request timed out. Try again.")),
+            () => reject(new Error(tr("Shortcut permission request timed out. Try again."))),
             timeoutMs,
           );
         }),
@@ -185,9 +190,9 @@ export class PortalCaptureShortcut {
   }
 
   private async call(message: MessageLike) {
-    if (this.closed) throw new Error("Capture shortcut registration closed.");
+    if (this.closed) throw new Error(tr("Capture shortcut registration closed."));
     const reply = await this.wait(this.bus.call(new Message(message)));
-    if (!reply) throw new Error("Missing shortcut portal reply.");
+    if (!reply) throw new Error(tr("Missing shortcut portal reply."));
     return reply;
   }
 
@@ -212,7 +217,9 @@ export class PortalCaptureShortcut {
       message.body[0] === PORTAL &&
       message.body[1] === this.owner
     ) {
-      this.failed(new Error("The desktop shortcut service restarted. Retry the shortcut request."));
+      this.failed(
+        new Error(tr("The desktop shortcut service restarted. Retry the shortcut request.")),
+      );
       return;
     }
     if (!this.owner || message.sender !== this.owner) return;
@@ -232,7 +239,7 @@ export class PortalCaptureShortcut {
       message.member === "Closed"
     ) {
       this.failed(
-        new Error("Your desktop closed the capture shortcut. Retry the shortcut request."),
+        new Error(tr("Your desktop closed the capture shortcut. Retry the shortcut request.")),
       );
       return;
     }
@@ -283,7 +290,8 @@ export class PortalCaptureShortcut {
         body: [...body, { ...options, handle_token: new Variant("s", token) }],
       });
       const handle = string(reply.body[0]);
-      if (!handle.startsWith(this.namespace)) throw new Error("Invalid shortcut request handle.");
+      if (!handle.startsWith(this.namespace))
+        throw new Error(tr("Invalid shortcut request handle."));
       this.pending.path = handle;
       if (this.responses.has(handle)) resolve(this.responses.get(handle));
       const [status, results] = decodeResponse(
@@ -297,12 +305,14 @@ export class PortalCaptureShortcut {
             shortcutPending: false,
             shortcutMessage:
               this.version >= 2
-                ? "Shortcut permission wasn't granted. Open shortcut permissions to allow it."
-                : "Shortcut permission wasn't granted. Allow T3 Code in your desktop's shortcut settings.",
+                ? tr("Shortcut permission wasn't granted. Open shortcut permissions to allow it.")
+                : tr(
+                    "Shortcut permission wasn't granted. Allow T3 Code in your desktop's shortcut settings.",
+                  ),
           });
           return undefined;
         }
-        throw new Error("Your desktop could not create a capture shortcut session.");
+        throw new Error(tr("Your desktop could not create a capture shortcut session."));
       }
       return results;
     } finally {
@@ -320,8 +330,10 @@ export class PortalCaptureShortcut {
         shortcutActionRegistered: Boolean(shortcut),
         shortcutPending: false,
         shortcutMessage: shortcut
-          ? "Managed by Hyprland. Add the binding to your config and save it."
-          : "Hyprland did not register the capture action. Check that xdg-desktop-portal-hyprland is running, then restart T3 Code.",
+          ? tr("Managed by Hyprland. Add the binding to your config and save it.")
+          : tr(
+              "Hyprland did not register the capture action. Check that xdg-desktop-portal-hyprland is running, then restart T3 Code.",
+            ),
       });
       return;
     }
@@ -331,10 +343,10 @@ export class PortalCaptureShortcut {
       shortcutPending: false,
       ...(label ? { shortcutLabel: label } : {}),
       shortcutMessage: label
-        ? `Desktop shortcut: ${label}`
+        ? tr("Desktop shortcut: {label}", { label: label })
         : this.version >= 2
-          ? "No shortcut is assigned. Open shortcut permissions to choose one."
-          : "No shortcut is assigned. Choose one in your desktop's shortcut settings.",
+          ? tr("No shortcut is assigned. Open shortcut permissions to choose one.")
+          : tr("No shortcut is assigned. Choose one in your desktop's shortcut settings."),
     });
   }
 
@@ -399,7 +411,8 @@ export class PortalCaptureShortcut {
     });
     const session = decodeSession(created).session_handle.value;
     const sessionNamespace = this.namespace.replace("/request/", "/session/");
-    if (!session.startsWith(sessionNamespace)) throw new Error("Invalid shortcut session handle.");
+    if (!session.startsWith(sessionNamespace))
+      throw new Error(tr("Invalid shortcut session handle."));
     this.session = session;
     this.shortcutId = this.managedByHyprland
       ? HYPRLAND_CAPTURE_ACTION
@@ -411,7 +424,7 @@ export class PortalCaptureShortcut {
         [
           this.shortcutId,
           {
-            description: new Variant("s", "Capture a window"),
+            description: new Variant("s", tr("Capture a window")),
             ...(!this.managedByHyprland ? { preferred_trigger: new Variant("s", trigger) } : {}),
           },
         ],

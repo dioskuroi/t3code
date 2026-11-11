@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Reads portal-owned screenshot files at the native boundary.
 import * as NodeFSP from "node:fs/promises";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeURL from "node:url";
 import type { SnapShotKeyChord } from "@t3tools/contracts";
 import { nativeImage } from "electron";
@@ -10,7 +11,10 @@ export const HYPRLAND_CAPTURE_ACTION = "capture-window";
 
 export class CaptureSetupRequiredError extends Error {
   constructor(state: string, options?: ErrorOptions) {
-    super(`${state} Open Settings → SnapShots to continue setup.`, options);
+    super(
+      tr("{state} Open Settings \u2192 SnapShots to continue setup.", { state: state }),
+      options,
+    );
   }
 }
 export const NIRI_CAPTURE_PATH = "/com/t3tools/SnapShot";
@@ -101,7 +105,9 @@ export function portalShortcutTrigger(shortcut: SnapShotKeyChord): string {
     KEY_NAMES[key] ??
     (/^[a-z0-9]$/.test(key) || /^f([1-9]|1\d|2[0-4])$/.test(key) ? key.toUpperCase() : undefined);
   if (!keysym)
-    throw new Error("This key isn't supported as a Wayland capture shortcut. Choose another key.");
+    throw new Error(
+      tr("This key isn't supported as a Wayland capture shortcut. Choose another key."),
+    );
   return [
     shortcut.ctrlKey || shortcut.modKey ? "CTRL" : null,
     shortcut.altKey ? "ALT" : null,
@@ -118,10 +124,10 @@ const MAX_PNG_BYTES = 32 * 1024 * 1024;
 
 export function resizeLinuxCapture(png: Buffer): Buffer {
   if (png.length > MAX_PNG_BYTES || !png.subarray(0, 8).equals(PNG_HEADER)) {
-    throw new Error("Invalid or oversized window screenshot.");
+    throw new Error(tr("Invalid or oversized window screenshot."));
   }
   const image = nativeImage.createFromBuffer(png);
-  if (image.isEmpty()) throw new Error("The window screenshot is empty.");
+  if (image.isEmpty()) throw new Error(tr("The window screenshot is empty."));
   const { width, height } = image.getSize();
   const scale = Math.min(2_560 / width, 1_600 / height, 1);
   return scale < 1
@@ -140,12 +146,13 @@ export async function readPortalPng(uri: string): Promise<Buffer> {
   const file = await NodeFSP.open(NodeURL.fileURLToPath(uri), "r");
   try {
     const stat = await file.stat();
-    if (!stat.isFile() || stat.size > MAX_PNG_BYTES) throw new Error("Invalid screenshot file.");
+    if (!stat.isFile() || stat.size > MAX_PNG_BYTES)
+      throw new Error(tr("Invalid screenshot file."));
     const buffer = Buffer.alloc(stat.size);
     let offset = 0;
     while (offset < buffer.length) {
       const { bytesRead } = await file.read(buffer, offset, buffer.length - offset, offset);
-      if (!bytesRead) throw new Error("Incomplete screenshot file.");
+      if (!bytesRead) throw new Error(tr("Incomplete screenshot file."));
       offset += bytesRead;
     }
     return resizeLinuxCapture(buffer);

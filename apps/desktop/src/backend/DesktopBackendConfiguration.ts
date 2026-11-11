@@ -1,4 +1,5 @@
 import * as NodeOS from "node:os";
+import { tr } from "@t3tools/shared/i18n";
 
 import { parsePersistedServerObservabilitySettings } from "@t3tools/shared/serverSettings";
 import { currentDesktopBootstrapToken } from "@t3tools/shared/desktopBootstrapToken";
@@ -305,7 +306,7 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
   if (!wslAvailable) {
     return {
       _tag: "Failed",
-      reason: "WSL is not available on this system",
+      reason: tr("WSL is not available on this system"),
       fatal: false,
     } as const;
   }
@@ -317,7 +318,9 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
   if (distroProbe._tag === "Failure") {
     return {
       _tag: "Failed",
-      reason: `Unable to list WSL distributions: ${distroProbe.error.message}`,
+      reason: tr("Unable to list WSL distributions: {reason}", {
+        reason: distroProbe.error.message,
+      }),
       fatal: false,
     } as const;
   }
@@ -332,10 +335,10 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
     return {
       _tag: "Failed",
       reason: input.distro
-        ? `WSL distro is not installed: ${input.distro}`
+        ? tr("WSL distro is not installed: {distro}", { distro: input.distro })
         : installedDistros.length === 0
-          ? "WSL has no installed distributions"
-          : "WSL has no default distribution",
+          ? tr("WSL has no installed distributions")
+          : tr("WSL has no default distribution"),
       fatal: true,
     } as const;
   }
@@ -347,7 +350,7 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
   const failedNodePty = (result: FailedNodePtyResult) =>
     ({
       _tag: "Failed",
-      reason: `WSL node-pty unavailable: ${result.reason}`,
+      reason: tr("WSL node-pty unavailable: {reason}", { reason: result.reason }),
       fatal: result.fatal,
       ...(result.retryLimit === undefined ? {} : { retryLimit: result.retryLimit }),
     }) as const;
@@ -382,7 +385,7 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
   const failedStaged = (failure: { readonly reason: string }) =>
     ({
       _tag: "Failed",
-      reason: `WSL runtime unavailable: ${failure.reason}`,
+      reason: tr("WSL runtime unavailable: {reason}", { reason: failure.reason }),
       fatal: true,
     }) as const;
 
@@ -403,14 +406,14 @@ const runWslPreflight = Effect.fn("desktop.backendConfiguration.wslPreflight")(f
         } as const;
       }
       yield* Effect.logWarning(
-        "The staged WSL runtime did not start; retrying from the mounted server tree.",
+        tr("The staged WSL runtime did not start; retrying from the mounted server tree."),
         { reason: stagedProbe.reason },
       );
       stagedFailure = { runtimeId: input.runtimeArchive.runtimeId, reason: stagedProbe.reason };
     } else {
       stagedFailure = { reason: runtime.reason };
       yield* Effect.logWarning(
-        "Could not stage the WSL runtime; launching from the mounted server tree instead.",
+        tr("Could not stage the WSL runtime; launching from the mounted server tree instead."),
         { reason: runtime.reason },
       );
     }
@@ -596,7 +599,9 @@ const resolveWslStartConfig = Effect.fn("desktop.backendConfiguration.resolveWsl
     : null;
   if (hasArchive && archiveHash === null) {
     yield* Effect.logWarning(
-      "Ignoring the WSL runtime archive because its SHA-256 identity is missing or invalid; launching from the mounted server tree instead.",
+      tr(
+        "Ignoring the WSL runtime archive because its SHA-256 identity is missing or invalid; launching from the mounted server tree instead.",
+      ),
       { hashPath: archiveHashPath },
     );
   }
@@ -818,7 +823,9 @@ export const make = Effect.gen(function* () {
       }
       if (wslRequested) {
         yield* Effect.logWarning(
-          "WSL-only backend requested but WSL is unavailable; starting the Windows primary instead.",
+          tr(
+            "WSL-only backend requested but WSL is unavailable; starting the Windows primary instead.",
+          ),
         );
       }
       return yield* buildWindowsPrimaryConfig;
@@ -826,9 +833,9 @@ export const make = Effect.gen(function* () {
     resolvePrimaryLabel: Effect.gen(function* () {
       const { useWsl, distro } = yield* describePrimary;
       if (!useWsl) {
-        return environment.platform === "win32" ? "Windows" : "Local environment";
+        return environment.platform === "win32" ? tr("Windows") : tr("Local environment");
       }
-      return distro ? `WSL (${distro})` : "WSL";
+      return distro ? tr("WSL ({distro})", { distro: distro }) : "WSL";
     }).pipe(Effect.withSpan("desktop.backendConfiguration.resolvePrimaryLabel")),
     // The span options depend on each request's port and distro.
     resolveWsl: Effect.fnUntraced(

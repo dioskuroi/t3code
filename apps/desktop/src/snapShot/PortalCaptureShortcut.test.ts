@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Event-driven fake of the portal transport.
 import * as NodeEvents from "node:events";
+import { tr } from "@t3tools/shared/i18n";
 import { DBusError, Message, MessageType, Variant, type MessageBus } from "dbus-next";
 import { afterEach, expect, it, vi } from "vite-plus/test";
 import { PortalCaptureShortcut, portalShortcutTrigger } from "./PortalCaptureShortcut.ts";
@@ -64,7 +65,7 @@ class FakeBus extends NodeEvents.EventEmitter {
         [
           this.boundId,
           {
-            description: new Variant("s", "Capture a window"),
+            description: new Variant("s", tr("Capture a window")),
             trigger_description: new Variant("s", this.actualLabel),
           },
         ],
@@ -144,14 +145,16 @@ it("accepts Hyprland's action-only binding without claiming the keys are reserve
   });
   expect(bus.boundId).toBe("capture-window");
   expect(bus.calls.find((call) => call.member === "BindShortcuts")?.body[1]).toEqual([
-    ["capture-window", { description: new Variant("s", "Capture a window") }],
+    ["capture-window", { description: new Variant("s", tr("Capture a window")) }],
   ]);
   bus.activate("wrong");
   bus.activate(bus.boundId, bus.session, ":1.999");
   expect(capture).not.toHaveBeenCalled();
   bus.activate();
   expect(capture).toHaveBeenCalledOnce();
-  await expect(client.configure()).rejects.toThrow("Hyprland config");
+  await expect(client.configure()).rejects.toThrow(
+    tr("Change the capture binding in your Hyprland config, then save it."),
+  );
   bus.signal(portal, "ShortcutsChanged", root, [bus.session, []]);
   bus.activate();
   expect(capture).toHaveBeenCalledOnce();
@@ -172,7 +175,9 @@ it("normalizes Ctrl/Mod and rejects unsupported keys before requesting access", 
   expect(portalShortcutTrigger({ ...chord, ctrlKey: true, metaKey: true })).toBe(
     "CTRL+SHIFT+LOGO+2",
   );
-  expect(() => portalShortcutTrigger({ ...chord, key: "unknown-key" })).toThrow("isn't supported");
+  expect(() => portalShortcutTrigger({ ...chord, key: "unknown-key" })).toThrow(
+    tr("This key isn't supported as a Wayland capture shortcut. Choose another key."),
+  );
 });
 
 it("does not call submission approval, then reads the actual assigned shortcut", async () => {
@@ -206,7 +211,7 @@ it("binds only the requested shortcut with a stable ID across sessions", async (
     [
       bus.boundId,
       {
-        description: new Variant("s", "Capture a window"),
+        description: new Variant("s", tr("Capture a window")),
         preferred_trigger: new Variant("s", "CTRL+SHIFT+2"),
       },
     ],
@@ -238,7 +243,7 @@ it("replaces a binding without restarting the application and stops the old call
     [
       next.bus.boundId,
       {
-        description: new Variant("s", "Capture a window"),
+        description: new Variant("s", tr("Capture a window")),
         preferred_trigger: new Variant("s", "CTRL+SHIFT+8"),
       },
     ],
@@ -265,7 +270,9 @@ it.each([1, 2])(
     expect(client.state.shortcutRegistered).toBe(false);
     expect(client.state.shortcutPending).toBe(false);
     expect(client.state.shortcutCanRetry).toBe(true);
-    expect(client.state.shortcutMessage).toContain("wasn't granted");
+    expect(client.state.shortcutMessage).toContain(
+      tr("Shortcut permission wasn't granted. Open shortcut permissions to allow it."),
+    );
     bus.activate();
     expect(capture).not.toHaveBeenCalled();
     await client.configure();
@@ -303,7 +310,7 @@ it("captures on older portals without offering an unsupported permission dialog"
   expect(client.state).toMatchObject({
     shortcutRegistered: false,
     shortcutCanRetry: false,
-    shortcutMessage: "No shortcut is assigned. Choose one in your desktop's shortcut settings.",
+    shortcutMessage: tr("No shortcut is assigned. Choose one in your desktop's shortcut settings."),
   });
   bus.signal("org.freedesktop.portal.Session", "Closed", bus.session, []);
   expect(client.hasSession).toBe(false);
@@ -337,7 +344,9 @@ it("handles a disappearing portal without keeping a false registered state", asy
     "org.freedesktop.DBus",
   );
   expect(client.state.shortcutRegistered).toBe(false);
-  expect(client.state.shortcutMessage).toContain("restarted");
+  expect(client.state.shortcutMessage).toContain(
+    tr("The desktop shortcut service restarted. Retry the shortcut request."),
+  );
   expect(bus.disconnect).toHaveBeenCalledOnce();
 });
 

@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -156,11 +157,20 @@ const formatWslShellTransportFailureReason = (
 ): string | null => {
   switch (failure) {
     case "timeout":
-      return `WSL backend preflight timed out while probing for ${subject}. WSL may be slow to start; retry, or check that the distro is healthy.`;
+      return tr(
+        "WSL backend preflight timed out while probing for {subject}. WSL may be slow to start; retry, or check that the distro is healthy.",
+        { subject: subject },
+      );
     case "spawn":
-      return `WSL backend preflight could not start wsl.exe to probe for ${subject}. Check that WSL is installed and the distro is accessible.`;
+      return tr(
+        "WSL backend preflight could not start wsl.exe to probe for {subject}. Check that WSL is installed and the distro is accessible.",
+        { subject: subject },
+      );
     case "process":
-      return `WSL backend preflight lost communication with wsl.exe while probing for ${subject}. Retry, or check that the distro is healthy.`;
+      return tr(
+        "WSL backend preflight lost communication with wsl.exe while probing for {subject}. Retry, or check that the distro is healthy.",
+        { subject: subject },
+      );
     case null:
       return null;
   }
@@ -420,7 +430,9 @@ const NODE_PTY_BINARY_MISSING_EXIT_CODE = 4;
 
 const formatNodePtyProbeFailureReason = (exitCode: number): string | null =>
   exitCode === NODE_PTY_BINARY_MISSING_EXIT_CODE
-    ? "WSL support is missing from this T3 Code build: the packaged Linux node-pty binary was not included. Install a build that includes WSL support."
+    ? tr(
+        "WSL support is missing from this T3 Code build: the packaged Linux node-pty binary was not included. Install a build that includes WSL support.",
+      )
     : null;
 
 // Capture login-shell PATH because the server launches provider CLIs by name.
@@ -570,7 +582,10 @@ const formatMissingToolsReason = (
     );
   }
 
-  return `WSL distro is missing required tools: ${issues.join(", ")}. Install ${remediations.join(" and ")}, then retry.`;
+  return tr("WSL distro is missing required tools: {issues}. Install {remediations}, then retry.", {
+    issues: issues.join(", "),
+    remediations: remediations.join(" and "),
+  });
 };
 
 const probeWslRuntimeImpl = Effect.fn("DesktopWslEnvironment.probeWslRuntimeImpl")(function* (
@@ -603,7 +618,7 @@ const probeWslRuntimeImpl = Effect.fn("DesktopWslEnvironment.probeWslRuntimeImpl
   if (resolvedPath === null) {
     return {
       ok: false,
-      reason: "WSL login-shell PATH could not be resolved during backend preflight.",
+      reason: tr("WSL login-shell PATH could not be resolved during backend preflight."),
     } as const;
   }
   return { ok: true, resolvedPath } as const;
@@ -657,14 +672,16 @@ const ensureNodePtyImpl = Effect.fn("DesktopWslEnvironment.ensureNodePtyImpl")(f
     const report = parseToolchainReport(toolchainCheck.stdout);
     const reason =
       formatMissingToolsReason(report, options.nodeEngineRange?.trim() || null) ??
-      "Node.js was not found in the WSL distro. Install it (e.g. via nvm) and restart the desktop app.";
+      tr(
+        "Node.js was not found in the WSL distro. Install it (e.g. via nvm) and restart the desktop app.",
+      );
     return { ok: false, reason, fatal: true } as const;
   }
 
   if (resolvedPath === null) {
     return {
       ok: false,
-      reason: "WSL login-shell PATH could not be resolved during backend preflight.",
+      reason: tr("WSL login-shell PATH could not be resolved during backend preflight."),
       fatal: true,
     } as const;
   }
@@ -672,8 +689,9 @@ const ensureNodePtyImpl = Effect.fn("DesktopWslEnvironment.ensureNodePtyImpl")(f
   if (probe.exitCode === 3) {
     return {
       ok: false,
-      reason:
+      reason: tr(
         'WSL server dependencies could not be loaded (for example "node-pty"). The native packages the server needs are not unpacked where the WSL distro\'s Node can read them. This is a packaging problem with this build. Please report it.',
+      ),
       fatal: true,
     } as const;
   }
@@ -688,7 +706,10 @@ const ensureNodePtyImpl = Effect.fn("DesktopWslEnvironment.ensureNodePtyImpl")(f
       const range = options.nodeEngineRange.trim();
       return {
         ok: false,
-        reason: `WSL Node.js ${rawVersion} does not satisfy the server's required engine range (${range}). Install a compatible version, and restart the desktop app.`,
+        reason: tr(
+          "WSL Node.js {rawVersion} does not satisfy the server's required engine range ({range}). Install a compatible version, and restart the desktop app.",
+          { rawVersion: rawVersion, range: range },
+        ),
         fatal: true,
       } as const;
     }
@@ -740,7 +761,9 @@ const ensureNodePtyImpl = Effect.fn("DesktopWslEnvironment.ensureNodePtyImpl")(f
       ok: false,
       reason:
         nodeOnlyReason ??
-        "The bundled WSL backend binary (node-pty) could not be loaded in this distro. This usually means an unsupported CPU architecture or incompatible system libraries (glibc). Use a glibc-based x64/arm64 WSL distro such as Ubuntu; if you already are, please report this with your distro and the output of `uname -m`.",
+        tr(
+          "The bundled WSL backend binary (node-pty) could not be loaded in this distro. This usually means an unsupported CPU architecture or incompatible system libraries (glibc). Use a glibc-based x64/arm64 WSL distro such as Ubuntu; if you already are, please report this with your distro and the output of `uname -m`.",
+        ),
       fatal: true,
     } as const;
   }
@@ -801,15 +824,22 @@ const prepareWslRuntimeImpl = Effect.fn("desktop.wsl.prepareRuntimeImpl")(functi
       ok: false,
       reason:
         install.transportFailure === "timeout"
-          ? "WSL runtime installation timed out. Check that the distro has free disk space, then retry."
-          : "WSL runtime installation lost communication with wsl.exe. Retry, or check that the distro is healthy.",
+          ? tr(
+              "WSL runtime installation timed out. Check that the distro has free disk space, then retry.",
+            )
+          : tr(
+              "WSL runtime installation lost communication with wsl.exe. Retry, or check that the distro is healthy.",
+            ),
     } as const;
   }
   if (install.exitCode !== 0) {
     const trimmedTail = `${install.stdout}${install.stderr}`.trim().slice(-500);
     return {
       ok: false,
-      reason: `WSL runtime installation failed (exit ${install.exitCode}): ${trimmedTail || "no stderr captured"}`,
+      reason: tr("WSL runtime installation failed (exit {code}): {detail}", {
+        code: install.exitCode,
+        detail: trimmedTail || tr("no stderr captured"),
+      }),
     } as const;
   }
 
@@ -817,7 +847,7 @@ const prepareWslRuntimeImpl = Effect.fn("desktop.wsl.prepareRuntimeImpl")(functi
   return linuxAppRoot === null
     ? {
         ok: false,
-        reason: "WSL runtime installation completed without reporting its cache path.",
+        reason: tr("WSL runtime installation completed without reporting its cache path."),
       }
     : { ok: true, linuxAppRoot };
 });
@@ -835,7 +865,7 @@ const pruneWslRuntimesImpl = Effect.fn("desktop.wsl.pruneRuntimesImpl")(function
   if (result.transportFailure === null && result.exitCode === 0) return;
 
   const detail = `${result.stdout}${result.stderr}`.trim().slice(-500);
-  yield* Effect.logWarning("Could not prune old WSL runtime caches.", {
+  yield* Effect.logWarning(tr("Could not prune old WSL runtime caches."), {
     distro,
     runtimeId,
     detail: detail || `exit ${result.exitCode}`,
@@ -855,7 +885,7 @@ const invalidateWslRuntimeImpl = Effect.fn("desktop.wsl.invalidateRuntimeImpl")(
   if (result.transportFailure === null && result.exitCode === 0) return;
 
   const detail = `${result.stdout}${result.stderr}`.trim().slice(-500);
-  yield* Effect.logWarning("Could not invalidate the staged WSL runtime cache.", {
+  yield* Effect.logWarning(tr("Could not invalidate the staged WSL runtime cache."), {
     distro,
     runtimeId,
     detail: detail || `exit ${result.exitCode}`,
@@ -1039,7 +1069,7 @@ export const makeIsAvailable = Effect.fn("DesktopWslEnvironment.makeIsAvailable"
   if (platform !== "win32") return false;
   const path = yield* Path.Path;
   const fileSystem = yield* FileSystem.FileSystem;
-  const wslExePath = path.join(windir, "System32", "wsl.exe");
+  const wslExePath = path.join(windir, tr("System32"), "wsl.exe");
   if (!(yield* fileSystem.exists(wslExePath).pipe(Effect.orElseSucceed(() => false)))) {
     return false;
   }

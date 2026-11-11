@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import type * as Fiber from "effect/Fiber";
 
 import * as Electron from "electron";
@@ -114,7 +115,7 @@ function createWindow(
     resizable: false,
     show: false,
     skipTaskbar: true,
-    title: "T3 Code Snapshot Animation",
+    title: tr("T3 Code Snapshot Animation"),
     transparent: true,
     webPreferences: {
       backgroundThrottling: false,

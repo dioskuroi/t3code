@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off -- GNOME's per-user installation is a native adapter boundary.
 // @effect-diagnostics globalTimers:off -- Bound calls into the user's desktop session.
 import * as NodeFSP from "node:fs/promises";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodePath from "node:path";
 import { Message, sessionBus, type MessageBus, type MessageLike } from "dbus-next";
 import * as Schema from "effect/Schema";
@@ -47,14 +48,18 @@ export async function installGnomeCaptureBundle({ bundle, dataHome }: SetupPaths
   });
   if (existing && (!existing.isDirectory() || existing.isSymbolicLink()))
     throw new Error(
-      "The extension installation is not a regular directory. Manage it in GNOME Extensions instead.",
+      tr(
+        "The extension installation is not a regular directory. Manage it in GNOME Extensions instead.",
+      ),
     );
   if (existing) {
     const installed = decodeMetadata(
       await NodeFSP.readFile(NodePath.join(target, "metadata.json"), "utf8"),
     );
     if (installed.version > metadata.version)
-      throw new Error("A newer extension is installed. Update T3 Code instead of replacing it.");
+      throw new Error(
+        tr("A newer extension is installed. Update T3 Code instead of replacing it."),
+      );
   }
   const staged = await NodeFSP.mkdtemp(NodePath.join(parent, ".t3-capture-install-"));
   let backup: string | undefined;
@@ -117,14 +122,14 @@ export class GnomeCaptureSetup {
             () =>
               reject(
                 new Error(
-                  "GNOME did not respond. Sign in to a GNOME Wayland session and try again.",
+                  tr("GNOME did not respond. Sign in to a GNOME Wayland session and try again."),
                 ),
               ),
             5_000,
           );
         }),
       ]);
-      if (!reply) throw new Error("GNOME returned no setup information.");
+      if (!reply) throw new Error(tr("GNOME returned no setup information."));
       return reply.body[0] as unknown;
     } finally {
       clearTimeout(timer);
@@ -169,53 +174,64 @@ export class GnomeCaptureSetup {
       if (!bundled["shell-version"].includes(major))
         return {
           status: "unsupported",
-          message: `The bundled extension supports GNOME ${bundled["shell-version"].join(", ")}. This session runs GNOME ${major}.`,
+          message: tr(
+            "The bundled extension supports GNOME {bundled}. This session runs GNOME {current}.",
+            { bundled: bundled["shell-version"].join(", "), current: major },
+          ),
         };
       if (!info.state && !installed)
         return {
           status: "not-installed",
-          message:
+          message: tr(
             "Install the bundled extension to capture the active window without a picker. No download or administrator password is needed.",
+          ),
         };
       if (installed && (!info.state || (info.version && installed.version > info.version.value)))
         return {
           status: "restart-required",
-          message:
+          message: tr(
             "Installed. Save your work, sign out of GNOME and sign back in, then return here to enable the extension. Restarting T3 Code alone is not enough.",
+          ),
         };
       if ((installed?.version ?? info.version?.value ?? 0) < bundled.version)
         return {
           status: "update-required",
-          message:
+          message: tr(
             "A newer extension is bundled with this app. Install it, then sign out and back in to load the update.",
+          ),
         };
       if (!properties.UserExtensionsEnabled.value)
         return {
           status: "extensions-disabled",
-          message:
+          message: tr(
             "GNOME has disabled user extensions. Turn on Extensions in the GNOME Extensions app, then check again. T3 Code will not enable your other extensions for you.",
+          ),
         };
       if (info.state?.value === 1)
         return {
           status: "enabled",
-          message: "The T3 Code extension is running. Active-window snapshots are available.",
+          message: tr("The T3 Code extension is running. Active-window snapshots are available."),
         };
       if (info.state?.value === 3 || info.state?.value === 4)
         return {
           status: "error",
           message:
             info.error?.value ||
-            "GNOME could not load the extension. Check GNOME Extensions for details, or sign out and back in.",
+            tr(
+              "GNOME could not load the extension. Check GNOME Extensions for details, or sign out and back in.",
+            ),
         };
       return {
         status: "disabled",
-        message:
+        message: tr(
           "Enable the T3 Code extension to allow active-window snapshots. You can disable it here at any time.",
+        ),
       };
     } catch (error) {
       return {
         status: "error",
-        message: error instanceof Error ? error.message : "Could not check GNOME extension setup.",
+        message:
+          error instanceof Error ? error.message : tr("Could not check GNOME extension setup."),
       };
     }
   }
@@ -238,6 +254,8 @@ export class GnomeCaptureSetup {
       body: [GNOME_CAPTURE_UUID],
     });
     if (result !== true)
-      throw new Error("GNOME has not loaded the extension. Sign out and back in, then try again.");
+      throw new Error(
+        tr("GNOME has not loaded the extension. Sign out and back in, then try again."),
+      );
   }
 }

@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import type { DesktopUpdateState } from "@t3tools/contracts";
 
 import {
@@ -39,7 +40,12 @@ describe("nextRemoteDesktopUpdateStep", () => {
       null,
     );
     assert.equal(step.action, "done");
-    assert.include(step.action === "done" ? step.reason : "", "1.2.4 did not apply");
+    assert.include(
+      step.action === "done" ? step.reason : "",
+      tr("Update {version} did not apply on this machine. Retry it from the desktop app there.", {
+        version: "1.2.4",
+      }),
+    );
     assert.deepEqual(
       nextRemoteDesktopUpdateStep(
         makeState({ status: "available", availableVersion: "1.2.5", notAppliedVersion: "1.2.4" }),
@@ -60,7 +66,7 @@ describe("nextRemoteDesktopUpdateStep", () => {
     assert.deepEqual(nextRemoteDesktopUpdateStep(state, NO_ATTEMPTS, null), {
       action: "done",
       outcome: "failed",
-      reason: "Automatic updates are disabled on this machine.",
+      reason: tr("Automatic updates are disabled on this machine."),
     });
   });
 
@@ -129,7 +135,7 @@ describe("nextRemoteDesktopUpdateStep", () => {
       {
         action: "done",
         outcome: "failed",
-        reason: "The desktop app failed to download the update.",
+        reason: tr("The desktop app failed to download the update."),
       },
     );
     assert.deepEqual(
@@ -178,7 +184,7 @@ describe("nextRemoteDesktopUpdateStep", () => {
     assert.deepEqual(nextRemoteDesktopUpdateStep(makeState({ status: "error" }), checked, null), {
       action: "done",
       outcome: "failed",
-      reason: "The desktop app update failed.",
+      reason: tr("The desktop app update failed."),
     });
   });
 });

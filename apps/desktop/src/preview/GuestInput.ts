@@ -1,4 +1,4 @@
-// CDP input follows shared window focus; send directly to unfocused guests to avoid typing into the app.
+import { tr } from "@t3tools/shared/i18n"; // CDP input follows shared window focus; send directly to unfocused guests to avoid typing into the app.
 
 const FOCUS_ROUTED_INPUT = new Set([
   "Input.insertText",
@@ -20,8 +20,9 @@ const FOCUSED_DOCUMENT = `(() => {
 /** Electron runs editing commands only for CDP keys; exclude clipboard commands to preserve the user's clipboard. */
 const EDITING_COMMANDS = new Set(["selectAll", "undo", "redo"]);
 
-const CROSS_SITE_FOCUS_MESSAGE =
-  "The page's focus is inside a cross-site frame, which takes typed input only while the preview has focus. Click the field first.";
+const CROSS_SITE_FOCUS_MESSAGE = tr(
+  "The page's focus is inside a cross-site frame, which takes typed input only while the preview has focus. Click the field first.",
+);
 
 const ARROW_KEYS: Record<string, string> = {
   ArrowUp: "Up",

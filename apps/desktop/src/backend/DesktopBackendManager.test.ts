@@ -6,6 +6,7 @@ import {
   DesktopTelemetryControlMessage,
 } from "@t3tools/contracts";
 import { assert, describe, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -675,7 +676,10 @@ describe("DesktopBackendManager", () => {
           yield* TestClock.adjust(Duration.minutes(1));
           const { exitCount: exitsWhenReported, failure } = yield* Queue.take(reports);
           assert.equal(exitsWhenReported, exits);
-          assert.equal(failure.reason, `The server could not start (code=${code}).`);
+          assert.equal(
+            failure.reason,
+            tr("The server could not start ({reason}).", { reason: `code=${code}` }),
+          );
           assert.equal(failure.managedPolicy, managedPolicy);
           assert.isTrue(failure.output.endsWith(message));
           assert.isTrue(failure.output.isWellFormed());
@@ -716,7 +720,7 @@ describe("DesktopBackendManager", () => {
         assert.isTrue(Option.isNone(yield* Queue.poll(reports)));
         yield* TestClock.adjust(Duration.seconds(1));
         const failure = yield* Queue.take(reports);
-        assert.equal(failure.reason, "The server started but did not become ready in time.");
+        assert.equal(failure.reason, tr("The server started but did not become ready in time."));
       }).pipe(Effect.provide(TestClock.layer())),
     ),
   );

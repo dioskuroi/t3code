@@ -1,4 +1,5 @@
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import type { DesktopUpdateState } from "@t3tools/contracts";
 import * as Effect from "effect/Effect";
@@ -139,7 +140,7 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
   let backendDesiredRunning = options.backendDesiredRunning ?? true;
   const stubBackendInstance: DesktopBackendPool.DesktopBackendInstance = {
     id: DesktopBackendPool.PRIMARY_INSTANCE_ID,
-    label: Effect.succeed("Windows"),
+    label: Effect.succeed(tr("Windows")),
     start: Effect.sync(() => {
       backendDesiredRunning = true;
       installSteps.push("startBackend");
@@ -166,7 +167,7 @@ export function makeHarness(options: UpdatesHarnessOptions = {}) {
             {
               ...stubBackendInstance,
               id: DesktopBackendPool.BackendInstanceId("wsl:Ubuntu"),
-              label: Effect.succeed("Ubuntu"),
+              label: Effect.succeed(tr("Ubuntu")),
             },
           ]
         : [stubBackendInstance]),

@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Native, consent-gated compositor config I/O.
 import * as NodeFSP from "node:fs/promises";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeCrypto from "node:crypto";
@@ -54,11 +55,11 @@ async function readSnapshot(path: string) {
   try {
     const stat = await file.stat();
     if (!stat.isFile() || stat.size > MAX_BYTES)
-      throw new Error("Choose a config file smaller than 1 MB.");
+      throw new Error(tr("Choose a config file smaller than 1 MB."));
     const bytes = await file.readFile();
-    if (bytes.length > MAX_BYTES) throw new Error("Choose a config file smaller than 1 MB.");
+    if (bytes.length > MAX_BYTES) throw new Error(tr("Choose a config file smaller than 1 MB."));
     const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
-    if (text.includes("\0")) throw new Error("Choose a text config file.");
+    if (text.includes("\0")) throw new Error(tr("Choose a text config file."));
     return { path, resolvedPath, text, bytes, stat };
   } finally {
     await file.close();
@@ -74,7 +75,9 @@ const defaultTools = {
       });
     } catch {
       throw new Error(
-        "Niri couldn't validate the proposed config. Nothing was changed. Check your config in Advanced.",
+        tr(
+          "Niri couldn't validate the proposed config. Nothing was changed. Check your config in Advanced.",
+        ),
       );
     }
   },
@@ -88,7 +91,7 @@ const defaultTools = {
       timeout: 5000,
       maxBuffer: 64 * 1024,
     });
-    if (errors.stdout.trim()) throw new Error("Hyprland reported config errors.");
+    if (errors.stdout.trim()) throw new Error(tr("Hyprland reported config errors."));
   },
 };
 
@@ -115,7 +118,7 @@ export class CaptureShortcutConfig {
     const keys = captureConfigKeys(shortcut);
     const bindings = await this.tools.hyprlandBindings().catch(() => {
       throw new Error(
-        "Couldn't check Hyprland's current shortcuts. Try again from your Hyprland session.",
+        tr("Couldn't check Hyprland's current shortcuts. Try again from your Hyprland session."),
       );
     });
     if (
@@ -133,13 +136,13 @@ export class CaptureShortcutConfig {
     target: Target,
     request: DesktopCaptureConfigRequest,
   ): Promise<DesktopCaptureConfigPreview> {
-    if (this.applying) throw new Error("Wait for the current config change to finish.");
+    if (this.applying) throw new Error(tr("Wait for the current config change to finish."));
     this.pending = undefined;
     const root = await readSnapshot(target.path).catch(() => {
-      throw new Error("Couldn't read your settings file. Choose a different file in Advanced.");
+      throw new Error(tr("Couldn't read your settings file. Choose a different file in Advanced."));
     });
     if (root.stat.uid !== process.getuid?.() || /\/omarchy\/default\//.test(root.resolvedPath))
-      throw new Error("Choose your own config, not system or Omarchy defaults.");
+      throw new Error(tr("Choose your own config, not system or Omarchy defaults."));
     const format: CaptureConfigFormat =
       target.desktop === "niri"
         ? "niri"
@@ -151,7 +154,7 @@ export class CaptureShortcutConfig {
         format === "niri" ? ".kdl" : format === "hyprland-lua" ? ".lua" : ".conf",
       )
     )
-      throw new Error("Choose a .kdl Niri config or a .conf/.lua Hyprland config.");
+      throw new Error(tr("Choose a .kdl Niri config or a .conf/.lua Hyprland config."));
     const edit = editCaptureConfig(
       root.text,
       format,
@@ -172,10 +175,14 @@ export class CaptureShortcutConfig {
           files.length > MAX_FILES ||
           files.reduce((size, item) => size + item.bytes.length, 0) > MAX_BYTES
         )
-          throw new Error("This config has too many included files. Use manual setup in Advanced.");
+          throw new Error(
+            tr("This config has too many included files. Use manual setup in Advanced."),
+          );
         for (const include of niriConfigIncludes(file.text)) {
           if (include.path.includes("$") || /[*?[\]]/.test(include.path))
-            throw new Error("This config uses a dynamic include. Use manual setup in Advanced.");
+            throw new Error(
+              tr("This config uses a dynamic include. Use manual setup in Advanced."),
+            );
           const path = include.path.startsWith("~/")
             ? NodePath.join(this.home, include.path.slice(2))
             : NodePath.resolve(NodePath.dirname(file.path), include.path);
@@ -188,7 +195,7 @@ export class CaptureShortcutConfig {
               continue;
             }
             throw new Error(
-              "Couldn't read an included Niri config. Check its location in Advanced.",
+              tr("Couldn't read an included Niri config. Check its location in Advanced."),
               { cause: error },
             );
           }
@@ -229,7 +236,7 @@ export class CaptureShortcutConfig {
       pending.preview.id !== id ||
       pending.target.desktop !== desktop
     )
-      throw new Error("This preview expired. Review changes again before saving.");
+      throw new Error(tr("This preview expired. Review changes again before saving."));
     this.pending = undefined;
     this.applying = true;
     const { preview, files } = pending;
@@ -247,7 +254,7 @@ export class CaptureShortcutConfig {
             )
           )
             throw new Error(
-              "Your config changed since this preview. Review changes again before saving.",
+              tr("Your config changed since this preview. Review changes again before saving."),
             );
         }
         for (const original of files) {
@@ -260,7 +267,9 @@ export class CaptureShortcutConfig {
             !current.bytes.equals(original.bytes)
           )
             throw new Error(
-              "Your config changed since this preview. Nothing was saved. Review changes again before saving.",
+              tr(
+                "Your config changed since this preview. Nothing was saved. Review changes again before saving.",
+              ),
             );
         }
       };
@@ -301,8 +310,9 @@ export class CaptureShortcutConfig {
         try {
           await this.tools.reloadHyprland();
         } catch {
-          warning =
-            "Config saved, but Hyprland couldn't reload it cleanly. Check hyprctl configerrors, then run hyprctl reload.";
+          warning = tr(
+            "Config saved, but Hyprland couldn't reload it cleanly. Check hyprctl configerrors, then run hyprctl reload.",
+          );
         }
       }
       return { backupPath, warning };

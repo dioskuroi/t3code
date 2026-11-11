@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
@@ -338,7 +339,7 @@ describe("PreviewPasskeys", () => {
       assert.deepStrictEqual(electron.showMessageBox.mock.calls[0]?.[0]?.buttons, [
         "alice@example.com",
         "Bob (bob@example.com)",
-        "Cancel",
+        tr("Cancel"),
       ]);
 
       electron.showMessageBox.mockResolvedValueOnce({ response: 2 });

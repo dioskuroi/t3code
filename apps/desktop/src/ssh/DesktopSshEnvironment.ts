@@ -3,6 +3,7 @@ import type {
   DesktopSshEnvironmentBootstrap,
   DesktopSshEnvironmentTarget,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as NetService from "@t3tools/shared/Net";
 import * as SshAuth from "@t3tools/ssh/auth";
 import { resolveSshTarget } from "@t3tools/ssh/command";
@@ -93,23 +94,27 @@ function toSshPasswordPromptError(
   let message: string;
   switch (cause._tag) {
     case "DesktopSshPromptRequestIdGenerationError":
-      message = "Secure randomness is unavailable.";
+      message = tr("Secure randomness is unavailable.");
       break;
     case "DesktopSshPromptWindowUnavailableError":
     case "DesktopSshPromptPresentationError":
-      message = "T3 Code window is not available for SSH authentication.";
+      message = tr("T3 Code window is not available for SSH authentication.");
       break;
     case "DesktopSshPromptTimedOutError":
-      message = `SSH authentication timed out for ${cause.destination}.`;
+      message = tr("SSH authentication timed out for {destination}.", {
+        destination: cause.destination,
+      });
       break;
     case "DesktopSshPromptCancelledError":
-      message = `SSH authentication cancelled for ${cause.destination}.`;
+      message = tr("SSH authentication cancelled for {destination}.", {
+        destination: cause.destination,
+      });
       break;
     case "DesktopSshPromptWindowClosedError":
-      message = "SSH authentication was cancelled because the app window closed.";
+      message = tr("SSH authentication was cancelled because the app window closed.");
       break;
     case "DesktopSshPromptServiceStoppedError":
-      message = "SSH password prompt service stopped.";
+      message = tr("SSH password prompt service stopped.");
       break;
     default:
       return unexpectedPasswordPromptError(cause);

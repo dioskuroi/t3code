@@ -1,6 +1,7 @@
 // @effect-diagnostics globalTimers:off -- Child-process deadlines run outside Effect fibers.
 // @effect-diagnostics nodeBuiltinImport:off -- This desktop-only helper owns a Node child process.
 import * as NodeChildProcess from "node:child_process";
+import { tr } from "@t3tools/shared/i18n";
 
 import * as Electron from "electron";
 
@@ -65,7 +66,7 @@ export function startRegionSnapShotProcess(
   } catch {
     return {
       alive: false,
-      capture: () => Promise.reject(new Error("Windows window capture is unavailable.")),
+      capture: () => Promise.reject(new Error(tr("Windows window capture is unavailable."))),
       close: () => undefined,
     };
   }
@@ -77,7 +78,7 @@ export function startRegionSnapShotProcess(
     settled = true;
     ready.resolve();
     if (value) result.resolve(value);
-    else result.reject(error ?? new Error("Windows window capture failed."));
+    else result.reject(error ?? new Error(tr("Windows window capture failed.")));
     child.kill();
   };
   child.onMessage((message) => {
@@ -95,7 +96,7 @@ export function startRegionSnapShotProcess(
       });
     }
   });
-  child.onExit(() => finish(new Error("Windows window capture helper exited.")));
+  child.onExit(() => finish(new Error(tr("Windows window capture helper exited."))));
   void result.promise.catch(() => undefined);
 
   return {
@@ -103,9 +104,9 @@ export function startRegionSnapShotProcess(
       return !settled;
     },
     capture: async (region) => {
-      if (settled) throw new Error("Windows window capture helper already used.");
+      if (settled) throw new Error(tr("Windows window capture helper already used."));
       const timeout = setTimeout(
-        () => finish(new Error("Windows window capture timed out. Try again.")),
+        () => finish(new Error(tr("Windows window capture timed out. Try again."))),
         CAPTURE_TIMEOUT_MS,
       );
       timeout.unref();
@@ -118,7 +119,7 @@ export function startRegionSnapShotProcess(
         clearTimeout(timeout);
       }
     },
-    close: () => finish(new Error("Windows window capture cancelled.")),
+    close: () => finish(new Error(tr("Windows window capture cancelled."))),
   };
 }
 
@@ -150,9 +151,9 @@ export function makeRegionSnapShotPool(
     warm,
     cool,
     capture: async (region) => {
-      if (closed) throw new Error("Windows window capture is unavailable.");
+      if (closed) throw new Error(tr("Windows window capture is unavailable."));
       if (inFlight?.alive) {
-        throw new Error("Windows window capture is still in progress. Try again.");
+        throw new Error(tr("Windows window capture is still in progress. Try again."));
       }
       const current = standby?.alive ? standby : start(workerPath);
       standby = undefined;
@@ -193,7 +194,7 @@ export async function captureRegionWindowSnapshot(
       : shot.png;
   return {
     source: {
-      name: active.title.trim() || active.owner.name.trim() || "Window",
+      name: active.title.trim() || active.owner.name.trim() || tr("Window"),
     },
     png,
   };
