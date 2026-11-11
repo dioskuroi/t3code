@@ -1,4 +1,5 @@
 import ChatMarkdown from "./ChatMarkdown";
+import { tr } from "@t3tools/shared/i18n";
 import { isSvgAttachment } from "@t3tools/shared/image";
 import { ReadOnlySourcePreview } from "./files/AttachmentFilePreview";
 import type {
@@ -183,7 +184,7 @@ function ContextChip(props: {
 
 function uploadStatusSuffix(upload: AttachmentUploadState | undefined): string | null {
   if (upload?.status === "uploading") return formatAttachmentUploadProgress(upload.progress);
-  if (upload?.status === "failed") return "upload failed";
+  if (upload?.status === "failed") return tr("upload failed");
   return null;
 }
 
@@ -228,7 +229,7 @@ function FileContextChip(props: {
   const actions = use(ComposerContextActionsContext);
   const { resolvedTheme } = useTheme();
   const needsReattach = composerFileNeedsReattach(props.record);
-  const suffix = needsReattach ? "attach again" : uploadStatusSuffix(props.upload);
+  const suffix = needsReattach ? tr("attach again") : uploadStatusSuffix(props.upload);
   const size = formatAttachmentSize(props.record.sizeBytes);
   const isVideo = videoMimeType(props.record) !== null;
   return (
@@ -249,7 +250,11 @@ function FileContextChip(props: {
       error={props.upload?.status === "failed"}
       unresolved={needsReattach}
       suffix={suffix}
-      accessibleLabel={`${isVideo && !needsReattach ? "Preview video" : "File"} attachment, ${props.record.name}, ${size}`}
+      accessibleLabel={tr("{kind} attachment, {name}, {size}", {
+        kind: isVideo && !needsReattach ? tr("Preview video") : tr("File"),
+        name: props.record.name,
+        size,
+      })}
       onOpen={
         !needsReattach
           ? () =>
@@ -258,7 +263,9 @@ function FileContextChip(props: {
       }
       tooltip={
         needsReattach
-          ? `${props.record.name} was not saved with this draft. Attach it again to send it.`
+          ? tr("{name} was not saved with this draft. Attach it again to send it.", {
+              name: props.record.name,
+            })
           : attachmentTooltip(props.record, props.upload)
       }
     />
@@ -285,12 +292,25 @@ function previewAnnotationTooltip(annotation: PreviewAnnotationPayload): string 
   const lines = [annotation.pageTitle?.trim() || annotation.pageUrl];
   if (annotation.comment.trim()) lines.push("", annotation.comment.trim());
   const targets: string[] = [];
-  const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? "" : "s"}`;
-  if (annotation.elements.length > 0) targets.push(plural(annotation.elements.length, "element"));
-  if (annotation.regions.length > 0) targets.push(plural(annotation.regions.length, "region"));
-  if (annotation.strokes.length > 0) targets.push(plural(annotation.strokes.length, "drawing"));
+  if (annotation.elements.length > 0) {
+    const count = annotation.elements.length;
+    targets.push(count === 1 ? tr("{count} element", { count }) : tr("{count} elements", { count }));
+  }
+  if (annotation.regions.length > 0) {
+    const count = annotation.regions.length;
+    targets.push(count === 1 ? tr("{count} region", { count }) : tr("{count} regions", { count }));
+  }
+  if (annotation.strokes.length > 0) {
+    const count = annotation.strokes.length;
+    targets.push(count === 1 ? tr("{count} drawing", { count }) : tr("{count} drawings", { count }));
+  }
   if (annotation.styleChanges.length > 0) {
-    targets.push(plural(annotation.styleChanges.length, "style change"));
+    const count = annotation.styleChanges.length;
+    targets.push(
+      count === 1
+        ? tr("{count} style change", { count })
+        : tr("{count} style changes", { count }),
+    );
   }
   if (targets.length > 0) lines.push("", targets.join(", "));
   return lines.join("\n");
@@ -329,12 +349,12 @@ function ComposerPreviewAnnotationDetails({
       {screenshotUrl ? (
         <img
           src={screenshotUrl}
-          alt="Annotated preview crop"
+          alt={tr("Annotated preview crop")}
           className="max-h-64 w-full border-border/70 border-b bg-muted object-contain"
         />
       ) : (
         <div className="border-border/70 border-b bg-muted/40 px-3 py-2 text-secondary-label text-xs">
-          Screenshot unavailable
+          {tr("Screenshot unavailable")}
         </div>
       )}
       <div className="whitespace-pre-wrap wrap-break-word px-3 py-2.5 text-sm text-foreground">
@@ -363,7 +383,7 @@ function UnresolvedContextChip(props: { label: string }) {
   return (
     <UnresolvedChip
       label={props.label}
-      tooltip="This context is no longer available. Remove it or attach it again."
+      tooltip={tr("This context is no longer available. Remove it or attach it again.")}
     />
   );
 }
@@ -441,7 +461,7 @@ const composerContextPresentationRegistry = createContextPresentationRegistry<
           <ContextChip
             icon={isPullRequest ? <PullRequestGlyph.pullRequest /> : <MessageCircleIcon />}
             label={reviewCommentContextLabel(entry.record)}
-            kindLabel={isPullRequest ? pullRequestContextKindLabel(entry.record) : "Review comment"}
+            kindLabel={isPullRequest ? pullRequestContextKindLabel(entry.record) : tr("Review comment")}
             details={<ComposerReviewCommentDetails comment={entry.record} />}
             detailsMode={definition.capabilities.details}
             kind={isPullRequest ? PULL_REQUEST_CHIP_KINDS[pullRequestState] : "review-comment"}
@@ -457,7 +477,7 @@ const composerContextPresentationRegistry = createContextPresentationRegistry<
           <ContextChip
             icon={<MousePointerClickIcon />}
             label={previewAnnotationContextLabel(entry.record)}
-            kindLabel="Preview annotation"
+            kindLabel={tr("Preview annotation")}
             details={
               <ComposerPreviewAnnotationDetails
                 annotation={entry.record}

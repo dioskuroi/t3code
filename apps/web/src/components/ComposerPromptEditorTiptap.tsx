@@ -1,4 +1,5 @@
 import { documentChipKindForFileName } from "~/pierre-icons";
+import { tr } from "@t3tools/shared/i18n";
 import { isProviderSkillUserInvocable } from "@t3tools/client-runtime/providerSkills";
 import { formatProviderSkillDisplayName } from "@t3tools/shared/inlineSkills";
 import {
@@ -267,7 +268,7 @@ function ComposerMentionNodeView({ node }: NodeViewProps) {
       dir="ltr"
       render={<button type="button" />}
       onClick={() => actions.openMention(path)}
-      aria-label={`Preview ${path}`}
+      aria-label={tr("Preview {path}", { path: path })}
       contentEditable={false}
       spellCheck={false}
       data-composer-mention-chip="true"
