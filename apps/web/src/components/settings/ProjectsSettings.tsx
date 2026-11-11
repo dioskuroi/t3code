@@ -1,4 +1,5 @@
 import { EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { LayersIcon } from "lucide-react";
 
 import { Button } from "../ui/button";
@@ -22,7 +23,7 @@ export function ProjectsSettings() {
               onClick={() => selectScope(selectEnvironmentAxis(value, ALL_ENVIRONMENTS_VALUE))}
             >
               <LayersIcon />
-              Show all environments
+              {tr("Show all environments")}
             </Button>
           ) : null}
         </div>
@@ -47,7 +48,7 @@ export function ProjectsSettings() {
         unavailable
       ) : (
         <SettingsScopeNotice target="project">
-          Choose a project to manage its name, icon, checkouts and actions.
+          {tr("Choose a project to manage its name, icon, checkouts and actions.")}
         </SettingsScopeNotice>
       )}
     </div>

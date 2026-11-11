@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import { AsyncResult, Atom } from "effect/reactivity";
 import { useId, useState } from "react";
@@ -17,21 +18,21 @@ const inFlightIcons = new Map<string, Promise<Blob>>();
 export { officialAcpRegistryIconUrlForAgentId, resolveOfficialAcpRegistryIconUrl };
 
 async function checkedIconBlob(response: Response): Promise<Blob> {
-  if (!response.ok || response.redirected) throw new Error("ACP registry icon request failed.");
+  if (!response.ok || response.redirected) throw new Error(tr("ACP registry icon request failed."));
   const contentType = response.headers.get("content-type")?.split(";", 1)[0]?.trim() ?? "";
-  if (!contentType.startsWith("image/")) throw new Error("ACP registry icon was not an image.");
+  if (!contentType.startsWith("image/")) throw new Error(tr("ACP registry icon was not an image."));
   const contentLength = Number(response.headers.get("content-length"));
   if (Number.isFinite(contentLength) && contentLength > MAX_ICON_BYTES) {
-    throw new Error("ACP registry icon was too large.");
+    throw new Error(tr("ACP registry icon was too large."));
   }
   const bytes = await response.arrayBuffer();
-  if (bytes.byteLength > MAX_ICON_BYTES) throw new Error("ACP registry icon was too large.");
+  if (bytes.byteLength > MAX_ICON_BYTES) throw new Error(tr("ACP registry icon was too large."));
   return new Blob([bytes], { type: contentType });
 }
 
 export function loadCachedAcpRegistryIcon(iconUrl: string): Promise<Blob> {
   if (resolveOfficialAcpRegistryIconUrl(iconUrl) !== iconUrl) {
-    return Promise.reject(new Error("ACP registry icon URL was not allowed."));
+    return Promise.reject(new Error(tr("ACP registry icon URL was not allowed.")));
   }
   const pending = inFlightIcons.get(iconUrl);
   if (pending) return pending;

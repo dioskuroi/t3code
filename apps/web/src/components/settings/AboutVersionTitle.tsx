@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import { APP_VERSION } from "../../branding";
 import { useCopyToClipboard } from "../../hooks/useCopyToClipboard";
@@ -16,7 +17,7 @@ export function AboutVersionTitle() {
       toastManager.add(
         stackedThreadToast({
           type: "error",
-          title: "Could not copy version",
+          title: tr("Could not copy version"),
           description: error.message,
         }),
       );
@@ -25,7 +26,7 @@ export function AboutVersionTitle() {
 
   return (
     <span className="inline-flex items-baseline gap-2">
-      <span>Version</span>
+      <span>{tr("Version")}</span>
       <code className="text-2xs font-medium">
         <Tooltip>
           <TooltipTrigger
@@ -33,14 +34,14 @@ export function AboutVersionTitle() {
               <InlineButton
                 ref={copyButtonRef}
                 tone="muted"
-                aria-label={`Copy version ${APP_VERSION}`}
+                aria-label={tr("Copy version {APP_VERSION}", { APP_VERSION: APP_VERSION })}
                 onClick={() => copyToClipboard(APP_VERSION, undefined)}
               >
                 {APP_VERSION}
               </InlineButton>
             }
           />
-          <TooltipPopup>Copy version</TooltipPopup>
+          <TooltipPopup>{tr("Copy version")}</TooltipPopup>
         </Tooltip>
       </code>
     </span>

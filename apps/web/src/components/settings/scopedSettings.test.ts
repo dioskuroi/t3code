@@ -118,7 +118,7 @@ describe("scoped settings targets", () => {
       planScopedSettingsPatch(scope, environments, { enableProviderUpdateChecks: false }),
     ).toMatchObject({
       serverWrites: [],
-      unavailableReason: "Connect Offline to save this setting.",
+      unavailableReason: "连接 Offline 以保存此设置。",
     });
   });
 
@@ -264,7 +264,7 @@ describe("scoped settings writes", () => {
     const unsupported = [
       {
         label: server.label,
-        message: "This environment does not support this setting. Update T3 Code on it.",
+        message: "此环境不支持此设置。请在其上更新 T3 Code。",
       },
     ];
 
@@ -463,7 +463,7 @@ describe("scoped settings writes", () => {
       planScopedSettingsPatch(project, environments, { enableProviderUpdateChecks: false }),
     ).toMatchObject({
       serverWrites: [],
-      unavailableReason: "This setting is environment-wide and cannot be overridden by a project.",
+      unavailableReason: "此设置为环境级，不能被项目覆盖。",
     });
   });
 
@@ -514,7 +514,7 @@ describe("scoped settings writes", () => {
         cause: Cause.fail(
           new EnvironmentAuthorizationError({
             requiredScope: "settings:write",
-            message: "This connection lacks permission to change settings.",
+            message: "此连接缺少更改这些设置的权限。",
           }),
         ),
       })
@@ -531,7 +531,7 @@ describe("scoped settings writes", () => {
       fourth.label,
     ]);
     expect(result.failedEnvironments.map(({ message }) => message)).toEqual([
-      "This connection lacks permission to change settings.",
+      "此连接缺少更改这些设置的权限。",
       "Disconnected during save",
     ]);
     expect(result.failedEnvironments.map(({ label }) => label)).toEqual([

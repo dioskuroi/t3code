@@ -57,7 +57,11 @@ describe("device host changes across environments", () => {
   it("refuses an ambiguous destination on another environment instead of changing a sibling", () => {
     const remote = { ...shared, id: "remote" };
     const sibling = { ...shared, id: "sibling" };
-    expect(() => updateDeviceHosts([remote, sibling], shared, true)).toThrow("Multiple hosts");
-    expect(() => updateDeviceHosts([remote, sibling], shared, false)).toThrow("Multiple hosts");
+    expect(() => updateDeviceHosts([remote, sibling], shared, true)).toThrow(
+      "多个主机匹配此 SSH 目标",
+    );
+    expect(() => updateDeviceHosts([remote, sibling], shared, false)).toThrow(
+      "多个主机匹配此 SSH 目标",
+    );
   });
 });

@@ -24,7 +24,13 @@
     "批 W2（#59，web 对话域 ChatView/composer）新增：exact 为 composerInlineChip 的 SKILL_CHIP_ICON_SVG 常量，SVG 标记串非 UI 文案，不翻；exact 补 \"Icon\"（ThreadPullRequestBadgePresentation 的类型成员名，§3 代码标识符精神）；words 新增 Mermaid（图表渲染库名，随 §3 品牌/技术词精神）。",
     "批 W3（#60，web 命令面板域）新增：exact \":disabled\" 为 getCommandPaletteReturnFocus 的 CSS 选择器（matches() 参数，§3 代码标识符精神，不翻）；contains \"~/projects/my-app\" 为输入示例路径（路径不译精神）；review 修复：words \"projects\"/\"my-app\" 会静默豁免 Projects 分区标签等真 UI 串（WelcomeWizard/settingsSearch 实证）故删除，改用 contains 收窄；Linux/Win32 平台标识由既有 words 豁免覆盖。",
     "批 W4（#61，web 设置域 SettingsPanels）新增：contains \"/default\" 为斜杠命令字面量（Legacy 面板描述 \"Restore Build/Plan, /plan, /default, and Shift+Tab.\"，§3.2 命令字面量精神），命令名不译。",
-    "批 W6（#63，web 设置域定时任务与诊断遥测）words 新增：Span/Spans/Trace/Traces（追踪域技术词，UI 展示层保留英文）、Sidecar（T3 组件名）、SIGKILL（POSIX 信号名）、Sentry（品牌名），供译文内容面豁免（术语表 §3 品牌/技术词精神）。"
+    "批 W6（#63，web 设置域定时任务与诊断遥测）words 新增：Span/Spans/Trace/Traces（追踪域技术词，UI 展示层保留英文）、Sidecar（T3 组件名）、SIGKILL（POSIX 信号名）、Sentry（品牌名），供译文内容面豁免（术语表 §3 品牌/技术词精神）。",
+    "W9 (#66)：品牌与信号短标签（1Password/INT/KILL/px）、CSS 选择器与字体预览示例（diff 片段、提示词样例文本）为标识符/示例内容，§3.5/§10 不译。",
+    "W9 (#66)：words 增补品牌与技术名词（1Password、CLIProxyAPI、Lucide、OTLP、SIGINT、PATH、emoji、SettingsScopeProvider、agent-device、op CLI 名）；contains 增补示例分支前缀（feat/、fix/、refactor/）示例字面量。",
+    "W9 (#66)：exact 增补应用商店品牌（App Store、Google Play）；contains 增补固定短语与示例分支字面量（boring sidebar、op account list、feat/add-search、fix/login-timeout、refactor/auth）。",
+    "W9 (#66)：contains 补充 boring（boring sidebar 产品名，译文中以「在 boring 侧边栏」形式出现）。",
+    "W9 (#66)：exact 增补 Effect.timeout 时长字面量（30 seconds，非 UI 文案）。",
+    "W9 review (#66)：删 exact 尾空格变体与 words/ exact 冗余 1Password、words PATH（改译「环境变量」随存量）。"
   ],
   "contains": [
     "/side",
@@ -68,7 +74,13 @@
     "such as High",
     "--config",
     "NIRI_CONFIG",
-    "如 High"
+    "如 High",
+    "boring",
+    "boring sidebar",
+    "feat/add-search",
+    "fix/login-timeout",
+    "op account list",
+    "refactor/auth"
   ],
   "exact": [
     " READY ",
@@ -694,7 +706,19 @@
     "DELETE FROM client_cache",
     "Moonbase Terminal",
     "Suspense Station",
-    "Kernel Cabin"
+    "Kernel Cabin",
+    "+  return `${user.name} <${user.email}>`; // 0O 1lI",
+    "+++ b/src/formatUser.ts",
+    "-  return user.name.toUpperCase();",
+    "--- a/src/formatUser.ts",
+    "30 seconds",
+    ":scope > [data-settings-scroll-target]",
+    "App Store",
+    "Google Play",
+    "INT",
+    "KILL",
+    "Use $frontend-design to fix the flaky test in",
+    "px"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -1095,6 +1119,15 @@
     "LaTeX",
     "TeX",
     "gh",
-    "devbox"
+    "devbox",
+    "CLIProxyAPI",
+    "Lucide",
+    "OTLP",
+    "SIGINT",
+    "SettingsScopeProvider",
+    "agent-device",
+    "emoji",
+    "op",
+    "1Password"
   ]
 }

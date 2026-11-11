@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentId } from "@t3tools/contracts";
 import * as Schema from "effect/Schema";
 
@@ -32,18 +33,22 @@ export function DatabaseStorageNotice({
   );
   if (visible.length === 0) return null;
   return (
-    <SettingsSection id="storage-database" title="Database">
+    <SettingsSection id="storage-database" title={tr("Database")}>
       <SettingsRow
-        title="Reclaim freed database space"
-        description="Old history is cleaned up automatically, but these databases still hold the freed space. Run the command on each machine to return it to disk; it pauses and restarts the background service. Quit the desktop app first if it hosts the environment."
+        title={tr("Reclaim freed database space")}
+        description={tr(
+          "Old history is cleaned up automatically, but these databases still hold the freed space. Run the command on each machine to return it to disk; it pauses and restarts the background service. Quit the desktop app first if it hosts the environment.",
+        )}
       />
       {visible.map(({ environmentId, status }) => (
         <SettingsRow
           key={environmentId}
-          title={`${(status.reclaimableBytes / 1024 ** 3).toFixed(1)} GiB on ${
-            environments.find((environment) => environment.environmentId === environmentId)
-              ?.label ?? environmentId
-          }`}
+          title={tr("{size} GiB on {label}", {
+            size: (status.reclaimableBytes / 1024 ** 3).toFixed(1),
+            label:
+              environments.find((environment) => environment.environmentId === environmentId)
+                ?.label ?? environmentId,
+          })}
           description={<code className="select-text break-all">{status.compactCommand}</code>}
           control={
             <div className="flex flex-wrap items-center gap-1.5">
@@ -52,14 +57,14 @@ export function DatabaseStorageNotice({
                 size="xs"
                 onClick={() => copyToClipboard(status.compactCommand, undefined)}
               >
-                Copy command
+                {tr("Copy command")}
               </Button>
               <Button
                 variant="ghost"
                 size="xs"
                 onClick={() => setDismissed((current) => [...current, environmentId])}
               >
-                Dismiss
+                {tr("Dismiss")}
               </Button>
             </div>
           }

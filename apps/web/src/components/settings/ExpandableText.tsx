@@ -1,4 +1,5 @@
 import { InlineButton } from "../ui/button";
+import { tr } from "@t3tools/shared/i18n";
 import { useId, useState } from "react";
 
 import { cn } from "../../lib/utils";
@@ -8,7 +9,7 @@ export function ExpandableText({
   collapsedText = text,
   className,
   collapsedClassName = "line-clamp-3",
-  expandLabel = "Show full error",
+  expandLabel = tr("Show full error"),
 }: {
   text: string;
   collapsedText?: string;
@@ -39,7 +40,7 @@ export function ExpandableText({
           className="mt-1"
           onClick={() => setExpanded((value) => !value)}
         >
-          {expanded ? "Show less" : expandLabel}
+          {expanded ? tr("Show less") : expandLabel}
         </InlineButton>
       ) : null}
     </div>
