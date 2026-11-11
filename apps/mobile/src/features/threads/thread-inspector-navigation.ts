@@ -1,4 +1,5 @@
 import { StackActions, useNavigation } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { createContext, use } from "react";
 import { Platform } from "react-native";
 
@@ -36,7 +37,7 @@ export function useOpenThreadInspector() {
       )
         return false;
       navigation.dispatch(
-        StackActions.popTo("Thread", { ...source, inspector: target }, { merge: true }),
+        StackActions.popTo(tr("Thread"), { ...source, inspector: target }, { merge: true }),
       );
     }
     return true;

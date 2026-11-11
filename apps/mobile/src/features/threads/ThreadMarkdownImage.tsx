@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { MISSING_FILE_ACCESS_MESSAGE } from "@t3tools/client-runtime/state/assets";
 import type { AssetResource, EnvironmentId } from "@t3tools/contracts";
 import * as Data from "effect/Data";
@@ -38,7 +39,7 @@ class SvgLoadError extends Data.TaggedError("SvgLoadError")<{ readonly cause: un
 async function readSvgXml(uri: string, signal: AbortSignal): Promise<string> {
   if (uri.startsWith("data:image/svg+xml")) {
     const comma = uri.indexOf(",");
-    if (comma < 0) throw new Error("SVG data URI has no content");
+    if (comma < 0) throw new Error(tr("SVG data URI has no content"));
     const content = decodeURIComponent(uri.slice(comma + 1));
     return uri.slice(0, comma).includes(";base64")
       ? new TextDecoder().decode(
@@ -49,7 +50,7 @@ async function readSvgXml(uri: string, signal: AbortSignal): Promise<string> {
   // expo/fetch, not the runtime HttpClient: it is the one that reads file:// URIs.
   const response = await fetch(uri, { signal });
   if (!response.ok && !(response.status === 0 && uri.startsWith("file://")))
-    throw new Error(`SVG request failed: ${response.status}`);
+    throw new Error(tr("SVG request failed: {status}", { status: response.status }));
   return response.text();
 }
 
@@ -73,7 +74,7 @@ const svgDocumentAtom = Atom.family((uri: string) =>
     return Effect.tryPromise({
       try: async (signal): Promise<SvgDocument> => {
         const ast = parse(await readSvgXml(uri, signal));
-        if (!ast) throw new Error("SVG has no root element");
+        if (!ast) throw new Error(tr("SVG has no root element"));
         return { ast, size: resolveSvgImageSize(ast.props) };
       },
       catch: (cause) => new SvgLoadError({ cause }),
@@ -142,9 +143,9 @@ export function ThreadMarkdownImageView(props: {
         <MediaActionsMenu media={mediaActions}>
           <Pressable
             accessibilityRole="imagebutton"
-            accessibilityLabel={props.alt ?? "Markdown image"}
+            accessibilityLabel={props.alt ?? tr("Markdown image")}
             accessibilityHint={
-              mediaActions.actions.length > 0 ? "Touch and hold for media actions" : undefined
+              mediaActions.actions.length > 0 ? tr("Touch and hold for media actions") : undefined
             }
             className="items-center justify-center rounded-[10px] bg-md-code-bg"
             style={frameStyle}
@@ -152,8 +153,8 @@ export function ThreadMarkdownImageView(props: {
             {failed ? (
               <Text className="px-3 text-center text-xs text-foreground-muted">
                 {props.unavailableDetail
-                  ? `Image unavailable. ${props.unavailableDetail}`
-                  : "Image unavailable"}
+                  ? tr("Image unavailable. {detail}", { detail: props.unavailableDetail })
+                  : tr("Image unavailable")}
               </Text>
             ) : (
               <AppActivityIndicator />
@@ -165,16 +166,16 @@ export function ThreadMarkdownImageView(props: {
           <MediaActionsMenu media={mediaActions}>
             <Pressable
               accessibilityRole="imagebutton"
-              accessibilityLabel={props.alt ?? "Markdown image"}
+              accessibilityLabel={props.alt ?? tr("Markdown image")}
               accessibilityHint={
-                mediaActions.actions.length > 0 ? "Touch and hold for media actions" : undefined
+                mediaActions.actions.length > 0 ? tr("Touch and hold for media actions") : undefined
               }
               onPress={() =>
                 props.onPressPreview(
                   withGallery({
                     kind: "image",
                     uri: props.uri!,
-                    name: props.actionsSource?.name ?? props.alt ?? "Image",
+                    name: props.actionsSource?.name ?? props.alt ?? tr("Image"),
                     sourceIdentifier,
                     actionsSource: props.actionsSource,
                   }),
@@ -253,7 +254,7 @@ function ThreadMarkdownImageLoading() {
       pointerEvents="none"
       style={[StyleSheet.absoluteFill, { alignItems: "center", justifyContent: "center" }]}
     >
-      <Text className="text-xs text-foreground-muted">Loading image…</Text>
+      <Text className="text-xs text-foreground-muted">{tr("Loading image\u2026")}</Text>
     </View>
   );
 }

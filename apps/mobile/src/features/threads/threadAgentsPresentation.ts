@@ -3,6 +3,7 @@ import {
   resolveSubagentMetadata,
   subagentDetailPreview,
 } from "@t3tools/client-runtime/state/subagent-display";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isActiveSubagentStatus,
   type RuntimeSubagent,
@@ -57,7 +58,7 @@ function rowTitle(subagent: Pick<OrchestrationV2Subagent, "title" | "prompt">): 
   const title = subagent.title?.trim();
   if (title) return formatSubagentDisplayTitle(title);
   const prompt = subagent.prompt.trim();
-  if (prompt.length === 0) return "Subagent";
+  if (prompt.length === 0) return tr("Subagent");
   return prompt.length > PROMPT_TITLE_LIMIT
     ? `${prompt.slice(0, PROMPT_TITLE_LIMIT - 3)}...`
     : prompt;
@@ -74,19 +75,19 @@ function rowStatusLabel(status: OrchestrationV2Subagent["status"]): string {
   switch (status) {
     case "pending":
     case "running":
-      return "Working";
+      return tr("Working");
     case "waiting":
-      return "Waiting";
+      return tr("Waiting");
     case "idle":
-      return "Idle";
+      return tr("Idle");
     case "completed":
-      return "Completed";
+      return tr("Completed");
     case "failed":
-      return "Failed";
+      return tr("Failed");
     case "cancelled":
-      return "Cancelled";
+      return tr("Cancelled");
     case "interrupted":
-      return "Interrupted";
+      return tr("Interrupted");
   }
 }
 
@@ -138,7 +139,7 @@ export function workflowRail(group: SubagentWorkflowGroup): ReadonlyArray<Workfl
   if (group.unphasedMembers.length > 0) {
     items.push({
       key: "unphased",
-      title: items.length === 0 ? "Agents" : "Other",
+      title: items.length === 0 ? tr("Agents") : tr("Other"),
       members: group.unphasedMembers,
     });
   }

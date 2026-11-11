@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import { vi } from "vite-plus/test";
 
 import { ProviderInstanceId, type ProviderOptionSelection } from "@t3tools/contracts";
@@ -22,7 +23,7 @@ function modelOption(
     label: model,
     subtitle: "",
     providerKey: "codex",
-    providerLabel: "Codex",
+    providerLabel: tr("Codex"),
     providerDriver: "codex",
     isDefault: false,
     isLegacy: false,
@@ -30,21 +31,21 @@ function modelOption(
       optionDescriptors: [
         {
           id: "effort",
-          label: "Reasoning",
+          label: tr("Reasoning"),
           type: "select",
           options: [
-            { id: "medium", label: "Medium", isDefault: true },
-            { id: "high", label: "High" },
+            { id: "medium", label: tr("Medium"), isDefault: true },
+            { id: "high", label: tr("High") },
           ],
           currentValue: "medium",
         },
         {
           id: "serviceTier",
-          label: "Service Tier",
+          label: tr("Service Tier"),
           type: "select",
           options: [
-            { id: "default", label: "Standard", isDefault: true },
-            { id: "priority", label: "Fast" },
+            { id: "default", label: tr("Standard"), isDefault: true },
+            { id: "priority", label: tr("Fast") },
           ],
           currentValue: "default",
         },
@@ -138,14 +139,18 @@ describe("thread settings sheet state", () => {
     const pending = modelOption("gpt-next");
     expect(
       canCommitPendingModel(pending, [
-        { providerKey: "codex", providerLabel: "Codex", models: [{ ...pending, isHidden: true }] },
+        {
+          providerKey: "codex",
+          providerLabel: tr("Codex"),
+          models: [{ ...pending, isHidden: true }],
+        },
       ]),
     ).toBe(false);
   });
 
   it("cannot save a staged model after sign-out removes it from the catalog", () => {
     const pending = modelOption("gemini-native");
-    const group = { providerKey: "codex", providerLabel: "Codex", models: [pending] };
+    const group = { providerKey: "codex", providerLabel: tr("Codex"), models: [pending] };
 
     expect(canCommitPendingModel(pending, [group])).toBe(true);
     expect(canCommitPendingModel(pending, [])).toBe(false);

@@ -1,7 +1,8 @@
 import type { ViewStyle } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 import type { MobileThemeVariables } from "../../lib/mobileTheme";
 
-export const THREAD_LIST_V2_MONO_FONT = "Menlo";
+export const THREAD_LIST_V2_MONO_FONT = tr("Menlo");
 export const THREAD_LIST_V2_ROW_CONTENT_CLASS_NAME = "px-5 py-2.5";
 export const THREAD_LIST_V2_ROW_DIVIDERS = true;
 export const THREAD_LIST_V2_SIDEBAR_ROW_STYLE = {
@@ -22,7 +23,7 @@ export const selectedThreadRowColors = {
 };
 
 export function getThreadListV2NewBranchMenuTitle(_branch: string) {
-  return "New thread on branch";
+  return tr("New thread on branch");
 }
 
 export function getThreadListV2RowAppearance(

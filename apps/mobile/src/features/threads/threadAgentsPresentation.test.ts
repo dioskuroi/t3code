@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 import {
   deriveWorkflowGroups,
   projectedSubagentsToRuntime,
@@ -23,7 +24,7 @@ import {
 
 const base = {
   title: null,
-  prompt: "Audit the timestamps",
+  prompt: tr("Audit the timestamps"),
   status: "running" as const,
   result: null,
   childThreadId: "thread-child" as never,
@@ -33,11 +34,11 @@ describe("resolveSubagentRowPresentation", () => {
   it("leads with progress while the agent is working", () => {
     const row = resolveSubagentRowPresentation({
       ...base,
-      progress: "Reading files",
+      progress: tr("Reading files"),
       result: "stale result",
     });
 
-    expect(row.detail).toBe("Reading files");
+    expect(row.detail).toBe(tr("Reading files"));
     expect(row.tone).toBe("working");
     expect(row.live).toBe(true);
   });
@@ -46,29 +47,36 @@ describe("resolveSubagentRowPresentation", () => {
     const row = resolveSubagentRowPresentation({
       ...base,
       status: "completed",
-      progress: "Reading files",
+      progress: tr("Reading files"),
       result: "Found two\n  problems",
     });
 
-    expect(row.detail).toBe("Found two problems");
+    expect(row.detail).toBe(tr("Found two problems"));
     expect(row.tone).toBe("completed");
-    expect(row.statusLabel).toBe("Completed");
+    expect(row.statusLabel).toBe(tr("Completed"));
   });
 
   it("shows a failure's text, since that is where the error lands", () => {
-    const row = resolveSubagentRowPresentation({ ...base, status: "failed", result: "Timed out" });
+    const row = resolveSubagentRowPresentation({
+      ...base,
+      status: "failed",
+      result: tr("Timed out"),
+    });
 
-    expect(row.detail).toBe("Timed out");
+    expect(row.detail).toBe(tr("Timed out"));
     expect(row.tone).toBe("failed");
   });
 
   it("falls back to a trimmed prompt when the agent has no title", () => {
     const long = resolveSubagentRowPresentation({ ...base, prompt: "x".repeat(200) });
-    const titled = resolveSubagentRowPresentation({ ...base, title: "Subagent: /root/my_worker" });
+    const titled = resolveSubagentRowPresentation({
+      ...base,
+      title: tr("Subagent: /root/my_worker"),
+    });
 
     expect(long.title).toHaveLength(80);
     expect(long.title.endsWith("...")).toBe(true);
-    expect(titled.title).toBe("My Worker");
+    expect(titled.title).toBe(tr("My Worker"));
   });
 
   it("only offers a thread to open when the agent has one", () => {
@@ -82,7 +90,7 @@ describe("resolveSubagentRowPresentation", () => {
     const row = resolveSubagentRowPresentation({ ...base, status: "pending" });
 
     expect(row.detail).toBeNull();
-    expect(row.statusLabel).toBe("Working");
+    expect(row.statusLabel).toBe(tr("Working"));
   });
 
   it("bounds long result previews without dropping the agent's status", () => {
@@ -92,7 +100,7 @@ describe("resolveSubagentRowPresentation", () => {
       result: "x".repeat(400),
     });
     expect(row.detail).toBe(`${"x".repeat(280)}…`);
-    expect(row.statusLabel).toBe("Failed");
+    expect(row.statusLabel).toBe(tr("Failed"));
   });
 });
 
@@ -107,7 +115,7 @@ const workflowRailOf = (
       projectedSubagentsToRuntime([
         {
           id: "workflow",
-          title: "Mobile Stop review",
+          title: tr("Mobile Stop review"),
           prompt: "",
           model: null,
           status,
@@ -117,9 +125,9 @@ const workflowRailOf = (
           updatedAt: DateTime.makeUnsafe("2026-08-01T10:00:05.000Z"),
           workflow: {
             phases: [
-              { index: 0, title: "Inspect" },
-              { index: 1, title: "Verify" },
-              { index: 2, title: "Report" },
+              { index: 0, title: tr("Inspect") },
+              { index: 1, title: tr("Verify") },
+              { index: 2, title: tr("Report") },
             ],
             agents,
           },
@@ -150,10 +158,10 @@ describe("workflowRail", () => {
     ]);
 
     expect(rail.map((item) => [item.title, item.tone, item.members.length])).toEqual([
-      ["Inspect", "completed", 1],
-      ["Verify", "working", 1],
-      ["Report", "queued", 0],
-      ["Other", "queued", 1],
+      [tr("Inspect"), "completed", 1],
+      [tr("Verify"), "working", 1],
+      [tr("Report"), "queued", 0],
+      [tr("Other"), "queued", 1],
     ]);
   });
 
@@ -196,19 +204,22 @@ describe("workflow member rows", () => {
           model: "claude-opus-5-5",
           effort: "high",
           speed: "fast",
-          result: "Checked controls",
+          result: tr("Checked controls"),
         }),
       ],
       "completed",
     )[0]!.members;
 
     expect(workflowMemberMetadata(completed!, undefined)).toEqual({
-      model: "Claude Opus 5.5",
-      effort: "High",
-      speed: "Fast",
+      model: tr("Claude Opus 5.5"),
+      effort: tr("High"),
+      speed: tr("Fast"),
       fast: true,
     });
-    expect(workflowMemberDetail(completed!)).toEqual({ detail: "Checked controls", error: null });
+    expect(workflowMemberDetail(completed!)).toEqual({
+      detail: tr("Checked controls"),
+      error: null,
+    });
   });
 
   it("reports nothing the provider did not send", () => {
@@ -229,17 +240,17 @@ describe("workflow member rows", () => {
           models: [
             {
               slug: "claude-opus-5-5",
-              name: "Claude Opus 5.5",
-              shortName: "Opus 5.5",
+              name: tr("Claude Opus 5.5"),
+              shortName: tr("Opus 5.5"),
               aliases: ["opus"],
               isCustom: false,
               capabilities: {
                 optionDescriptors: [
                   {
                     id: "effort",
-                    label: "Reasoning",
+                    label: tr("Reasoning"),
                     type: "select",
-                    options: [{ id: "xhigh", label: "Extra High" }],
+                    options: [{ id: "xhigh", label: tr("Extra High") }],
                   },
                 ],
               },
@@ -247,17 +258,17 @@ describe("workflow member rows", () => {
           ],
         },
       ),
-    ).toMatchObject({ model: "Opus 5.5", effort: "Extra High" });
+    ).toMatchObject({ model: tr("Opus 5.5"), effort: tr("Extra High") });
   });
 
   it("shows a failed agent's error under its prompt", () => {
     const [failed] = workflowRailOf([
-      agent(1, 0, "failed", { prompt: "Update session store", result: "Type error" }),
+      agent(1, 0, "failed", { prompt: tr("Update session store"), result: tr("Type error") }),
     ])[0]!.members;
 
     expect(workflowMemberDetail(failed!)).toEqual({
-      detail: "Update session store",
-      error: "Type error",
+      detail: tr("Update session store"),
+      error: tr("Type error"),
     });
   });
 });
@@ -333,7 +344,7 @@ describe("resolveSubagentStopTarget", () => {
   });
 
   it("stops the whole workflow through its own command", () => {
-    const workflow = { name: "Review", phases: [], agents: [] };
+    const workflow = { name: tr("Review"), phases: [], agents: [] };
     expect(resolveSubagentStopTarget({ ...native, workflow })).toEqual({
       kind: "workflow",
       input: { threadId: native.threadId, subagentId: native.id },

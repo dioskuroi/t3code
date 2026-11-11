@@ -1,4 +1,5 @@
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 import {
   EnvironmentId,
   ProjectId,
@@ -38,7 +39,7 @@ function makeThread(environmentId: EnvironmentId, instanceId: string): Environme
     environmentId,
     id: ThreadId.make("thread-1"),
     projectId: ProjectId.make("project-1"),
-    title: "Thread",
+    title: tr("Thread"),
     modelSelection: { instanceId: ProviderInstanceId.make(instanceId), model: "gpt-5.4" },
     runtimeMode: "full-access",
     interactionMode: "default",
@@ -90,8 +91,8 @@ describe("resolveThreadProviderInstance", () => {
         environmentId,
         makeConfig([
           { instanceId: "claudeAgent", driver: "claudeAgent" },
-          { instanceId: "codex", driver: "codex", displayName: "Codex" },
-          { instanceId: "codex_work", driver: "codex", displayName: "Codex" },
+          { instanceId: "codex", driver: "codex", displayName: tr("Codex") },
+          { instanceId: "codex_work", driver: "codex", displayName: tr("Codex") },
         ]),
       ],
     ]);
@@ -101,7 +102,7 @@ describe("resolveThreadProviderInstance", () => {
         status: "running" as const,
         activeRunId: null,
         providerInstanceId: ProviderInstanceId.make("codex_work"),
-        providerName: "Codex",
+        providerName: tr("Codex"),
         lastError: null,
         updatedAt: "2026-06-01T00:01:00.000Z",
       },
@@ -111,7 +112,7 @@ describe("resolveThreadProviderInstance", () => {
       resolveThreadProviderInstance(serverConfigs.get(environmentId)?.providers, thread),
     ).toMatchObject({
       driverKind: "codex",
-      displayName: "Codex Work",
+      displayName: tr("Codex Work"),
       showBadge: true,
     });
   });

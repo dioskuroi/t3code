@@ -1,4 +1,5 @@
 import * as NodePath from "node:path";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeModule from "node:module";
 import * as React from "react";
 import { act, useLayoutEffect } from "react";
@@ -42,7 +43,7 @@ function setup(fromAgents: boolean, fullscreen = false) {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   const router = StackRouter({});
   const options = {
-    routeNames: ["Home", "Thread", "ThreadAgents", "ThreadInspectorFullscreen"],
+    routeNames: [tr("Home"), tr("Thread"), "ThreadAgents", "ThreadInspectorFullscreen"],
     routeParamList: {},
     routeGetIdList: {},
   };
@@ -108,7 +109,7 @@ it("opens a subagent from the Agents sheet without replacing the parent thread",
     threadId: "child",
   } as const;
   screen.open(inspector);
-  expect(screen.state.routes.map((route) => route.name)).toEqual(["Home", "Thread"]);
+  expect(screen.state.routes.map((route) => route.name)).toEqual([tr("Home"), tr("Thread")]);
   expect(screen.state.routes.at(-1)).toMatchObject({
     key: screen.parentKey,
     params: { ...screen.source, prompt: "retained prompt", inspector },
@@ -194,7 +195,7 @@ it("keeps a focused inspector registered across renders and updates its content"
   };
   const navigationContext = React.createContext(navigation);
   const routeContext = React.createContext({ key: "file" });
-  const babel = requireMobile("@babel/core") as {
+  const babel = requireMobile(tr("@babel/core")) as {
     transformFileSync(file: string, options: Record<string, unknown>): { code: string };
   };
   const compiled = babel.transformFileSync(

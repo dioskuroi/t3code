@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { useRememberThreadProject } from "./useRememberThreadProject";
 import { useOpenPullRequest } from "../../native/useOpenPullRequest";
 import { makeTurnCommandMetadata } from "../../lib/commandMetadata";
@@ -141,7 +142,7 @@ function ThreadRouteFallbackLayout(props: { readonly children: ReactNode }) {
   return (
     <>
       <AppBar
-        title="Thread"
+        title={tr("Thread")}
         options={{ contentStyle: { backgroundColor: themeVariables["--color-header"] } }}
         onBack={layout.usesSplitView ? undefined : goBack}
         hideBottomBorder
@@ -155,7 +156,7 @@ function OpeningThreadLoadingScreen() {
   return (
     <ThreadRouteFallbackLayout>
       <LoadingScreen
-        message="Opening thread…"
+        message={tr("Opening thread\u2026")}
         messagePlacement="above-spinner"
         embedded={Platform.OS === "android"}
       />
@@ -194,8 +195,8 @@ function ThreadUnavailableScreen(props: {
         className="bg-screen flex-1 android:bg-transparent"
       >
         <EmptyState
-          title="Thread unavailable"
-          detail="This thread is not available in the current mobile snapshot."
+          title={tr("Thread unavailable")}
+          detail={tr("This thread is not available in the current mobile snapshot.")}
           actionLabel={props.actionLabel}
           onAction={props.onAction}
         />
@@ -280,7 +281,7 @@ function LiveThreadRouteController(props: ThreadRouteScreenProps) {
     <>
       {props.inspectorPresentation ? (
         <ThreadInspectorHeader
-          title={selectedThread?.title ?? "Thread"}
+          title={selectedThread?.title ?? tr("Thread")}
           {...props.inspectorPresentation}
         />
       ) : null}
@@ -333,7 +334,7 @@ function LiveThreadRouteController(props: ThreadRouteScreenProps) {
   return withInspectorHeader(
     <ThreadUnavailableScreen
       actionLabel={
-        routeEnvironmentRuntime === null ? "Manage environments" : "Reconnect environment"
+        routeEnvironmentRuntime === null ? tr("Manage environments") : tr("Reconnect environment")
       }
       onAction={() => {
         if (routeEnvironmentRuntime !== null) {
@@ -538,9 +539,9 @@ function ThreadRouteContent(
     selectedEnvironmentConnection?.environmentLabel ?? null,
     // A linked environment's delegated task names its parent; other linked work its origin.
     delegatedFrom !== null
-      ? `Subagent of ${delegatedFromThread?.title ?? delegatedFrom.title}`
+      ? tr("Subagent of {title}", { title: delegatedFromThread?.title ?? delegatedFrom.title })
       : selectedThread?.linkOrigin
-        ? `From ${selectedThread.linkOrigin.label}`
+        ? tr("From {label}", { label: selectedThread.linkOrigin.label })
         : null,
   ]
     .filter(Boolean)
@@ -642,7 +643,7 @@ function ThreadRouteContent(
         cwd={selectedThreadCwd}
         environmentId={selectedThread.environmentId}
         headerInset={inspectorHeaderInset}
-        projectName={selectedThreadProject?.title ?? "Files"}
+        projectName={selectedThreadProject?.title ?? tr("Files")}
         selectedPath={null}
         onSelectFile={handleSelectInspectorFile}
       />
@@ -721,8 +722,8 @@ function ThreadRouteContent(
     if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
       const error = squashAtomCommandFailure(result);
       Dialog.alert(
-        "Could not resume thread",
-        error instanceof Error ? error.message : "Try again.",
+        tr("Could not resume thread"),
+        error instanceof Error ? error.message : tr("Try again."),
       );
     }
   };
@@ -824,7 +825,7 @@ function ThreadRouteContent(
     auxiliaryPaneControl:
       !layout.usesSplitView && fileInspector.supported && selectedThreadCwd !== null
         ? {
-            accessibilityLabel: "Toggle inspector",
+            accessibilityLabel: tr("Toggle inspector"),
             onPress: handleToggleInspector,
           }
         : undefined,
@@ -866,7 +867,7 @@ function ThreadRouteContent(
       await recoverFailedThreadDraft(creation);
     } catch (error) {
       Dialog.alert(
-        "Could not restore draft",
+        tr("Could not restore draft"),
         error instanceof Error ? error.message : String(error),
       );
       return;

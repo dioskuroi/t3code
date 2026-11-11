@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import * as Dialog from "../../components/ui/Dialog";
 import type { EnvironmentId, ThreadId, TurnItemId } from "@t3tools/contracts";
@@ -70,7 +71,7 @@ const commandFailure = (result: {
 }) => {
   const error = squashAtomCommandFailure(result);
   return new McpAppHostRefusal(
-    error instanceof Error && error.message.trim() !== "" ? error.message : "Request failed.",
+    error instanceof Error && error.message.trim() !== "" ? error.message : tr("Request failed."),
   );
 };
 
@@ -80,7 +81,7 @@ const confirm = (title: string, message: string, action: string) =>
       title,
       message,
       [
-        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+        { text: tr("Cancel"), style: "cancel", onPress: () => resolve(false) },
         { text: action, onPress: () => resolve(true) },
       ],
       // Android dismisses earlier alerts when showing another; decline dismissed requests to release their slots.
@@ -320,16 +321,17 @@ export function ThreadMcpApp(props: {
         const { environmentId, input } = scope();
         const info = await latest.current.toolInfo({ environmentId, input: { ...input, name } });
         if (info._tag !== "Success") throw commandFailure(info);
-        if (!info.value.callable) throw new McpAppHostRefusal("This app cannot call that tool.");
+        if (!info.value.callable)
+          throw new McpAppHostRefusal(tr("This app cannot call that tool."));
         if (
           !info.value.readOnly &&
           !(await confirm(
-            `Allow ${app.server} to run ${info.value.title ?? name}?`,
+            tr("Allow {app} to run {title}?", { app: app.server, title: info.value.title ?? name }),
             JSON.stringify(args, null, 2),
-            "Allow",
+            tr("Allow"),
           ))
         ) {
-          throw new McpAppHostRefusal("Declined by the user.");
+          throw new McpAppHostRefusal(tr("Declined by the user."));
         }
         const result = await latest.current.callTool({
           environmentId,
@@ -349,16 +351,22 @@ export function ThreadMcpApp(props: {
       },
       openLink: async (url) => {
         // WebViews cannot prove user activation; confirm links to prevent timer-driven navigation out of T3.
-        if (!(await confirm(`Open a link from ${app.server}?`, url, "Open"))) {
-          throw new McpAppHostRefusal("Declined by the user.");
+        if (!(await confirm(tr("Open a link from {app}?", { app: app.server }), url, tr("Open")))) {
+          throw new McpAppHostRefusal(tr("Declined by the user."));
         }
         if (!(await tryOpenExternalUrl(url, "mcp-app"))) {
-          throw new McpAppHostRefusal("The link could not be opened.");
+          throw new McpAppHostRefusal(tr("The link could not be opened."));
         }
       },
       sendMessage: async (text) => {
-        if (!(await confirm(`Send this message from ${app.server}?`, text, "Send"))) {
-          throw new McpAppHostRefusal("Declined by the user.");
+        if (
+          !(await confirm(
+            tr("Send this message from {app}?", { app: app.server }),
+            text,
+            tr("Send"),
+          ))
+        ) {
+          throw new McpAppHostRefusal(tr("Declined by the user."));
         }
         await enqueueThreadOutboxMessage({
           environmentId: latest.current.props.environmentId,
@@ -421,8 +429,10 @@ export function ThreadMcpApp(props: {
       },
       downloadFile: async (files) => {
         const names = files.map((file) => file.name).join(", ");
-        if (!(await confirm(`Save a file from ${app.server}?`, names, "Save"))) {
-          throw new McpAppHostRefusal("Declined by the user.");
+        if (
+          !(await confirm(tr("Save a file from {app}?", { app: app.server }), names, tr("Save")))
+        ) {
+          throw new McpAppHostRefusal(tr("Declined by the user."));
         }
         for (const file of files) {
           let bytes: Uint8Array | undefined;
@@ -450,7 +460,7 @@ export function ThreadMcpApp(props: {
             attachment: { name: file.name, mimeType },
             signal: new AbortController().signal,
           });
-          if (!shared) throw new McpAppHostRefusal("Sharing is not available on this device.");
+          if (!shared) throw new McpAppHostRefusal(tr("Sharing is not available on this device."));
         }
       },
       onRequestTeardown: () => {
@@ -487,7 +497,7 @@ export function ThreadMcpApp(props: {
         className="items-center justify-center rounded-lg border border-border"
       >
         <Text className="text-sm text-foreground-muted">
-          The {app.server} app is open full screen
+          {tr("The {app} app is open full screen", { app: app.server })}
         </Text>
       </View>
     );
@@ -499,10 +509,12 @@ export function ThreadMcpApp(props: {
         style={{ height, marginBottom: ROW_BOTTOM_MARGIN }}
         className="items-center justify-center gap-2 rounded-lg border border-border"
       >
-        <Text className="text-sm text-foreground-muted">The {app.server} app was closed</Text>
+        <Text className="text-sm text-foreground-muted">
+          {tr("The {app} app was closed", { app: app.server })}
+        </Text>
         <View className="items-center">
           <Button
-            label="Show app"
+            label={tr("Show app")}
             tone="secondary"
             onPress={() => {
               reopenDocument();
@@ -519,7 +531,7 @@ export function ThreadMcpApp(props: {
       {navigatedAway ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-sm text-foreground-muted">
-            The {app.server} app left its page and was stopped
+            {tr("The {app} app left its page and was stopped", { app: app.server })}
           </Text>
         </View>
       ) : uri !== null && !crashed ? (
@@ -564,7 +576,9 @@ export function ThreadMcpApp(props: {
         />
       ) : asset._tag === "Failure" || crashed ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-sm text-foreground-muted">Unable to load the {app.server} app</Text>
+          <Text className="text-sm text-foreground-muted">
+            {tr("Unable to load the {app} app", { app: app.server })}
+          </Text>
         </View>
       ) : null}
       {uri !== null && !loaded && !crashed && !navigatedAway ? (

@@ -1,4 +1,5 @@
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { LegendList } from "@legendapp/list/react-native";
 import { useMemo } from "react";
 import { Platform, View } from "react-native";
@@ -46,7 +47,7 @@ export function ThreadPullRequestsSheet(
   });
   const rowInputs = { lines, actions };
   const { singular } = actions.terminology;
-  const title = `Linked ${actions.terminology.plural}`;
+  const title = tr("Linked {kind}", { kind: actions.terminology.plural });
 
   const content = (
     <View className="flex-1 android:bg-sheet-solid ios:bg-screen">
@@ -77,13 +78,16 @@ export function ThreadPullRequestsSheet(
         ListHeaderComponent={
           lines.length > 0 ? (
             <Text className="px-4 pt-2 pb-1 text-xs text-foreground-muted">
-              {openCount} open · {lines.length} linked
+              {tr("{openCount} open \u00B7 {linkedCount} linked", {
+                openCount,
+                linkedCount: lines.length,
+              })}
             </Text>
           ) : null
         }
         ListEmptyComponent={
           <Text className="pt-6 text-center text-sm text-foreground-muted">
-            No linked {actions.terminology.plural}.
+            {tr("No linked")} {actions.terminology.plural}.
           </Text>
         }
       />
@@ -98,7 +102,7 @@ export function ThreadPullRequestsSheet(
           <Toolbar placement="right">
             <Toolbar.Button
               icon="plus"
-              accessibilityLabel={`Link ${singular}`}
+              accessibilityLabel={tr("Link {singular}", { singular: singular })}
               onPress={actions.promptLink}
             />
           </Toolbar>
@@ -119,7 +123,7 @@ export function ThreadPullRequestsSheet(
           actions.canLink
             ? [
                 {
-                  accessibilityLabel: `Link ${singular}`,
+                  accessibilityLabel: tr("Link {singular}", { singular: singular }),
                   icon: "plus",
                   onPress: actions.promptLink,
                 },

@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 import { ProviderDriverKind } from "@t3tools/contracts";
 
 vi.mock("react-native", () => ({ Alert: { alert: vi.fn() } }));
@@ -65,7 +66,7 @@ describe("mobile slash commands", () => {
   const antigravity = {
     driver: ProviderDriverKind.make("antigravity"),
     showInteractionModeToggle: false,
-    slashCommands: [{ name: "plan", description: "Plan with Antigravity" }],
+    slashCommands: [{ name: "plan", description: tr("Plan with Antigravity") }],
   };
 
   it.each([false, true])(
@@ -82,7 +83,7 @@ describe("mobile slash commands", () => {
       expect(items).toHaveLength(1);
       expect(items[0]?.type).toBe("provider-slash-command");
       const item = items[0];
-      if (!item) throw new Error("Expected the native plan command");
+      if (!item) throw new Error(tr("Expected the native plan command"));
       expect(
         resolveComposerCommandSelection({
           draftMessage: "/pl",
@@ -106,7 +107,7 @@ describe("mobile slash commands", () => {
       },
     });
     const item = items[0];
-    if (!item) throw new Error("Expected the T3 plan command");
+    if (!item) throw new Error(tr("Expected the T3 plan command"));
     expect(
       resolveComposerCommandSelection({
         draftMessage: "/plan",

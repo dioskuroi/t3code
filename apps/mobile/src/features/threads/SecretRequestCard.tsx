@@ -1,4 +1,5 @@
 import { pipe } from "effect/Function";
+import { tr } from "@t3tools/shared/i18n";
 import {
   SECRET_REQUEST_DEFAULT_PLACEHOLDER,
   secretRequestAnswerInput,
@@ -132,7 +133,7 @@ function PendingSecretRequestForm(props: {
         </Text>
       ) : null}
       <Button
-        label="Save securely"
+        label={tr("Save securely")}
         tone="primary"
         fullWidth
         disabled={submitting || secret.trim().length === 0}
@@ -151,7 +152,7 @@ function PendingSecretRequestForm(props: {
           </Text>
         </View>
         <Button
-          label="Decline"
+          label={tr("Decline")}
           tone="text"
           disabled={submitting}
           onPress={() => void send({ type: "decline" })}

@@ -1,4 +1,5 @@
 import type { ReactElement } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { Sheet } from "../../components/ui/Sheet";
 
 export interface WorktreeSetupSheetProps {
@@ -9,7 +10,7 @@ export interface WorktreeSetupSheetProps {
 
 export function WorktreeSetupSheet({ children, onClose }: WorktreeSetupSheetProps) {
   return (
-    <Sheet title="Worktree setup" onClose={onClose}>
+    <Sheet title={tr("Worktree setup")} onClose={onClose}>
       {children}
     </Sheet>
   );

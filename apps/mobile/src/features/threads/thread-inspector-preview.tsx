@@ -5,6 +5,7 @@ import {
   useNavigation,
   type StaticScreenProps,
 } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import { type ReactNode } from "react";
 import { View } from "react-native";
@@ -40,12 +41,12 @@ export function ThreadInspectorHeader(
       <SheetHeader
         title={props.title}
         onClose={props.onClose}
-        accessibilityLabel="Close thread preview"
+        accessibilityLabel={tr("Close thread preview")}
         trailing={
           props.onMaximize ? (
             <IconButton
               icon="arrow.up.left.and.arrow.down.right"
-              accessibilityLabel="Maximize thread"
+              accessibilityLabel={tr("Maximize thread")}
               onPress={props.onMaximize}
             />
           ) : undefined
@@ -115,7 +116,7 @@ export function ThreadInspectorPreview(props: {
                     key={`${target.environmentId}:${target.threadId}`}
                     screenOptions={{ headerBackVisible: false }}
                   >
-                    <PreviewStack.Screen name="Thread" initialParams={target}>
+                    <PreviewStack.Screen name={"Thread"} initialParams={target}>
                       {(screen) =>
                         props.renderThread({
                           route: screen.route,

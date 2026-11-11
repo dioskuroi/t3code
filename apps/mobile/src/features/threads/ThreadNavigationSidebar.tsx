@@ -1,4 +1,5 @@
 import { useActiveNewTask } from "../../state/active-new-task";
+import { tr } from "@t3tools/shared/i18n";
 import { ThreadUndoNotice } from "../home/ThreadUndoNotice";
 import { useAndroidControlSizing } from "../../components/ui/useAndroidControlSizing";
 import {
@@ -343,12 +344,12 @@ function ThreadNavigationSidebarPane(
   const listMenuActions = [
     {
       id: "environment",
-      title: "Environment",
+      title: tr("Environment"),
       subactions: [
         {
           id: "environment:all",
-          title: "All environments",
-          subtitle: "Show threads from every environment",
+          title: tr("All environments"),
+          subtitle: tr("Show threads from every environment"),
           state: options.selectedEnvironmentId === null ? "on" : "off",
         },
         ...environments.map((environment) => ({
@@ -366,12 +367,12 @@ function ThreadNavigationSidebarPane(
       : ([
           {
             id: "project",
-            title: "Project",
+            title: tr("Project"),
             subactions: [
               {
                 id: "project:all",
-                title: "All projects",
-                subtitle: "Show threads from every project",
+                title: tr("All projects"),
+                subtitle: tr("Show threads from every project"),
                 state: selectedProjectKey === null ? "on" : "off",
               },
               ...projectFilterOptions.map((project) => ({
@@ -689,16 +690,16 @@ function ThreadNavigationSidebarPane(
       }
     >
       {catalogState.isLoadingConnections
-        ? "Loading threads…"
+        ? tr("Loading threads\u2026")
         : Platform.OS === "android" && !catalogState.hasConnections
-          ? "No environments connected"
+          ? tr("No environments connected")
           : props.searchQuery.trim().length > 0
             ? threadSearch.isPending
-              ? "Searching thread messages…"
-              : "No matching threads"
+              ? tr("Searching thread messages\u2026")
+              : tr("No matching threads")
             : selectedProjectScope !== null
-              ? `No threads in ${selectedProjectScope.title}`
-              : "No threads yet"}
+              ? tr("No threads in {scope}", { scope: selectedProjectScope.title })
+              : tr("No threads yet")}
     </Text>
   );
 
@@ -720,7 +721,7 @@ function ThreadNavigationSidebarPane(
               hideNavigationBar: false,
               hideWhenScrolling: false,
               obscureBackground: false,
-              placeholder: "Search",
+              placeholder: tr("Search"),
               placement: "stacked",
               onCancelButtonPress: () => {
                 props.onSearchQueryChange("");
@@ -876,7 +877,7 @@ function ThreadNavigationSidebarPane(
             />
             <View className="flex-row items-center gap-2.5">
               <Menu actions={listMenuActions} onPressAction={handleListMenuAction}>
-                <SidebarFilterButton accessibilityLabel="Filter threads" icon={filterIcon} />
+                <SidebarFilterButton accessibilityLabel={tr("Filter threads")} icon={filterIcon} />
               </Menu>
               <SidebarHeaderActions onOpenSettings={props.onOpenSettings} />
             </View>
@@ -891,12 +892,12 @@ function ThreadNavigationSidebarPane(
             />
             <TextInput
               ref={searchInputRef}
-              accessibilityLabel="Search threads"
+              accessibilityLabel={tr("Search threads")}
               autoCapitalize="none"
               autoCorrect={false}
               clearButtonMode="while-editing"
               onChangeText={props.onSearchQueryChange}
-              placeholder="Search"
+              placeholder={tr("Search")}
               placeholderTextColorClassName="accent-placeholder"
               selectionColorClassName={undefined}
               cursorColorClassName={undefined}

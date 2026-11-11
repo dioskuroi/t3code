@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { View } from "react-native";
 
 import { RenderErrorBoundary, RenderFailureView } from "../../components/RenderErrorBoundary";
@@ -35,7 +36,7 @@ function InspectorContentPane(props: {
         resetKeys={props.resetKeys}
         renderFallback={(fallback) => (
           <NativeInspectorContent>
-            <RenderFailureView {...fallback} title="The inspector couldn't be displayed" />
+            <RenderFailureView {...fallback} title={tr("The inspector couldn't be displayed")} />
           </NativeInspectorContent>
         )}
       >

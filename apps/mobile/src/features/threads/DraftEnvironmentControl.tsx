@@ -1,4 +1,5 @@
 import { Pressable } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentMachineKind } from "@t3tools/contracts";
 import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
 import { EnvironmentMachineSymbol } from "../../components/EnvironmentMachineSymbol";
@@ -18,7 +19,10 @@ export function DraftEnvironmentControl(props: {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Choose environment, ${props.label}, ${disconnected ? "Offline" : "Connected"}`}
+      accessibilityLabel={tr("Choose environment, {label}, {status}", {
+        label: props.label,
+        status: disconnected ? tr("Offline") : tr("Connected"),
+      })}
       disabled={props.disabled}
       onPress={props.onChooseEnvironment}
       className="flex-row items-center gap-1.5 rounded-xl px-3 py-2 active:opacity-65"
@@ -29,7 +33,7 @@ export function DraftEnvironmentControl(props: {
         tintColorClassName="accent-icon-muted"
       />
       <Text className="shrink text-sm text-foreground-muted" numberOfLines={1}>
-        on {props.label}
+        {tr("On {label}", { label: props.label })}
       </Text>
       <SymbolView name="chevron.right" size={11} tintColorClassName="accent-icon-muted" />
       {disconnected ? <ConnectionStatusDot state="error" pulse={false} size={6} /> : null}
