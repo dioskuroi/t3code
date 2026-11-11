@@ -553,7 +553,15 @@
     ":hunk::",
     ":hunk:",
     ":row:",
-    "^ file mode 100(644|755)$"
+    "^ file mode 100(644|755)$",
+    "12px",
+    "13px",
+    "Discarding corrupt legacy mobile connections",
+    "Discarding corrupt mobile connection catalog",
+    "Discarding corrupt mobile client cache record.",
+    "Offline query database save failed",
+    "Could not clear mobile environment-owned data.",
+    "Failed to parse the href to a navigation state ()."
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",

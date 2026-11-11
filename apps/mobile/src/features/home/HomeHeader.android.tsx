@@ -1,4 +1,5 @@
 import type { MenuAction } from "@react-native-menu/menu";
+import { tr } from "@t3tools/shared/i18n";
 import { NativeStackScreenOptions } from "../../native/StackHeader";
 import { ThreadListToolbar } from "./ThreadListToolbar";
 import type { HomeHeaderProps } from "./HomeHeader.types";
@@ -15,11 +16,11 @@ export function HomeHeader(props: HomeHeaderProps) {
   const menuActions: MenuAction[] = [
     {
       id: "environment",
-      title: "Environment",
+      title: tr("Environment"),
       subactions: [
         {
           id: "environment:all",
-          title: "All environments",
+          title: tr("All environments"),
           state: checkedMenuState(props.selectedEnvironmentId === null),
         },
         ...props.environments.map((environment) => ({
@@ -34,11 +35,11 @@ export function HomeHeader(props: HomeHeaderProps) {
       : ([
           {
             id: "project",
-            title: "Project",
+            title: tr("Project"),
             subactions: [
               {
                 id: "project:all",
-                title: "All projects",
+                title: tr("All projects"),
                 state: checkedMenuState(props.selectedProjectKey === null),
               },
               ...props.projects.map((project) => ({

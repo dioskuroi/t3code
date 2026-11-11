@@ -11,6 +11,7 @@ import {
   EMPTY_CONNECTION_CATALOG_DOCUMENT,
   registerConnectionInCatalog,
 } from "@t3tools/client-runtime/platform";
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId } from "@t3tools/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -94,14 +95,18 @@ export const migrateLegacyConnectionCatalog = Effect.fn(
     try: () => JSON.parse(raw) as unknown,
     catch: (cause) =>
       new LegacyConnectionMigrationError({
-        message: `Could not parse the legacy mobile connection catalog: ${String(cause)}`,
+        message: tr("Could not parse the legacy mobile connection catalog: {cause}", {
+          cause: String(cause),
+        }),
       }),
   });
   const legacy = yield* decodeLegacyConnectionDocument(parsed).pipe(
     Effect.mapError(
       (cause) =>
         new LegacyConnectionMigrationError({
-          message: `Could not decode the legacy mobile connection catalog: ${String(cause)}`,
+          message: tr("Could not decode the legacy mobile connection catalog: {cause}", {
+            cause: String(cause),
+          }),
         }),
     ),
   );

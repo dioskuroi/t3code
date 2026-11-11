@@ -2,6 +2,7 @@ import {
   createDeviceStreamClient,
   type DeviceScreenSize,
 } from "@t3tools/client-runtime/device/stream";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { DeviceStreamConfiguration } from "./device-stream-document";
 
@@ -50,7 +51,7 @@ export function start(configuration: DeviceStreamConfiguration) {
   frame.setAttribute("role", "application");
   frame.setAttribute(
     "aria-label",
-    platform === "ios" ? "iOS Simulator screen" : "Android Emulator screen",
+    platform === "ios" ? tr("iOS Simulator screen") : tr("Android Emulator screen"),
   );
   frame.tabIndex = 0;
   Object.assign(frame.style, {
@@ -68,7 +69,7 @@ export function start(configuration: DeviceStreamConfiguration) {
   image.style.display = "none";
   const inputStatus = document.createElement("div");
   inputStatus.setAttribute("role", "status");
-  inputStatus.textContent = "Reconnecting device controls...";
+  inputStatus.textContent = tr("Reconnecting device controls...");
   Object.assign(inputStatus.style, {
     position: "fixed",
     bottom: "12px",
