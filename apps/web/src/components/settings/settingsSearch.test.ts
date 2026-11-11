@@ -61,10 +61,10 @@ describe("searchSettings", () => {
   it("matches titles, sections, and remembered setting details", () => {
     expect(searchSettings("word", ITEMS).map((item) => item.id)).toEqual(["word-wrap"]);
     expect(searchSettings("network", ITEMS).map((item) => item.id)).toEqual(["network-access"]);
-    expect(searchSettings("sharing", ITEMS).map((item) => item.id)).toEqual(["network-access"]);
+    expect(searchSettings("共享与访问", ITEMS).map((item) => item.id)).toEqual(["network-access"]);
     expect(searchSettings("claude", ITEMS).map((item) => item.id)).toEqual(["providers"]);
     expect(searchSettings("long lines", ITEMS).map((item) => item.id)).toEqual(["word-wrap"]);
-    for (const query of ["fallback", "fallback agent", "fallback model"]) {
+    for (const query of ["fallback", "fallback agent", "回退模型"]) {
       expect(searchSettings(query)[0]).toMatchObject({
         id: "fallback-model",
         to: "/settings/threads",
@@ -80,9 +80,9 @@ describe("searchSettings", () => {
 
   it("matches normalized title substrings", () => {
     expect(searchSettings("  WORD   WRAP  ", ITEMS).map((item) => item.id)).toEqual(["word-wrap"]);
-    expect(searchSettings("glass").map((item) => item.id)).toEqual(["setting-glass-opacity"]);
-    expect(searchSettings("panel animations").map((item) => item.id)).toEqual(["panel-animations"]);
-    expect(searchSettings("thè\u{1ab0}mes")[0]?.id).toBe("theme");
+    expect(searchSettings("玻璃").map((item) => item.id)).toEqual(["setting-glass-opacity"]);
+    expect(searchSettings("面板动画").map((item) => item.id)).toEqual(["panel-animations"]);
+    expect(searchSettings("主题")[0]?.id).toBe("theme");
     const localeLowerCase = vi.spyOn(String.prototype, "toLocaleLowerCase").mockReturnValue("gıt");
     try {
       expect(searchSettings("GIT")[0]?.id).toBe("git-fetch-interval");
@@ -158,7 +158,7 @@ describe("searchSettings", () => {
     };
     const results = (hasPeerLinkHost: boolean) =>
       searchSettings(
-        "linked environments",
+        "已链接的环境",
         filterAvailableSettingsSearchItems({ ...availability, hasPeerLinkHost }),
       );
     expect(results(false).map((item) => item.id)).not.toContain("linked-environments");
@@ -175,7 +175,7 @@ describe("searchSettings", () => {
     expect(searchSettings("toggle sidebar")[0]?.id).toBe("keybinding-sidebar.toggle");
     expect(searchSettings("sidebar.toggle")[0]?.id).toBe("keybinding-sidebar.toggle");
     expect(searchSettings("mod+b")[0]?.id).toBe("keybinding-sidebar.toggle");
-    expect(searchSettings("copy link")[0]).toMatchObject({
+    expect(searchSettings("复制链接")[0]).toMatchObject({
       id: "keybinding-thread.copyReference",
       to: "/settings/keybindings",
     });
@@ -191,11 +191,11 @@ describe("searchSettings", () => {
 
   it("finds rows by the titles shown on their pages", () => {
     for (const [title, id] of [
-      ["Automatic worktree cleanup", "storage-worktrees"],
+      ["工作树清理", "storage-worktrees"],
       ["Delete settled worktrees", "storage-worktrees"],
       ["Delete old browser artifacts", "storage-artifacts"],
       ["Delete old rotated logs", "storage-artifacts"],
-      ["Custom search URL", "browser-search-engine"],
+      ["搜索引擎", "browser-search-engine"],
       ["Native sessions", "providers"],
       ["CODEX_HOME path", "providers"],
       ["Shadow home path", "providers"],
@@ -267,10 +267,13 @@ describe("auto-settlement search availability", () => {
       isWslSettingsRowVisible: false,
       hasThreadAutoSettlement: availability.eligibleEnvironmentIds.length > 0,
     });
-    expect(searchSettings("auto-settle", items).map((item) => item.id)).toEqual([
+    expect(searchSettings("自动归置", items).map((item) => item.id)).toEqual([
       "auto-settle-inactive-threads",
       "auto-settle-merged-threads",
       "days-before-auto-settle",
+    ]);
+    // "keep-threads-with-pull-requests" stays discoverable through its English search terms.
+    expect(searchSettings("auto-settle", items).map((item) => item.id)).toEqual([
       "keep-threads-with-pull-requests",
     ]);
   });

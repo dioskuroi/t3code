@@ -43,9 +43,9 @@ async function activate(locator: Locator, action: "click" | "focus") {
   (locator.element() as HTMLElement)[action]();
 }
 
-const existingField = page.getByRole("textbox", { name: "Keybinding for Sidebar: Toggle" });
-const existingPill = page.getByRole("button", { name: /^Edit shortcut for Sidebar: Toggle:/ });
-const newField = page.getByRole("textbox", { name: "Keybinding for new keybinding" });
+const existingField = page.getByRole("textbox", { name: "Sidebar: Toggle 的键位" });
+const existingPill = page.getByRole("button", { name: /^编辑 Sidebar: Toggle 的快捷键：/ });
+const newField = page.getByRole("textbox", { name: "new keybinding 的键位" });
 
 describe("Esc in a shortcut recorder", () => {
   it.each<{
@@ -61,19 +61,19 @@ describe("Esc in a shortcut recorder", () => {
       expectReset: async () => {
         await expect.element(existingField).not.toBeInTheDocument();
         await expect.element(existingPill).toHaveFocus();
-        await expect.element(page.getByRole("button", { name: "Save" })).not.toBeInTheDocument();
+        await expect.element(page.getByRole("button", { name: "保存" })).not.toBeInTheDocument();
       },
     },
     {
       name: "new binding",
       field: newField,
       open: async () => {
-        await activate(page.getByRole("button", { name: "Add keybinding" }), "click");
+        await activate(page.getByRole("button", { name: "添加键位" }), "click");
         await activate(newField, "focus");
       },
       expectReset: async () => {
         await expect.element(newField).toHaveValue("");
-        await expect.element(newField).toHaveAttribute("placeholder", "Unassigned");
+        await expect.element(newField).toHaveAttribute("placeholder", "未分配");
       },
     },
   ])("leaves the $name field without closing Settings", async ({ field, open, expectReset }) => {
@@ -92,7 +92,7 @@ describe("Esc in a shortcut recorder", () => {
     await expect.element(field).not.toHaveValue("");
     await userEvent.tab();
     await activate(field, "focus");
-    await expect.element(field).toHaveAttribute("placeholder", "Press shortcut");
+    await expect.element(field).toHaveAttribute("placeholder", "按下快捷键");
 
     await userEvent.keyboard("{Escape}");
 
@@ -111,17 +111,17 @@ it("re-enables Save when a When editor closes on an expression it could not pars
       <KeybindingsSettingsPanel />
     </RegistryProvider>,
   );
-  const whenTrigger = screen.getByRole("button", { name: "Edit when clause for Terminal: Toggle" });
-  const expression = screen.getByRole("textbox", { name: "When expression" });
+  const whenTrigger = screen.getByRole("button", { name: "编辑 Terminal: Toggle 的 when 子句" });
+  const expression = screen.getByRole("textbox", { name: "when 表达式" });
 
   await whenTrigger.click();
   await userEvent.type(expression, "terminalFocus");
   await userEvent.type(expression, " &&");
-  await expect.element(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+  await expect.element(screen.getByRole("button", { name: "保存" })).toBeDisabled();
 
   await userEvent.keyboard("{Escape}");
   await whenTrigger.click();
 
   await expect.element(expression).toHaveValue("terminalFocus");
-  await expect.element(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  await expect.element(screen.getByRole("button", { name: "保存" })).toBeEnabled();
 });
