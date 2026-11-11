@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
@@ -354,7 +355,9 @@ export class ChromiumLocalStorageReadError extends Schema.TaggedError<ChromiumLo
   },
 ) {
   override get message() {
-    return `Could not read Chromium Local Storage at ${this.directory}.`;
+    return tr("Could not read Chromium Local Storage at {directory}.", {
+      directory: this.directory,
+    });
   }
 }
 
