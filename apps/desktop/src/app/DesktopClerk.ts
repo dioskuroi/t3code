@@ -1,4 +1,5 @@
 import { createClerkBridge } from "@clerk/electron";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeURL from "node:url";
 import { storage } from "@clerk/electron/storage";
 import * as Context from "effect/Context";
@@ -181,8 +182,9 @@ export const make = Effect.gen(function* () {
                 ),
               catch: () =>
                 new CodexAuthCallbackError({
-                  detail:
+                  detail: tr(
                     "Could not receive hosted web ChatGPT sign-in. Retry or use the redirect URL in the web app.",
+                  ),
                 }),
             });
           }).pipe(

@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import type { ManagedPolicyLimits } from "@t3tools/contracts";
 import * as HostProcess from "@t3tools/shared/HostProcess";
@@ -97,7 +98,7 @@ describe("getLocalEnvironmentBootstraps", () => {
       assert.deepEqual(result, [
         {
           id: "wsl:default",
-          label: "WSL (Ubuntu)",
+          label: tr("WSL ({runningDistro})", { runningDistro: "Ubuntu" }),
           runningDistro: "Ubuntu",
           httpBaseUrl: "http://127.0.0.1:3774/",
           wsBaseUrl: "ws://127.0.0.1:3774/",
@@ -313,7 +314,7 @@ describe("pickProjectFavicon", () => {
             multiple: false,
             filters: [
               {
-                name: "Images",
+                name: tr("Images"),
                 extensions: [
                   "avif",
                   "bmp",
