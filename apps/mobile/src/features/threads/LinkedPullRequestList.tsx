@@ -88,7 +88,7 @@ export const LinkedPullRequestRow = memo(function LinkedPullRequestRow(props: {
   const row = (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${capitalizeTerm(singular)} ${link.number}, ${snapshot?.title ?? "waiting for host state"}${status ? `, ${status.label}` : ""}${conflict ? `, ${conflict.label.toLowerCase()}` : ""}, ${link.repository}${stack ? `, stack of ${stack.size}` : ""}${watching ? tr(", watching") : ""}${checks ? `, checks ${snapshot?.checksState}` : ""}${review ? `, ${review.accessibleLabel}` : ""}`}
+      accessibilityLabel={`${capitalizeTerm(singular)} ${link.number}, ${snapshot?.title ?? "waiting for host state"}${status ? `, ${status.label}` : ""}${conflict ? `, ${conflict.label.toLowerCase()}` : ""}, ${link.repository}${stack ? `tr(", stack of {size}", { size: stack.size })` : ""}${watching ? tr(", watching") : ""}${checks ? `tr(", checks {state}", { state: snapshot?.checksState })` : ""}${review ? `, ${review.accessibleLabel}` : ""}`}
       accessibilityHint={props.actions ? tr("Touch and hold for actions.") : undefined}
       onPress={() => {
         void props.openPullRequest(link.url).then((opened) => {
