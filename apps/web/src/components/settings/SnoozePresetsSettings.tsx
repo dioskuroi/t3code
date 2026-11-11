@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   DEFAULT_SNOOZE_PRESETS,
   MAX_SNOOZE_PRESET_MINUTES,
@@ -51,15 +52,15 @@ const SINGULAR_UNIT_LABELS: Record<DurationUnit, string> = {
 
 const WHEN_LABELS: Record<"after" | SnoozePresetDay, string> = {
   after: "In",
-  today: "Today",
-  tomorrow: "Tomorrow",
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
-  saturday: "Saturday",
-  sunday: "Sunday",
+  today: tr("Today"),
+  tomorrow: tr("Tomorrow"),
+  monday: tr("Monday"),
+  tuesday: tr("Tuesday"),
+  wednesday: tr("Wednesday"),
+  thursday: tr("Thursday"),
+  friday: tr("Friday"),
+  saturday: tr("Saturday"),
+  sunday: tr("Sunday"),
 };
 const WHEN_VALUES = ["after", ...SnoozePresetDay.literals] as const;
 
@@ -186,7 +187,9 @@ export function SnoozePresetsRow() {
       serverScoped
       settingKeys={["snoozePresets"]}
       {...searchableSetting("snooze-options")}
-      description="Choices in every snooze menu, listed soonest first. Weekdays mean the next one after today."
+      description={tr(
+        "Choices in every snooze menu, listed soonest first. Weekdays mean the next one after today.",
+      )}
       resetAction={
         !mixed && sameSnoozePresets(presets, DEFAULT_SNOOZE_PRESETS) ? null : (
           <SettingResetButton
@@ -238,12 +241,12 @@ function SnoozePresetList(props: {
   const seenWakes = new Set<string>();
   const previews = props.presets.map((preset) => {
     const resolved = resolveSnoozePreset(preset, now, formatTime);
-    if (resolved === null) return { tone: "muted", text: "Passed for today" } as const;
+    if (resolved === null) return { tone: "muted", text: tr("Passed for today") } as const;
     if (seenIds.has(resolved.id)) {
-      return { tone: "muted", text: "Duplicate of an option above" } as const;
+      return { tone: "muted", text: tr("Duplicate of an option above") } as const;
     }
     if (seenWakes.has(resolved.snoozedUntil)) {
-      return { tone: "muted", text: "Same time as an option above" } as const;
+      return { tone: "muted", text: tr("Same time as an option above") } as const;
     }
     seenIds.add(resolved.id);
     seenWakes.add(resolved.snoozedUntil);
@@ -281,7 +284,7 @@ function SnoozePresetList(props: {
           <div
             key={props.keys[index]}
             role="group"
-            aria-label={`Snooze option ${index + 1}`}
+            aria-label={tr("Snooze option {index}", { index: index + 1 })}
             className="flex flex-wrap items-center gap-2"
           >
             <SnoozePresetFields preset={preset} onChange={(next) => props.onChange(index, next)} />
@@ -297,7 +300,7 @@ function SnoozePresetList(props: {
               <Button
                 variant="ghost-muted"
                 size="icon-sm"
-                aria-label={`Remove snooze option ${index + 1}`}
+                aria-label={tr("Remove snooze option {index}", { index: index + 1 })}
                 onClick={() => props.onRemove(index)}
               >
                 <XIcon />
@@ -307,7 +310,9 @@ function SnoozePresetList(props: {
         );
       })}
       <p className="text-xs text-muted-foreground">
-        {menuOrder.length === 0 ? "Menus offer only Custom…" : `Menu now: ${menuOrder.join(" · ")}`}
+        {menuOrder.length === 0
+          ? tr("Menus offer only Custom\u2026")
+          : tr("Menu now: {menu}", { menu: menuOrder.join(" · ") })}
       </p>
       <div>
         <Button
@@ -317,11 +322,11 @@ function SnoozePresetList(props: {
           onClick={props.onAdd}
         >
           <PlusIcon />
-          Add option
+          {tr("Add option")}
         </Button>
         {props.presets.length >= MAX_SNOOZE_PRESETS ? (
           <span className="ps-2 text-xs text-muted-foreground">
-            Up to {MAX_SNOOZE_PRESETS} options
+            {tr("Up to {count} options", { count: MAX_SNOOZE_PRESETS })}
           </span>
         ) : null}
       </div>
@@ -356,7 +361,7 @@ function SnoozePresetFields(props: {
           onChange(next);
         }}
       >
-        <SelectTrigger size="sm" className="w-32" aria-label="When">
+        <SelectTrigger size="sm" className="w-32" aria-label={tr("When")}>
           <SelectValue />
         </SelectTrigger>
         <SelectPopup>
@@ -374,13 +379,13 @@ function SnoozePresetFields(props: {
         />
       ) : (
         <>
-          <span className="text-xs text-muted-foreground">at</span>
+          <span className="text-xs text-muted-foreground">{tr("at")}</span>
           <Input
             nativeInput
             size="sm"
             type="time"
             className="w-32"
-            aria-label="Time"
+            aria-label={tr("Time")}
             value={preset.time}
             onChange={(event) => {
               if (/^\d{2}:\d{2}$/.test(event.target.value)) {
@@ -430,9 +435,9 @@ function DurationFields(props: { minutes: number; onChange: (minutes: number) =>
         }}
       >
         <NumberFieldGroup>
-          <NumberFieldDecrement aria-label="Decrease" />
+          <NumberFieldDecrement aria-label={tr("Decrease")} />
           <NumberFieldInput
-            aria-label="Amount"
+            aria-label={tr("Amount")}
             // Base UI commits on blur but not on Enter; refocus so keyboard users stay put.
             onKeyDown={(event) => {
               if (event.key !== "Enter") return;
@@ -441,7 +446,7 @@ function DurationFields(props: { minutes: number; onChange: (minutes: number) =>
               input.focus();
             }}
           />
-          <NumberFieldIncrement aria-label="Increase" />
+          <NumberFieldIncrement aria-label={tr("Increase")} />
         </NumberFieldGroup>
       </NumberField>
       <Select
@@ -454,7 +459,7 @@ function DurationFields(props: { minutes: number; onChange: (minutes: number) =>
           }
         }}
       >
-        <SelectTrigger size="sm" className="w-28" aria-label="Unit">
+        <SelectTrigger size="sm" className="w-28" aria-label={tr("Unit")}>
           <SelectValue />
         </SelectTrigger>
         <SelectPopup>

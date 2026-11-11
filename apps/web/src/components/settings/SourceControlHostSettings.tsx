@@ -1,4 +1,5 @@
 import type { EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { SourceControlDefinition } from "@t3tools/client-runtime/source-control-clients";
 import * as Equal from "effect/Equal";
 import { useState } from "react";
@@ -68,7 +69,7 @@ export function SourceControlHostSettings({
               void save(Object.fromEntries(Object.keys(saved ?? {}).map((key) => [key, ""])))
             }
           >
-            Remove
+            {tr("Remove")}
           </Button>
         </div>
       ) : null}

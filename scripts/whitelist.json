@@ -25,7 +25,7 @@
     "批 W3（#60，web 命令面板域）新增：exact \":disabled\" 为 getCommandPaletteReturnFocus 的 CSS 选择器（matches() 参数，§3 代码标识符精神，不翻）；contains \"~/projects/my-app\" 为输入示例路径（路径不译精神）；review 修复：words \"projects\"/\"my-app\" 会静默豁免 Projects 分区标签等真 UI 串（WelcomeWizard/settingsSearch 实证）故删除，改用 contains 收窄；Linux/Win32 平台标识由既有 words 豁免覆盖。",
     "批 W4（#61，web 设置域 SettingsPanels）新增：contains \"/default\" 为斜杠命令字面量（Legacy 面板描述 \"Restore Build/Plan, /plan, /default, and Shift+Tab.\"，§3.2 命令字面量精神），命令名不译。",
     "批 W6（#63，web 设置域定时任务与诊断遥测）words 新增：Span/Spans/Trace/Traces（追踪域技术词，UI 展示层保留英文）、Sidecar（T3 组件名）、SIGKILL（POSIX 信号名）、Sentry（品牌名），供译文内容面豁免（术语表 §3 品牌/技术词精神）。",
-    "批 W8（#65，web 设置域 SnapShot/项目默认/外观/设备主机）新增：words Mac mini/Conventional Commits/LaTeX/TeX/High（品牌、提交规范名、排版技术名、投入度档位显示名，保留英文）；contains EXPO_TOKEN（环境变量名）、eas login（CLI 命令字面量）、extra.eas.projectId（配置键）、user@host（输入示例字面量）、$x^2$ 与 \\[x^2\\]（LaTeX 示例字面量），均为禁译/保留英文字面量。"
+    "批 W8（#65，web 设置域 SnapShot/项目默认/外观/设备主机）新增：words Mac mini/Conventional Commits/LaTeX/TeX（品牌、提交规范名、排版技术名，保留英文）；contains 补 such as High（投入度档位示例，收窄豁免防泛用词遮蔽）；contains EXPO_TOKEN（环境变量名）、eas login（CLI 命令字面量）、extra.eas.projectId（配置键）、user@host（输入示例字面量）、$x^2$ 与 \\[x^2\\]（LaTeX 示例字面量），均为禁译/保留英文字面量。；复审核增：words gh（GitHub CLI 命令名）、devbox（主机类型名），contains --config/NIRI_CONFIG（CLI 旗标与配置环境变量）、t3 pair（CLI 命令字面量）、如 High（译文内投入度档位示例的中文语境收窄豁免）。"
   ],
   "contains": [
     "/side",
@@ -58,7 +58,12 @@
     "user@host",
     "$x^2$",
     "\\[x^2\\]",
-    "EAS Simulator"
+    "EAS Simulator",
+    "such as High",
+    "--config",
+    "NIRI_CONFIG",
+    "t3 pair",
+    "如 High"
   ],
   "exact": [
     " READY ",
@@ -1041,6 +1046,7 @@
     "Conventional Commits",
     "LaTeX",
     "TeX",
-    "High"
+    "gh",
+    "devbox"
   ]
 }

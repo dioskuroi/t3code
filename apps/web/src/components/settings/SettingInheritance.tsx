@@ -414,7 +414,7 @@ export function SettingInheritance({
                       )}
                       {onClearOverrides ? (
                         <InlineButton onClick={() => onClearOverrides(overriding)}>
-                          {tr("Reset")} {overriding.length === 1 ? "it" : "all"}
+                          {overriding.length === 1 ? tr("Reset it") : tr("Reset all")}
                         </InlineButton>
                       ) : null}
                     </div>

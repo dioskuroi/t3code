@@ -1,4 +1,5 @@
 import { useScopedSettingsWriteAllowed } from "./useScopedSettings";
+import { tr } from "@t3tools/shared/i18n";
 import { SettingsIcon } from "lucide-react";
 import { useState } from "react";
 import { type BackgroundActivityProfile } from "@t3tools/contracts";
@@ -37,25 +38,25 @@ import { PolicyTooltip, SettingResetButton, SettingsRow } from "./settingsLayout
 import { searchableSetting } from "./settingsSearch";
 
 const BACKGROUND_ACTIVITY_PROFILE_LABELS: Record<BackgroundActivityProfile, string> = {
-  balanced: "Balanced",
-  performance: "Performance",
-  "battery-saver": "Battery saver",
+  balanced: tr("Balanced"),
+  performance: tr("Performance"),
+  "battery-saver": tr("Battery saver"),
 };
 
 type BackgroundActivityProfileOption = BackgroundActivityProfile | "advanced";
 
 const BACKGROUND_ACTIVITY_PROFILE_OPTION_LABELS: Record<BackgroundActivityProfileOption, string> = {
   ...BACKGROUND_ACTIVITY_PROFILE_LABELS,
-  advanced: "Advanced",
+  advanced: tr("Advanced"),
 };
 
 const BACKGROUND_ACTIVITY_PROFILE_DESCRIPTIONS: Record<BackgroundActivityProfile, string> = {
-  balanced: "Pauses probes for idle clients, locked hosts, or low power mode.",
-  performance: "Allows scoped background probes while any subscribed client remains connected.",
-  "battery-saver": "Also pauses background probes when the host or client is on battery.",
+  balanced: tr("Pauses probes for idle clients, locked hosts, or low power mode."),
+  performance: tr("Allows scoped background probes while any subscribed client remains connected."),
+  "battery-saver": tr("Also pauses background probes when the host or client is on battery."),
 };
 
-const ADVANCED_BACKGROUND_ACTIVITY_DESCRIPTION = "Uses custom intervals.";
+const ADVANCED_BACKGROUND_ACTIVITY_DESCRIPTION = tr("Uses custom intervals.");
 
 const BACKGROUND_ACTIVITY_BOOLEAN_OVERRIDES: ReadonlyArray<{
   readonly key:
@@ -65,10 +66,10 @@ const BACKGROUND_ACTIVITY_BOOLEAN_OVERRIDES: ReadonlyArray<{
     | "pauseWhenOnBattery";
   readonly label: string;
 }> = [
-  { key: "pauseWhenHostLocked", label: "Pause when host is locked" },
-  { key: "pauseWhenHostLowPower", label: "Pause on host low power" },
-  { key: "pauseWhenClientLowPower", label: "Pause on client low power" },
-  { key: "pauseWhenOnBattery", label: "Pause on battery" },
+  { key: "pauseWhenHostLocked", label: tr("Pause when host is locked") },
+  { key: "pauseWhenHostLowPower", label: tr("Pause on host low power") },
+  { key: "pauseWhenClientLowPower", label: tr("Pause on client low power") },
+  { key: "pauseWhenOnBattery", label: tr("Pause on battery") },
 ];
 
 function resetBackgroundActivitySettings() {
@@ -116,9 +117,9 @@ function BackgroundActivityAdvancedDialog({
     <Dialog open={open && canWriteSettings} onOpenChange={onOpenChange}>
       <DialogPopup className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Background Activity</DialogTitle>
+          <DialogTitle>{tr("Background Activity")}</DialogTitle>
           <DialogDescription>
-            Tune the shared power policy and the background intervals that feed it.
+            {tr("Tune the shared power policy and the background intervals that feed it.")}
           </DialogDescription>
         </DialogHeader>
         <DialogPanel>
@@ -128,9 +129,11 @@ function BackgroundActivityAdvancedDialog({
           >
             <div className="flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 space-y-1">
-                <div className="text-sm font-medium">Shared policy</div>
+                <div className="text-sm font-medium">{tr("Shared policy")}</div>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Controls whether background work may run after a subscribed interval fires.
+                  {tr(
+                    "Controls whether background work may run after a subscribed interval fires.",
+                  )}
                 </p>
               </div>
               <Select
@@ -150,7 +153,7 @@ function BackgroundActivityAdvancedDialog({
                 <SelectTrigger
                   size="sm"
                   className="w-full sm:w-40"
-                  aria-label="Shared background policy"
+                  aria-label={tr("Shared background policy")}
                 >
                   <SelectValue>{BACKGROUND_ACTIVITY_PROFILE_LABELS[activeProfile]}</SelectValue>
                 </SelectTrigger>
@@ -174,12 +177,12 @@ function BackgroundActivityAdvancedDialog({
                   {searchableSetting("git-fetch-interval").title}
                 </div>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Refresh remote branch status in the background.
+                  {tr("Refresh remote branch status in the background.")}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <IntervalSecondsField
-                  label="Git fetch interval"
+                  label={tr("Git fetch interval")}
                   value={automaticGitFetchIntervalSeconds}
                   min={0}
                   step={5}
@@ -194,16 +197,17 @@ function BackgroundActivityAdvancedDialog({
                     )
                   }
                 />
-                <span className="text-xs text-muted-foreground">seconds</span>
+                <span className="text-xs text-muted-foreground">{tr("seconds")}</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 space-y-1">
-                <div className="text-sm font-medium">Provider health interval</div>
+                <div className="text-sm font-medium">{tr("Provider health interval")}</div>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Refresh provider availability, versions, and auth state. Model catalog updates
-                  follow Provider update checks.
+                  {tr(
+                    "Refresh provider availability, versions, and auth state. Model catalog updates follow Provider update checks.",
+                  )}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -223,15 +227,15 @@ function BackgroundActivityAdvancedDialog({
                     )
                   }
                 />
-                <span className="text-xs text-muted-foreground">seconds</span>
+                <span className="text-xs text-muted-foreground">{tr("seconds")}</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 space-y-1">
-                <div className="text-sm font-medium">Host power monitor</div>
+                <div className="text-sm font-medium">{tr("Host power monitor")}</div>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Poll host power state while clients are active.
+                  {tr("Poll host power state while clients are active.")}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -251,15 +255,15 @@ function BackgroundActivityAdvancedDialog({
                     )
                   }
                 />
-                <span className="text-xs text-muted-foreground">seconds</span>
+                <span className="text-xs text-muted-foreground">{tr("seconds")}</span>
               </div>
             </div>
 
             <div className="flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0 space-y-1">
-                <div className="text-sm font-medium">Idle host monitor</div>
+                <div className="text-sm font-medium">{tr("Idle host monitor")}</div>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Poll host power state when no foreground client is active.
+                  {tr("Poll host power state when no foreground client is active.")}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -279,7 +283,7 @@ function BackgroundActivityAdvancedDialog({
                     )
                   }
                 />
-                <span className="text-xs text-muted-foreground">seconds</span>
+                <span className="text-xs text-muted-foreground">{tr("seconds")}</span>
               </div>
             </div>
 
@@ -316,9 +320,9 @@ function BackgroundActivityAdvancedDialog({
             disabled={!canWriteSettings}
             onClick={() => updateSettings(resetBackgroundActivitySettings())}
           >
-            Reset all
+            {tr("Reset all")}
           </Button>
-          <Button onClick={() => onOpenChange(false)}>Done</Button>
+          <Button onClick={() => onOpenChange(false)}>{tr("Done")}</Button>
         </DialogFooter>
       </DialogPopup>
     </Dialog>
@@ -338,9 +342,10 @@ export function BackgroundActivitySettingsRow() {
   const backgroundActivityProfileOption = resolveBackgroundActivityProfileOption(settings);
   const backgroundActivityDescription =
     backgroundActivityProfileOption === "advanced"
-      ? `${ADVANCED_BACKGROUND_ACTIVITY_DESCRIPTION} Shared policy: ${
-          BACKGROUND_ACTIVITY_PROFILE_LABELS[activeBackgroundActivityProfile]
-        }.`
+      ? tr("{advanced} Shared policy: {profile}.", {
+          advanced: ADVANCED_BACKGROUND_ACTIVITY_DESCRIPTION,
+          profile: BACKGROUND_ACTIVITY_PROFILE_LABELS[activeBackgroundActivityProfile],
+        })
       : BACKGROUND_ACTIVITY_PROFILE_DESCRIPTIONS[resolvedBackgroundActivity.profile];
   const canResetBackgroundActivity = !Equal.equals(
     settings.backgroundActivity,
@@ -356,8 +361,9 @@ export function BackgroundActivitySettingsRow() {
         <span className="inline-flex items-center gap-1.5">
           {searchableSetting("background-activity").title}
           <PolicyTooltip>
-            This shared policy gates background work such as Git refreshes and provider health
-            probes after their individual intervals elapse.
+            {tr(
+              "This shared policy gates background work such as Git refreshes and provider health probes after their individual intervals elapse.",
+            )}
           </PolicyTooltip>
         </span>
       }
@@ -387,11 +393,11 @@ export function BackgroundActivitySettingsRow() {
             <SelectTrigger
               size="sm"
               className="w-full sm:w-40"
-              aria-label="Background activity profile"
+              aria-label={tr("Background activity profile")}
             >
               <SelectValue>
                 {(value: BackgroundActivityProfileOption | null) =>
-                  value === null ? "Mixed" : BACKGROUND_ACTIVITY_PROFILE_OPTION_LABELS[value]
+                  value === null ? tr("Mixed") : BACKGROUND_ACTIVITY_PROFILE_OPTION_LABELS[value]
                 }
               </SelectValue>
             </SelectTrigger>
@@ -419,14 +425,14 @@ export function BackgroundActivitySettingsRow() {
                   <Button
                     size="icon-sm"
                     variant="outline"
-                    aria-label="Configure advanced background activity"
+                    aria-label={tr("Configure advanced background activity")}
                     onClick={() => setBackgroundActivityDialogOpen(true)}
                   >
                     <SettingsIcon className="size-4" />
                   </Button>
                 }
               />
-              <TooltipPopup side="top">Configure background activity</TooltipPopup>
+              <TooltipPopup side="top">{tr("Configure background activity")}</TooltipPopup>
             </Tooltip>
           ) : null}
           <BackgroundActivityAdvancedDialog
