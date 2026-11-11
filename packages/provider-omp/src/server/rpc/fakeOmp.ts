@@ -60,6 +60,11 @@ export interface FakeOmpProgram {
   readonly exitCodeOnStdinEnd?: number;
   /** Simulate a crash: exit with this code after N ms without waiting for stdin EOF. */
   readonly crash?: { readonly delayMs: number; readonly exitCode: number };
+  /**
+   * Die by signal after N ms (default SIGKILL): the spawner reports exit code null for
+   * signal deaths, exercising the path a coded `crash` exit cannot reach (#39).
+   */
+  readonly crashBySignal?: { readonly delayMs: number; readonly signal?: string };
 }
 
 /**
@@ -184,6 +189,12 @@ const emitPerRequest = (requestType) => {
 };
 if (program.crash !== undefined) {
   setTimeout(() => process.exit(program.crash.exitCode), program.crash.delayMs);
+}
+if (program.crashBySignal !== undefined) {
+  setTimeout(
+    () => process.kill(process.pid, program.crashBySignal.signal || "SIGKILL"),
+    program.crashBySignal.delayMs,
+  );
 }
 let buffer = "";
 const requestLog = process.env.FAKE_OMP_REQUEST_LOG;

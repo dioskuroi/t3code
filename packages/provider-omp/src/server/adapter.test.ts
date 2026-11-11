@@ -1690,6 +1690,79 @@ describe("omp adapter session runtime", () => {
     }).pipe(Effect.provide(NodeTestLayer)),
   );
 
+  live("ends a turn interrupted when the child dies by SIGKILL and recovers on the next prompt (#39)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-sigkill-" });
+      const sessionFile = `${directory}/sessions/sigkill.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      // Signal death (exit code null) is the real-env crash shape: a coded exit travels a
+      // different watcher branch and used to skip the adapter's crash handling entirely.
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: { open_session: { data: { sessionId: "s-sigkill", sessionFile } } },
+          eventsOnPrompt: [
+            [
+              {
+                delayMs: 10,
+                frame: {
+                  type: "message_update",
+                  assistantMessageEvent: { type: "text_delta", delta: "partial", contentIndex: 0 },
+                },
+              },
+            ],
+          ],
+          crashBySignal: { delayMs: 300 },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("sigkill");
+      yield* Effect.gen(function* () {
+        const harness = yield* openHarness(ids, command);
+        const providerThread = yield* harness.runtime.ensureThread({
+          threadId: ids.threadId,
+          modelSelection: ids.modelSelection,
+          runtimePolicy,
+        });
+        yield* driveTurn(harness, ids, providerThread, 1);
+        // SIGKILL mid-turn: the turn must reach a terminal, not hang as in #39.
+        yield* waitFor(
+          harness,
+          "turn.terminal",
+          (event) => event.runOrdinal === 1 && event.status === "interrupted",
+        );
+        yield* waitFor(
+          harness,
+          "provider_thread.updated",
+          (event) => event.providerThread.status === "error",
+        );
+        // Phase 2: healthy respawn — the next prompt switches back to the same session.
+        writeFakeOmp({
+          directory,
+          program: {
+            responses: { open_session: { data: { sessionId: "s-sigkill", sessionFile } } },
+            eventsOnPrompt: [completedTurnEvents("revived")],
+          },
+          env: { FAKE_OMP_REQUEST_LOG: requestLog },
+        });
+        yield* driveTurn(harness, ids, providerThread, 2);
+        yield* waitFor(
+          harness,
+          "turn.terminal",
+          (event) => event.runOrdinal === 2 && event.status === "completed",
+        );
+        const requests = yield* readRequestLog(requestLog);
+        const switches = requests.filter((request) => request["type"] === "switch_session");
+        expect(switches).toHaveLength(1);
+        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
+        expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
+          2,
+        );
+      }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
   live("wires child stderr into the server log", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

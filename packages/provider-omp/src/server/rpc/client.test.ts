@@ -219,6 +219,32 @@ it.layer(NodeServices.layer)("omp RPC client", (it) => {
     }),
   );
 
+  it.effect("reports signal death to the caller and fails in-flight requests (#39)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-rpc-client-" });
+      const exits: Array<{ exitCode: number | null }> = [];
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: { get_available_models: { never: true } },
+          crashBySignal: { delayMs: 50 },
+        },
+      });
+      const client = yield* makeOmpRpcClient({
+        command,
+        args: ["--mode", "rpc"],
+        onExit: (exit) => exits.push(exit),
+      });
+      const error = yield* Effect.flip(client.request("get_available_models"));
+      expect(isExitError(error)).toBe(true);
+      if (isExitError(error)) expect(error.exitCode).toBe(null);
+      const exitCode = yield* client.close;
+      expect(exitCode).toBe(null);
+      expect(exits).toEqual([{ exitCode: null }]);
+    }),
+  );
+
   it.effect("delivers scripted event frames to the consumer after reassembly", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
