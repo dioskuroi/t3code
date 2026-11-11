@@ -59,7 +59,7 @@
   "{message} Only stable releases can be installed.": "{message} 只能安装稳定版本。",
   "{name} is not an http or https URL, so the signals it configures are not exported": "{name} 不是 http 或 https URL，因此不会导出其配置的信号",
   "{name} names {ignored}, which T3 Code does not export to, so they were ignored": "{name} 指向 {ignored}，T3 Code 不会导出到这些目标，因此已忽略",
-  "{name} was not saved with this draft. Attach it again to send it.": "{name}未随此草稿保存。重新附加后再发送。",
+  "{name} was not saved with this draft. Attach it again to send it.": "{name} 未随此草稿保存。请重新附加后再发送。",
   "{name}, zoomable image": "{name}，可缩放图片",
   "{names}: stashed files are kept for 24 hours and this upload expired. Attach the file again.": "{names}：储藏文件仅保留 24 小时，此上传已过期。请重新附加该文件。",
   "{noun} omitted from message": "{noun}已从消息中略去",

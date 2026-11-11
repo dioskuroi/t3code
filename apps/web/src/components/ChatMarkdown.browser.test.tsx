@@ -390,7 +390,9 @@ describe("ChatMarkdown skill chips", () => {
 
     await userEvent.click(
       screen.getByRole("button", {
-        name: `${tr("Skill {label}", { label: "Review" })}. Show details`,
+        name: tr("{label}. Show details", {
+          label: tr("Skill {label}", { label: "Review" }),
+        }),
       }),
     );
     await expect.element(page.getByText("Reviews the current branch.")).toBeVisible();

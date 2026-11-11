@@ -170,7 +170,9 @@ function ContextPermissions() {
 
 it("opens permissions directly from the context strip and applies a supported mode", async () => {
   await using screen = await render(<ContextPermissions />, { router: false }); // no routes involved
-  await userEvent.click(screen.getByRole("button", { name: `Permissions: ${tr("Full access")}` }));
+  await userEvent.click(
+    screen.getByRole("button", { name: tr("Permissions: {label}", { label: tr("Full access") }) }),
+  );
   await expect
     .element(page.getByRole("menuitemradio", { name: tr("Full access") }))
     .toHaveAttribute("aria-checked", "true");
@@ -178,7 +180,9 @@ it("opens permissions directly from the context strip and applies a supported mo
     .element(page.getByRole("menuitemradio", { name: tr("Auto"), exact: true }))
     .not.toBeInTheDocument();
   await userEvent.click(page.getByRole("menuitemradio", { name: tr("Supervised") }));
-  const trigger = screen.getByRole("button", { name: `Permissions: ${tr("Supervised")}` });
+  const trigger = screen.getByRole("button", {
+    name: tr("Permissions: {label}", { label: tr("Supervised") }),
+  });
   await expect.element(trigger).toBeVisible();
   await expect
     .element(page.getByRole("menuitemradio", { name: tr("Supervised") }))
