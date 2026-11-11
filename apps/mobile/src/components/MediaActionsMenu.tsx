@@ -1,4 +1,5 @@
 import { MenuView } from "@react-native-menu/menu";
+import { tr } from "@t3tools/shared/i18n";
 import type { ReactElement } from "react";
 import { Platform, View, type PressableProps, type StyleProp, type ViewStyle } from "react-native";
 
@@ -34,7 +35,7 @@ export function MediaActionsMenu(props: {
         <View
           accessible
           accessibilityRole="button"
-          accessibilityLabel="Media actions"
+          accessibilityLabel={tr("Media actions")}
           className="min-h-11 min-w-11 items-center justify-center rounded-md bg-black/60"
         >
           <SymbolView name="ellipsis" size={20} tintColor="#ffffff" type="monochrome" />

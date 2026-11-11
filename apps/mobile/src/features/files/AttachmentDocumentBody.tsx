@@ -1,4 +1,5 @@
 import type { EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { View } from "react-native";
 
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -43,28 +44,28 @@ export function AttachmentDocumentBody(props: {
     return (
       <View className="flex-1 items-center justify-center bg-sheet px-6">
         <EmptyState
-          title="File unavailable"
+          title={tr("File unavailable")}
           detail={document.error}
-          actionLabel="Try again"
+          actionLabel={tr("Try again")}
           onAction={document.retry}
         />
       </View>
     );
   }
   if (props.nativeViewer !== null && props.nativeViewer !== "unavailable") {
-    return <FilePreviewLoading message="Opening in file viewer..." />;
+    return <FilePreviewLoading message={tr("Opening in file viewer...")} />;
   }
   // ZIP text entries are read into memory and have no file URI.
   if (document.needsText ? !document.content : !document.uri) {
-    return <FilePreviewLoading message="Loading file..." />;
+    return <FilePreviewLoading message={tr("Loading file...")} />;
   }
   if (document.needsText && document.content) {
     const { content, table } = document;
     return (
       <View className="flex-1 bg-sheet">
         {content.truncated ? (
-          <FilePreviewNotice title="Partial file">
-            Preview limited to the first 1 MB. Save or share the file to read it in full.
+          <FilePreviewNotice title={tr("Partial file")}>
+            {tr("Preview limited to the first 1 MB. Save or share the file to read it in full.")}
           </FilePreviewNotice>
         ) : null}
         {table && document.activeMode === "table" ? (
@@ -98,12 +99,12 @@ export function AttachmentDocumentBody(props: {
   return (
     <View className="flex-1 items-center justify-center bg-sheet px-6">
       <EmptyState
-        title="No preview for this file"
+        title={tr("No preview for this file")}
         detail={
           props.nativeError ??
-          "No app on this device can show this format. Save or share it to open it elsewhere."
+          tr("No app on this device can show this format. Save or share it to open it elsewhere.")
         }
-        actionLabel="Try again"
+        actionLabel={tr("Try again")}
         onAction={props.onOpenNative}
       />
     </View>

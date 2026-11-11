@@ -1,4 +1,5 @@
 import { useRef, useState, type ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { Keyboard, type TextInputInstance, View } from "react-native";
 
 import {
@@ -44,29 +45,29 @@ export function FilesHeader(props: {
         style={{ opacity: searching ? 0 : 1 }}
       >
         <AndroidScreenHeader
-          title="Files"
+          title={tr("Files")}
           subtitle={props.projectName}
           hideBottomBorder
           onBack={props.onBack}
           leading={props.leading}
           actions={[
             {
-              accessibilityLabel: "Search files",
+              accessibilityLabel: tr("Search files"),
               icon: "magnifyingglass",
               onPress: () => setSearchOpen(true),
             },
           ]}
           trailing={
             <AndroidAnchoredMenu
-              title="File options"
-              actions={[{ id: "refresh", title: "Refresh files" }]}
+              title={tr("File options")}
+              actions={[{ id: "refresh", title: tr("Refresh files") }]}
               onPressAction={({ nativeEvent }) => {
                 if (nativeEvent.event === "refresh") props.onRefresh();
               }}
             >
               {(open) => (
                 <AndroidHeaderIconButton
-                  accessibilityLabel="File options"
+                  accessibilityLabel={tr("File options")}
                   icon="ellipsis"
                   onPress={open}
                 />
@@ -79,15 +80,15 @@ export function FilesHeader(props: {
         <View className="absolute inset-0 bg-header px-2" style={{ paddingTop, paddingBottom }}>
           <View className="flex-1 flex-row items-center gap-1">
             <AndroidHeaderIconButton
-              accessibilityLabel="Close file search"
+              accessibilityLabel={tr("Close file search")}
               icon="arrow.left"
               onPress={closeSearch}
             />
             <SearchField
               inputRef={searchRef}
-              accessibilityLabel="Search files"
-              clearAccessibilityLabel="Clear file search"
-              placeholder="Search files"
+              accessibilityLabel={tr("Search files")}
+              clearAccessibilityLabel={tr("Clear file search")}
+              placeholder={tr("Search files")}
               value={props.searchQuery}
               onChangeText={onSearchQueryChange}
             />

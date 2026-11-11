@@ -1,4 +1,5 @@
 import { EnvironmentId, PROVIDER_SEND_TURN_MAX_IMAGE_BYTES } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Option from "effect/Option";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -184,7 +185,7 @@ describe("prepareTurnAttachments", () => {
         attachments: [fileBackedImage],
         supportsImageUploads: true,
       }),
-    ).rejects.toThrow("cannot upload attachments");
+    ).rejects.toThrow(tr("This connection cannot upload attachments."));
     expect(mocks.runAtomCommand).not.toHaveBeenCalled();
     expect(mocks.upload).not.toHaveBeenCalled();
   });
@@ -209,7 +210,7 @@ describe("prepareTurnAttachments", () => {
           attachments: [fileBackedImage],
           supportsImageUploads: true,
         }),
-      ).rejects.toThrow("cannot upload attachments");
+      ).rejects.toThrow(tr("This connection cannot upload attachments."));
       expect(mocks.upload).not.toHaveBeenCalled();
       expect(mocks.runAtomCommand).toHaveBeenCalledTimes(1);
     } finally {
@@ -234,7 +235,7 @@ describe("prepareTurnAttachments", () => {
         ],
         supportsImageUploads: true,
       }),
-    ).rejects.toThrow("cannot upload attachments");
+    ).rejects.toThrow(tr("This connection cannot upload attachments."));
     expect(mocks.runAtomCommand).not.toHaveBeenCalled();
     expect(mocks.upload).not.toHaveBeenCalled();
   });
@@ -245,7 +246,7 @@ describe("prepareTurnAttachments", () => {
       return { _tag: "Failure", error: new Error("Retry cleanup") };
     });
     await expect(releasePendingAttachmentUploads(environmentId, [MINTED_ID])).rejects.toThrow(
-      "cannot delete pending attachments",
+      tr("This connection cannot delete pending attachments."),
     );
     expect(mocks.runAtomCommand).toHaveBeenCalledTimes(1);
   });
@@ -292,7 +293,9 @@ describe("prepareTurnAttachments", () => {
     const { fileUri: _, ...missingImage } = fileBackedImage;
     await expect(
       prepareTurnAttachments({ environmentId, attachments: [missingImage] }),
-    ).rejects.toThrow("'photo.png' is no longer available. Attach the image again.");
+    ).rejects.toThrow(
+      tr("'{name}' is no longer available. Attach the image again.", { name: "photo.png" }),
+    );
   });
 
   it.each(["resolve", "reject"] as const)(
@@ -696,7 +699,7 @@ describe("prepareTurnAttachments", () => {
     mocks.upload.mockResolvedValue({ status: 500, body: "failed", headers: {} });
 
     await expect(prepareTurnAttachments({ environmentId, attachments: [file] })).rejects.toThrow(
-      "Upload failed for 'report.pdf' (500).",
+      tr("Upload failed for '{name}' ({status}).", { name: "report.pdf", status: 500 }),
     );
     expect(removeCallsFor(MINTED_ID)).toBe(1);
   });
@@ -712,7 +715,9 @@ describe("prepareTurnAttachments", () => {
 
     await expect(
       prepareTurnAttachments({ environmentId, attachments: [previouslyUploaded, file] }),
-    ).rejects.toThrow("Upload failed for 'report.pdf' (500).");
+    ).rejects.toThrow(
+      tr("Upload failed for '{name}' ({status}).", { name: "report.pdf", status: 500 }),
+    );
 
     expect(removeCallsFor("pending-existing-pdf")).toBe(0);
   });

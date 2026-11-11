@@ -1,3 +1,5 @@
+import { tr } from "@t3tools/shared/i18n";
+
 export interface ZipEntry {
   readonly path: string;
   readonly name: string;
@@ -134,6 +136,8 @@ export function zipDownloadTimeLeft(input: {
     ((input.totalBytes - input.receivedBytes) * input.elapsedMs) / input.receivedBytes / 1000,
   );
   return seconds < 60
-    ? `About ${seconds} ${seconds === 1 ? "second" : "seconds"} left`
-    : `About ${Math.ceil(seconds / 60)} minutes left`;
+    ? seconds === 1
+      ? tr("About {seconds} second left", { seconds })
+      : tr("About {seconds} seconds left", { seconds })
+    : tr("About {minutes} minutes left", { minutes: Math.ceil(seconds / 60) });
 }

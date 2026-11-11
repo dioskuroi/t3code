@@ -21,7 +21,8 @@
     "M2 (#78) review 补充：outbox 系诊断串（console.error / TaggedError.message / AggregateError，不进 UI）与剪贴板写失败 console.error——确不翻，白名单豁免。",
     "批 D2（#86，桌面壳 snapshot/preview/updates/backend/wsl/ssh/telemetry）新增：exact 为批内日志/错误 getter 语句、Effect/状态 _tag 哨兵、键名与键盘键、品牌/路径/钥匙串标识、SVG/样式值、Niri/Hyprland 配置片段、PowerShell/SQL/CDP 协议串（均为非显示层，不翻）；words 新增品牌与技术词（GNOME/Hyprland/Niri/KDE/Wayland/X11/AppImage/KDL/D-Bus/gdbus/hyprctl/portal/Omarchy/Lua、MagicDNS/Tailscale Serve、cookie/webview/node-pty/glibc/arm64、Ubuntu/System32/Win/Super、键名 Enter 等），供译文内容面豁免（术语表 §3 品牌/技术词精神）。",
     "批 D2 review 修复（#86）：BrowserImport/WslServerTree/NetworkInterfaces 的 Schema TaggedError message getter 为诊断面（IPC 失败详情由 reason token 在渲染层另行成文），日志语境不翻，exact 豁免。",
-    "批 W2（#59，web 对话域 ChatView/composer）新增：exact 为 composerInlineChip 的 SKILL_CHIP_ICON_SVG 常量，SVG 标记串非 UI 文案，不翻；exact 补 \"Icon\"（ThreadPullRequestBadgePresentation 的类型成员名，§3 代码标识符精神）；words 新增 Mermaid（图表渲染库名，随 §3 品牌/技术词精神）。"
+    "批 W2（#59，web 对话域 ChatView/composer）新增：exact 为 composerInlineChip 的 SKILL_CHIP_ICON_SVG 常量，SVG 标记串非 UI 文案，不翻；exact 补 \"Icon\"（ThreadPullRequestBadgePresentation 的类型成员名，§3 代码标识符精神）；words 新增 Mermaid（图表渲染库名，随 §3 品牌/技术词精神）。",
+    "批 M5（#81，mobile 文件/媒体/附件）新增：words 补 zip（ZIP 压缩格式名，随 PDF/Safari 同类的技术缩写精神，zh 译文中 ZIP 原样保留）。"
   ],
   "contains": ["/side", "@container", "update-desktop-database exit code", "xdg-mime exit code"],
   "exact": [
@@ -823,6 +824,7 @@
     "x-hub-signature-256",
     "yaml",
     "zed",
+    "zip",
     "zygote",
     "gnome",
     "hyprland",

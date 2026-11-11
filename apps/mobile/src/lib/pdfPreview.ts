@@ -1,4 +1,5 @@
 import { downloadAttachmentForPreview } from "./attachmentDownload";
+import { tr } from "@t3tools/shared/i18n";
 
 export function isPdfPreviewUri(uri: string): boolean {
   try {
@@ -40,7 +41,7 @@ export async function preparePdfPreview(uri: string, signal: AbortSignal) {
     try {
       const header = await handle.readBytes(5);
       if (String.fromCharCode(...header) !== "%PDF-") {
-        throw new Error("The server did not return a PDF. Check the connection and try again.");
+        throw new Error(tr("The server did not return a PDF. Check the connection and try again."));
       }
     } finally {
       handle.close();

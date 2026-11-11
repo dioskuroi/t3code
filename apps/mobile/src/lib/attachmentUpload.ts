@@ -1,4 +1,5 @@
 import { resolveAssetUrl } from "@t3tools/client-runtime/state/assets";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isAssetAttachmentNotFoundFailure,
   runAttachmentUploadCycle,
@@ -69,7 +70,7 @@ export async function releasePendingAttachmentUploads(
 ): Promise<void> {
   const deleteOnce = async (attachmentId: string): Promise<boolean> => {
     if (!readEnvironmentScope(environmentId, AuthOrchestrationOperateScope)) {
-      throw new Error("This connection cannot delete pending attachments.");
+      throw new Error(tr("This connection cannot delete pending attachments."));
     }
     const result = await runAtomCommand(
       appAtomRegistry,
@@ -91,7 +92,10 @@ export async function releasePendingAttachmentUploads(
   }
   if (failedAttachmentIds.length > 0) {
     throw new Error(
-      `Could not delete ${failedAttachmentIds.length} pending attachment upload(s): ${failedAttachmentIds.join(", ")}.`,
+      tr("Could not delete {count} pending attachment upload(s): {ids}.", {
+        count: failedAttachmentIds.length,
+        ids: failedAttachmentIds.join(", "),
+      }),
     );
   }
 }
@@ -131,7 +135,8 @@ function supportedImageWireMimeType(
   const mimeType = PROVIDER_SEND_TURN_SUPPORTED_IMAGE_MIME_TYPES.find(
     (type) => type === attachment.mimeType.toLowerCase() || type === inferred,
   );
-  if (!mimeType) throw new Error(`Unsupported image type for '${attachment.name}'.`);
+  if (!mimeType)
+    throw new Error(tr("Unsupported image type for '{name}'.", { name: attachment.name }));
   return mimeType;
 }
 
@@ -182,7 +187,9 @@ async function composerImageAttachmentDataUrl(
     return attachment.dataUrl;
   }
   if (!isFileBackedComposerAttachment(attachment)) {
-    throw new Error(`'${attachment.name}' is no longer available. Attach the image again.`);
+    throw new Error(
+      tr("'{name}' is no longer available. Attach the image again.", { name: attachment.name }),
+    );
   }
   const release = retainComposerAttachmentFileForPreview(attachment);
   try {
@@ -205,14 +212,16 @@ async function uploadFileBytes(
   onProgress?: (progress: number) => void,
 ): Promise<void> {
   const { File, Paths, UploadType } = await import("expo-file-system");
-  if (signal.aborted) throw new Error("Upload cancelled.");
+  if (signal.aborted) throw new Error(tr("Upload cancelled."));
   if (!readEnvironmentScope(environmentId, AuthOrchestrationOperateScope)) {
-    throw new Error("This connection cannot upload attachments.");
+    throw new Error(tr("This connection cannot upload attachments."));
   }
   const fileUri = attachment.fileUri;
   const inlineDataUrl = attachment.type === "image" ? attachment.dataUrl : undefined;
   if (fileUri === undefined && inlineDataUrl === undefined) {
-    throw new Error(`'${attachment.name}' is no longer available. Attach the image again.`);
+    throw new Error(
+      tr("'{name}' is no longer available. Attach the image again.", { name: attachment.name }),
+    );
   }
   const file =
     fileUri === undefined
@@ -239,7 +248,12 @@ async function uploadFileBytes(
         : {}),
     });
     if (result.status < 200 || result.status >= 300) {
-      throw new Error(`Upload failed for '${attachment.name}' (${result.status}).`);
+      throw new Error(
+        tr("Upload failed for '{name}' ({status}).", {
+          name: attachment.name,
+          status: result.status,
+        }),
+      );
     }
   } finally {
     if (fileUri === undefined && file.exists) file.delete();
@@ -286,7 +300,7 @@ export async function prepareTurnAttachments(input: {
 
   const requireUploadAccess = () => {
     if (!readEnvironmentScope(environmentId, AuthOrchestrationOperateScope)) {
-      throw new Error("This connection cannot upload attachments.");
+      throw new Error(tr("This connection cannot upload attachments."));
     }
   };
   requireUploadAccess();
@@ -295,7 +309,7 @@ export async function prepareTurnAttachments(input: {
     environmentSession.preparedConnectionValueAtom(environmentId),
   );
   if (Option.isNone(connection)) {
-    throw new Error("The environment is not connected.");
+    throw new Error(tr("The environment is not connected."));
   }
 
   const uploadedAttachments: UploadedMobileAttachment[] = [];
@@ -306,7 +320,7 @@ export async function prepareTurnAttachments(input: {
   input.signal?.addEventListener("abort", abort, { once: true });
   try {
     for (const attachment of input.attachments) {
-      if (controller.signal.aborted) throw new Error("Upload cancelled.");
+      if (controller.signal.aborted) throw new Error(tr("Upload cancelled."));
       requireUploadAccess();
       if (attachment.type === "image" && !input.supportsImageUploads) {
         uploadedAttachments.push(...(await toUploadChatImageAttachments([attachment])));
@@ -372,12 +386,12 @@ export async function prepareTurnAttachments(input: {
       if (result.status !== "uploaded") {
         throw result.status === "failed" && result.error !== undefined
           ? result.error
-          : new Error(`Upload failed for '${attachment.name}'.`);
+          : new Error(tr("Upload failed for '{name}'.", { name: attachment.name }));
       }
       uploadedAttachments.push(uploadedReference(attachment, result.attachmentId));
     }
 
-    if (controller.signal.aborted) throw new Error("Upload cancelled.");
+    if (controller.signal.aborted) throw new Error(tr("Upload cancelled."));
 
     const draftAttachments = withUploadedMobileAttachmentReferences({
       environmentId,

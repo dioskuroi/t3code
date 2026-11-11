@@ -1,4 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { Atom, AsyncResult } from "effect/reactivity";
@@ -29,7 +30,8 @@ const preparedPdfAtom = Atom.family((uri: string) =>
           });
           return prepared;
         },
-        catch: (cause) => (cause instanceof Error ? cause.message : "The PDF could not be loaded."),
+        catch: (cause) =>
+          cause instanceof Error ? cause.message : tr("The PDF could not be loaded."),
       }).pipe(
         Effect.flatMap((file) => (file === null ? Effect.interrupt : Effect.succeed(file))),
         Effect.interruptible,
@@ -48,23 +50,24 @@ export function PdfPreview(props: { readonly uri: string }) {
   const file = prepared._tag === "Success" && !prepared.waiting ? prepared.value : null;
   const error =
     file !== null && unrenderable === file
-      ? "The PDF could not be rendered. It may be damaged or password protected."
+      ? tr("The PDF could not be rendered. It may be damaged or password protected.")
       : prepared._tag === "Failure" && !prepared.waiting
-        ? Option.getOrElse(AsyncResult.error(prepared), () => "The PDF could not be loaded.")
+        ? Option.getOrElse(AsyncResult.error(prepared), () => tr("The PDF could not be loaded."))
         : null;
   const localUri = file?.uri ?? null;
 
   if (error) {
     return (
       <View className="flex-1 gap-4 bg-card">
-        <FilePreviewNotice title="Could not load PDF">{error}</FilePreviewNotice>
+        <FilePreviewNotice title={tr("Could not load PDF")}>{error}</FilePreviewNotice>
         <View className="items-center">
-          <ControlPill label="Try again" variant="pill" onPress={refresh} />
+          <ControlPill label={tr("Try again")} variant="pill" onPress={refresh} />
         </View>
       </View>
     );
   }
-  if (localUri === null) return <FilePreviewLoading message="Loading PDF..." background="card" />;
+  if (localUri === null)
+    return <FilePreviewLoading message={tr("Loading PDF...")} background="card" />;
 
   return (
     <Pdf

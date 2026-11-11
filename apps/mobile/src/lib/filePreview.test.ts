@@ -585,7 +585,7 @@ describe("ThreadInlineFilePreview playback", () => {
           .find(
             (button) =>
               button.getAttribute("aria-label") === tr("Play audio") ||
-              button.textContent === "Play",
+              button.textContent === tr("Play"),
           )!
           .click(),
       );
@@ -616,7 +616,7 @@ describe("ThreadInlineFilePreview playback", () => {
               .find(
                 (button) =>
                   button.getAttribute("aria-label") === tr("Pause audio") ||
-                  button.textContent === "Pause",
+                  button.textContent === tr("Pause"),
               )!
               .click(),
           );
@@ -704,7 +704,8 @@ describe("ThreadInlineFilePreview playback", () => {
       [...container.querySelectorAll("button")]
         .find(
           (button) =>
-            button.getAttribute("aria-label") === tr("Play audio") || button.textContent === "Play",
+            button.getAttribute("aria-label") === tr("Play audio") ||
+            button.textContent === tr("Play"),
         )!
         .click(),
     );
@@ -748,7 +749,7 @@ describe("ThreadInlineFilePreview playback", () => {
     );
     expect(audio.enabled).toBe(true);
     const play = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent === "Play",
+      (button) => button.textContent === tr("Play"),
     )!;
     await act(async () => play.click());
     expect(audio.played).toHaveBeenCalledTimes(2);
@@ -782,17 +783,17 @@ describe("ThreadInlineFilePreview playback", () => {
         ),
       );
       const play = [...container.querySelectorAll("button")].find(
-        (button) => button.textContent === "Play",
+        (button) => button.textContent === tr("Play"),
       )!;
       await act(async () => play.click());
-      expect(play.textContent).toBe("Pause");
+      expect(play.textContent).toBe(tr("Pause"));
       let recording: ReturnType<typeof acquireAudioSession> | undefined;
       if (action === "pause") await act(async () => play.click());
       else if (action === "recording") {
         await act(async () => {
           recording = acquireAudioSession("recording");
         });
-        expect(play.textContent).toBe("Play");
+        expect(play.textContent).toBe(tr("Play"));
         await activateAudioSession(recording!);
       } else {
         await act(async () => root!.unmount());
@@ -821,7 +822,7 @@ describe("ThreadInlineFilePreview playback", () => {
       await act(async () => render());
       await act(async () =>
         [...container.querySelectorAll("button")]
-          .find((button) => button.textContent === "Play")!
+          .find((button) => button.textContent === tr("Play"))!
           .click(),
       );
       audio.status = { ...audio.status, playing: true };
@@ -830,7 +831,7 @@ describe("ThreadInlineFilePreview playback", () => {
       if (transition === "seek") {
         await act(async () =>
           [...container.querySelectorAll("button")]
-            .find((button) => button.textContent === "+15s")!
+            .find((button) => button.textContent === tr("+15s"))!
             .click(),
         );
         expect(audio.player.seekTo).toHaveBeenCalledWith(10);
@@ -840,7 +841,7 @@ describe("ThreadInlineFilePreview playback", () => {
       expect(audio.player.pause).not.toHaveBeenCalled();
       expect(
         [...container.querySelectorAll("button")].map((button) => button.textContent),
-      ).toContain("Pause");
+      ).toContain(tr("Pause"));
       audio.status = { ...audio.status, playing: true, isBuffering: false };
       await act(async () => render());
       expect(audio.played).toHaveBeenCalledOnce();
@@ -870,7 +871,7 @@ describe("ThreadInlineFilePreview playback", () => {
       await act(async () => render());
       await act(async () =>
         [...container.querySelectorAll("button")]
-          .find((button) => button.textContent === "Play")!
+          .find((button) => button.textContent === tr("Play"))!
           .click(),
       );
       audio.status = { ...audio.status, playing: true };
@@ -887,7 +888,7 @@ describe("ThreadInlineFilePreview playback", () => {
         }
         await act(async () =>
           [...container.querySelectorAll("button")]
-            .find((button) => button.textContent === "Pause")!
+            .find((button) => button.textContent === tr("Pause"))!
             .click(),
         );
       } else {
@@ -900,7 +901,7 @@ describe("ThreadInlineFilePreview playback", () => {
       await act(async () => render());
       expect(
         [...container.querySelectorAll("button")].map((button) => button.textContent),
-      ).toContain("Play");
+      ).toContain(tr("Play"));
       audio.player.pause.mockClear();
       const recording = acquireAudioSession("recording");
       expect(audio.player.pause).not.toHaveBeenCalled();
