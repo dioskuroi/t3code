@@ -346,9 +346,7 @@ export function ProviderAuthenticationSection({
         <>
           {interaction?.type === "deviceCode" ? (
             <p className="py-2 text-sm text-muted-foreground">
-              {tr("Enter code")}{" "}
-              <code className="select-all font-mono text-foreground">{interaction.userCode}</code>{" "}
-              {tr("in your browser.")}
+              {tr("Enter code {code} in your browser.", { code: interaction.userCode })}
             </p>
           ) : null}
           {interaction?.type === "terminal" ? (
