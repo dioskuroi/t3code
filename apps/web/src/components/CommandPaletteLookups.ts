@@ -33,7 +33,7 @@ export function useEnvironmentLookups() {
           label: isPrimary
             ? tr("Local")
             : isLocal
-              ? `${environment.label} (Local)`
+              ? tr("{label} (Local)", { label: environment.label })
               : environment.label,
           machine: resolveEnvironmentMachineKind(environment.serverConfig),
         },

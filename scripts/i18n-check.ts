@@ -199,7 +199,10 @@ export function translationContentIssues(value: string): string[] {
     .replace(/\{[^{}]+\}/g, " ")
     .replace(/&[a-zA-Z][a-zA-Z0-9]*;/g, " ")
     .replace(/https?:\/\/\S+/g, " ");
-  if (survivesWordWhitelist(stripped)) issues.push("白名单外英文混入");
+  // contains 豁免（与裸串面 isWhitelisted 同语义）：命中子串先整体扣除再判词，
+  // 使示例路径等「不译片段」在字典内容面与裸串面行为一致。
+  const afterContains = whitelist.contains.reduce((acc, c) => acc.split(c).join(" "), stripped);
+  if (survivesWordWhitelist(afterContains)) issues.push("白名单外英文混入");
   return issues;
 }
 

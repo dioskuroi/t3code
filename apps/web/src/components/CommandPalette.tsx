@@ -1100,7 +1100,9 @@ function OpenCommandPaletteDialog(props: {
         stackedThreadToast({
           type: "error",
           title: tr("Environment unavailable"),
-          description: `${environment?.label ?? tr("The selected environment")} is not connected.`,
+          description: tr("{label} is not connected.", {
+            label: environment?.label ?? tr("The selected environment"),
+          }),
         }),
       );
       return;
@@ -1776,7 +1778,9 @@ function OpenCommandPaletteDialog(props: {
         stackedThreadToast({
           type: "error",
           title: tr("Environment unavailable"),
-          description: `${environment?.label ?? tr("The selected environment")} is not connected.`,
+          description: tr("{label} is not connected.", {
+            label: environment?.label ?? tr("The selected environment"),
+          }),
         }),
       );
       return;
@@ -1959,7 +1963,9 @@ function OpenCommandPaletteDialog(props: {
         stackedThreadToast({
           type: "error",
           title: tr("Environment unavailable"),
-          description: `${browseEnvironment?.label ?? tr("The selected environment")} is not connected.`,
+          description: tr("{label} is not connected.", {
+            label: browseEnvironment?.label ?? tr("The selected environment"),
+          }),
         }),
       );
       return;
