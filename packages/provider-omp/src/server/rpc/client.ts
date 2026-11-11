@@ -144,36 +144,31 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
     pending.clear();
   });
 
-  const onExitWatchFailure = Effect.fn("OmpRpc.onExitWatchFailure")(function* (cause: unknown) {
-    exited = true;
-    yield* failAllPending(
-      new OmpRpcExitError({ exitCode: null, detail: `exit watch failed: ${String(cause)}` }),
-    );
-    yield* Deferred.fail(
-      exitDeferred,
-      new OmpRpcError({ operation: "exit", detail: String(cause) }),
-    );
-  });
-
-  const onExitObserved = Effect.fn("OmpRpc.onExitObserved")(function* (raw: number | null) {
+  // #39: signal deaths (SIGKILL/SIGTERM — exit code null) surface as exitCode failures
+  // from the spawner, alongside genuine observation defects. Both mean the child is gone
+  // or unverifiable, so every exit observation funnels through one path and notifies
+  // `onExit` fail-closed with the code (null when death came by signal or is unverifiable):
+  // the adapter's crash handling (turn interrupted, thread error) hangs off that callback.
+  const onExitObserved = Effect.fn("OmpRpc.onExitObserved")(function* (
+    raw: number | null,
+    detail: string,
+  ) {
     exitCode = raw;
     exited = true;
-    yield* failAllPending(
-      new OmpRpcExitError({
-        exitCode,
-        detail: "process exited before the response arrived",
-      }),
-    );
+    yield* failAllPending(new OmpRpcExitError({ exitCode, detail }));
     exitObserved = true;
     yield* Effect.sync(() => options.onExit?.({ exitCode }));
     yield* Deferred.succeed(exitDeferred, exitCode);
   });
 
+  const exitWatchDetail = (cause: unknown): string =>
+    `exit watch failed: ${cause instanceof globalThis.Error ? cause.message : String(cause)}`;
+
   // Exit watcher: registered before the reader so crashes fail requests immediately.
   yield* child.exitCode.pipe(
     Effect.matchEffect({
-      onFailure: onExitWatchFailure,
-      onSuccess: onExitObserved,
+      onFailure: (cause) => onExitObserved(null, exitWatchDetail(cause)),
+      onSuccess: (code) => onExitObserved(code, "process exited before the response arrived"),
     }),
     Effect.forkIn(scope),
   );

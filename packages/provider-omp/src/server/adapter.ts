@@ -932,11 +932,18 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         }),
         interruptTurn: Effect.fn("OmpAdapter.interruptTurn")(function* (interruptInput) {
           const thread = threads.get(interruptInput.providerThread.id);
-          const client = thread === undefined ? undefined : thread.client.client;
-          if (client === undefined || client === null || thread!.projection.state.active === null) {
+          if (thread === undefined || thread.projection.state.active === null) {
             return;
           }
-          yield* client.request("abort").pipe(
+          // Dead child (#39): an abort RPC can never be answered — finalize the turn
+          // locally so Stop never wedges on a corpse. The exit watcher's crash
+          // finalization usually lands first; finalizeTurn is a no-op without an
+          // active turn, so the two paths cannot double-finalize.
+          if (thread.client.client === null || thread.client.exited || thread.crashed) {
+            yield* thread.projection.finalizeTurn("interrupted");
+            return;
+          }
+          yield* thread.client.client.request("abort").pipe(
             Effect.mapError(
               (cause) =>
                 new ProviderAdapter.ProviderAdapterInterruptError({
