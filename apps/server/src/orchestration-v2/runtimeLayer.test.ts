@@ -1790,19 +1790,10 @@ it.layer(layerTest)("OrchestrationV2LayerLive", (it) => {
         requestId,
         answers,
       });
-      const errors = orchestrator
-        .getThreadProjection(threadId)
-        .pipe(
-          Effect.map((projection) => projection.turnItems.filter((item) => item.type === "error")),
-        );
-
-      // A delivery that can still be retried reports nothing.
+      // Answer delivery is single-attempt (#38): dispatch already resolved the request, so
+      // a retry could only fail "request-not-ready" — the first failure red-cards at once
+      // instead of burning four WARN retries first.
       yield* worker.drain();
-      assert.deepEqual(yield* errors, []);
-      for (let attempt = 1; attempt < 5; attempt++) {
-        yield* TestClock.adjust("30 seconds");
-        yield* worker.drain();
-      }
 
       const [deliveryEffect] = yield* outbox.listByCommandId(commandId);
       assert.equal(deliveryEffect?.request.type, "runtime-request.respond");

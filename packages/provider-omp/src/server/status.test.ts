@@ -48,6 +48,9 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
               ],
             },
           },
+          // The status check always probes thinking levels (#21); declared explicitly since
+          // the fake stays silent on undeclared methods (#38) and this case doesn't care.
+          get_available_thinking_levels: { data: { levels: [] } },
         },
       });
       const markerPath = `${directory}/drain-marker`;
@@ -99,6 +102,7 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
                 models: [{ provider: "zai", id: "glm-5.3", name: "GLM-5.3", reasoning: true }],
               },
             },
+            get_available_thinking_levels: { data: { levels: [] } },
           },
           // omp pushes the full replacement catalog right after ready — measured shape from
           // the real 18.18.2 transcripts (fixtures/*/omp_transcript.ndjson line 6).

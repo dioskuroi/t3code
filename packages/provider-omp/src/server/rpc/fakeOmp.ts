@@ -52,7 +52,12 @@ export interface FakeOmpProgram {
    * repeatable same-process turn completions (e.g. prompt → agent_end + prompt_result).
    */
   readonly eventsPerRequest?: Record<string, ReadonlyArray<FakeOmpTimedFrame>>;
-  /** Response behavior per command type; unlisted commands answer success with `data`. */
+  /**
+   * Response behavior per command type. The fake answers only the hardcoded handshake
+   * trio, prompt (#38 probe), and set_model (#25 D5) by default; other methods stay
+   * silent until declared here, and extension_ui_response is hard-banned (never acked
+   * by real omp, #38). Per-method evidence: see the comments at DEFAULT_RESPONSES.
+   */
   readonly responses?: Record<string, FakeOmpResponseSpec>;
   /** Frames flushed after stdin EOF, before exit — proves the caller kept draining stdout. */
   readonly framesOnStdinEnd?: ReadonlyArray<Record<string, unknown>>;
@@ -75,6 +80,15 @@ function createFakeOmpSource(): string {
   return `
 import { appendFileSync } from "node:fs";
 const program = JSON.parse(process.env[${JSON.stringify(FAKE_OMP_PROGRAM_ENV)}] ?? "{}");
+// Hard ban (#38): real omp never answers extension_ui_response (probe evidence), so a
+// scripted ack for it is a protocol lie. Fail startup before the ready frame so the
+// client's construction fails closed with an exit error.
+if (program.responses !== undefined && "extension_ui_response" in program.responses) {
+  process.stderr.write(
+    "fake omp: extension_ui_response must never be scripted to answer (real omp sends no ack, #38); remove the responses entry\\n",
+  );
+  process.exit(1);
+}
 const send = (frame) => process.stdout.write(JSON.stringify(frame) + "\\n");
 const sleep = (ms) => {
   const { promise, resolve } = Promise.withResolvers();
@@ -107,6 +121,15 @@ if (process.env.FAKE_OMP_EXIT_LOG) {
   process.on("exit", () => appendFileSync(exitLog, String(process.exitCode ?? 0)));
 }
 let promptCount = 0;
+// Default ack whitelist (#38): handshake trio (hardcoded above) plus prompt (#38 probe)
+// and set_model (#25 D5; necessary: every test turn with a concrete model sends it).
+// Other real-omp responders stay silent until declared: switch_session #25 D6/D7,
+// set_thinking_level #25 D10, get_available_models #25 D1, open_session #38 probe.
+// abort/cancel_subagent/steer/get_state are unaudited: declarations are scripted assumptions.
+const DEFAULT_RESPONSES = {
+  prompt: { success: true, data: {} },
+  set_model: { success: true, data: {} },
+};
 const respond = (request) => {
   const type = typeof request.type === "string" ? request.type : "";
   if (type === "negotiate_protocol") {
@@ -125,7 +148,8 @@ const respond = (request) => {
     send({ id: request.id, type: "response", command: type, success: true, data: {} });
     return;
   }
-  const spec = (program.responses ?? {})[type] ?? { success: true, data: {} };
+  const spec = (program.responses ?? {})[type] ?? DEFAULT_RESPONSES[type];
+  if (spec === undefined) return;
   if (spec.never === true) return;
   if (type === "prompt" && Array.isArray(program.eventsOnPrompt)) {
     const sequence = program.eventsOnPrompt[promptCount];

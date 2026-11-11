@@ -219,6 +219,8 @@ const openHarness = Effect.fn("adapterTest.openHarness")(function* (
     readonly clock?: Clock.Clock | undefined;
     /** Overrides the ambient host's attachment resolution (e.g. simulate an unresolvable id). */
     readonly resolveAttachmentPath?: (attachment: ChatAttachment) => string | null;
+    /** Forwards a short RPC request timeout to the spawned client (#38 regression B). */
+    readonly requestTimeoutMs?: number | undefined;
   } = {},
 ) {
   const scope = yield* Effect.scope;
@@ -232,6 +234,9 @@ const openHarness = Effect.fn("adapterTest.openHarness")(function* (
     command,
     ...(options.idleTimeoutMs === undefined ? {} : { idleTimeoutMs: options.idleTimeoutMs }),
     ...(options.clock === undefined ? {} : { clock: options.clock }),
+    ...(options.requestTimeoutMs === undefined
+      ? {}
+      : { requestTimeoutMs: options.requestTimeoutMs }),
   }).pipe(Effect.provideService(ProviderHost.ProviderHost, effectiveHost));
   const runtime = yield* adapter.openSession({
     threadId: ids.threadId,
@@ -508,6 +513,9 @@ describe("omp adapter session runtime", () => {
         program: {
           responses: {
             open_session: { data: { sessionId: "s-a", sessionFile } },
+            // Real omp acks switch_session (#25 D6/D7); declared since the fake is silent
+            // on undeclared methods (#38).
+            switch_session: { data: { resumed: true } },
           },
           events: [
             messageUpdate(20, { type: "text_delta", delta: "ok", contentIndex: 0 }),
@@ -1464,7 +1472,11 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: { open_session: { data: { sessionId: "s-idle", sessionFile } } },
+          responses: {
+            open_session: { data: { sessionId: "s-idle", sessionFile } },
+            // Revival respawns and switches back (#25 D6/D7 ack evidence).
+            switch_session: { data: { resumed: true } },
+          },
           eventsOnPrompt: [
             completedTurnEvents("first"),
             completedTurnEvents("second"),
@@ -1661,7 +1673,10 @@ describe("omp adapter session runtime", () => {
         writeFakeOmp({
           directory,
           program: {
-            responses: { open_session: { data: { sessionId: "s-crash2", sessionFile } } },
+            responses: {
+              open_session: { data: { sessionId: "s-crash2", sessionFile } },
+              switch_session: { data: { resumed: true } },
+            },
             eventsOnPrompt: [completedTurnEvents("revived")],
           },
           env: { FAKE_OMP_REQUEST_LOG: requestLog },
@@ -1690,77 +1705,86 @@ describe("omp adapter session runtime", () => {
     }).pipe(Effect.provide(NodeTestLayer)),
   );
 
-  live("ends a turn interrupted when the child dies by SIGKILL and recovers on the next prompt (#39)", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-sigkill-" });
-      const sessionFile = `${directory}/sessions/sigkill.jsonl`;
-      const requestLog = `${directory}/requests.jsonl`;
-      // Signal death (exit code null) is the real-env crash shape: a coded exit travels a
-      // different watcher branch and used to skip the adapter's crash handling entirely.
-      const command = writeFakeOmp({
-        directory,
-        program: {
-          responses: { open_session: { data: { sessionId: "s-sigkill", sessionFile } } },
-          eventsOnPrompt: [
-            [
-              {
-                delayMs: 10,
-                frame: {
-                  type: "message_update",
-                  assistantMessageEvent: { type: "text_delta", delta: "partial", contentIndex: 0 },
-                },
-              },
-            ],
-          ],
-          crashBySignal: { delayMs: 300 },
-        },
-        env: { FAKE_OMP_REQUEST_LOG: requestLog },
-      });
-      const ids = makeIds("sigkill");
-      yield* Effect.gen(function* () {
-        const harness = yield* openHarness(ids, command);
-        const providerThread = yield* harness.runtime.ensureThread({
-          threadId: ids.threadId,
-          modelSelection: ids.modelSelection,
-          runtimePolicy,
-        });
-        yield* driveTurn(harness, ids, providerThread, 1);
-        // SIGKILL mid-turn: the turn must reach a terminal, not hang as in #39.
-        yield* waitFor(
-          harness,
-          "turn.terminal",
-          (event) => event.runOrdinal === 1 && event.status === "interrupted",
-        );
-        yield* waitFor(
-          harness,
-          "provider_thread.updated",
-          (event) => event.providerThread.status === "error",
-        );
-        // Phase 2: healthy respawn — the next prompt switches back to the same session.
-        writeFakeOmp({
+  live(
+    "ends a turn interrupted when the child dies by SIGKILL and recovers on the next prompt (#39)",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-sigkill-" });
+        const sessionFile = `${directory}/sessions/sigkill.jsonl`;
+        const requestLog = `${directory}/requests.jsonl`;
+        // Signal death (exit code null) is the real-env crash shape: a coded exit travels a
+        // different watcher branch and used to skip the adapter's crash handling entirely.
+        const command = writeFakeOmp({
           directory,
           program: {
             responses: { open_session: { data: { sessionId: "s-sigkill", sessionFile } } },
-            eventsOnPrompt: [completedTurnEvents("revived")],
+            eventsOnPrompt: [
+              [
+                {
+                  delayMs: 10,
+                  frame: {
+                    type: "message_update",
+                    assistantMessageEvent: {
+                      type: "text_delta",
+                      delta: "partial",
+                      contentIndex: 0,
+                    },
+                  },
+                },
+              ],
+            ],
+            crashBySignal: { delayMs: 300 },
           },
           env: { FAKE_OMP_REQUEST_LOG: requestLog },
         });
-        yield* driveTurn(harness, ids, providerThread, 2);
-        yield* waitFor(
-          harness,
-          "turn.terminal",
-          (event) => event.runOrdinal === 2 && event.status === "completed",
-        );
-        const requests = yield* readRequestLog(requestLog);
-        const switches = requests.filter((request) => request["type"] === "switch_session");
-        expect(switches).toHaveLength(1);
-        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
-        expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
-          2,
-        );
-      }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeTestLayer)),
+        const ids = makeIds("sigkill");
+        yield* Effect.gen(function* () {
+          const harness = yield* openHarness(ids, command);
+          const providerThread = yield* harness.runtime.ensureThread({
+            threadId: ids.threadId,
+            modelSelection: ids.modelSelection,
+            runtimePolicy,
+          });
+          yield* driveTurn(harness, ids, providerThread, 1);
+          // SIGKILL mid-turn: the turn must reach a terminal, not hang as in #39.
+          yield* waitFor(
+            harness,
+            "turn.terminal",
+            (event) => event.runOrdinal === 1 && event.status === "interrupted",
+          );
+          yield* waitFor(
+            harness,
+            "provider_thread.updated",
+            (event) => event.providerThread.status === "error",
+          );
+          // Phase 2: healthy respawn — the next prompt switches back to the same session.
+          writeFakeOmp({
+            directory,
+            program: {
+              responses: {
+                open_session: { data: { sessionId: "s-sigkill", sessionFile } },
+                switch_session: { data: { resumed: true } },
+              },
+              eventsOnPrompt: [completedTurnEvents("revived")],
+            },
+            env: { FAKE_OMP_REQUEST_LOG: requestLog },
+          });
+          yield* driveTurn(harness, ids, providerThread, 2);
+          yield* waitFor(
+            harness,
+            "turn.terminal",
+            (event) => event.runOrdinal === 2 && event.status === "completed",
+          );
+          const requests = yield* readRequestLog(requestLog);
+          const switches = requests.filter((request) => request["type"] === "switch_session");
+          expect(switches).toHaveLength(1);
+          expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
+          expect(
+            requests.filter((request) => request["type"] === "negotiate_protocol"),
+          ).toHaveLength(2);
+        }).pipe(Effect.scoped);
+      }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("wires child stderr into the server log", () =>
@@ -2254,6 +2278,9 @@ describe("omp adapter session runtime", () => {
             open_session: {
               data: { sessionId: "s-thinkkeep", sessionFile: "/tmp/fake-thinkkeep.jsonl" },
             },
+            // Real omp acks set_thinking_level (#25 D10); declared since the fake is
+            // silent on undeclared methods (#38).
+            set_thinking_level: { data: { level: "high" } },
           },
           eventsPerRequest: {
             prompt: [
@@ -2530,6 +2557,10 @@ describe("omp adapter session runtime", () => {
             open_session: {
               data: { sessionId: "s-busy", sessionFile: "/tmp/fake-busy.jsonl" },
             },
+            // abort is unaudited against real omp (evidence table in fakeOmp.ts): scripted
+            // assumption, needed because interruptTurn issues it while the fake is silent
+            // on undeclared methods (#38).
+            abort: { data: { stopped: true } },
           },
           events: [
             messageUpdate(20, { type: "text_delta", delta: "slow", contentIndex: 0 }),
@@ -3272,6 +3303,9 @@ describe("omp adapter session runtime", () => {
       expect(answeredTwice._tag).toBe("ProviderAdapterRuntimeRequestResponseError");
 
       yield* waitFor(harness, "turn.terminal");
+      // Wire semantics are already-sent (#38): the answer goes out fire-and-forget — the
+      // fake never acks extension_ui_response (real omp doesn't either) and no response
+      // frame is expected or waited for.
       const wire = (yield* readRequestLog(requestLog)).filter(
         (request) => request["type"] === "extension_ui_response",
       );
@@ -3282,6 +3316,90 @@ describe("omp adapter session runtime", () => {
         { id: "u3", type: "extension_ui_response", value: "Deny" },
         { id: "u4", type: "extension_ui_response", cancelled: true },
       ]);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("answers approvals fire-and-forget under a short request timeout (#38)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-ff-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: { data: { sessionId: "s-ff", sessionFile: "/tmp/fake-ff.jsonl" } },
+          },
+          events: [
+            {
+              afterRequestType: "prompt",
+              frame: approvalFrame("u1", "bash", [
+                "Approve",
+                "Approve bash for this session",
+                "Deny",
+              ]),
+            },
+            // Held until the answer request lands, then settle the turn — releaseHeld fires
+            // on receipt of the request, not on any response to it.
+            {
+              afterRequestType: "extension_ui_response",
+              delayMs: 300,
+              frame: { type: "agent_end", isTerminal: true },
+            },
+            {
+              afterRequestType: "extension_ui_response",
+              delayMs: 300,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("ff");
+      // 500ms RPC request timeout: a regressed answer (pending request instead of notify)
+      // would time out against the ack-less fake — real omp semantics — and fail the
+      // approval round-trip before the turn could settle.
+      const harness = yield* openHarness(ids, command, { requestTimeoutMs: 500 });
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("needs approval"),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the fake child emits its dialog on real time after the prompt lands.
+      for (
+        let attempt = 0;
+        attempt < 500 && eventsOf(harness, "runtime_request.updated").length < 1;
+        attempt += 1
+      ) {
+        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- fake omp dialogs arrive on real time.
+        yield* Effect.sleep(10);
+      }
+      const request = eventsOf(harness, "runtime_request.updated")[0]?.runtimeRequest;
+      if (request === undefined) throw new Error("approval request never arrived");
+      yield* harness.runtime.respondToRuntimeRequest({
+        requestId: request.id,
+        decision: "accept",
+      });
+      const terminal = yield* waitFor(harness, "turn.terminal");
+      expect(terminal.status).toBe("completed");
+      expect(
+        (yield* readRequestLog(requestLog)).some(
+          (sent) => sent["type"] === "extension_ui_response",
+        ),
+      ).toBe(true);
     }).pipe(Effect.provide(NodeTestLayer)),
   );
   live("queues a runtime-mode switch until the turn settles, then respawns (D4)", () =>
@@ -3296,6 +3414,10 @@ describe("omp adapter session runtime", () => {
         program: {
           responses: {
             open_session: { data: { sessionId: "s-mode", sessionFile } },
+            // Real-omp evidence declarations (#38 whitelist): steer is acked by real omp
+            // (scripted assumption — unaudited), switch_session acks per #25 D6/D7.
+            steer: { data: { queued: true } },
+            switch_session: { data: { resumed: true } },
           },
           events: [
             messageUpdate(20, { type: "text_delta", delta: "long turn", contentIndex: 0 }),

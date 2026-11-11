@@ -322,6 +322,143 @@ it.effect("does not report an answer whose last delivery attempt is interrupted"
   }),
 );
 
+it.effect("fails an answer delivery on its first attempt without retrying (#38)", () =>
+  Effect.gen(function* () {
+    const now = DateTime.formatIso(yield* DateTime.now);
+    const effectId = "effect:worker-answer-delivery-single-attempt";
+    const workerId = "worker-answer-delivery-single-attempt";
+    const claimedEffect: EffectOutbox.OrchestrationEffectV2 = {
+      id: effectId,
+      commandId: CommandId.make("command:worker-answer-delivery-single-attempt"),
+      threadId: ThreadId.make("thread:worker-answer-delivery-single-attempt"),
+      request: {
+        type: "runtime-request.respond",
+        providerSessionId: oldSessionId,
+        requestId: RuntimeRequestId.make("runtime-request:worker-answer-delivery"),
+      },
+      status: "running",
+      attemptCount: 1,
+      availableAt: now,
+      leaseOwner: workerId,
+      createdAt: now,
+      updatedAt: now,
+      completedAt: null,
+      lastError: null,
+    };
+    const failed = yield* Ref.make<ReadonlyArray<string>>([]);
+    const retries = yield* Ref.make(0);
+    const redCards = yield* Ref.make<ReadonlyArray<string>>([]);
+    const layerOutbox = Layer.mock(EffectOutbox.EffectOutboxV2)({
+      claimNext: () => Effect.succeedSome(claimedEffect),
+      get: () => Effect.succeedSome(claimedEffect),
+      awaitCancellation: () => Effect.never,
+      clearCancellation: () => Effect.void,
+      succeed: () => Effect.succeed(true),
+      fail: ({ error }) =>
+        Ref.update(failed, (existing) => [...existing, error]).pipe(Effect.as(true)),
+      retry: () => Ref.update(retries, (count) => count + 1).pipe(Effect.as(true)),
+    });
+    const layerExecutor = layerExecutorFor({
+      events: yield* Ref.make<ReadonlyArray<string>>([]),
+      respond: () =>
+        Effect.fail(
+          new RuntimeRequestService.RuntimeRequestResponseExecutionError({
+            reason: "unexpected-failure",
+            threadId: ThreadId.make("thread:worker-answer-delivery-single-attempt"),
+            providerSessionId: oldSessionId,
+            requestId: RuntimeRequestId.make("runtime-request:worker-answer-delivery"),
+            cause: "omp RPC process has already exited",
+          }),
+        ),
+      threads: {
+        dispatch: (command) =>
+          Ref.update(redCards, (existing) => [...existing, command.type]).pipe(
+            Effect.as({ sequence: 1, storedEvents: [] }),
+          ),
+      },
+    });
+    const layerWorker = EffectWorker.layerWithOptions({ workerId }).pipe(
+      Layer.provide(Layer.merge(layerOutbox, layerExecutor)),
+    );
+
+    yield* EffectWorker.OrchestrationEffectWorkerV2.pipe(
+      Effect.flatMap((worker) => worker.runOnce),
+      Effect.provide(layerWorker),
+    );
+
+    // The orchestrator resolved the request before this effect ran, so a retry could only
+    // fail "request-not-ready": the first failure is terminal and red-cards immediately.
+    assert.equal(yield* Ref.get(retries), 0);
+    assert.equal((yield* Ref.get(failed)).length, 1);
+    assert.deepEqual(yield* Ref.get(redCards), ["runtime-request.delivery.fail"]);
+  }),
+);
+
+it.effect("still retries a non-answer effect on its first failure", () =>
+  Effect.gen(function* () {
+    const now = DateTime.formatIso(yield* DateTime.now);
+    const effectId = "effect:worker-generic-retry-first-failure";
+    const workerId = "worker-generic-retry-first-failure";
+    const claimedEffect: EffectOutbox.OrchestrationEffectV2 = {
+      id: effectId,
+      commandId: CommandId.make("command:worker-generic-retry-first-failure"),
+      threadId: ThreadId.make("thread:worker-generic-retry-first-failure"),
+      request: { type: "terminal.cleanup" },
+      status: "running",
+      attemptCount: 1,
+      availableAt: now,
+      leaseOwner: workerId,
+      createdAt: now,
+      updatedAt: now,
+      completedAt: null,
+      lastError: null,
+    };
+    const failures = yield* Ref.make(0);
+    const retries = yield* Ref.make<
+      ReadonlyArray<{ readonly effectId: string; readonly delayMs: number }>
+    >([]);
+    const layerOutbox = Layer.mock(EffectOutbox.EffectOutboxV2)({
+      claimNext: () => Effect.succeedSome(claimedEffect),
+      get: () => Effect.succeedSome(claimedEffect),
+      awaitCancellation: () => Effect.never,
+      clearCancellation: () => Effect.void,
+      succeed: () => Ref.update(failures, (count) => count + 1).pipe(Effect.as(true)),
+      fail: () => Ref.update(failures, (count) => count + 1).pipe(Effect.as(true)),
+      retry: (input) =>
+        Ref.update(retries, (existing) => [
+          ...existing,
+          { effectId: input.effectId, delayMs: input.delayMs },
+        ]).pipe(Effect.as(true)),
+    });
+    const layerExecutor = Layer.succeed(
+      EffectWorker.OrchestrationEffectExecutorV2,
+      EffectWorker.OrchestrationEffectExecutorV2.of({
+        execute: () =>
+          Effect.fail(
+            new EffectWorker.OrchestrationEffectExecutionError({
+              effectId,
+              effectType: "terminal.cleanup",
+              cause: "transient worker failure",
+            }),
+          ),
+      }),
+    );
+    const layerWorker = EffectWorker.layerWithOptions({ workerId }).pipe(
+      Layer.provide(Layer.merge(layerOutbox, layerExecutor)),
+    );
+
+    yield* EffectWorker.OrchestrationEffectWorkerV2.pipe(
+      Effect.flatMap((worker) => worker.runOnce),
+      Effect.provide(layerWorker),
+    );
+
+    // The single-attempt rule is answer-delivery-only (#38): other effect types keep the
+    // default retry schedule (first backoff 100ms, up to maxAttempts 5).
+    assert.equal(yield* Ref.get(failures), 0);
+    assert.deepEqual(yield* Ref.get(retries), [{ effectId, delayMs: 100 }]);
+  }),
+);
+
 it.effect("requeues a claim when a pre-execution worker check fails", () =>
   Effect.gen(function* () {
     const now = DateTime.formatIso(yield* DateTime.now);

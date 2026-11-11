@@ -167,6 +167,93 @@ it.layer(NodeServices.layer)("omp RPC client", (it) => {
     }),
   );
 
+  it.effect("notify resolves without waiting for a response frame (#38)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-rpc-client-" });
+      // No scripted response for extension_ui_response — and the fake now stays silent on
+      // it by default, mirroring real omp.
+      const client = yield* spawnClient(directory, {});
+      const fiber = yield* Effect.forkChild(
+        Effect.raceFirst(
+          client
+            .notify("extension_ui_response", { id: "u1", value: "Approve" })
+            .pipe(Effect.as("delivered" as const)),
+          Effect.sleep(Duration.seconds(31)).pipe(Effect.as("still-waiting" as const)),
+        ),
+      );
+      // Advance past any hypothetical 30s request timeout: a notify that regressed to
+      // request() would still be parked in the pending map (or timeout-failed) here.
+      yield* TestClock.adjust(Duration.seconds(31));
+      expect(yield* Fiber.join(fiber)).toBe("delivered");
+      yield* client.close;
+    }),
+  );
+
+  it.effect("notify fails closed once the child has already exited (#38)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-rpc-client-" });
+      const client = yield* spawnClient(directory, {});
+      // close() drains to EOF, so the exit watcher has observed the exit by the time it
+      // resolves — the synchronous exited check is what notify must hit.
+      expect(yield* client.close).toBe(0);
+      const error = yield* Effect.flip(
+        client.notify("extension_ui_response", { id: "u1", value: "Approve" }),
+      );
+      expect(isExitError(error)).toBe(true);
+      if (isExitError(error)) expect(error.message).toMatch(/already exited/);
+    }),
+  );
+
+  it.effect("notify fails closed over the single-frame limit (#38)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-rpc-client-" });
+      const client = yield* spawnClient(directory, { maxFrameBytes: 1024 });
+      const error = yield* Effect.flip(
+        client.notify("extension_ui_response", { id: "u1", value: "z".repeat(4000) }),
+      );
+      expect(isRpcError(error)).toBe(true);
+      if (isRpcError(error)) expect(error.message).toMatch(/single-frame limit/);
+      yield* client.close;
+    }),
+  );
+
+  it.effect("notify adopts the omp dialog id as the envelope id (#38)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-rpc-client-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const client = yield* spawnClient(directory, {}, { FAKE_OMP_REQUEST_LOG: requestLog });
+      yield* client.notify("extension_ui_response", { id: "u9", value: "Approve" });
+      // Notify resolves on queueing, not on the writer flushing stdin: give the writer
+      // fiber a scheduling turn before close() shuts the outgoing queue down.
+      yield* TestClock.adjust(Duration.millis(50));
+      yield* client.close;
+      const wire = (yield* readLines(requestLog)).find(
+        (request: Record<string, unknown>) => request["type"] === "extension_ui_response",
+      );
+      expect(wire).toEqual({ id: "u9", type: "extension_ui_response", value: "Approve" });
+    }),
+  );
+
+  it.effect(
+    "fake omp refuses to start when extension_ui_response is scripted to answer (#38)",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-rpc-client-" });
+        // The hard ban fails the fake before its ready frame: real omp never answers this
+        // method, so a scripted ack is a protocol lie the harness must not silently run.
+        const error = yield* Effect.flip(
+          spawnClient(directory, { responses: { extension_ui_response: { data: {} } } }),
+        );
+        expect(isExitError(error)).toBe(true);
+        if (isExitError(error)) expect(error.message).toMatch(/before sending a ready frame/);
+      }),
+  );
+
   it.effect("closes stdin, drains stdout to EOF, and surfaces the exit code", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

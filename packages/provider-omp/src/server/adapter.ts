@@ -237,6 +237,12 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
   readonly command?: string | undefined;
   /** Idle window before the omp child is reclaimed; defaults to OMP_IDLE_RECLAIM_TIMEOUT_MS. */
   readonly idleTimeoutMs?: number | undefined;
+  /**
+   * Per-request RPC timeout forwarded to each spawned omp client (spec §5.2). Defaults to
+   * the client's OMP_REQUEST_TIMEOUT_MS; tests inject a short window to prove approval
+   * answers no longer wait on it (#38 fire-and-forget).
+   */
+  readonly requestTimeoutMs?: number | undefined;
   /** Clock driving the idle-reclaim timer; defaults to the ambient Clock (tests inject one). */
   readonly clock?: Clock.Clock | undefined;
 }) {
@@ -532,6 +538,9 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           command: input.command ?? "omp",
           args: argsForApprovalMode(approvalMode),
           cwd,
+          ...(input.requestTimeoutMs === undefined
+            ? {}
+            : { requestTimeoutMs: input.requestTimeoutMs }),
           // Child stderr goes to the T3 server log (spec §5.2, #18).
           onStderr: (chunk) => {
             const text = chunk.trim();
@@ -1001,7 +1010,10 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           }
           found.entry.answering = true;
           const params = ompResponseValueFor(found.entry, requestInput.decision);
-          const delivered = yield* Effect.result(client.request("extension_ui_response", params));
+          // Fire-and-forget (#38): real omp never answers extension_ui_response (probe-
+          // verified 18.18.6/18.18.1), so waiting only manufactured a 30s timeout. Delivery
+          // success is observed through the event stream (tool execution / prompt_result).
+          const delivered = yield* Effect.result(client.notify("extension_ui_response", params));
           if (delivered._tag === "Failure") {
             found.entry.answering = false;
             return yield* refusal(delivered.failure);

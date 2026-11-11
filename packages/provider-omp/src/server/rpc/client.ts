@@ -1,6 +1,7 @@
 // Long-lived omp RPC client (spec §5.2): spawn `omp --mode rpc`, wait for the ready frame,
 // negotiate protocol v2, multiplex requests with a pending map + 30s fail-closed timeout,
-// subscribe to events, and drain stdout to EOF after closing stdin (notes §7).
+// fire-and-forget notifies (no pending entry, no timeout), subscribe to events, and drain
+// stdout to EOF after closing stdin (notes §7).
 // @effect-diagnostics preferSchemaOverJson:off - the wire is an untyped JSON envelope; Schema would add decoding without removing any failure mode the pending-map timeout already covers.
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -94,6 +95,16 @@ export interface OmpRpcClient {
     params?: Record<string, unknown>,
   ) => Effect.Effect<unknown, OmpRpcRequestError>;
   /**
+   * Fire-and-forget send (#38): same envelope as request, no pending entry, no timeout —
+   * resolves once queued to stdin. Real omp never answers extension_ui_response, so
+   * waiting only manufactured a 30s timeout. Fails only on child-exited (OmpRpcExitError)
+   * or over-frame-limit (OmpRpcError); post-queue deaths surface via the exit watcher.
+   */
+  readonly notify: (
+    type: string,
+    params?: Record<string, unknown>,
+  ) => Effect.Effect<void, OmpRpcError | OmpRpcExitError>;
+  /**
    * Closes stdin, keeps reading stdout until EOF, and resolves with the child's exit code.
    * Resolves with a nonzero code (not an error) so callers can distinguish drain semantics.
    */
@@ -144,11 +155,10 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
     pending.clear();
   });
 
-  // #39: signal deaths (SIGKILL/SIGTERM — exit code null) surface as exitCode failures
-  // from the spawner, alongside genuine observation defects. Both mean the child is gone
-  // or unverifiable, so every exit observation funnels through one path and notifies
-  // `onExit` fail-closed with the code (null when death came by signal or is unverifiable):
-  // the adapter's crash handling (turn interrupted, thread error) hangs off that callback.
+  // #39: signal deaths (exit code null) and observation defects both mean the child is
+  // gone or unverifiable, so every exit observation funnels through one path and
+  // notifies onExit fail-closed (null when by signal/unverifiable): the adapter's crash
+  // handling (turn interrupted, thread error) hangs off that callback.
   const onExitObserved = Effect.fn("OmpRpc.onExitObserved")(function* (
     raw: number | null,
     detail: string,
@@ -296,37 +306,48 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
   }
 
   let nextRequestId = 0;
-  const request = Effect.fn("OmpRpc.request")(function* (
-    type: string,
-    params: Record<string, unknown> = {},
-  ): Effect.fn.Return<unknown, OmpRpcRequestError> {
-    if (exited) {
-      return yield* new OmpRpcExitError({
-        exitCode,
-        detail: "omp RPC process has already exited",
-      });
-    }
-    // omp echoes the request id. extension_ui_response carries the omp dialog id in params.id —
-    // make it the envelope id so the echoed response resolves the pending entry instead of
-    // racing a phantom t3-N id into the 30s timeout.
+  // Shared envelope facts for request and notify (#38): omp echoes the request id, and
+  // methods that carry one (extension_ui_response ships the omp dialog id in params.id)
+  // adopt it as the envelope id — request so the echo resolves the pending entry, notify
+  // purely for protocol faithfulness (omp never answers it). Otherwise a fresh t3-N id.
+  const envelopeFor = (type: string, params: Record<string, unknown>) => {
     const id =
       typeof params["id"] === "string" && params["id"] !== ""
         ? params["id"]
         : `t3-${nextRequestId++}`;
-    const payload = new TextEncoder().encode(JSON.stringify({ id, type, ...params }) + "\n");
+    return {
+      id,
+      payload: new TextEncoder().encode(JSON.stringify({ id, type, ...params }) + "\n"),
+    };
+  };
+  const assertWithinFrameLimit = (
+    type: string,
+    params: Record<string, unknown>,
+    payload: Uint8Array,
+  ): OmpRpcError | null =>
     // Fail closed over the server-advertised single-frame transport limit (notes §2). For
     // image-carrying prompts (#22) the message must be readable and actionable — never a
     // truncation, never a silent drop.
-    if (payload.byteLength > maxFrameBytes) {
-      const imageCount = Array.isArray(params.images) ? params.images.length : 0;
-      return yield* new OmpRpcError({
-        operation: type,
-        detail:
-          imageCount === 0
-            ? `Request of ${payload.byteLength} bytes exceeds the ${maxFrameBytes}-byte single-frame limit`
-            : `Prompt with ${imageCount} image${imageCount === 1 ? "" : "s"} encodes to ${payload.byteLength} bytes, over the ${maxFrameBytes}-byte single-frame RPC limit (base64 inflates image bytes by ~4/3). Compress the attached images or attach fewer/smaller ones, then retry.`,
-      });
-    }
+    payload.byteLength > maxFrameBytes
+      ? new OmpRpcError({
+          operation: type,
+          detail:
+            Array.isArray(params.images) && params.images.length > 0
+              ? `Prompt with ${params.images.length} image${params.images.length === 1 ? "" : "s"} encodes to ${payload.byteLength} bytes, over the ${maxFrameBytes}-byte single-frame RPC limit (base64 inflates image bytes by ~4/3). Compress the attached images or attach fewer/smaller ones, then retry.`
+              : `Request of ${payload.byteLength} bytes exceeds the ${maxFrameBytes}-byte single-frame limit`,
+        })
+      : null;
+  const exitCheck = () =>
+    exited ? new OmpRpcExitError({ exitCode, detail: "omp RPC process has already exited" }) : null;
+  const request = Effect.fn("OmpRpc.request")(function* (
+    type: string,
+    params: Record<string, unknown> = {},
+  ): Effect.fn.Return<unknown, OmpRpcRequestError> {
+    const exitedError = exitCheck();
+    if (exitedError !== null) return yield* exitedError;
+    const { id, payload } = envelopeFor(type, params);
+    const limitError = assertWithinFrameLimit(type, params, payload);
+    if (limitError !== null) return yield* limitError;
     const deferred = yield* Deferred.make<unknown, OmpRpcRequestError>();
     pending.set(id, { operation: type, deferred });
     yield* Queue.offer(outgoing, payload);
@@ -343,6 +364,19 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
       }),
       Effect.onError(() => Effect.sync(() => pending.delete(id))),
     );
+  });
+  const notify = Effect.fn("OmpRpc.notify")(function* (
+    type: string,
+    params: Record<string, unknown> = {},
+  ): Effect.fn.Return<void, OmpRpcError | OmpRpcExitError> {
+    const exitedError = exitCheck();
+    if (exitedError !== null) return yield* exitedError;
+    const { payload } = envelopeFor(type, params);
+    const limitError = assertWithinFrameLimit(type, params, payload);
+    if (limitError !== null) return yield* limitError;
+    // No pending entry, no timeout: the only failures are the synchronous facts checked
+    // above. Anything after the queue offer surfaces through the exit watcher instead.
+    yield* Queue.offer(outgoing, payload);
   });
 
   const negotiation = yield* request("negotiate_protocol", {
@@ -376,6 +410,7 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
   return {
     protocolVersion: OMP_NEGOTIATED_PROTOCOL_VERSION,
     request,
+    notify,
     close,
   } satisfies OmpRpcClient;
 });

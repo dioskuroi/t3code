@@ -405,6 +405,8 @@ export const layerExecutor: Layer.Layer<
               })
               .pipe(
                 Effect.tapCause((cause) =>
+                  // willRetry is always false for respond (#38 single-attempt, see
+                  // attemptsFor in the worker): a delivery failure red-cards immediately.
                   willRetry || Cause.hasInterruptsOnly(cause)
                     ? Effect.void
                     : threads
@@ -647,6 +649,12 @@ export const layerWithOptions = (
       const executor = yield* OrchestrationEffectExecutorV2;
       const workerId = options.workerId ?? `orchestration-v2:${process.pid}`;
       const maxAttempts = Math.max(1, options.maxAttempts ?? 5);
+      // #38: answer delivery is single-attempt — the orchestrator resolves the request
+      // before the effect runs, so any retry re-enters respond against a resolved
+      // request and fails "request-not-ready": unsendable, pure WARN noise plus a
+      // delayed red card. First failure fails the effect and red-cards immediately.
+      const attemptsFor = (effect: EffectOutbox.OrchestrationEffectV2) =>
+        effect.request.type === "runtime-request.respond" ? 1 : maxAttempts;
       const wasCancelled = (effectId: string) =>
         outbox.get(effectId).pipe(
           Effect.map(
@@ -783,7 +791,7 @@ export const layerWithOptions = (
           if (cancelledBeforeExecution) return true;
 
           const execution = executor
-            .execute(effect, { willRetry: effect.attemptCount < maxAttempts })
+            .execute(effect, { willRetry: effect.attemptCount < attemptsFor(effect) })
             .pipe(boundExecution(effect), Effect.as("executed" as const));
           const exit = yield* Effect.exit(Effect.raceFirst(execution, cancellation)).pipe(
             Effect.ensuring(outbox.clearCancellation(effect.id)),
@@ -819,7 +827,7 @@ export const layerWithOptions = (
             ? yield* outbox
                 .succeed({ effectId: effect.id, workerId })
                 .pipe(Effect.onError((cause) => terminalizeClaim(effect, cause)))
-            : effect.attemptCount >= maxAttempts
+            : effect.attemptCount >= attemptsFor(effect)
               ? yield* outbox
                   .fail({ effectId: effect.id, workerId, error })
                   .pipe(Effect.onError((cause) => terminalizeClaim(effect, cause)))
