@@ -1,4 +1,5 @@
 import { EasDeviceHostConfigs, SimlockDeviceHostConfigs, SshDeviceHostConfigs } from "./device.ts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   AuthOrchestrationOperateScope,
   AuthSettingsWriteScope,
@@ -205,7 +206,7 @@ export const SnapShotKeyChord = KeybindingShortcut.check(
       shortcut.shiftKey ||
       shortcut.altKey ||
       shortcut.modKey ||
-      "Snapshot shortcut requires a modifier.",
+      tr("Snapshot shortcut requires a modifier."),
   ),
 );
 export type SnapShotKeyChord = typeof SnapShotKeyChord.Type;
@@ -237,16 +238,16 @@ export function snapShotShortcutModifierPair(
 }
 
 const APPLE_MODIFIER_LABELS: Record<SnapShotModifier, string> = {
-  shift: "Shift",
-  meta: "Command",
-  control: "Control",
-  alt: "Option",
+  shift: tr("Shift"),
+  meta: tr("Command"),
+  control: tr("Control"),
+  alt: tr("Option"),
 };
 const OTHER_MODIFIER_LABELS: Record<SnapShotModifier, string> = {
-  shift: "Shift",
-  meta: "Super",
-  control: "Ctrl",
-  alt: "Alt",
+  shift: tr("Shift"),
+  meta: tr("Super"),
+  control: tr("Ctrl"),
+  alt: tr("Alt"),
 };
 
 export function snapShotModifierPairLabel(modifier: SnapShotModifier, apple: boolean): string {
@@ -639,16 +640,16 @@ export const CodexSettings = makeProviderSettingsSchema(
     ),
     binaryPath: makeBinaryPathSetting("codex").pipe(
       Schema.annotateKey({
-        title: "Binary path",
-        description: "Path to the Codex binary used by this instance.",
+        title: tr("Binary path"),
+        description: tr("Path to the Codex binary used by this instance."),
         providerSettingsForm: { placeholder: "codex", clearWhenEmpty: "omit" },
       }),
     ),
     homePath: TrimmedString.pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "CODEX_HOME path",
-        description: "Custom Codex home and config directory.",
+        title: tr("CODEX_HOME path"),
+        description: tr("Custom Codex home and config directory."),
         providerSettingsForm: {
           placeholder: "~/.codex",
           clearWhenEmpty: "omit",
@@ -658,9 +659,10 @@ export const CodexSettings = makeProviderSettingsSchema(
     shadowHomePath: TrimmedString.pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "Shadow home path",
-        description:
+        title: tr("Shadow home path"),
+        description: tr(
           "Account-specific Codex home. Keeps auth.json separate while sharing state from CODEX_HOME.",
+        ),
         providerSettingsForm: {
           placeholder: "~/.codex-t3/personal",
           clearWhenEmpty: "omit",
@@ -670,8 +672,8 @@ export const CodexSettings = makeProviderSettingsSchema(
     launchArgs: TrimmedString.pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "Launch arguments",
-        description: "Additional CLI arguments passed to codex app-server on session start.",
+        title: tr("Launch arguments"),
+        description: tr("Additional CLI arguments passed to codex app-server on session start."),
       }),
     ),
     customModels: Schema.Array(CustomModelSetting).pipe(
@@ -688,9 +690,9 @@ export type CodexSettings = typeof CodexSettings.Type;
 const CLAUDE_AUTO_COMPACT_WINDOW_PATTERN = /^(?:|[1-9]\d{5}|1000000)$/;
 
 export const IDLE_COMPACTION_MODES = [
-  { value: "onReturn", label: "When you return" },
-  { value: "beforeCacheExpires", label: "Before the cache expires (beta)" },
-  { value: "off", label: "Never" },
+  { value: "onReturn", label: tr("When you return") },
+  { value: "beforeCacheExpires", label: tr("Before the cache expires (beta)") },
+  { value: "off", label: tr("Never") },
 ] as const;
 export const IdleCompactionMode = Schema.Literals(IDLE_COMPACTION_MODES.map((mode) => mode.value));
 export type IdleCompactionMode = typeof IdleCompactionMode.Type;
@@ -700,7 +702,7 @@ export type IdleCompactionMode = typeof IdleCompactionMode.Type;
 const LegacyCompactIdleThreads = Schema.Union([Schema.Boolean, IdleCompactionMode]);
 
 const INSTANCE_IDLE_COMPACTION_MODES = [
-  { value: "default", label: "Use default" },
+  { value: "default", label: tr("Use default") },
   ...IDLE_COMPACTION_MODES,
 ] as const;
 const InstanceIdleCompaction = Schema.Literals(
@@ -715,17 +717,18 @@ export const ClaudeSettings = makeProviderSettingsSchema(
     ),
     binaryPath: makeBinaryPathSetting("claude").pipe(
       Schema.annotateKey({
-        title: "Binary path",
-        description: "Path to the Claude binary used by this instance.",
+        title: tr("Binary path"),
+        description: tr("Path to the Claude binary used by this instance."),
         providerSettingsForm: { placeholder: "claude", clearWhenEmpty: "omit" },
       }),
     ),
     homePath: TrimmedString.pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "CLAUDE_CONFIG_DIR path",
-        description:
+        title: tr("CLAUDE_CONFIG_DIR path"),
+        description: tr(
           "Custom Claude home and config directory. Keeps .claude.json and .claude separate.",
+        ),
         providerSettingsForm: { placeholder: "~/.claude", clearWhenEmpty: "omit" },
       }),
     ),
@@ -736,8 +739,8 @@ export const ClaudeSettings = makeProviderSettingsSchema(
     launchArgs: Schema.String.pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "Launch arguments",
-        description: "Additional CLI arguments passed on session start.",
+        title: tr("Launch arguments"),
+        description: tr("Additional CLI arguments passed on session start."),
         providerSettingsForm: {
           placeholder: "e.g. --chrome",
           clearWhenEmpty: "omit",
@@ -749,9 +752,10 @@ export const ClaudeSettings = makeProviderSettingsSchema(
     ).pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "Auto-compact after",
-        description:
+        title: tr("Auto-compact after"),
+        description: tr(
           "Compact after 100,000 to 1,000,000 tokens. Leave empty to use Claude's default.",
+        ),
         providerSettingsForm: {
           placeholder: "e.g. 300000",
           clearWhenEmpty: "omit",
@@ -761,9 +765,10 @@ export const ClaudeSettings = makeProviderSettingsSchema(
     idleCompaction: InstanceIdleCompaction.pipe(
       Schema.withDecodingDefault(Effect.succeed("default" as const)),
       Schema.annotateKey({
-        title: "Compact idle threads",
-        description:
+        title: tr("Compact idle threads"),
+        description: tr(
           "When to compact an idle thread over 200,000 tokens: after you return, just before its prompt cache expires, or never. Overrides the default in Providers > Advanced.",
+        ),
         providerSettingsForm: {
           control: "select",
           options: INSTANCE_IDLE_COMPACTION_MODES,
@@ -779,10 +784,10 @@ export const ClaudeSettings = makeProviderSettingsSchema(
 export type ClaudeSettings = typeof ClaudeSettings.Type;
 
 export const ANTIGRAVITY_AUTH_METHODS = [
-  { value: "oauth-personal", label: "Google account" },
-  { value: "oauth-business", label: "Gemini Enterprise" },
-  { value: "gemini-api-key", label: "Gemini API key" },
-  { value: "agent-platform", label: "Agent Platform (Vertex AI)" },
+  { value: "oauth-personal", label: tr("Google account") },
+  { value: "oauth-business", label: tr("Gemini Enterprise") },
+  { value: "gemini-api-key", label: tr("Gemini API key") },
+  { value: "agent-platform", label: tr("Agent Platform (Vertex AI)") },
 ] as const satisfies ReadonlyArray<ProviderSettingsFormOption>;
 export const AntigravityAuthMethod = Schema.Literals(
   ANTIGRAVITY_AUTH_METHODS.map((method) => method.value),
@@ -798,9 +803,10 @@ export const AntigravitySettings = makeProviderSettingsSchema(
     authMethod: AntigravityAuthMethod.pipe(
       Schema.withDecodingDefault(Effect.succeed("oauth-personal" as const)),
       Schema.annotateKey({
-        title: "Sign-in method",
-        description:
+        title: tr("Sign-in method"),
+        description: tr(
           "Google accounts use your subscription; API keys and Agent Platform bill usage.",
+        ),
         providerSettingsForm: {
           control: "select",
           options: ANTIGRAVITY_AUTH_METHODS,
@@ -812,11 +818,11 @@ export const AntigravitySettings = makeProviderSettingsSchema(
       secretSetting,
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "API key",
-        description: "Gemini or Vertex AI express key. Stored separately on the host.",
+        title: tr("API key"),
+        description: tr("Gemini or Vertex AI express key. Stored separately on the host."),
         providerSettingsForm: {
           control: "password",
-          placeholder: "Optional",
+          placeholder: tr("Optional"),
           clearWhenEmpty: "omit",
         },
       }),
@@ -824,26 +830,27 @@ export const AntigravitySettings = makeProviderSettingsSchema(
     gcpProject: TrimmedString.pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "GCP project",
-        description:
+        title: tr("GCP project"),
+        description: tr(
           "Required for Gemini Enterprise. Agent Platform uses it when no API key is set.",
+        ),
         providerSettingsForm: { placeholder: "my-project-id", clearWhenEmpty: "omit" },
       }),
     ),
     gcpLocation: TrimmedString.pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "GCP location",
-        description: "Region for Gemini Enterprise or Agent Platform.",
+        title: tr("GCP location"),
+        description: tr("Region for Gemini Enterprise or Agent Platform."),
         providerSettingsForm: { placeholder: "us-central1", clearWhenEmpty: "omit" },
       }),
     ),
     binaryPath: TrimmedString.pipe(
       Schema.withDecodingDefault(Effect.succeed("")),
       Schema.annotateKey({
-        title: "Binary path",
-        description: "Custom ACP executable. Leave empty to select automatically.",
-        providerSettingsForm: { placeholder: "Automatic", clearWhenEmpty: "persist" },
+        title: tr("Binary path"),
+        description: tr("Custom ACP executable. Leave empty to select automatically."),
+        providerSettingsForm: { placeholder: tr("Automatic"), clearWhenEmpty: "persist" },
       }),
     ),
     customModels: Schema.Array(CustomModelSetting).pipe(
@@ -1509,7 +1516,7 @@ export type ServerSettingsOperation = typeof ServerSettingsOperation.Type;
 
 /** Why a provider the administrator's policy leaves out cannot be used. */
 export const disallowedProviderMessage = (organization: string | undefined, label: string) =>
-  `${organization === undefined ? "Your organization" : `${organization}'s`} policy does not allow the ${label} provider.`;
+  `${organization === undefined ? tr("Your organization") : `${organization}'s`} policy does not allow the ${label} provider.`;
 
 export class ServerSettingsError extends Schema.TaggedError<ServerSettingsError>()(
   "ServerSettingsError",
@@ -1528,7 +1535,7 @@ export class ServerSettingsError extends Schema.TaggedError<ServerSettingsError>
 ) {
   override get message(): string {
     if (this.operation === "write-managed-setting") {
-      return `${this.managedSetting ?? "This setting"} is managed by ${this.managedBy ?? "your organization"} and cannot be changed.`;
+      return `${this.managedSetting ?? tr("This setting")} is managed by ${this.managedBy ?? "your organization"} and cannot be changed.`;
     }
     if (this.operation === "use-disallowed-provider") {
       return disallowedProviderMessage(
@@ -1542,7 +1549,15 @@ export class ServerSettingsError extends Schema.TaggedError<ServerSettingsError>
       this.environmentVariable === undefined
         ? ""
         : ` and environment variable ${this.environmentVariable}`;
-    return `Server settings ${this.operation} failed${provider}${variable} at ${this.settingsPath}.`;
+    return tr(
+      "Server settings {operation} failed{providerSuffix}{variableSuffix} at {settingsPath}.",
+      {
+        operation: this.operation,
+        providerSuffix: provider,
+        variableSuffix: variable,
+        settingsPath: this.settingsPath,
+      },
+    );
   }
 }
 

@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { IsoDateTime, NonNegativeInt, ThreadId, TrimmedNonEmptyString } from "./baseSchemas.ts";
 
@@ -90,14 +91,14 @@ export const WORKTREE_SETUP_STAGE_ORDER: ReadonlyArray<WorktreeSetupStageId> = [
 export function worktreeSetupStageLabel(id: WorktreeSetupStageId): string {
   switch (id) {
     case "fetch":
-      return "Fetch base branch";
+      return tr("Fetch base branch");
     case "checkout":
-      return "Check out files";
+      return tr("Check out files");
     case "submodules":
-      return "Init submodules";
+      return tr("Init submodules");
     case "setup-script":
-      return "Run setup script";
+      return tr("Run setup script");
     case "agent":
-      return "Start agent";
+      return tr("Start agent");
   }
 }

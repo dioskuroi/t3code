@@ -93,7 +93,7 @@ describe("device boot errors", () => {
       cause: null,
     }).message;
     expect(message).not.toContain("environment server");
-    expect(message).toContain("Try again or open another device");
+    expect(message).toContain("请重试或打开其他设备");
   });
 
   it("keeps the host's diagnostics when it sent them", () => {

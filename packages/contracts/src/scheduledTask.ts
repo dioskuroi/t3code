@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   CommandId,
@@ -20,7 +21,7 @@ import { ProviderInteractionMode, RuntimeMode } from "./providerPolicy.ts";
 
 const TimeOfDay = TrimmedNonEmptyString.check(
   Schema.isPattern(/^([01]?\d|2[0-3]):([0-5]\d)$/),
-).annotate({ description: "Local time as HH:MM, such as 09:30." });
+).annotate({ description: tr("Local time as HH:MM, such as 09:30.") });
 
 export const MIN_SCHEDULED_TASK_INTERVAL_MS = 60_000;
 
@@ -37,10 +38,10 @@ const ScheduledTaskFixedTimeSchedule = Schema.Struct({
   weekdays: Schema.optional(
     Schema.Array(
       Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 6 })).annotate({
-        description: "Weekday. 0 is Sunday, 6 is Saturday.",
+        description: tr("Weekday. 0 is Sunday, 6 is Saturday."),
       }),
     ).annotate({
-      description: "Default: every day.",
+      description: tr("Default: every day."),
     }),
   ),
 });
@@ -68,24 +69,24 @@ const ScheduledTaskOnceSchedule = Schema.Struct({
   type: Schema.Literal("once"),
   runAt: TrimmedNonEmptyString.check(
     Schema.makeFilter(
-      (value) => isIsoWithOffset(value) || "Expected an ISO date and time with an offset.",
+      (value) => isIsoWithOffset(value) || tr("Expected an ISO date and time with an offset."),
     ),
   ),
 });
 
 const ScheduledTaskWebhookSignatureFields = {
   header: TrimmedNonEmptyString.annotate({
-    description: "Header with the signature, such as x-hub-signature-256.",
+    description: tr("Header with the signature, such as x-hub-signature-256."),
   }),
   encoding: Schema.Literals(["hex", "base64"]),
   prefix: Schema.String.annotate({
-    description: "Text before the digest, such as 'sha256='. Empty for none.",
+    description: tr("Text before the digest, such as 'sha256='. Empty for none."),
   }),
 };
 
 export const ScheduledTaskWebhookSignature = Schema.Struct(
   ScheduledTaskWebhookSignatureFields,
-).annotate({ description: "HMAC-SHA256 check on the raw body." });
+).annotate({ description: tr("HMAC-SHA256 check on the raw body.") });
 export type ScheduledTaskWebhookSignature = typeof ScheduledTaskWebhookSignature.Type;
 
 /** Matches how long the relay holds a request for an offline environment. */
@@ -94,7 +95,7 @@ export const MAX_WEBHOOK_DELIVERY_AGE_MINUTES = 24 * 60;
 const WebhookMaxDeliveryAgeMinutes = Schema.Int.check(
   Schema.isBetween({ minimum: 1, maximum: MAX_WEBHOOK_DELIVERY_AGE_MINUTES }),
 ).annotate({
-  description: "Skip requests held offline over this many minutes. Omit to run all.",
+  description: tr("Skip requests held offline over this many minutes. Omit to run all."),
 });
 
 export function isWebhookDedupeTemplate(template: string): boolean {
@@ -113,7 +114,7 @@ const ScheduledTaskWebhookDedupe = Schema.Struct({
     Schema.Int.check(Schema.isBetween({ minimum: 10, maximum: 3600 })),
   ),
 }).annotate({
-  description: "Replay and coalesce key templates. Window in seconds, default 120.",
+  description: tr("Replay and coalesce key templates. Window in seconds, default 120."),
 });
 
 export const MAX_WEBHOOK_FILTERS = 16;
@@ -128,7 +129,7 @@ const WebhookFilterPath = TrimmedNonEmptyString.check(
  */
 const WebhookFilterListValue = Schema.String.check(
   Schema.isPattern(/^[^,\s](?:[^,]*[^,\s])?$/),
-).annotate({ description: "Non-empty, without commas or surrounding whitespace." });
+).annotate({ description: tr("Non-empty, without commas or surrounding whitespace.") });
 
 export const ScheduledTaskWebhookFilter = Schema.Union([
   Schema.Struct({
@@ -143,8 +144,9 @@ export const ScheduledTaskWebhookFilter = Schema.Union([
   }),
   Schema.Struct({ path: WebhookFilterPath, op: Schema.Literal("exists") }),
 ]).annotate({
-  description:
+  description: tr(
     "Path: `headers.x-event` or `body.action`. String compare. Objects pass only 'exists'. A `[]` segment matches any array item. `notEquals` passes only if no item equals.",
+  ),
 });
 export type ScheduledTaskWebhookFilter = typeof ScheduledTaskWebhookFilter.Type;
 export type ScheduledTaskWebhookFilterOp = ScheduledTaskWebhookFilter["op"];
@@ -152,7 +154,7 @@ export type ScheduledTaskWebhookFilterOp = ScheduledTaskWebhookFilter["op"];
 const ScheduledTaskWebhookFilters = Schema.Array(ScheduledTaskWebhookFilter)
   .check(Schema.isMaxLength(MAX_WEBHOOK_FILTERS))
   .annotate({
-    description: "All must match. Max 16. Omitted: keep stored. [] clears.",
+    description: tr("All must match. Max 16. Omitted: keep stored. [] clears."),
   });
 
 const ScheduledTaskWebhookSchedule = Schema.Struct({
@@ -162,7 +164,7 @@ const ScheduledTaskWebhookSchedule = Schema.Struct({
   dedupe: Schema.optional(ScheduledTaskWebhookDedupe),
   filters: Schema.optional(ScheduledTaskWebhookFilters),
 }).annotate({
-  description: "Run on each webhook request.",
+  description: tr("Run on each webhook request."),
 });
 
 const ScheduledTaskUpsertWebhookSchedule = Schema.Struct({
@@ -172,22 +174,23 @@ const ScheduledTaskUpsertWebhookSchedule = Schema.Struct({
       Schema.Struct({
         ...ScheduledTaskWebhookSignatureFields,
         secret: Schema.optional(TrimmedNonEmptyString).annotate({
-          description: "Default: stored secret.",
+          description: tr("Default: stored secret."),
         }),
         secretRef: Schema.optional(SecretRef).annotate({
-          description: "From `request_secret`. Instead of `secret`. Spent by this save.",
+          description: tr("From `request_secret`. Instead of `secret`. Spent by this save."),
         }),
       }),
     ),
   ).annotate({
-    description: "Omit for URL token only.",
+    description: tr("Omit for URL token only."),
   }),
   maxDeliveryAgeMinutes: Schema.optional(Schema.NullOr(WebhookMaxDeliveryAgeMinutes)),
   dedupe: Schema.optional(ScheduledTaskWebhookDedupe),
   filters: Schema.optional(ScheduledTaskWebhookFilters),
 }).annotate({
-  description:
+  description: tr(
     "Run per webhook request. Prompt can use {{body.path}}, {{headers.name}}, {{query.name}}, {{body}}, {{request}}.",
+  ),
 });
 
 /** Accept legacy sub-minute schedules so users can still manage them. */
@@ -205,7 +208,7 @@ export const ScheduledTaskUpsertSchedule = Schema.Union([
     everyMs: ScheduledTaskIntervalMs.check(
       Schema.isGreaterThanOrEqualTo(MIN_SCHEDULED_TASK_INTERVAL_MS),
     ).annotate({
-      description: "Min 60000.",
+      description: tr("Min 60000."),
     }),
   }),
   ScheduledTaskFixedTimeSchedule,
@@ -262,7 +265,7 @@ export type ScheduledTaskListResult = typeof ScheduledTaskListResult.Type;
 export const ScheduledTaskUpsertInput = Schema.Struct({
   id: Schema.optional(ScheduledTaskId),
   requireExisting: Schema.optional(Schema.Boolean).annotate({
-    description: "Reject the save if the task no longer exists, for edits from a client form.",
+    description: tr("Reject the save if the task no longer exists, for edits from a client form."),
   }),
   commandId: Schema.optional(CommandId),
   title: TrimmedNonEmptyString,

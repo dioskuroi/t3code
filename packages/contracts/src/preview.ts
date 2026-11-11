@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import { tr } from "@t3tools/shared/i18n";
 import { NonNegativeInt, PositiveInt, ThreadId, TrimmedNonEmptyString } from "./baseSchemas.ts";
 import { BROWSER_PROFILE_MAX_COUNT, BrowserProfile, BrowserProfileId } from "./browserProfile.ts";
 
@@ -29,7 +30,9 @@ const PreviewViewportDimension = Schema.Int.check(
 const viewportAreaFilter = Schema.makeFilter(
   ({ width, height }: { readonly width: number; readonly height: number }) =>
     width * height <= PREVIEW_VIEWPORT_MAX_AREA ||
-    `Viewport area must not exceed ${PREVIEW_VIEWPORT_MAX_AREA} pixels.`,
+    tr("Viewport area must not exceed {PREVIEW_VIEWPORT_MAX_AREA} pixels.", {
+      PREVIEW_VIEWPORT_MAX_AREA: PREVIEW_VIEWPORT_MAX_AREA,
+    }),
 );
 
 export const PreviewViewportSize = Schema.Struct({
@@ -335,13 +338,15 @@ export class PreviewStopLocalServerError extends Schema.TaggedError<PreviewStopL
   override get message() {
     switch (this.reason) {
       case "not-found":
-        return "This server is no longer running.";
+        return tr("This server is no longer running.");
       case "shared-group":
-        return "This server shares a process group with T3 Code, an agent, or a terminal shell, so it can't be stopped on its own.";
+        return tr(
+          "This server shares a process group with T3 Code, an agent, or a terminal shell, so it can't be stopped on its own.",
+        );
       case "unsupported":
-        return "Stopping servers is not supported on this environment's platform.";
+        return tr("Stopping servers is not supported on this environment's platform.");
       case "signal-failed":
-        return "The server's processes could not be signaled.";
+        return tr("The server's processes could not be signaled.");
     }
   }
 }
@@ -361,7 +366,10 @@ export class PreviewSessionLookupError extends Schema.TaggedError<PreviewSession
   },
 ) {
   override get message() {
-    return `Unknown preview session: thread=${this.threadId}, tab=${this.tabId}`;
+    return tr("Unknown preview session: thread={threadId}, tab={tabId}", {
+      threadId: this.threadId,
+      tabId: this.tabId,
+    });
   }
 }
 
@@ -376,7 +384,10 @@ export class PreviewInvalidUrlError extends Schema.TaggedError<PreviewInvalidUrl
 ) {
   override get message() {
     const protocol = this.protocol === undefined ? "" : `: ${this.protocol}`;
-    return `Invalid preview URL (${this.reason}${protocol}; input length ${this.inputLength}). Use an http(s) URL or a schemeless host such as localhost:5173. With preview_open, omit url when creating a new tab to open a blank tab.`;
+    return tr(
+      "Invalid preview URL ({reason}{protocol}; input length {inputLength}). Use an http(s) URL or a schemeless host such as localhost:5173. With preview_open, omit url when creating a new tab to open a blank tab.",
+      { reason: this.reason, protocol, inputLength: this.inputLength },
+    );
   }
 }
 
@@ -385,7 +396,7 @@ export class PreviewControlRequiredError extends Schema.TaggedError<PreviewContr
   { tabId: Schema.String },
 ) {
   override get message() {
-    return "Take control of the server browser and use its viewer controls.";
+    return tr("Take control of the server browser and use its viewer controls.");
   }
 }
 
@@ -394,7 +405,7 @@ export class PreviewClearProfileError extends Schema.TaggedError<PreviewClearPro
   { profileId: Schema.String, cause: Schema.Defect() },
 ) {
   override get message() {
-    return "The environment could not delete this browser profile's data.";
+    return tr("The environment could not delete this browser profile's data.");
   }
 }
 

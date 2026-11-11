@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 import * as HttpApi from "effect/http-api/HttpApi";
 import * as HttpApiEndpoint from "effect/http-api/HttpApiEndpoint";
@@ -269,12 +270,12 @@ export type RelayAgentActivityPublishProofPayload =
 
 export const RelayAgentActivityPublishRequest = Schema.Struct({
   state: Schema.NullOr(RelayAgentActivityState).annotate({
-    description: "Current agent-awareness state, or null to remove the published state.",
+    description: tr("Current agent-awareness state, or null to remove the published state."),
   }),
   proof: TrimmedNonEmptyString.annotate({
-    description: "Environment-signed JWT covering this published activity state.",
+    description: tr("Environment-signed JWT covering this published activity state."),
   }),
-}).annotate({ description: "Publishes a signed agent-awareness update from an environment." });
+}).annotate({ description: tr("Publishes a signed agent-awareness update from an environment.") });
 export type RelayAgentActivityPublishRequest = typeof RelayAgentActivityPublishRequest.Type;
 
 export const RelayEnvironmentLinkScope = Schema.Literals([
@@ -300,15 +301,15 @@ export type RelayEnvironmentLinkProof = typeof RelayEnvironmentLinkProof.Type;
 
 export const RelayEnvironmentLinkChallengeRequest = Schema.Struct({
   notificationsEnabled: Schema.Boolean.annotate({
-    description: "Whether this link may deliver push notifications.",
+    description: tr("Whether this link may deliver push notifications."),
   }),
   liveActivitiesEnabled: Schema.Boolean.annotate({
-    description: "Whether this link may update Live Activities.",
+    description: tr("Whether this link may update Live Activities."),
   }),
   managedTunnelsEnabled: Schema.Boolean.annotate({
-    description: "Whether the relay should provision a managed tunnel for this environment.",
+    description: tr("Whether the relay should provision a managed tunnel for this environment."),
   }),
-}).annotate({ description: "Requested capabilities for a new environment-link challenge." });
+}).annotate({ description: tr("Requested capabilities for a new environment-link challenge.") });
 export type RelayEnvironmentLinkChallengeRequest = typeof RelayEnvironmentLinkChallengeRequest.Type;
 
 export const RelayEnvironmentLinkChallengeResponse = Schema.Struct({
@@ -321,16 +322,16 @@ export type RelayEnvironmentLinkChallengeResponse =
 export const RelayEnvironmentLinkRequest = Schema.Struct({
   deviceId: Schema.optional(
     TrimmedNonEmptyString.annotate({
-      description: "Optional client device identifier associated with this link.",
+      description: tr("Optional client device identifier associated with this link."),
     }),
   ),
   proof: RelayEnvironmentLinkProof.annotate({
-    description: "Environment-signed proof bound to a previously issued link challenge.",
+    description: tr("Environment-signed proof bound to a previously issued link challenge."),
   }),
   notificationsEnabled: Schema.Boolean,
   liveActivitiesEnabled: Schema.Boolean,
   managedTunnelsEnabled: Schema.Boolean,
-}).annotate({ description: "Links an authenticated cloud user to a T3 environment." });
+}).annotate({ description: tr("Links an authenticated cloud user to a T3 environment.") });
 export type RelayEnvironmentLinkRequest = typeof RelayEnvironmentLinkRequest.Type;
 
 export const RelayEnvironmentLinkResponse = Schema.Struct({
@@ -433,7 +434,7 @@ export class RelayAuthInvalidError extends Schema.TaggedError<RelayAuthInvalidEr
   { httpApiStatus: 401 },
 ) {
   override get message(): string {
-    return `Relay authentication failed: ${this.reason}`;
+    return tr("Relay authentication failed: {reason}", { reason: this.reason });
   }
 }
 
@@ -446,7 +447,7 @@ export class RelayEnvironmentLinkProofExpiredError extends Schema.TaggedError<Re
   { httpApiStatus: 401 },
 ) {
   override get message(): string {
-    return "Relay environment link proof expired";
+    return tr("Relay environment link proof expired");
   }
 }
 
@@ -460,7 +461,7 @@ export class RelayEnvironmentLinkProofInvalidError extends Schema.TaggedError<Re
   { httpApiStatus: 400 },
 ) {
   override get message(): string {
-    return `Relay environment link proof is invalid: ${this.reason}`;
+    return tr("Relay environment link proof is invalid: {reason}", { reason: this.reason });
   }
 }
 
@@ -488,8 +489,8 @@ export class RelayEnvironmentConnectNotAuthorizedError extends Schema.TaggedErro
 ) {
   override get message(): string {
     return this.reason
-      ? `Relay environment connection is not authorized: ${this.reason}`
-      : "Relay environment connection is not authorized";
+      ? tr("Relay environment connection is not authorized: {reason}", { reason: this.reason })
+      : tr("Relay environment connection is not authorized");
   }
 }
 
@@ -505,7 +506,7 @@ export class RelayEnvironmentEndpointUnavailableError extends Schema.TaggedError
   { httpApiStatus: 502 },
 ) {
   override get message(): string {
-    return `Relay environment endpoint is unavailable: ${this.reason}`;
+    return tr("Relay environment endpoint is unavailable: {reason}", { reason: this.reason });
   }
 }
 
@@ -518,7 +519,7 @@ export class RelayEnvironmentEndpointTimedOutError extends Schema.TaggedError<Re
   { httpApiStatus: 504 },
 ) {
   override get message(): string {
-    return "Relay environment endpoint request timed out";
+    return tr("Relay environment endpoint request timed out");
   }
 }
 
@@ -532,7 +533,7 @@ export class RelayEnvironmentLinkFailedError extends Schema.TaggedError<RelayEnv
   { httpApiStatus: 500 },
 ) {
   override get message(): string {
-    return `Relay environment link failed: ${this.reason}`;
+    return tr("Relay environment link failed: {reason}", { reason: this.reason });
   }
 }
 
@@ -547,7 +548,7 @@ export class RelayEnvironmentLinkUnavailableError extends Schema.TaggedError<Rel
   { httpApiStatus: 503 },
 ) {
   override get message(): string {
-    return `Relay environment link is unavailable: ${this.reason}`;
+    return tr("Relay environment link is unavailable: {reason}", { reason: this.reason });
   }
 }
 
@@ -561,7 +562,10 @@ export class RelayEnvironmentLinkLimitExceededError extends Schema.TaggedError<R
   { httpApiStatus: 403 },
 ) {
   override get message(): string {
-    return `Relay managed tunnel limit reached: this account allows at most ${this.maxTunnels} tunnels`;
+    return tr(
+      "Relay managed tunnel limit reached: this account allows at most {maxTunnels} tunnels",
+      { maxTunnels: this.maxTunnels },
+    );
   }
 }
 
@@ -574,7 +578,7 @@ export class RelayAgentActivityPublishProofExpiredError extends Schema.TaggedErr
   { httpApiStatus: 401 },
 ) {
   override get message(): string {
-    return "Relay agent activity publish proof expired";
+    return tr("Relay agent activity publish proof expired");
   }
 }
 
@@ -588,7 +592,7 @@ export class RelayAgentActivityPublishProofInvalidError extends Schema.TaggedErr
   { httpApiStatus: 401 },
 ) {
   override get message(): string {
-    return `Relay agent activity publish proof is invalid: ${this.reason}`;
+    return tr("Relay agent activity publish proof is invalid: {reason}", { reason: this.reason });
   }
 }
 
@@ -602,7 +606,7 @@ export class RelayInternalError extends Schema.TaggedError<RelayInternalError>()
   { httpApiStatus: 500 },
 ) {
   override get message(): string {
-    return `Relay internal error: ${this.reason}`;
+    return tr("Relay internal error: {reason}", { reason: this.reason });
   }
 }
 
@@ -670,7 +674,7 @@ export class RelayEnvironmentPrincipal extends Context.Service<
 const RelayClientBearerAuthorization = HttpApiSecurity.http({ scheme: "bearer" }).pipe(
   HttpApiSecurity.annotate(
     OpenApi.Description,
-    "Clerk session or OAuth bearer token for the signed-in T3 Connect user.",
+    tr("Clerk session or OAuth bearer token for the signed-in T3 Connect user."),
   ),
 );
 
@@ -685,7 +689,7 @@ export class RelayClientAuth extends HttpApiMiddleware.Service<
 const RelayEnvironmentBearerAuthorization = HttpApiSecurity.http({ scheme: "bearer" }).pipe(
   HttpApiSecurity.annotate(
     OpenApi.Description,
-    "Relay-issued environment credential installed when the environment is linked.",
+    tr("Relay-issued environment credential installed when the environment is linked."),
   ),
 );
 
@@ -700,7 +704,7 @@ export class RelayEnvironmentAuth extends HttpApiMiddleware.Service<
 const RelayDpopAuthorization = HttpApiSecurity.http({ scheme: "DPoP" }).pipe(
   HttpApiSecurity.annotate(
     OpenApi.Description,
-    "DPoP-bound access token. Requests must also include the DPoP proof JWT header.",
+    tr("DPoP-bound access token. Requests must also include the DPoP proof JWT header."),
   ),
 );
 
@@ -728,20 +732,22 @@ export type RelayListEnvironmentsResponse = typeof RelayListEnvironmentsResponse
 export const RelayEnvironmentConnectRequest = Schema.Struct({
   deviceId: Schema.optional(
     TrimmedNonEmptyString.annotate({
-      description: "Optional client device identifier requesting the connection.",
+      description: tr("Optional client device identifier requesting the connection."),
     }),
   ),
   clientKeyThumbprint: Schema.optional(
     TrimmedNonEmptyString.annotate({
-      description: "Deprecated alias for clientProofKeyThumbprint.",
+      description: tr("Deprecated alias for clientProofKeyThumbprint."),
     }),
   ),
   clientProofKeyThumbprint: Schema.optional(
     TrimmedNonEmptyString.annotate({
-      description: "JWK thumbprint that the minted environment credential must be bound to.",
+      description: tr("JWK thumbprint that the minted environment credential must be bound to."),
     }),
   ),
-}).annotate({ description: "Requests a short-lived credential for connecting to an environment." });
+}).annotate({
+  description: tr("Requests a short-lived credential for connecting to an environment."),
+});
 export type RelayEnvironmentConnectRequest = typeof RelayEnvironmentConnectRequest.Type;
 
 export const RelayEnvironmentConnectScope = "environment:connect" as const;
@@ -766,19 +772,21 @@ export const RelayWebClientId = "t3-web" as const;
 export const RelayDpopAccessTokenRequest = Schema.Struct({
   grant_type: Schema.Literal(RelayDpopTokenExchangeGrantType),
   subject_token: TrimmedNonEmptyString.annotate({
-    description: "Clerk bearer token for the signed-in cloud user.",
+    description: tr("Clerk bearer token for the signed-in cloud user."),
   }),
   subject_token_type: Schema.Literal(RelayJwtSubjectTokenType),
   requested_token_type: Schema.Literal(RelayAccessTokenType),
   resource: TrimmedNonEmptyString.annotate({
-    description: "Relay issuer URL that will receive the DPoP-bound access token.",
+    description: tr("Relay issuer URL that will receive the DPoP-bound access token."),
   }),
   scope: TrimmedNonEmptyString.annotate({
-    description: "Space-separated relay scopes requested by the client.",
+    description: tr("Space-separated relay scopes requested by the client."),
   }),
   client_id: RelayPublicClientId,
 })
-  .annotate({ description: "OAuth token exchange request for a DPoP-bound relay access token." })
+  .annotate({
+    description: tr("OAuth token exchange request for a DPoP-bound relay access token."),
+  })
   .pipe(HttpApiSchema.asFormUrlEncoded());
 export type RelayDpopAccessTokenRequest = typeof RelayDpopAccessTokenRequest.Type;
 
@@ -1008,20 +1016,20 @@ const RelayHealthGroup = HttpApiGroup.make("health")
     HttpApiEndpoint.get("health", "/health", {
       success: RelayHealthResponse,
       error: RelayInternalError,
-    }).annotate(OpenApi.Summary, "Check relay health"),
+    }).annotate(OpenApi.Summary, tr("Check relay health")),
   )
-  .annotate(OpenApi.Description, "Service health and readiness.");
+  .annotate(OpenApi.Description, tr("Service health and readiness."));
 
 const RelayMetadataGroup = HttpApiGroup.make("metadata")
   .add(
     HttpApiEndpoint.get("authorizationServer", "/.well-known/oauth-authorization-server", {
       success: RelayAuthorizationServerMetadata,
-    }).annotate(OpenApi.Summary, "Read OAuth authorization-server metadata"),
+    }).annotate(OpenApi.Summary, tr("Read OAuth authorization-server metadata")),
     HttpApiEndpoint.get("protectedResource", "/.well-known/oauth-protected-resource", {
       success: RelayProtectedResourceMetadata,
-    }).annotate(OpenApi.Summary, "Read OAuth protected-resource metadata"),
+    }).annotate(OpenApi.Summary, tr("Read OAuth protected-resource metadata")),
   )
-  .annotate(OpenApi.Description, "OAuth and DPoP discovery metadata.");
+  .annotate(OpenApi.Description, tr("OAuth and DPoP discovery metadata."));
 
 export const RelayRegisterDeviceEndpoint = HttpApiEndpoint.post(
   "registerDevice",
@@ -1032,7 +1040,7 @@ export const RelayRegisterDeviceEndpoint = HttpApiEndpoint.post(
     success: RelayOkResponse,
     error: RelayAuthAndInternalErrors,
   },
-).annotate(OpenApi.Summary, "Register or update a mobile device");
+).annotate(OpenApi.Summary, tr("Register or update a mobile device"));
 
 export const RelayRegisterLiveActivityEndpoint = HttpApiEndpoint.post(
   "registerLiveActivity",
@@ -1043,7 +1051,7 @@ export const RelayRegisterLiveActivityEndpoint = HttpApiEndpoint.post(
     success: RelayOkResponse,
     error: RelayAuthAndInternalErrors,
   },
-).annotate(OpenApi.Summary, "Register a Live Activity push token");
+).annotate(OpenApi.Summary, tr("Register a Live Activity push token"));
 
 export const RelayAgentActivitySnapshotResponse = Schema.Struct({
   aggregate: Schema.NullOr(RelayAgentActivityAggregateState),
@@ -1058,7 +1066,7 @@ export const RelayAgentActivitySnapshotEndpoint = HttpApiEndpoint.get(
     success: RelayAgentActivitySnapshotResponse,
     error: RelayAuthAndInternalErrors,
   },
-).annotate(OpenApi.Summary, "Read the current Live Activity aggregate");
+).annotate(OpenApi.Summary, tr("Read the current Live Activity aggregate"));
 
 export const RelayUnregisterDeviceEndpoint = HttpApiEndpoint.delete(
   "unregisterDevice",
@@ -1069,7 +1077,7 @@ export const RelayUnregisterDeviceEndpoint = HttpApiEndpoint.delete(
     success: RelayOkResponse,
     error: RelayAuthAndInternalErrors,
   },
-).annotate(OpenApi.Summary, "Unregister a mobile device");
+).annotate(OpenApi.Summary, tr("Unregister a mobile device"));
 
 const RelayMobileGroup = HttpApiGroup.make("mobile")
   .add(
@@ -1078,7 +1086,7 @@ const RelayMobileGroup = HttpApiGroup.make("mobile")
     RelayAgentActivitySnapshotEndpoint,
     RelayUnregisterDeviceEndpoint,
   )
-  .annotate(OpenApi.Description, "Mobile push-notification and Live Activity registration.")
+  .annotate(OpenApi.Description, tr("Mobile push-notification and Live Activity registration."))
   .middleware(RelayDpopClientAuth);
 
 const RelayClientGroup = HttpApiGroup.make("client")
@@ -1087,23 +1095,23 @@ const RelayClientGroup = HttpApiGroup.make("client")
       headers: RelayBearerRequestHeaders,
       success: RelayListEnvironmentsResponse,
       error: RelayAuthAndInternalErrors,
-    }).annotate(OpenApi.Summary, "List linked environments"),
+    }).annotate(OpenApi.Summary, tr("List linked environments")),
     HttpApiEndpoint.get("listDevices", "/v1/client/devices", {
       headers: RelayBearerRequestHeaders,
       success: RelayListDevicesResponseV1,
       error: RelayAuthAndInternalErrors,
-    }).annotate(OpenApi.Summary, "List registered iOS devices (legacy clients)"),
+    }).annotate(OpenApi.Summary, tr("List registered iOS devices (legacy clients)")),
     HttpApiEndpoint.get("listDevicesV2", "/v2/client/devices", {
       headers: RelayBearerRequestHeaders,
       success: RelayListDevicesResponse,
       error: RelayAuthAndInternalErrors,
-    }).annotate(OpenApi.Summary, "List registered mobile devices"),
+    }).annotate(OpenApi.Summary, tr("List registered mobile devices")),
     HttpApiEndpoint.post("linkEnvironment", "/v1/client/environment-links", {
       headers: RelayBearerRequestHeaders,
       payload: RelayEnvironmentLinkRequest,
       success: RelayEnvironmentLinkResponse,
       error: RelayEnvironmentLinkErrors,
-    }).annotate(OpenApi.Summary, "Link an environment"),
+    }).annotate(OpenApi.Summary, tr("Link an environment")),
     HttpApiEndpoint.post(
       "createEnvironmentLinkChallenge",
       "/v1/client/environment-link-challenges",
@@ -1113,13 +1121,13 @@ const RelayClientGroup = HttpApiGroup.make("client")
         success: RelayEnvironmentLinkChallengeResponse,
         error: RelayAuthAndInternalErrors,
       },
-    ).annotate(OpenApi.Summary, "Create an environment-link challenge"),
+    ).annotate(OpenApi.Summary, tr("Create an environment-link challenge")),
     HttpApiEndpoint.delete("unlinkEnvironment", "/v1/client/environment-links/:environmentId", {
       headers: RelayBearerRequestHeaders,
       params: RelayEnvironmentUnlinkParams,
       success: RelayOkResponse,
       error: RelayAuthAndInternalErrors,
-    }).annotate(OpenApi.Summary, "Unlink an environment"),
+    }).annotate(OpenApi.Summary, tr("Unlink an environment")),
     HttpApiEndpoint.delete(
       "releaseEnvironmentTunnel",
       "/v1/client/environment-links/:environmentId/tunnel",
@@ -1130,28 +1138,30 @@ const RelayClientGroup = HttpApiGroup.make("client")
         error: RelayAuthAndInternalErrors,
       },
     )
-      .annotate(OpenApi.Summary, "Release an environment's managed tunnel")
+      .annotate(OpenApi.Summary, tr("Release an environment's managed tunnel"))
       .annotate(
         OpenApi.Description,
-        "Deletes the provisioned Cloudflare tunnel while keeping the environment link and its hostname reservation, so a later link re-provisions the tunnel under the same URL. Environments call this when they shut down; Cloudflare bills per provisioned tunnel, so idle tunnels should not outlive their environment.",
+        tr(
+          "Deletes the provisioned Cloudflare tunnel while keeping the environment link and its hostname reservation, so a later link re-provisions the tunnel under the same URL. Environments call this when they shut down; Cloudflare bills per provisioned tunnel, so idle tunnels should not outlive their environment.",
+        ),
       ),
     HttpApiEndpoint.get("getT3ChatLink", "/v1/client/t3chat-link", {
       headers: RelayBearerRequestHeaders,
       success: RelayT3ChatLinkResponse,
       error: RelayAuthAndInternalErrors,
-    }).annotate(OpenApi.Summary, "Get the linked T3 Chat account"),
+    }).annotate(OpenApi.Summary, tr("Get the linked T3 Chat account")),
     HttpApiEndpoint.post("createT3ChatLinkRequest", "/v1/client/t3chat-link-requests", {
       headers: RelayBearerRequestHeaders,
       success: RelayT3ChatLinkRequestResponse,
       error: RelayAuthAndInternalErrors,
-    }).annotate(OpenApi.Summary, "Start linking a T3 Chat account"),
+    }).annotate(OpenApi.Summary, tr("Start linking a T3 Chat account")),
     HttpApiEndpoint.delete("unlinkT3Chat", "/v1/client/t3chat-link", {
       headers: RelayBearerRequestHeaders,
       success: RelayOkResponse,
       error: RelayAuthAndInternalErrors,
-    }).annotate(OpenApi.Summary, "Unlink the T3 Chat account"),
+    }).annotate(OpenApi.Summary, tr("Unlink the T3 Chat account")),
   )
-  .annotate(OpenApi.Description, "Cloud-user environment links and registered devices.")
+  .annotate(OpenApi.Description, tr("Cloud-user environment links and registered devices."))
   .middleware(RelayClientAuth);
 
 export const RelayExchangeDpopAccessTokenEndpoint = HttpApiEndpoint.post(
@@ -1164,15 +1174,17 @@ export const RelayExchangeDpopAccessTokenEndpoint = HttpApiEndpoint.post(
     error: RelayAuthAndInternalErrors,
   },
 )
-  .annotate(OpenApi.Summary, "Exchange a Clerk token for a DPoP access token")
+  .annotate(OpenApi.Summary, tr("Exchange a Clerk token for a DPoP access token"))
   .annotate(
     OpenApi.Description,
-    "Bootstrap endpoint. Send the DPoP proof JWT in the dpop header and the Clerk token in subject_token. The returned access token is bound to the proof key.",
+    tr(
+      "Bootstrap endpoint. Send the DPoP proof JWT in the dpop header and the Clerk token in subject_token. The returned access token is bound to the proof key.",
+    ),
   );
 
 const RelayTokenGroup = HttpApiGroup.make("token")
   .add(RelayExchangeDpopAccessTokenEndpoint)
-  .annotate(OpenApi.Description, "OAuth token exchange for DPoP-bound client access.");
+  .annotate(OpenApi.Description, tr("OAuth token exchange for DPoP-bound client access."));
 
 export const RelayConnectEnvironmentEndpoint = HttpApiEndpoint.post(
   "connectEnvironment",
@@ -1186,7 +1198,7 @@ export const RelayConnectEnvironmentEndpoint = HttpApiEndpoint.post(
     success: RelayEnvironmentConnectResponse,
     error: RelayEnvironmentConnectErrors,
   },
-).annotate(OpenApi.Summary, "Connect to an environment");
+).annotate(OpenApi.Summary, tr("Connect to an environment"));
 
 export const RelayGetEnvironmentStatusEndpoint = HttpApiEndpoint.post(
   "getEnvironmentStatus",
@@ -1199,11 +1211,11 @@ export const RelayGetEnvironmentStatusEndpoint = HttpApiEndpoint.post(
     success: RelayEnvironmentStatusResponse,
     error: RelayEnvironmentConnectErrors,
   },
-).annotate(OpenApi.Summary, "Check environment status");
+).annotate(OpenApi.Summary, tr("Check environment status"));
 
 const RelayDpopClientGroup = HttpApiGroup.make("dpopClient")
   .add(RelayConnectEnvironmentEndpoint, RelayGetEnvironmentStatusEndpoint)
-  .annotate(OpenApi.Description, "DPoP-authenticated client access to linked environments.")
+  .annotate(OpenApi.Description, tr("DPoP-authenticated client access to linked environments."))
   .middleware(RelayDpopClientAuth);
 
 export const RelayEnvironmentLinkPreferencesRequest = Schema.Struct({
@@ -1230,7 +1242,7 @@ const RelayServerGroup = HttpApiGroup.make("server")
         success: RelayManagedEndpointRecoveryRegistrationResponse,
         error: RelayAuthAndInternalErrors,
       },
-    ).annotate(OpenApi.Summary, "Register managed tunnel recovery without provisioning"),
+    ).annotate(OpenApi.Summary, tr("Register managed tunnel recovery without provisioning")),
     HttpApiEndpoint.post("recoverManagedEndpoint", "/v1/environments/:environmentId/tunnel", {
       params: Schema.Struct({
         environmentId: EnvironmentId,
@@ -1238,7 +1250,7 @@ const RelayServerGroup = HttpApiGroup.make("server")
       payload: RelayManagedEndpointRecoveryRequest,
       success: RelayManagedEndpointRecoveryResponse,
       error: RelayAuthAndInternalErrors,
-    }).annotate(OpenApi.Summary, "Recover an environment's managed tunnel"),
+    }).annotate(OpenApi.Summary, tr("Recover an environment's managed tunnel")),
     HttpApiEndpoint.post(
       "publishAgentActivity",
       "/v1/environments/:environmentId/threads/:threadId/agent-activity",
@@ -1251,7 +1263,7 @@ const RelayServerGroup = HttpApiGroup.make("server")
         success: RelayPublishResponse,
         error: RelayAgentActivityPublishErrors,
       },
-    ).annotate(OpenApi.Summary, "Publish agent activity"),
+    ).annotate(OpenApi.Summary, tr("Publish agent activity")),
     HttpApiEndpoint.post(
       "updateLinkPreferences",
       "/v1/environments/:environmentId/link-preferences",
@@ -1261,17 +1273,17 @@ const RelayServerGroup = HttpApiGroup.make("server")
         success: RelayEnvironmentLinkPreferencesRequest,
         error: RelayAuthAndInternalErrors,
       },
-    ).annotate(OpenApi.Summary, "Update an environment's link preferences"),
+    ).annotate(OpenApi.Summary, tr("Update an environment's link preferences")),
     HttpApiEndpoint.post("wakeHeldHooks", "/v1/environments/:environmentId/hooks/wake", {
       params: Schema.Struct({ environmentId: EnvironmentId }),
       success: RelayWakeHeldHooksResponse,
       error: RelayAuthAndInternalErrors,
     }).annotate(
       OpenApi.Summary,
-      "Deliver webhook requests held while the environment was offline now",
+      tr("Deliver webhook requests held while the environment was offline now"),
     ),
   )
-  .annotate(OpenApi.Description, "Environment-authenticated activity publication.")
+  .annotate(OpenApi.Description, tr("Environment-authenticated activity publication."))
   .middleware(RelayEnvironmentAuth);
 
 // Path token authenticates; forward raw bytes for signature verification.
@@ -1290,7 +1302,7 @@ const RelayHooksGroup = HttpApiGroup.make("hooks")
     HttpApiEndpoint.patch("forwardPatch", RELAY_HOOK_PATH, relayHookEndpoint),
     HttpApiEndpoint.get("forwardGet", RELAY_HOOK_PATH, relayHookEndpoint),
   )
-  .annotate(OpenApi.Description, "Forward webhook requests to an environment.");
+  .annotate(OpenApi.Description, tr("Forward webhook requests to an environment."));
 
 export const RelayMobileTelemetrySignal = Schema.Literals(["logs", "metrics", "traces"]);
 export type RelayMobileTelemetrySignal = typeof RelayMobileTelemetrySignal.Type;
@@ -1306,7 +1318,7 @@ const RelayMobileTelemetryGroup = HttpApiGroup.make("mobileTelemetry")
       params: RelayMobileTelemetryParams,
     }),
   )
-  .annotate(OpenApi.Description, "Receive mobile app telemetry from expo-observe.");
+  .annotate(OpenApi.Description, tr("Receive mobile app telemetry from expo-observe."));
 
 export const RelayApi = HttpApi.make("RelayApi")
   .add(
@@ -1320,10 +1332,12 @@ export const RelayApi = HttpApi.make("RelayApi")
     RelayHooksGroup,
     RelayMobileTelemetryGroup,
   )
-  .annotate(OpenApi.Title, "T3 Code Relay API")
+  .annotate(OpenApi.Title, tr("T3 Code Relay API"))
   .annotate(OpenApi.Version, "1.0.0")
   .annotate(
     OpenApi.Description,
-    "Control-plane API for linking T3 environments, connecting authorized clients, and publishing agent activity.",
+    tr(
+      "Control-plane API for linking T3 environments, connecting authorized clients, and publishing agent activity.",
+    ),
   );
 export type RelayApi = typeof RelayApi;

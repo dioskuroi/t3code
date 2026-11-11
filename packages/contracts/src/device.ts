@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 
@@ -12,11 +13,11 @@ export const DeviceHostId = TrimmedNonEmptyString.check(Schema.isMaxLength(128))
 export type DeviceHostId = typeof DeviceHostId.Type;
 
 export const LOCAL_DEVICE_HOST_ID = "local" as DeviceHostId;
-export const LOCAL_DEVICE_HOST_LABEL = "This machine";
+export const LOCAL_DEVICE_HOST_LABEL = tr("This machine");
 
 const ConfiguredDeviceHostId = DeviceHostId.check(
   Schema.isPattern(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/),
-  Schema.makeFilter((id) => id !== "local" || "The local host id is reserved."),
+  Schema.makeFilter((id) => id !== "local" || tr("The local host id is reserved.")),
 );
 
 export const SshDeviceHostConfig = Schema.Struct({
@@ -64,7 +65,7 @@ export const EasDeviceHostConfig = Schema.Struct({
   Schema.makeFilter(
     (host: { readonly idleMinutes: number; readonly maxSessionMinutes: number }) =>
       host.idleMinutes < host.maxSessionMinutes ||
-      "Idle minutes must be smaller than session minutes.",
+      tr("Idle minutes must be smaller than session minutes."),
   ),
 );
 export type EasDeviceHostConfig = typeof EasDeviceHostConfig.Type;
@@ -99,7 +100,7 @@ export type DeviceHostConfig = SshDeviceHostConfig | EasDeviceHostConfig | Simlo
 const uniqueHostIds = Schema.makeFilter(
   (hosts: ReadonlyArray<{ readonly id: string }>) =>
     new Set(hosts.map((host) => host.id)).size === hosts.length ||
-    "Device host ids must be unique.",
+    tr("Device host ids must be unique."),
 );
 
 export const SshDeviceHostConfigs = Schema.Array(SshDeviceHostConfig).check(uniqueHostIds);
@@ -550,7 +551,10 @@ export class DeviceNotFoundError extends Schema.TaggedError<DeviceNotFoundError>
   },
 ) {
   override get message(): string {
-    return `Device ${this.deviceId} was not found on host ${this.hostId}.`;
+    return tr("Device {deviceId} was not found on host {hostId}.", {
+      deviceId: this.deviceId,
+      hostId: this.hostId,
+    });
   }
 }
 
@@ -563,14 +567,20 @@ export class DeviceBootError extends Schema.TaggedError<DeviceBootError>()("Devi
 }) {
   override get message(): string {
     const explanation = {
-      disk_space: "There is not enough free disk space on its device host.",
-      timeout: "The device did not become ready in time.",
-      launch_failed: "The simulator or emulator could not start.",
+      disk_space: tr("There is not enough free disk space on its device host."),
+      timeout: tr("The device did not become ready in time."),
+      launch_failed: tr("The simulator or emulator could not start."),
     }[this.reason];
-    const summary = `Device ${this.deviceId} failed to boot: ${explanation}`;
+    const summary = tr("Device {deviceId} failed to boot: {explanation}", {
+      deviceId: this.deviceId,
+      explanation,
+    });
     return this.diagnostics
       ? `${summary}\n\n${this.diagnostics}`
-      : `${summary} The device host sent no details. Try again or open another device; if it keeps failing, check the device on that host.`;
+      : tr(
+          "{summary} The device host sent no details. Try again or open another device; if it keeps failing, check the device on that host.",
+          { summary: summary },
+        );
   }
 }
 
@@ -591,13 +601,18 @@ export class DeviceOperationError extends Schema.TaggedError<DeviceOperationErro
 ) {
   override get message(): string {
     const explanation = {
-      command_failed: `The device command failed${this.exitCode === undefined ? "" : ` (exit code ${this.exitCode})`}.`,
-      request_failed: "Could not communicate with device support. Try refreshing devices.",
-      invalid_payload: "The device request could not be encoded.",
-      settings_failed: "Could not read or save device settings.",
-      hub_rejected: "The device hub could not complete the request.",
+      command_failed: tr("The device command failed{exitCodeSuffix}.", {
+        exitCodeSuffix: this.exitCode === undefined ? "" : ` (exit code ${this.exitCode})`,
+      }),
+      request_failed: tr("Could not communicate with device support. Try refreshing devices."),
+      invalid_payload: tr("The device request could not be encoded."),
+      settings_failed: tr("Could not read or save device settings."),
+      hub_rejected: tr("The device hub could not complete the request."),
     }[this.reason];
-    return `Device ${this.operation} failed: ${explanation}`;
+    return tr("Device {operation} failed: {explanation}", {
+      operation: this.operation,
+      explanation,
+    });
   }
 }
 
@@ -611,8 +626,14 @@ export class DeviceActionUnavailableError extends Schema.TaggedError<DeviceActio
 ) {
   override get message(): string {
     return this.reason === "helper_missing"
-      ? `Device ${this.operation} requires a helper missing from this install. Set up device support again.`
-      : `Device ${this.operation} is not supported on ${this.platform}.`;
+      ? tr(
+          "Device {operation} requires a helper missing from this install. Set up device support again.",
+          { operation: this.operation },
+        )
+      : tr("Device {operation} is not supported on {platform}.", {
+          operation: this.operation,
+          platform: this.platform,
+        });
   }
 }
 
@@ -637,16 +658,16 @@ export type DeviceToolListResult = typeof DeviceToolListResult.Type;
 export const DeviceToolOpenInput = Schema.Struct({
   deviceId: Schema.optional(
     DeviceId.annotate({
-      description: "Device id from `device_list`. Default: the booted or last used device.",
+      description: tr("Device id from `device_list`. Default: the booted or last used device."),
     }),
   ),
   platform: Schema.optional(
     DevicePlatform.annotate({
-      description: "Needed with no `deviceId` when both platforms exist.",
+      description: tr("Needed with no `deviceId` when both platforms exist."),
     }),
   ),
   hostId: Schema.optional(
-    DeviceHostId.annotate({ description: "Host from `device_list`. Default local." }),
+    DeviceHostId.annotate({ description: tr("Host from `device_list`. Default local.") }),
   ),
 });
 export type DeviceToolOpenInput = typeof DeviceToolOpenInput.Type;
@@ -665,7 +686,7 @@ export type DeviceToolOpenResult = typeof DeviceToolOpenResult.Type;
 export const DeviceToolTargetInput = Schema.Struct({
   deviceId: Schema.optional(
     DeviceId.annotate({
-      description: "Device. Default: the last one opened here.",
+      description: tr("Device. Default: the last one opened here."),
     }),
   ),
   hostId: Schema.optional(DeviceHostId),
@@ -686,13 +707,13 @@ export type DeviceToolScreenshotResult = typeof DeviceToolScreenshotResult.Type;
 export const DeviceToolCloseInput = Schema.Struct({
   deviceId: Schema.optional(
     DeviceId.annotate({
-      description: "Device to close. None: close all here.",
+      description: tr("Device to close. None: close all here."),
     }),
   ),
   hostId: Schema.optional(DeviceHostId),
   shutdown: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Also turn it off. Default false.",
+      description: tr("Also turn it off. Default false."),
     }),
   ),
 });
@@ -722,11 +743,15 @@ export const DeviceToolError = Schema.Union([
 export type DeviceToolError = typeof DeviceToolError.Type;
 
 export function deviceToolInstallMessage(name: string, tool: DeviceToolVersion | undefined) {
-  if (!tool) return `Installing ${name}…`;
+  if (!tool) return tr("Installing {name}\u2026", { name: name });
   const previous =
     tool.runningVersion ??
     [...tool.installedVersions].sort((a, b) => a.localeCompare(b, "en", { numeric: true })).at(-1);
   return previous && !tool.installedVersions.includes(tool.requiredVersion)
-    ? `Updating ${name} from ${previous} to ${tool.requiredVersion}…`
-    : `Installing ${name} ${tool.requiredVersion}…`;
+    ? tr("Updating {name} from {previous} to {version}…", {
+        name,
+        previous,
+        version: tool.requiredVersion,
+      })
+    : tr("Installing {name} {version}…", { name, version: tool.requiredVersion });
 }

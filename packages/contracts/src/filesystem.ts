@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
 
 const FILESYSTEM_PATH_MAX_LENGTH = 512;
@@ -82,7 +83,10 @@ export class FilesystemBrowseError extends Schema.TaggedError<FilesystemBrowseEr
       ...props,
       message:
         decodedFilesystemBrowseErrorMessage(props) ??
-        `Failed to browse filesystem path '${props.partialPath}'${cwd}.`,
+        tr("Failed to browse filesystem path '{partialPath}'{cwdSuffix}.", {
+          partialPath: props.partialPath,
+          cwdSuffix: cwd,
+        }),
     } as any);
   }
 }
