@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 import { AcpRegistryUrlAuthAction } from "./acpRegistry.ts";
 import {
@@ -309,9 +310,9 @@ export const OtlpEndpointCheckInput = Schema.Struct({
 export type OtlpEndpointCheckInput = typeof OtlpEndpointCheckInput.Type;
 
 export const OtlpEndpointCheckResult = Schema.Union([
-  Schema.TaggedStruct("Accepted", { latencyMs: Schema.Number }),
-  Schema.TaggedStruct("Rejected", { status: Schema.Number }),
-  Schema.TaggedStruct("Unreachable", { timedOut: Schema.Boolean }),
+  Schema.TaggedStruct(tr("Accepted"), { latencyMs: Schema.Number }),
+  Schema.TaggedStruct(tr("Rejected"), { status: Schema.Number }),
+  Schema.TaggedStruct(tr("Unreachable"), { timedOut: Schema.Boolean }),
 ]);
 export type OtlpEndpointCheckResult = typeof OtlpEndpointCheckResult.Type;
 
@@ -338,7 +339,7 @@ export class ServerPrepareTriageError extends Schema.TaggedError<ServerPrepareTr
   { cause: Schema.optional(Schema.Defect()) },
 ) {
   override get message(): string {
-    return "Could not write the triage session files.";
+    return tr("Could not write the triage session files.");
   }
 }
 
@@ -880,7 +881,10 @@ export class ServerProviderUpdateError extends Schema.TaggedError<ServerProvider
   },
 ) {
   override get message(): string {
-    return `Provider update failed for ${this.provider}: ${this.reason}`;
+    return tr("Provider update failed for {provider}: {reason}", {
+      provider: this.provider,
+      reason: this.reason,
+    });
   }
 }
 
@@ -903,7 +907,7 @@ export class ServerNpmReleaseError extends Schema.TaggedError<ServerNpmReleaseEr
   { reason: Schema.String },
 ) {
   override get message(): string {
-    return `Could not check the configured npm registry: ${this.reason}`;
+    return tr("Could not check the configured npm registry: {reason}", { reason: this.reason });
   }
 }
 
@@ -953,6 +957,6 @@ export class ServerSelfUpdateError extends Schema.TaggedError<ServerSelfUpdateEr
   },
 ) {
   override get message(): string {
-    return `Server update failed: ${this.reason}`;
+    return tr("Server update failed: {reason}", { reason: this.reason });
   }
 }

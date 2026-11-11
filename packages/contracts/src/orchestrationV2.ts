@@ -1,4 +1,5 @@
 import { OrchestrationMessageContext } from "./composerContext.ts";
+import { tr } from "@t3tools/shared/i18n";
 import { withRecordIdTable } from "./orchestrationV2IdTable.ts";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -416,7 +417,7 @@ export const OrchestrationV2LimitRecoveryUpdate = Schema.Struct({
     (update) =>
       update.autoResume !== undefined ||
       update.snooze !== undefined ||
-      "A recovery update must include autoResume or snooze.",
+      tr("A recovery update must include autoResume or snooze."),
   ),
 );
 export type OrchestrationV2LimitRecoveryUpdate = typeof OrchestrationV2LimitRecoveryUpdate.Type;
@@ -973,7 +974,7 @@ function encodedKind(member: Schema.Top): string {
   if (kind !== undefined && SchemaAST.isLiteral(kind) && typeof kind.literal === "string") {
     return kind.literal;
   }
-  throw new Error("Each member of a kind union needs a literal string `kind`.");
+  throw new Error(tr("Each member of a kind union needs a literal string `kind`."));
 }
 
 function kindUnionWithFallback<
@@ -989,14 +990,14 @@ function kindUnionWithFallback<
     Schema.optional(
       Schema.String.check(
         Schema.makeFilter(
-          (kind: string) => !knownKinds.has(kind) || "A known kind must decode in full.",
+          (kind: string) => !knownKinds.has(kind) || tr("A known kind must decode in full."),
         ),
       ),
     ),
   ).pipe(
     Schema.decodeTo(Schema.Union(members), {
       decode: SchemaGetter.transform(fallback),
-      encode: SchemaGetter.forbidden(() => "Unknown kinds are decode-only."),
+      encode: SchemaGetter.forbidden(() => tr("Unknown kinds are decode-only.")),
     }),
   );
   return Schema.Union([...members, unknownKind]);
@@ -1418,7 +1419,10 @@ export class OrchestrationV2CheckpointUnavailableError extends Schema.TaggedErro
   },
 ) {
   override get message(): string {
-    return `Rollback target ${this.target} is unavailable for thread ${this.threadId}.`;
+    return tr("Rollback target {target} is unavailable for thread {threadId}.", {
+      target: this.target,
+      threadId: this.threadId,
+    });
   }
 }
 
@@ -3860,7 +3864,7 @@ const OrchestrationV2UnknownThreadStreamEvent = Schema.Struct({
       (event) =>
         !knownDomainEventTypes.has(event.type) ||
         (event.type === "turn-item.updated" && isUnknownTurnItem(event.payload)) ||
-        "A known event type must decode in full.",
+        tr("A known event type must decode in full."),
     ),
   ),
 }).pipe(
@@ -3876,7 +3880,7 @@ const OrchestrationV2UnknownThreadStreamEvent = Schema.Struct({
         sequence: item.sequence,
         eventType: item.event.type,
       })),
-      encode: SchemaGetter.forbidden(() => "Servers never send unknown thread events."),
+      encode: SchemaGetter.forbidden(() => tr("Servers never send unknown thread events.")),
     },
   ),
 );
@@ -3963,13 +3967,13 @@ export class OrchestrationV2StopWorkflowError extends Schema.TaggedError<Orchest
   override get message(): string {
     switch (this.reason) {
       case "not-running":
-        return "This workflow is no longer running.";
+        return tr("This workflow is no longer running.");
       case "unsupported":
-        return "This provider cannot stop a workflow.";
+        return tr("This provider cannot stop a workflow.");
       case "unavailable":
-        return "This workflow has no live provider task.";
+        return tr("This workflow has no live provider task.");
       case "stop-failed":
-        return "Failed to stop the workflow.";
+        return tr("Failed to stop the workflow.");
     }
   }
 }
@@ -4004,8 +4008,8 @@ export class OrchestrationV2ForceStopThreadError extends Schema.TaggedError<Orch
 ) {
   override get message(): string {
     return this.reason === "superseded"
-      ? "A new turn started, so nothing was force stopped."
-      : "Failed to force stop the agent.";
+      ? tr("A new turn started, so nothing was force stopped.")
+      : tr("Failed to force stop the agent.");
   }
 }
 
@@ -4067,19 +4071,19 @@ export class OrchestrationV2GetNativeChildWorkError extends Schema.TaggedError<O
   },
 ) {
   override get message(): string {
-    return "Failed to read the subagent's work.";
+    return tr("Failed to read the subagent's work.");
   }
 }
 
 const WORKFLOW_FILE_ERROR_MESSAGES = {
-  "invalid-path": "Workflow files must be absolute paths with the expected extension.",
-  "root-unavailable": "Workflow file root unavailable.",
-  "not-found": "Workflow file not found.",
-  "outside-root": "Path is outside the workflow files root.",
-  "wrong-extension": "Resolved file has the wrong extension.",
-  "not-regular-file": "Workflow file is not a regular file.",
-  "changed-during-read": "Workflow file changed between resolution and open.",
-  "read-failed": "Workflow file read failed.",
+  "invalid-path": tr("Workflow files must be absolute paths with the expected extension."),
+  "root-unavailable": tr("Workflow file root unavailable."),
+  "not-found": tr("Workflow file not found."),
+  "outside-root": tr("Path is outside the workflow files root."),
+  "wrong-extension": tr("Resolved file has the wrong extension."),
+  "not-regular-file": tr("Workflow file is not a regular file."),
+  "changed-during-read": tr("Workflow file changed between resolution and open."),
+  "read-failed": tr("Workflow file read failed."),
 } as const;
 
 export class OrchestrationWorkflowFileError extends Schema.TaggedError<OrchestrationWorkflowFileError>()(
@@ -4117,14 +4121,14 @@ export const OrchestrationV2GetTurnItemResult = Schema.Struct({
 export type OrchestrationV2GetTurnItemResult = typeof OrchestrationV2GetTurnItemResult.Type;
 
 const WORKFLOW_SCRIPT_ERROR_MESSAGES = {
-  "invalid-path": "Workflow scripts must be absolute .js paths.",
-  "root-unavailable": "Script root unavailable.",
-  "not-found": "Script not found.",
-  "outside-root": "Script path is outside the workflow scripts root.",
-  "not-js": "Resolved script is not a .js file.",
-  "not-regular-file": "Script is not a regular file.",
-  "changed-during-read": "Script changed between resolution and open.",
-  "read-failed": "Script read failed.",
+  "invalid-path": tr("Workflow scripts must be absolute .js paths."),
+  "root-unavailable": tr("Script root unavailable."),
+  "not-found": tr("Script not found."),
+  "outside-root": tr("Script path is outside the workflow scripts root."),
+  "not-js": tr("Resolved script is not a .js file."),
+  "not-regular-file": tr("Script is not a regular file."),
+  "changed-during-read": tr("Script changed between resolution and open."),
+  "read-failed": tr("Script read failed."),
 } as const;
 
 export class OrchestrationGetWorkflowScriptError extends Schema.TaggedError<OrchestrationGetWorkflowScriptError>()(
@@ -4197,7 +4201,7 @@ export class OrchestrationV2SearchThreadError extends Schema.TaggedError<Orchest
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not search this thread. Please retry.";
+    return tr("Could not search this thread. Please retry.");
   }
 }
 

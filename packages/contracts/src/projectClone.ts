@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { IsoDateTime, NonNegativeInt, ProjectId, TrimmedNonEmptyString } from "./baseSchemas.ts";
 import {
@@ -79,15 +80,15 @@ export type ProjectCloneActionResult = typeof ProjectCloneActionResult.Type;
 function projectCloneStageLabel(stage: ProjectCloneStage): string {
   switch (stage) {
     case "connecting":
-      return "Connecting";
+      return tr("Connecting");
     case "counting":
-      return "Counting objects";
+      return tr("Counting objects");
     case "receiving":
-      return "Receiving objects";
+      return tr("Receiving objects");
     case "resolving":
-      return "Resolving deltas";
+      return tr("Resolving deltas");
     case "checkout":
-      return "Checking out files";
+      return tr("Checking out files");
   }
 }
 

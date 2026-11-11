@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import type * as DateTime from "effect/DateTime";
 import * as Schema from "effect/Schema";
 import * as HttpApi from "effect/http-api/HttpApi";
@@ -142,7 +143,7 @@ export class EnvironmentRequestInvalidError extends Schema.TaggedError<Environme
   }
 
   override get message(): string {
-    return `The environment rejected the request (${this.reason}).`;
+    return tr("The environment rejected the request ({reason}).", { reason: this.reason });
   }
 }
 
@@ -161,7 +162,9 @@ export class EnvironmentAuthInvalidError extends Schema.TaggedError<EnvironmentA
   }
 
   override get message(): string {
-    return `The environment rejected this client's credentials (${this.reason}).`;
+    return tr("The environment rejected this client's credentials ({reason}).", {
+      reason: this.reason,
+    });
   }
 }
 
@@ -180,7 +183,9 @@ export class EnvironmentScopeRequiredError extends Schema.TaggedError<Environmen
   }
 
   override get message(): string {
-    return `This request needs the ${this.requiredPermission ?? this.requiredScope} scope, which this client does not have.`;
+    return tr("This request needs the {scope} scope, which this client does not have.", {
+      scope: this.requiredPermission ?? this.requiredScope,
+    });
   }
 }
 
@@ -198,7 +203,7 @@ export class EnvironmentOperationForbiddenError extends Schema.TaggedError<Envir
   }
 
   override get message(): string {
-    return `The environment refused this operation (${this.reason}).`;
+    return tr("The environment refused this operation ({reason}).", { reason: this.reason });
   }
 }
 
@@ -216,7 +221,7 @@ export class EnvironmentInternalError extends Schema.TaggedError<EnvironmentInte
   }
 
   override get message(): string {
-    return `The environment failed to answer this request (${this.reason}).`;
+    return tr("The environment failed to answer this request ({reason}).", { reason: this.reason });
   }
 }
 
@@ -237,7 +242,9 @@ export class EnvironmentResourceNotFoundError extends Schema.TaggedError<Environ
   }
 
   override get message(): string {
-    return `The environment could not find what this request named (${this.reason}).`;
+    return tr("The environment could not find what this request named ({reason}).", {
+      reason: this.reason,
+    });
   }
 }
 
@@ -448,7 +455,7 @@ export function formatConnectReachable(
 ): string {
   const count = result.readyConnections;
   return [
-    "Tunnel connected",
+    tr("Tunnel connected"),
     ...(count === null ? [] : [`${count} connection${count === 1 ? "" : "s"}`]),
     ...(result.protocol ? [result.protocol.toUpperCase()] : []),
   ].join(" · ");

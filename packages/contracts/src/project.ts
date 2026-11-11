@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { RepositoryIdentity, ThreadEnvMode } from "./environment.ts";
 import { ModelSelection } from "./modelSelection.ts";
@@ -196,7 +197,7 @@ export const ProjectUpdatePayload = Schema.Struct({
   pinned: Schema.optional(Schema.Boolean),
   archived: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Threads and files are kept.",
+      description: tr("Threads and files are kept."),
     }),
   ),
 });
@@ -372,7 +373,7 @@ export class ProjectSearchEntriesError extends Schema.TaggedError<ProjectSearchE
       ...props,
       message:
         decodedProjectErrorMessage(props) ??
-        `Failed to search workspace entries in '${props.cwd}'.`,
+        tr("Failed to search workspace entries in '{cwd}'.", { cwd: props.cwd }),
     } as any);
   }
 }
@@ -403,7 +404,7 @@ export class ProjectSearchContentsError extends Schema.TaggedError<ProjectSearch
       ...props,
       message:
         decodedProjectErrorMessage(props) ??
-        `Failed to search workspace contents in '${props.cwd}'.`,
+        tr("Failed to search workspace contents in '{cwd}'.", { cwd: props.cwd }),
     } as any);
   }
 }
@@ -425,7 +426,8 @@ export class ProjectListEntriesError extends Schema.TaggedError<ProjectListEntri
     super({
       ...props,
       message:
-        decodedProjectErrorMessage(props) ?? `Failed to list workspace entries in '${props.cwd}'.`,
+        decodedProjectErrorMessage(props) ??
+        tr("Failed to list workspace entries in '{cwd}'.", { cwd: props.cwd }),
     } as any);
   }
 }
@@ -501,7 +503,10 @@ export class ProjectReadFileError extends Schema.TaggedError<ProjectReadFileErro
       ...props,
       message:
         decodedProjectErrorMessage(props) ??
-        `Failed to read workspace file '${props.relativePath}' in '${props.cwd}'.`,
+        tr("Failed to read workspace file '{relativePath}' in '{cwd}'.", {
+          relativePath: props.relativePath,
+          cwd: props.cwd,
+        }),
     } as any);
   }
 }
@@ -566,7 +571,10 @@ export class ProjectWriteFileError extends Schema.TaggedError<ProjectWriteFileEr
       ...props,
       message:
         decodedProjectErrorMessage(props) ??
-        `Failed to write workspace file '${props.relativePath}' in '${props.cwd}'.`,
+        tr("Failed to write workspace file '{relativePath}' in '{cwd}'.", {
+          relativePath: props.relativePath,
+          cwd: props.cwd,
+        }),
     } as any);
   }
 }

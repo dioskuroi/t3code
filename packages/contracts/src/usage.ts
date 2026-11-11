@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { ForwardCompatibleArray, NonNegativeInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
 
@@ -159,6 +160,9 @@ export class UsageReadError extends Schema.TaggedError<UsageReadError>()("UsageR
   cause: Schema.optional(Schema.Defect()),
 }) {
   override get message(): string {
-    return `Usage read failed (${this.reason}): ${this.detail}`;
+    return tr("Usage read failed ({reason}): {detail}", {
+      reason: this.reason,
+      detail: this.detail,
+    });
   }
 }

@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
+    "@t3tools/shared": "workspace:*",
     "vite-plus": "catalog:"
   }
 }

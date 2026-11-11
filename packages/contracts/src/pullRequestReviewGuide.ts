@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { IsoDateTime, PositiveInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
 import { ModelSelection } from "./modelSelection.ts";
@@ -51,11 +52,11 @@ export const PullRequestReviewGuide = Schema.Struct({
 export type PullRequestReviewGuide = typeof PullRequestReviewGuide.Type;
 
 export const PullRequestReviewGuideRun = Schema.Union([
-  Schema.TaggedStruct("Running", {
+  Schema.TaggedStruct(tr("Running"), {
     headSha: TrimmedNonEmptyString,
     startedAt: IsoDateTime,
   }),
-  Schema.TaggedStruct("Failed", {
+  Schema.TaggedStruct(tr("Failed"), {
     headSha: TrimmedNonEmptyString,
     failedAt: IsoDateTime,
     detail: TrimmedNonEmptyString,

@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   CommandId,
@@ -27,7 +28,7 @@ export function hasOnlyPairedSurrogates(value: string): boolean {
 }
 
 const ThreadMetadataTitle = TrimmedNonEmptyString.check(Schema.isMaxLength(512)).annotate({
-  description: "New concise display title. Required only when action is rename.",
+  description: tr("New concise display title. Required only when action is rename."),
 });
 
 const ThreadMetadataClientRequestId = TrimmedNonEmptyString.check(Schema.isMaxLength(256))
@@ -38,7 +39,7 @@ const ThreadMetadataClientRequestId = TrimmedNonEmptyString.check(Schema.isMaxLe
         : "clientRequestId must contain valid paired Unicode surrogates.",
     ),
   )
-  .annotate({ description: "Stable idempotency key to reuse when retrying this mutation." });
+  .annotate({ description: tr("Stable idempotency key to reuse when retrying this mutation.") });
 
 export const ThreadMetadataMcpAction = Schema.Literals(["rename", "regenerate_title"]);
 export type ThreadMetadataMcpAction = typeof ThreadMetadataMcpAction.Type;

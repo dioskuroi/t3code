@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import * as Struct from "effect/Struct";
 
 import { TrimmedNonEmptyString } from "./baseSchemas.ts";
@@ -148,7 +149,9 @@ export function managedUpdatesMessage(organization: string): string {
 
 /** The message when the policy allows only stable releases. */
 export function managedNightlyDeniedMessage(organization: string): string {
-  return `${managedUpdatesMessage(organization)} Only stable releases can be installed.`;
+  return tr("{message} Only stable releases can be installed.", {
+    message: managedUpdatesMessage(organization),
+  });
 }
 
 /** Whether `path` is locked itself, sits inside a locked setting, or contains one. */
@@ -164,14 +167,17 @@ export function isManagedSettingPath(
 
 /** The one shape users see when policy refuses something: "Example Corp's policy does not allow webhook tasks." */
 export function managedPolicyDeniedMessage(organization: string, capability: string): string {
-  return `${organization}'s policy does not allow ${capability}.`;
+  return tr("{organization}'s policy does not allow {capability}.", {
+    organization: organization,
+    capability: capability,
+  });
 }
 
 const RUNTIME_MODE_LABELS: Record<RuntimeMode, string> = {
-  "approval-required": "Supervised",
-  "auto-accept-edits": "Auto-accept edits",
-  auto: "Auto",
-  "full-access": "Full access",
+  "approval-required": tr("Supervised"),
+  "auto-accept-edits": tr("Auto-accept edits"),
+  auto: tr("Auto"),
+  "full-access": tr("Full access"),
 };
 
 /** "Example Corp limits threads to Auto-accept edits." */
@@ -206,7 +212,7 @@ export function clampManagedRuntimeMode(
 
 const CAPABILITY_LABELS = {
   remoteClients: "connecting from other devices",
-  connect: "T3 Connect",
+  connect: tr("T3 Connect"),
   webhookTasks: "webhook tasks",
   browserCookieImport: "importing browser cookies",
 } as const;

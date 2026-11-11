@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as HttpServerRespondable from "effect/http/HttpServerRespondable";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
@@ -900,11 +901,13 @@ export class PullRequestUnavailableError extends Schema.TaggedError<PullRequestU
   override get message(): string {
     switch (this.reason) {
       case "cli-missing":
-        return this.requirement ?? "The tool this host is read through is not installed or set up.";
+        return (
+          this.requirement ?? tr("The tool this host is read through is not installed or set up.")
+        );
       case "cli-unauthenticated":
-        return this.requirement ?? "This host has no working credentials.";
+        return this.requirement ?? tr("This host has no working credentials.");
       case "provider-unsupported":
-        return "Change requests cannot be browsed for this project's host yet.";
+        return tr("Change requests cannot be browsed for this project's host yet.");
     }
   }
 }
@@ -924,6 +927,9 @@ export class PullRequestOperationError extends Schema.TaggedError<PullRequestOpe
   }
 
   override get message(): string {
-    return `Pull request operation ${this.operation} failed: ${this.detail}`;
+    return tr("Pull request operation {operation} failed: {detail}", {
+      operation: this.operation,
+      detail: this.detail,
+    });
   }
 }

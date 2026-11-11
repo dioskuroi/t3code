@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import { tr } from "@t3tools/shared/i18n";
 
 import { EnvironmentId, ThreadId, TrimmedNonEmptyString } from "./baseSchemas.ts";
 import {
@@ -15,12 +16,13 @@ import { BrowserProfileId } from "./browserProfile.ts";
 const BoundedUrl = Schema.String.check(Schema.isTrimmed())
   .check(Schema.isNonEmpty())
   .check(Schema.isMaxLength(2048));
-const URL_GUIDANCE = "Absolute http(s) URL, or a bare host (https; http for loopback).";
-const PROFILE_GUIDANCE =
-  "Profile id or name from preview_status, for a new tab. Default: the user's. A tab keeps its profile.";
+const URL_GUIDANCE = tr("Absolute http(s) URL, or a bare host (https; http for loopback).");
+const PROFILE_GUIDANCE = tr(
+  "Profile id or name from preview_status, for a new tab. Default: the user's. A tab keeps its profile.",
+);
 const OptionalTimeoutMs = Schema.optional(
   Schema.Int.check(Schema.isGreaterThan(0)).check(Schema.isLessThanOrEqualTo(60_000)),
-).annotate({ description: "Default 15000." });
+).annotate({ description: tr("Default 15000.") });
 
 export const PREVIEW_AUTOMATION_V1_OPERATIONS = [
   "status",
@@ -139,21 +141,23 @@ export type PreviewAutomationDialogInput = typeof PreviewAutomationDialogInput.T
 export const PreviewAutomationOpenInput = Schema.Struct({
   ...PreviewAutomationTabTargetFields,
   url: Schema.optional(BoundedUrl).annotate({
-    description: `First page URL. ${URL_GUIDANCE} Omit to open a blank tab.`,
+    description: tr("First page URL. {URL_GUIDANCE} Omit to open a blank tab.", {
+      URL_GUIDANCE: URL_GUIDANCE,
+    }),
   }),
   open: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Show the preview to the user. Default true. False for background only.",
+      description: tr("Show the preview to the user. Default true. False for background only."),
     }),
   ),
   show: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Old alias for `open`.",
+      description: tr("Old alias for `open`."),
     }),
   ),
   reuseExistingTab: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Reuse `tabId`, or your current tab. Default true. False makes a new tab.",
+      description: tr("Reuse `tabId`, or your current tab. Default true. False makes a new tab."),
     }),
   ),
   profileId: Schema.optional(TrimmedNonEmptyString.check(Schema.isMaxLength(64))).annotate({
@@ -172,22 +176,22 @@ export const BrowserNavigationTarget = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("url"),
     url: BoundedUrl.annotate({
-      description: `Website URL. ${URL_GUIDANCE}`,
+      description: tr("Website URL. {URL_GUIDANCE}", { URL_GUIDANCE: URL_GUIDANCE }),
     }),
   }),
   Schema.Struct({
     kind: Schema.Literal("environment-port"),
     port: Schema.Int.check(Schema.isGreaterThan(0))
       .check(Schema.isLessThan(65_536))
-      .annotate({ description: "Dev-server port here." }),
+      .annotate({ description: tr("Dev-server port here.") }),
     protocol: Schema.optional(
       Schema.Literals(["http", "https"]).annotate({
-        description: "Default http.",
+        description: tr("Default http."),
       }),
     ),
     path: Schema.optional(
       Schema.String.annotate({
-        description: "Path, query, and fragment, such as /settings?tab=account.",
+        description: tr("Path, query, and fragment, such as /settings?tab=account."),
       }),
     ),
   }),
@@ -197,18 +201,20 @@ export type BrowserNavigationTarget = typeof BrowserNavigationTarget.Type;
 export const PreviewAutomationNavigateInput = Schema.Struct({
   ...PreviewAutomationTabTargetFields,
   url: Schema.optional(BoundedUrl).annotate({
-    description: `Website URL. ${URL_GUIDANCE} For public pages.`,
+    description: tr("Website URL. {URL_GUIDANCE} For public pages.", {
+      URL_GUIDANCE: URL_GUIDANCE,
+    }),
   }),
   target: Schema.optional(BrowserNavigationTarget),
   readiness: Schema.optional(Schema.Literals(["load", "domContentLoaded", "none"])).annotate({
-    description: "Default 'load'. 'none': return at once.",
+    description: tr("Default 'load'. 'none': return at once."),
   }),
   timeoutMs: OptionalTimeoutMs,
 }).check(
   Schema.makeFilter(
     (input) =>
       Number(input.url !== undefined) + Number(input.target !== undefined) === 1 ||
-      "Provide exactly one of url or target.",
+      tr("Provide exactly one of url or target."),
   ),
 );
 export type PreviewAutomationNavigateInput = typeof PreviewAutomationNavigateInput.Type;
@@ -226,21 +232,25 @@ export const PreviewAutomationResizeInput = Schema.Struct({
     const hasPreset = input.preset !== undefined;
     const hasWidth = input.width !== undefined;
     const hasHeight = input.height !== undefined;
-    if (hasWidth !== hasHeight) return "Custom dimensions require both width and height.";
+    if (hasWidth !== hasHeight) return tr("Custom dimensions require both width and height.");
     if (input.mode === "fill") {
       return !hasPreset && !hasWidth && input.orientation === undefined
         ? true
-        : "Fill mode does not accept a preset, dimensions, or orientation.";
+        : tr("Fill mode does not accept a preset, dimensions, or orientation.");
     }
     if (input.mode === "freeform") {
       if (!hasWidth || !hasHeight || hasPreset || input.orientation !== undefined) {
-        return "Freeform mode requires width and height and does not accept a preset or orientation.";
+        return tr(
+          "Freeform mode requires width and height and does not accept a preset or orientation.",
+        );
       }
     } else if (!hasPreset || hasWidth || hasHeight) {
-      return "Preset mode requires a preset and does not accept custom dimensions.";
+      return tr("Preset mode requires a preset and does not accept custom dimensions.");
     }
     if (hasWidth && hasHeight && input.width! * input.height! > PREVIEW_VIEWPORT_MAX_AREA) {
-      return `Custom viewport area must not exceed ${PREVIEW_VIEWPORT_MAX_AREA} pixels.`;
+      return tr("Custom viewport area must not exceed {PREVIEW_VIEWPORT_MAX_AREA} pixels.", {
+        PREVIEW_VIEWPORT_MAX_AREA: PREVIEW_VIEWPORT_MAX_AREA,
+      });
     }
     return true;
   }),
@@ -294,9 +304,9 @@ const singlePointerTarget = Schema.makeFilter(
       Number(input.selector !== undefined) + Number(input.locator !== undefined);
     const hasX = input.x !== undefined;
     const hasY = input.y !== undefined;
-    if (hasX !== hasY) return "Coordinates require both x and y.";
+    if (hasX !== hasY) return tr("Coordinates require both x and y.");
     const coordinateModes = hasX && hasY ? 1 : 0;
-    return selectorModes + coordinateModes === 1 || "Provide exactly one target.";
+    return selectorModes + coordinateModes === 1 || tr("Provide exactly one target.");
   },
 );
 
@@ -304,12 +314,12 @@ export const PreviewAutomationClickInput = Schema.Struct({
   ...PointerTargetFields,
   button: Schema.optional(
     Schema.Literals(["left", "right", "middle"]).annotate({
-      description: "Button. Default left. Right opens the menu.",
+      description: tr("Button. Default left. Right opens the menu."),
     }),
   ),
   clickCount: Schema.optional(
     Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 3 })).annotate({
-      description: "1 click, 2 double, 3 triple. Default 1.",
+      description: tr("1 click, 2 double, 3 triple. Default 1."),
     }),
   ),
 }).check(singlePointerTarget);
@@ -323,22 +333,24 @@ export const PreviewAutomationSelectInput = Schema.Struct({
   ...PreviewAutomationTabTargetFields,
   selector: Schema.optional(LegacySelector),
   locator: Schema.optional(Locator),
-  values: Schema.Array(Schema.String).check(Schema.isMaxLength(100)).annotate({
-    description: "Empty clears it.",
-  }),
+  values: Schema.Array(Schema.String)
+    .check(Schema.isMaxLength(100))
+    .annotate({
+      description: tr("Empty clears it."),
+    }),
   timeoutMs: OptionalTimeoutMs,
 }).check(
   Schema.makeFilter(
     (input) =>
       Number(input.selector !== undefined) + Number(input.locator !== undefined) === 1 ||
-      "Provide exactly one of selector or locator.",
+      tr("Provide exactly one of selector or locator."),
   ),
 );
 export type PreviewAutomationSelectInput = typeof PreviewAutomationSelectInput.Type;
 
 export const PreviewAutomationSelectResult = Schema.Struct({
   selected: Schema.Array(Schema.String).annotate({
-    description: "The values of the options now selected.",
+    description: tr("The values of the options now selected."),
   }),
 });
 export type PreviewAutomationSelectResult = typeof PreviewAutomationSelectResult.Type;
@@ -356,14 +368,14 @@ export const PreviewAutomationUploadInput = Schema.Struct({
   paths: Schema.Array(TrimmedNonEmptyString).check(Schema.isMaxLength(20)),
   selector: Schema.optional(LegacySelector),
   locator: Schema.optional(Locator).annotate({
-    description: "Set files on this <input type=file> instead of the open picker.",
+    description: tr("Set files on this <input type=file> instead of the open picker."),
   }),
   timeoutMs: OptionalTimeoutMs,
 }).check(
   Schema.makeFilter(
     (input) =>
       !(input.selector !== undefined && input.locator !== undefined) ||
-      "Provide at most one of selector or locator.",
+      tr("Provide at most one of selector or locator."),
   ),
 );
 export type PreviewAutomationUploadInput = typeof PreviewAutomationUploadInput.Type;
@@ -375,7 +387,7 @@ export const PreviewAutomationTypeInput = Schema.Struct({
   locator: Schema.optional(Locator),
   clear: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Clear the input first. Default false.",
+      description: tr("Clear the input first. Default false."),
     }),
   ),
   timeoutMs: OptionalTimeoutMs,
@@ -383,7 +395,7 @@ export const PreviewAutomationTypeInput = Schema.Struct({
   Schema.makeFilter(
     (input) =>
       !(input.selector !== undefined && input.locator !== undefined) ||
-      "Provide at most one of selector or locator.",
+      tr("Provide at most one of selector or locator."),
   ),
 );
 export type PreviewAutomationTypeInput = typeof PreviewAutomationTypeInput.Type;
@@ -391,7 +403,9 @@ export type PreviewAutomationTypeInput = typeof PreviewAutomationTypeInput.Type;
 export const PreviewAutomationPressInput = Schema.Struct({
   ...PreviewAutomationTabTargetFields,
   key: Schema.String.check(Schema.isTrimmed()).check(Schema.isNonEmpty()),
-  modifiers: Schema.optional(Schema.Array(Schema.Literals(["Alt", "Control", "Meta", "Shift"]))),
+  modifiers: Schema.optional(
+    Schema.Array(Schema.Literals([tr("Alt"), tr("Control"), tr("Meta"), tr("Shift")])),
+  ),
 });
 export type PreviewAutomationPressInput = typeof PreviewAutomationPressInput.Type;
 
@@ -404,9 +418,11 @@ export const PreviewAutomationScrollInput = Schema.Struct({
 }).check(
   Schema.makeFilter((input) => {
     if (input.selector !== undefined && input.locator !== undefined) {
-      return "Provide at most one of selector or locator.";
+      return tr("Provide at most one of selector or locator.");
     }
-    return input.deltaX !== undefined || input.deltaY !== undefined || "Provide deltaX or deltaY.";
+    return (
+      input.deltaX !== undefined || input.deltaY !== undefined || tr("Provide deltaX or deltaY.")
+    );
   }),
 );
 export type PreviewAutomationScrollInput = typeof PreviewAutomationScrollInput.Type;
@@ -462,10 +478,10 @@ export const PreviewAutomationEvaluateInput = Schema.Struct({
   expression: Schema.String.check(Schema.isTrimmed())
     .check(Schema.isNonEmpty())
     .check(Schema.isMaxLength(64_000)),
-  awaitPromise: Schema.optional(Schema.Boolean.annotate({ description: "Default true." })),
+  awaitPromise: Schema.optional(Schema.Boolean.annotate({ description: tr("Default true.") })),
   returnByValue: Schema.optional(
     Schema.Boolean.annotate({
-      description: "False returns a ref. Default true.",
+      description: tr("False returns a ref. Default true."),
     }),
   ),
 });
@@ -476,21 +492,21 @@ export const PreviewAutomationWaitForInput = Schema.Struct({
   selector: Schema.optional(LegacySelector),
   locator: Schema.optional(Locator),
   text: Schema.optional(TrimmedNonEmptyString).annotate({
-    description: "Case counts.",
+    description: tr("Case counts."),
   }),
   urlIncludes: Schema.optional(TrimmedNonEmptyString),
   timeoutMs: OptionalTimeoutMs,
 }).check(
   Schema.makeFilter((input) => {
     if (input.selector !== undefined && input.locator !== undefined) {
-      return "Provide at most one of selector or locator.";
+      return tr("Provide at most one of selector or locator.");
     }
     return (
       input.selector !== undefined ||
       input.locator !== undefined ||
       input.text !== undefined ||
       input.urlIncludes !== undefined ||
-      "Provide at least one wait condition."
+      tr("Provide at least one wait condition.")
     );
   }),
 );
@@ -665,7 +681,10 @@ export class PreviewAutomationUnavailableError extends Schema.TaggedError<Previe
   },
 ) {
   override get message(): string {
-    return `MCP credential does not grant the ${this.capability} capability: browser preview tools are off for this thread. Do not retry them. To check a page, use a headless browser from the shell, such as Playwright, or curl. The user can turn on "Agent browser access" in Settings; it applies when the agent session next starts.`;
+    return tr(
+      'MCP credential does not grant the {capability} capability: browser preview tools are off for this thread. Do not retry them. To check a page, use a headless browser from the shell, such as Playwright, or curl. The user can turn on "Agent browser access" in Settings; it applies when the agent session next starts.',
+      { capability: this.capability },
+    );
   }
 }
 
@@ -677,7 +696,9 @@ export class McpCapabilityUnavailableError extends Schema.TaggedError<McpCapabil
   },
 ) {
   override get message(): string {
-    return `MCP credential does not grant the ${this.capability} capability.`;
+    return tr("MCP credential does not grant the {capability} capability.", {
+      capability: this.capability,
+    });
   }
 }
 
@@ -731,7 +752,10 @@ export class PreviewAutomationNoAvailableHostError extends Schema.TaggedError<Pr
   },
 ) {
   override get message(): string {
-    return `No preview automation host is available for ${this.operation} in environment ${this.environmentId}. The server-owned browser may be starting or reconnecting. Retry preview_status, then call preview_open if no tab is available. If it remains unavailable, report the browser connection failure.`;
+    return tr(
+      "No preview automation host is available for {operation} in environment {environmentId}. The server-owned browser may be starting or reconnecting. Retry preview_status, then call preview_open if no tab is available. If it remains unavailable, report the browser connection failure.",
+      { operation: this.operation, environmentId: this.environmentId },
+    );
   }
 }
 
@@ -743,7 +767,10 @@ export class PreviewAutomationUnsupportedClientError extends Schema.TaggedError<
   },
 ) {
   override get message(): string {
-    return `Preview automation client ${this.clientId} does not support ${this.operation}.`;
+    return tr("Preview automation client {clientId} does not support {operation}.", {
+      clientId: this.clientId,
+      operation: this.operation,
+    });
   }
 }
 
@@ -756,8 +783,13 @@ export class PreviewAutomationTabNotFoundError extends Schema.TaggedError<Previe
 ) {
   override get message(): string {
     return this.tabId
-      ? `Preview tab ${this.tabId} was not found for ${this.operation}. Omit tabId to use the current tab, or call preview_open.`
-      : `No active preview tab was found for ${this.operation}. Call preview_open first.`;
+      ? tr(
+          "Preview tab {tabId} was not found for {operation}. Omit tabId to use the current tab, or call preview_open.",
+          { tabId: this.tabId, operation: this.operation },
+        )
+      : tr("No active preview tab was found for {operation}. Call preview_open first.", {
+          operation: this.operation,
+        });
   }
 }
 
@@ -770,7 +802,10 @@ export class PreviewAutomationTimeoutError extends Schema.TaggedError<PreviewAut
   },
 ) {
   override get message(): string {
-    const summary = `Preview automation ${this.operation} timed out after ${this.timeoutMs}ms.`;
+    const summary = tr("Preview automation {operation} timed out after {timeoutMs}ms.", {
+      operation: this.operation,
+      timeoutMs: this.timeoutMs,
+    });
     return this.reason === undefined ? summary : `${summary} ${this.reason}`;
   }
 }
@@ -796,19 +831,28 @@ export class PreviewAutomationControlInterruptedError extends Schema.TaggedError
 ) {
   override get message(): string {
     if (this.reason === "agentMismatch")
-      return "This browser tab belongs to another agent session or a human. Open your own tab.";
+      return tr("This browser tab belongs to another agent session or a human. Open your own tab.");
     if (this.reason === "humanControl")
-      return "A human controls this browser tab. Wait until they release control.";
+      return tr("A human controls this browser tab. Wait until they release control.");
     if (this.reason === "tabRequired")
-      return "Multiple browser tabs belong to this session. Pass a tabId from preview_open or from the tabs listed by preview_status.";
+      return tr(
+        "Multiple browser tabs belong to this session. Pass a tabId from preview_open or from the tabs listed by preview_status.",
+      );
     if (this.reason === "dialogPending")
-      return "A browser dialog is pending. Read preview_status and resolve it with preview_dialog.";
+      return tr(
+        "A browser dialog is pending. Read preview_status and resolve it with preview_dialog.",
+      );
     if (this.reason === "tabLimit")
-      return "Too many server browser tabs are open. Close one with t3_preview_close, or reuse a tabId from preview_status tabs.";
-    if (this.reason === "closed") return "This browser tab is closed. Call preview_open.";
+      return tr(
+        "Too many server browser tabs are open. Close one with t3_preview_close, or reuse a tabId from preview_status tabs.",
+      );
+    if (this.reason === "closed") return tr("This browser tab is closed. Call preview_open.");
     if (this.reason === "interrupted")
-      return "Browser control changed. Take a fresh snapshot before trying again.";
-    return `Preview automation ${this.operation} was interrupted on client ${this.clientId}.`;
+      return tr("Browser control changed. Take a fresh snapshot before trying again.");
+    return tr("Preview automation {operation} was interrupted on client {clientId}.", {
+      operation: this.operation,
+      clientId: this.clientId,
+    });
   }
 }
 
@@ -822,8 +866,14 @@ export class PreviewAutomationExecutionError extends Schema.TaggedError<PreviewA
 ) {
   override get message(): string {
     return this.reason === undefined
-      ? `Preview automation ${this.operation} failed on client ${this.clientId}.`
-      : `Preview automation ${this.operation} failed: ${this.reason}`;
+      ? tr("Preview automation {operation} failed on client {clientId}.", {
+          operation: this.operation,
+          clientId: this.clientId,
+        })
+      : tr("Preview automation {operation} failed: {reason}", {
+          operation: this.operation,
+          reason: this.reason,
+        });
   }
 }
 
@@ -839,15 +889,29 @@ export class PreviewAutomationInvalidSelectorError extends Schema.TaggedError<Pr
 ) {
   override get message(): string {
     if (this.staleRef)
-      return "This element ref is stale. Navigation, dialogs, and new snapshots replace refs; take a fresh snapshot and use its refs.";
+      return tr(
+        "This element ref is stale. Navigation, dialogs, and new snapshots replace refs; take a fresh snapshot and use its refs.",
+      );
     if (this.selectorKind !== undefined && this.selectorLength !== undefined) {
       const guidance =
         this.selectorKind === "locator"
-          ? "Use aria-ref=<ref> from the latest snapshot or a Playwright role/text selector; put CSS in selector."
+          ? tr(
+              "Use aria-ref=<ref> from the latest snapshot or a Playwright role/text selector; put CSS in selector.",
+            )
           : "selector takes CSS; use locator for aria-ref=<ref>, role, or text targets.";
-      return `Preview automation ${this.operation} received an invalid ${this.selectorKind} (${this.selectorLength} characters). ${guidance}`;
+      return tr(
+        "Preview automation {operation} received an invalid {selectorKind} ({selectorLength} characters). {guidance}",
+        {
+          operation: this.operation,
+          selectorKind: this.selectorKind,
+          selectorLength: this.selectorLength,
+          guidance,
+        },
+      );
     }
-    return `Preview automation ${this.operation} received an invalid selector.`;
+    return tr("Preview automation {operation} received an invalid selector.", {
+      operation: this.operation,
+    });
   }
 }
 
@@ -862,12 +926,23 @@ export class PreviewAutomationTargetNotEditableError extends Schema.TaggedError<
 ) {
   override get message(): string {
     if (this.selectorKind === "focused-element") {
-      return `Preview automation ${this.operation} requires an editable focused element.`;
+      return tr("Preview automation {operation} requires an editable focused element.", {
+        operation: this.operation,
+      });
     }
     if (this.selectorKind !== undefined && this.selectorLength !== undefined) {
-      return `Preview automation ${this.operation} requires an editable ${this.selectorKind} (${this.selectorLength} characters).`;
+      return tr(
+        "Preview automation {operation} requires an editable {selectorKind} ({selectorLength} characters).",
+        {
+          operation: this.operation,
+          selectorKind: this.selectorKind,
+          selectorLength: this.selectorLength,
+        },
+      );
     }
-    return `Preview automation ${this.operation} requires an editable target.`;
+    return tr("Preview automation {operation} requires an editable target.", {
+      operation: this.operation,
+    });
   }
 }
 
@@ -882,8 +957,13 @@ export class PreviewAutomationResultTooLargeError extends Schema.TaggedError<Pre
   override get message(): string {
     const summary =
       this.maximumBytes === undefined
-        ? `Preview automation ${this.operation} produced a result that is too large.`
-        : `Preview automation ${this.operation} produced a result larger than ${this.maximumBytes} bytes.`;
+        ? tr("Preview automation {operation} produced a result that is too large.", {
+            operation: this.operation,
+          })
+        : tr("Preview automation {operation} produced a result larger than {maximumBytes} bytes.", {
+            operation: this.operation,
+            maximumBytes: this.maximumBytes,
+          });
     return summary;
   }
 }
@@ -893,7 +973,10 @@ export class PreviewAutomationClientDisconnectedError extends Schema.TaggedError
   PreviewAutomationRequestErrorFields,
 ) {
   override get message(): string {
-    return `Preview automation client ${this.clientId} disconnected during ${this.operation}.`;
+    return tr("Preview automation client {clientId} disconnected during {operation}.", {
+      clientId: this.clientId,
+      operation: this.operation,
+    });
   }
 }
 
@@ -902,7 +985,10 @@ export class PreviewAutomationRequestQueueClosedError extends Schema.TaggedError
   PreviewAutomationRequestErrorFields,
 ) {
   override get message(): string {
-    return `Preview automation client ${this.clientId} stopped accepting ${this.operation} requests.`;
+    return tr("Preview automation client {clientId} stopped accepting {operation} requests.", {
+      clientId: this.clientId,
+      operation: this.operation,
+    });
   }
 }
 
@@ -914,7 +1000,10 @@ export class PreviewAutomationRemoteUnavailableError extends Schema.TaggedError<
   },
 ) {
   override get message(): string {
-    return `Preview automation ${this.operation} is unavailable on client ${this.clientId}.`;
+    return tr("Preview automation {operation} is unavailable on client {clientId}.", {
+      operation: this.operation,
+      clientId: this.clientId,
+    });
   }
 }
 
@@ -923,7 +1012,10 @@ export class PreviewAutomationMalformedResponseError extends Schema.TaggedError<
   PreviewAutomationRequestErrorFields,
 ) {
   override get message(): string {
-    return `Preview automation client ${this.clientId} returned a malformed response for ${this.operation}.`;
+    return tr(
+      "Preview automation client {clientId} returned a malformed response for {operation}.",
+      { clientId: this.clientId, operation: this.operation },
+    );
   }
 }
 
@@ -935,7 +1027,7 @@ export class PreviewAutomationRecordingTransferError extends Schema.TaggedError<
   },
 ) {
   override get message(): string {
-    return "Preview recording could not be saved to the agent environment.";
+    return tr("Preview recording could not be saved to the agent environment.");
   }
 }
 
@@ -944,7 +1036,9 @@ export class PreviewAutomationRecordingDesktopUpdateRequiredError extends Schema
   { threadId: ThreadId, cause: Schema.optional(Schema.Defect()) },
 ) {
   override get message(): string {
-    return "Update the desktop app to transfer recordings. The recording remains on the desktop.";
+    return tr(
+      "Update the desktop app to transfer recordings. The recording remains on the desktop.",
+    );
   }
 }
 
@@ -953,7 +1047,7 @@ export class PreviewAutomationRecordingTooLargeError extends Schema.TaggedError<
   { threadId: ThreadId, cause: Schema.optional(Schema.Defect()) },
 ) {
   override get message(): string {
-    return "The recording exceeds 50 MiB. Make a shorter recording.";
+    return tr("The recording exceeds 50 MiB. Make a shorter recording.");
   }
 }
 
@@ -962,7 +1056,7 @@ export class PreviewAutomationRecordingDeadlineExpiredError extends Schema.Tagge
   { threadId: ThreadId, cause: Schema.optional(Schema.Defect()) },
 ) {
   override get message(): string {
-    return "The recording transfer deadline expired.";
+    return tr("The recording transfer deadline expired.");
   }
 }
 
