@@ -480,7 +480,10 @@ export const make = Effect.gen(function* () {
   const channelBlockedReason = (channel: DesktopUpdateChannel): Option.Option<string> =>
     channel === "nightly" && !policy.allowNightly
       ? Option.some(
-          `${policy.message ?? tr("Nightly updates are turned off on this machine.")} ${tr("Switch to the stable channel to keep getting updates.")}`,
+          [
+            policy.message ?? tr("Nightly updates are turned off on this machine."),
+            tr("Switch to the stable channel to keep getting updates."),
+          ].join(" "),
         )
       : Option.none();
 

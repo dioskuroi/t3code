@@ -479,7 +479,13 @@
     "AddMatch",
     "Response",
     "CaptureWithFeedback",
-    "EventStream"
+    "EventStream",
+    "Failed to read desktop network interfaces on .",
+    "Could not read Chromium cookies at : .",
+    "Could not read Firefox cookies at .",
+    "Could not read Safari cookies: .",
+    "Could not read Safari cookies at : .",
+    "Failed to extract the WSL server tree to ."
   ],
   "contains": ["/side", "@container", "update-desktop-database exit code", "xdg-mime exit code"],
   "globs": [
@@ -838,6 +844,7 @@
     "M2 (#78) 补充：文件容器路径片段 <app>/Documents 与菜单 ID 后缀 :menu，均为标识符片段非展示文案。",
     "M2 (#78) words 增补：pt（终端字号单位，随 §3.6 单位精神）、Beta（版本品牌，§3.7 同类）、PDF/Safari（产品与格式名）、Build/Plan（模式显示名 Plan Mode 内的保留标识词）。",
     "M2 (#78) review 补充：outbox 系诊断串（console.error / TaggedError.message / AggregateError，不进 UI）与剪贴板写失败 console.error——确不翻，白名单豁免。",
-    "批 D2（#86，桌面壳 snapshot/preview/updates/backend/wsl/ssh/telemetry）新增：exact 为批内日志/错误 getter 语句、Effect/状态 _tag 哨兵、键名与键盘键、品牌/路径/钥匙串标识、SVG/样式值、Niri/Hyprland 配置片段、PowerShell/SQL/CDP 协议串（均为非显示层，不翻）；words 新增品牌与技术词（GNOME/Hyprland/Niri/KDE/Wayland/X11/AppImage/KDL/D-Bus/gdbus/hyprctl/portal/Omarchy/Lua、MagicDNS/Tailscale Serve、cookie/webview/node-pty/glibc/arm64、Ubuntu/System32/Win/Super、键名 Enter 等），供译文内容面豁免（术语表 §3 品牌/技术词精神）。"
+    "批 D2（#86，桌面壳 snapshot/preview/updates/backend/wsl/ssh/telemetry）新增：exact 为批内日志/错误 getter 语句、Effect/状态 _tag 哨兵、键名与键盘键、品牌/路径/钥匙串标识、SVG/样式值、Niri/Hyprland 配置片段、PowerShell/SQL/CDP 协议串（均为非显示层，不翻）；words 新增品牌与技术词（GNOME/Hyprland/Niri/KDE/Wayland/X11/AppImage/KDL/D-Bus/gdbus/hyprctl/portal/Omarchy/Lua、MagicDNS/Tailscale Serve、cookie/webview/node-pty/glibc/arm64、Ubuntu/System32/Win/Super、键名 Enter 等），供译文内容面豁免（术语表 §3 品牌/技术词精神）。",
+    "批 D2 review 修复（#86）：BrowserImport/WslServerTree/NetworkInterfaces 的 Schema TaggedError message getter 为诊断面（IPC 失败详情由 reason token 在渲染层另行成文），日志语境不翻，exact 豁免。"
   ]
 }

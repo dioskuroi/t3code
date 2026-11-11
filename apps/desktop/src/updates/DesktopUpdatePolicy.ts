@@ -5,6 +5,7 @@
  *
  * @module DesktopUpdatePolicy
  */
+import { tr } from "@t3tools/shared/i18n";
 import {
   managedUpdatesMessage,
   type ManagedPolicyDocument,
@@ -76,7 +77,10 @@ const make = Effect.gen(function* () {
             mode: "off",
             feedUrl: undefined,
             allowNightly: false,
-            message: `Updates are off because T3 Code cannot use the managed policy at ${error.path}. Contact your administrator.`,
+            message: tr(
+              "Updates are off because T3 Code cannot use the managed policy at {path}. Contact your administrator.",
+              { path: error.path },
+            ),
           }),
         ),
     }),
