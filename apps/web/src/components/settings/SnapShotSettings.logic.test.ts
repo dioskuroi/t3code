@@ -1,5 +1,6 @@
 import { assert, expect, it } from "vite-plus/test";
 import { DEFAULT_CLIENT_SETTINGS, type DesktopSnapShotState } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   createRecordingRequestTracker,
@@ -38,8 +39,8 @@ it.each(["gnome-extension", "picker"] as const)(
     };
 
     expect(DEFAULT_CLIENT_SETTINGS.snapShotEnabled).toBe(false);
-    expect(snapShotStatus(state, false)).toBe("Turn this on to set up snapshots.");
-    expect(snapShotStatus(state, true)).toBe("Capture needs attention");
+    expect(snapShotStatus(state, false)).toBe(tr("Turn this on to set up snapshots."));
+    expect(snapShotStatus(state, true)).toBe(tr("Capture needs attention"));
   },
 );
 
@@ -53,19 +54,23 @@ it("distinguishes saved shortcuts from observed delivery without making users re
     message: null,
     gnomeExtension: { status: "enabled", message: "Running" },
   };
-  expect(snapShotSetupSummary(state, true)).toBe("Shortcut saved");
-  expect(snapShotSetupButtonLabel(state)).toBe("Manage capture");
-  expect(snapShotSetupSummary({ ...state, shortcutVerified: true }, true)).toBe("Ready to capture");
-  expect(snapShotSetupButtonLabel({ ...state, shortcutVerified: true })).toBe("Manage capture");
-  expect(snapShotSetupButtonLabel({ ...state, shortcutRegistered: false })).toBe("Manage capture");
+  expect(snapShotSetupSummary(state, true)).toBe(tr("Shortcut saved"));
+  expect(snapShotSetupButtonLabel(state)).toBe(tr("Manage capture"));
+  expect(snapShotSetupSummary({ ...state, shortcutVerified: true }, true)).toBe(
+    tr("Ready to capture"),
+  );
+  expect(snapShotSetupButtonLabel({ ...state, shortcutVerified: true })).toBe(tr("Manage capture"));
+  expect(snapShotSetupButtonLabel({ ...state, shortcutRegistered: false })).toBe(
+    tr("Manage capture"),
+  );
   expect(
     snapShotSetupButtonLabel({
       ...state,
       gnomeExtension: { status: "disabled", message: "Enable the extension" },
     }),
-  ).toBe("Set up GNOME capture");
+  ).toBe(tr("Set up {desktop} capture", { desktop: "GNOME" }));
   expect(snapShotSetupSummary({ ...state, shortcutVerified: true }, false)).toContain(
-    "Enable capture",
+    tr("Enable capture to continue"),
   );
   expect(
     snapShotSetupSummary(
@@ -76,19 +81,19 @@ it("distinguishes saved shortcuts from observed delivery without making users re
       },
       true,
     ),
-  ).toBe("Set up active-window snapshots");
+  ).toBe(tr("Set up active-window snapshots"));
   expect(
     snapShotSetupSummary(
       { ...state, linuxBackend: "niri", gnomeExtension: undefined, shortcutRegistered: false },
       true,
     ),
-  ).toBe("Finish shortcut setup");
+  ).toBe(tr("Finish shortcut setup"));
   expect(
     snapShotSetupSummary(
       { ...state, linuxBackend: "picker", gnomeExtension: undefined, shortcutVerified: true },
       true,
     ),
-  ).toBe("Manual capture only. You'll choose a window each time");
+  ).toBe(tr("Manual capture only. You'll choose a window each time"));
   expect(
     snapShotSetupSummary(
       {
@@ -99,7 +104,7 @@ it("distinguishes saved shortcuts from observed delivery without making users re
       },
       true,
     ),
-  ).toBe("Ready to capture");
+  ).toBe(tr("Ready to capture"));
 });
 
 it("reports pending, denied, and assigned shortcuts without inferring consent from saved keys", () => {
@@ -112,8 +117,10 @@ it("reports pending, denied, and assigned shortcuts without inferring consent fr
     shortcutMessage: null,
     message: null,
   };
-  expect(snapShotStatus(state, true)).toContain("Waiting for shortcut permission");
-  expect(snapShotShortcutStatus(state)).toContain("Approve the shortcut permission prompt");
+  expect(snapShotStatus(state, true)).toContain(tr("Waiting for shortcut permission"));
+  expect(snapShotShortcutStatus(state)).toContain(
+    tr("Approve the shortcut permission prompt to continue."),
+  );
   const denied = { ...state, shortcutPending: false, shortcutMessage: "Permission wasn't granted" };
   expect(snapShotShortcutStatus(denied)).toBe("Permission wasn't granted");
   const approved = {
@@ -122,10 +129,10 @@ it("reports pending, denied, and assigned shortcuts without inferring consent fr
     shortcutLabel: "Press <Shift><Control>2",
     shortcutMessage: "Desktop shortcut: Press <Shift><Control>2",
   };
-  expect(snapShotStatus(approved, true)).toBe("Ready to capture");
+  expect(snapShotStatus(approved, true)).toBe(tr("Ready to capture"));
   expect(snapShotShortcutStatus(approved)).toBeNull();
   expect(snapShotShortcutStatus({ ...approved, shortcutPending: true })).toContain(
-    "Approve the shortcut permission prompt",
+    tr("Approve the shortcut permission prompt to continue."),
   );
   expect(
     snapShotShortcutStatus({
@@ -154,8 +161,8 @@ it("hides macOS setup only while permissions and the shortcut are all in place",
     message: "Allow Accessibility in System Settings, then restart T3 Code.",
   };
   expect(snapShotSetupComplete(revoked, true)).toBe(false);
-  expect(snapShotStatus(revoked, true)).toBe("Capture needs attention");
-  expect(snapShotSetupButtonLabel(revoked)).toBe("Continue setup");
+  expect(snapShotStatus(revoked, true)).toBe(tr("Capture needs attention"));
+  expect(snapShotSetupButtonLabel(revoked)).toBe(tr("Continue setup"));
   expect(snapShotSetupComplete({ ...revoked, message: null }, false)).toBe(true);
   expect(
     snapShotSetupComplete(

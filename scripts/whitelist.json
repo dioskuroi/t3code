@@ -58,7 +58,17 @@
     "T3 Account",
     "t3 pair",
     "Native token",
-    "口袋 Pi"
+    "口袋 Pi",
+    "EXPO_TOKEN",
+    "eas login",
+    "extra.eas.projectId",
+    "user@host",
+    "$x^2$",
+    "\\[x^2\\]",
+    "such as High",
+    "--config",
+    "NIRI_CONFIG",
+    "如 High"
   ],
   "exact": [
     " READY ",
@@ -1079,6 +1089,12 @@
     "macbook",
     "suspense",
     "testflight",
-    "href"
+    "href",
+    "Mac mini",
+    "Conventional Commits",
+    "LaTeX",
+    "TeX",
+    "gh",
+    "devbox"
   ]
 }

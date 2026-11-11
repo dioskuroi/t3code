@@ -24,6 +24,7 @@ vi.mock(import("../ui/toast"), async (original) => {
 });
 
 import { CaptureShortcutConfig } from "./CaptureShortcutConfig";
+import { tr } from "@t3tools/shared/i18n";
 
 const preview: DesktopCaptureConfigPreview = {
   id: "approved-snapshot",
@@ -68,7 +69,7 @@ async function renderConfig(desktop: "niri" | "hyprland" = "niri") {
   return Object.assign(screen, {
     button,
     recorder,
-    diff: () => container.querySelector('[aria-label="Shortcut changes"]'),
+    diff: () => container.querySelector(`[aria-label="${tr("Shortcut changes")}"]`),
     alert: () => container.querySelector('[role="alert"]'),
     advanced: () => container.querySelector("details")!,
     async click(label: string) {
@@ -93,13 +94,13 @@ it.each(["niri", "hyprland"] as const)(
     );
     expect(screen.advanced().textContent).toContain("manual binding");
     expect(bridge.previewSnapShotConfig).not.toHaveBeenCalled();
-    await screen.click("Review changes");
+    await screen.click(tr("Review changes"));
     expect(screen.recorder().getAttribute("aria-label")).toBe(
       "Record snapshot shortcut, currently Ctrl+Shift+2",
     );
     expect(bridge.applySnapShotConfig).not.toHaveBeenCalled();
     expect(screen.diff()).not.toBeNull();
-    await screen.click("Save shortcut");
+    await screen.click(tr("Save shortcut"));
     expect(bridge.applySnapShotConfig).toHaveBeenCalledExactlyOnceWith(preview.id);
     expect(complete).toHaveBeenCalledOnce();
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ type: "success" }));
@@ -109,14 +110,16 @@ it.each(["niri", "hyprland"] as const)(
 it("withdraws a stale diff and requires another read instead of retrying its write", async () => {
   using _env = setup();
   await using screen = await renderConfig();
-  await screen.click("Review changes");
+  await screen.click(tr("Review changes"));
   bridge.applySnapShotConfig.mockRejectedValue(
     new Error("Your config changed since this preview."),
   );
-  await screen.click("Save shortcut");
-  expect(screen.alert()?.textContent).toContain("Review the changes and try again");
+  await screen.click(tr("Save shortcut"));
+  expect(screen.alert()?.textContent).toContain(
+    tr("Couldn't save your shortcut. Review the changes and try again."),
+  );
   expect(screen.advanced().textContent).toContain("Your config changed since this preview.");
-  expect(screen.button("Review changes")).toBeDefined();
+  expect(screen.button(tr("Review changes"))).toBeDefined();
   expect(screen.diff()).toBeNull();
   expect(complete).not.toHaveBeenCalled();
 });
