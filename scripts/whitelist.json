@@ -48,7 +48,10 @@
     "View relay",
     "Manage relay",
     "claude mcp add --transport http t3",
-    "Claude Code"
+    "Claude Code",
+    "%s",
+    "agent-device:",
+    "EAS Simulator"
   ],
   "exact": [
     " READY ",
@@ -633,7 +636,11 @@
     "30d",
     "90d",
     "7d",
-    "Usage"
+    "Usage",
+    "-ml-2 first:ml-0",
+    "::group",
+    "::editor",
+    "@min-[48rem]/providers:h-[min(44rem,calc(100dvh-11rem))] @min-[48rem]/providers:min-h-[32rem]"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -1014,6 +1021,14 @@
     "node_modules",
     ".env",
     "alpha",
-    "keybindings.json"
+    "keybindings.json",
+    "Bing",
+    "Brave Search",
+    "Ecosia",
+    "Kagi",
+    "DuckDuckGo",
+    "slug",
+    "fps",
+    "EAS"
   ]
 }
