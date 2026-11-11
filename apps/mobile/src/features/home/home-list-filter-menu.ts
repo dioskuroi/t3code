@@ -1,4 +1,5 @@
 import type { EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 export interface HomeListFilterMenuEnvironment {
   readonly environmentId: EnvironmentId;
@@ -41,12 +42,12 @@ export function buildHomeListFilterMenu(props: {
 
   items.push({
     type: "submenu",
-    title: "Environment",
+    title: tr("Environment"),
     items: [
       {
         type: "action",
-        title: "All environments",
-        subtitle: "Show threads from every environment",
+        title: tr("All environments"),
+        subtitle: tr("Show threads from every environment"),
         state: props.selectedEnvironmentId === null ? "on" : "off",
         onPress: () => props.onEnvironmentChange(null),
       },
@@ -65,12 +66,12 @@ export function buildHomeListFilterMenu(props: {
   if (props.projects.length > 0) {
     items.push({
       type: "submenu",
-      title: "Project",
+      title: tr("Project"),
       items: [
         {
           type: "action",
-          title: "All projects",
-          subtitle: "Show threads from every project",
+          title: tr("All projects"),
+          subtitle: tr("Show threads from every project"),
           state: props.selectedProjectKey === null ? "on" : "off",
           onPress: () => props.onProjectChange(null),
         },
@@ -85,7 +86,7 @@ export function buildHomeListFilterMenu(props: {
   }
 
   return {
-    title: "Thread list options",
+    title: tr("Thread list options"),
     items,
   };
 }

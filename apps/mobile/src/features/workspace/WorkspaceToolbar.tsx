@@ -1,4 +1,5 @@
 import { useFocusEffect } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Keyboard,
@@ -21,7 +22,7 @@ import { WORKSPACE_TOOLBAR, type WorkspaceTab } from "./workspace-tabs-state";
 import { PullRequestGlyph } from "../pull-requests/pullRequestGlyphs";
 
 const TABS: ReadonlyArray<{ id: WorkspaceTab; label: string; icon: AppSymbolName }> = [
-  { id: "threads", label: "Threads", icon: "text.bubble" },
+  { id: "threads", label: tr("Threads"), icon: "text.bubble" },
   { id: "pullRequests", label: "PRs", icon: PullRequestGlyph.pullRequest },
 ];
 
@@ -113,7 +114,7 @@ export function WorkspaceToolbar(props: {
           <View className="flex-row items-center" style={{ gap }}>
             {!keyboardVisible && !expanded ? (
               <ToolbarButton
-                label={`Show tabs, ${activeTab.label} selected`}
+                label={tr("Show tabs, {tab} selected", { tab: activeTab.label })}
                 icon={activeTab.icon}
                 size={48}
                 onPress={() => dispatch({ type: "expand" })}
@@ -130,7 +131,12 @@ export function WorkspaceToolbar(props: {
                 focusSearch();
               }}
             />
-            <ToolbarButton label="Cancel search" icon="xmark" size={48} onPress={cancelSearch} />
+            <ToolbarButton
+              label={tr("Cancel search")}
+              icon="xmark"
+              size={48}
+              onPress={cancelSearch}
+            />
           </View>
         ) : null}
         {showNavigation ? <WorkspaceDock onNewTask={props.onNewTask} /> : null}

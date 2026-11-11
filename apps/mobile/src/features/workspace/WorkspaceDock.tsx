@@ -1,4 +1,5 @@
 import { Keyboard, Pressable, View } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { SymbolView } from "../../components/ui/AppSymbol";
 import { GlassSurface } from "../../components/ui/GlassSurface";
@@ -27,7 +28,7 @@ export function WorkspaceDock(props: { readonly onNewTask: () => void }) {
               <Pressable
                 key={tab}
                 accessibilityRole="tab"
-                accessibilityLabel={tab === "threads" ? "Threads" : "Pull requests"}
+                accessibilityLabel={tab === "threads" ? tr("Threads") : tr("Pull requests")}
                 accessibilityState={{ selected }}
                 onPress={() => {
                   if (selected) return;
@@ -59,7 +60,7 @@ export function WorkspaceDock(props: { readonly onNewTask: () => void }) {
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="New chat"
+          accessibilityLabel={tr("New chat")}
           onPress={props.onNewTask}
           className="flex-1 items-center justify-center"
         >

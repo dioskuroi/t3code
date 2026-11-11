@@ -3,6 +3,7 @@ import {
   type ConnectionCatalogDocument as ConnectionCatalogDocumentType,
   EMPTY_CONNECTION_CATALOG_DOCUMENT,
 } from "@t3tools/client-runtime/platform";
+import { tr } from "@t3tools/shared/i18n";
 import { ConnectionTransientError } from "@t3tools/client-runtime/connection";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -19,7 +20,10 @@ export const LEGACY_CONNECTIONS_KEY = "t3code.connections";
 function catalogError(operation: string, cause: unknown) {
   return new ConnectionTransientError({
     reason: "remote-unavailable",
-    detail: `Could not ${operation} the local connection catalog: ${String(cause)}`,
+    detail: tr("Could not {operation} the local connection catalog: {cause}", {
+      operation: operation,
+      cause: String(cause),
+    }),
   });
 }
 
@@ -67,7 +71,7 @@ export const make = Effect.fn("mobile.connectionStorage.makeCatalogStore")(funct
         : yield* migrateLegacyConnectionCatalog(legacyRaw).pipe(
             Effect.mapError((cause) => catalogError("migrate", cause)),
             Effect.catch((error) =>
-              Effect.logWarning("Discarding corrupt legacy mobile connections", error).pipe(
+              Effect.logWarning(tr("Discarding corrupt legacy mobile connections"), error).pipe(
                 Effect.as(EMPTY_CONNECTION_CATALOG_DOCUMENT),
               ),
             ),
@@ -90,7 +94,7 @@ export const make = Effect.fn("mobile.connectionStorage.makeCatalogStore")(funct
     if (raw !== null && raw.trim() !== "") {
       catalog = yield* decodeCatalog(raw).pipe(
         Effect.catch((error) =>
-          Effect.logWarning("Discarding corrupt mobile connection catalog", error).pipe(
+          Effect.logWarning(tr("Discarding corrupt mobile connection catalog"), error).pipe(
             Effect.andThen(deleteItem(CONNECTION_CATALOG_KEY)),
             Effect.andThen(loadLegacyCatalog()),
           ),

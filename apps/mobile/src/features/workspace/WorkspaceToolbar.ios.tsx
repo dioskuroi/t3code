@@ -1,4 +1,5 @@
 import { useActiveNewTask } from "../../state/active-new-task";
+import { tr } from "@t3tools/shared/i18n";
 import { Toolbar } from "../../components/ui/Toolbar";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { use, useCallback, useEffect, useRef } from "react";
@@ -21,9 +22,9 @@ import { useFloatingWorkspaceTabs, useSidebarWorkspaceTabs } from "./useSystemWo
 import { WorkspaceTabToolbarButtons } from "./WorkspaceSectionToolbar";
 
 const SEARCH_LABELS = {
-  threads: "Search threads",
-  pullRequests: "Search pull requests",
-  settings: "Search settings",
+  threads: tr("Search threads"),
+  pullRequests: tr("Search pull requests"),
+  settings: tr("Search settings"),
 } as const;
 
 export function WorkspaceToolbar(props: {
@@ -121,7 +122,7 @@ export function WorkspaceToolbar(props: {
   const composeButton = nativeToolbarCompose ? (
     <Toolbar.Button
       identifier="workspace-compose"
-      accessibilityLabel="New chat"
+      accessibilityLabel={tr("New chat")}
       icon="square.and.pencil"
       onPress={props.onNewTask}
       separateBackground
@@ -130,7 +131,7 @@ export function WorkspaceToolbar(props: {
   const searchButton = foldedSearch ? (
     <Toolbar.Button
       identifier="workspace-search"
-      accessibilityLabel={searchVisible ? "Close search" : searchLabel}
+      accessibilityLabel={searchVisible ? tr("Close search") : searchLabel}
       icon={searchVisible ? "xmark" : "magnifyingglass"}
       onPress={searchVisible ? () => searchRef.current?.cancelSearch() : focusSearch}
       separateBackground
@@ -194,7 +195,7 @@ export function WorkspaceToolbar(props: {
           sidebarTabs === "picker" ||
           floatingTabs ? null : (
             <Toolbar.Button
-              accessibilityLabel="New chat"
+              accessibilityLabel={tr("New chat")}
               icon="square.and.pencil"
               onPress={props.onNewTask}
             />

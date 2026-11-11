@@ -3,6 +3,7 @@ import {
   PlatformConnectionSource,
   Persistence,
 } from "@t3tools/client-runtime/platform";
+import { tr } from "@t3tools/shared/i18n";
 import {
   ConnectionBlockedError,
   ConnectionTransientError,
@@ -162,7 +163,7 @@ const layerCapabilities = Layer.effectContext(
           if (session === null) {
             return yield* new ConnectionBlockedError({
               reason: "authentication",
-              detail: "Sign in to T3 Connect to connect this environment.",
+              detail: tr("Sign in to T3 Connect to connect this environment."),
             });
           }
           const token = yield* session.readClerkToken().pipe(
@@ -177,7 +178,7 @@ const layerCapabilities = Layer.effectContext(
           if (token === null) {
             return yield* new ConnectionBlockedError({
               reason: "authentication",
-              detail: "The T3 Connect session is unavailable.",
+              detail: tr("The T3 Connect session is unavailable."),
             });
           }
           return token;
@@ -202,7 +203,9 @@ const layerCapabilities = Layer.effectContext(
               (cause) =>
                 new ConnectionTransientError({
                   reason: "remote-unavailable",
-                  detail: `Could not load the mobile device identity: ${String(cause)}`,
+                  detail: tr("Could not load the mobile device identity: {cause}", {
+                    cause: String(cause),
+                  }),
                 }),
             ),
             Effect.map(Option.some),
@@ -222,14 +225,14 @@ const layerCapabilities = Layer.effectContext(
             Effect.fail(
               new ConnectionBlockedError({
                 reason: "unsupported",
-                detail: "SSH environments are only available in the desktop app.",
+                detail: tr("SSH environments are only available in the desktop app."),
               }),
             ),
           prepare: () =>
             Effect.fail(
               new ConnectionBlockedError({
                 reason: "unsupported",
-                detail: "SSH environments are only available in the desktop app.",
+                detail: tr("SSH environments are only available in the desktop app."),
               }),
             ),
           disconnect: () => Effect.void,
@@ -262,7 +265,7 @@ const layerEnvironmentOwnedDataCleanup = Layer.succeed(
         { concurrency: "unbounded", discard: true },
       ).pipe(
         Effect.catch((cause) =>
-          Effect.logWarning("Could not clear mobile environment-owned data.", {
+          Effect.logWarning(tr("Could not clear mobile environment-owned data."), {
             environmentId,
             cause,
           }),

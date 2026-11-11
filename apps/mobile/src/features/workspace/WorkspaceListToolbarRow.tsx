@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { View } from "react-native";
 import { AndroidHeaderIconButton } from "../../components/ui/AndroidScreenHeader";
 import { CompactBrandTitle } from "../../components/CompactBrandTitle";
@@ -28,7 +29,7 @@ export function WorkspaceListToolbarRow(props: {
       {props.searching ? (
         <>
           <AndroidHeaderIconButton
-            accessibilityLabel="Close search"
+            accessibilityLabel={tr("Close search")}
             icon="arrow.left"
             onPress={props.onCloseSearch}
           />

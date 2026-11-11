@@ -3,6 +3,7 @@ import {
   NAVIGATION_TAB_ICONS,
   useEnabledNavigationTabs,
 } from "./navigation-tabs";
+import { tr } from "@t3tools/shared/i18n";
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { View, useWindowDimensions, type NativeSyntheticEvent } from "react-native";
 import { Tabs, type TabSelectedEvent, type TabSelectionRejectedEvent } from "react-native-screens";
@@ -125,7 +126,7 @@ export function WorkspaceNativeTabs(props: {
               key={slot}
               screenKey={slot}
               title=""
-              tabBarItemAccessibilityLabel={settings ? "Settings" : WORKSPACE_TAB_LABELS[tab]}
+              tabBarItemAccessibilityLabel={settings ? tr("Settings") : WORKSPACE_TAB_LABELS[tab]}
               ios={{
                 icon: settings
                   ? { type: "sfSymbol", name: "gearshape" }

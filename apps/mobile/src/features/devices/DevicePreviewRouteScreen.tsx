@@ -1,4 +1,5 @@
 import { SheetCloseButton } from "../../components/ui/SheetHeader";
+import { tr } from "@t3tools/shared/i18n";
 import { Button } from "../../components/ui/Button";
 import * as Dialog from "../../components/ui/Dialog";
 import {
@@ -141,7 +142,7 @@ export function DevicePreviewScreen({
       },
     }).finally(() => setShuttingDown(false));
     if (result._tag === "Failure") {
-      Dialog.alert("Could not shut down device", String(Cause.squash(result.cause)));
+      Dialog.alert(tr("Could not shut down device"), String(Cause.squash(result.cause)));
     }
   };
 
@@ -153,7 +154,7 @@ export function DevicePreviewScreen({
       )
       .map((host) => ({
         id: `retry-${host.id}`,
-        title: `Retry ${host.label}`,
+        title: tr("Retry {label}", { label: host.label }),
         icon: "arrow.clockwise" as const,
         onPress: () => {
           void retryHost({ environmentId, input: { retryHostId: host.id } });
@@ -163,7 +164,7 @@ export function DevicePreviewScreen({
       ? [
           {
             id: "check-device-tools",
-            title: "Check device tool versions",
+            title: tr("Check device tool versions"),
             icon: "arrow.clockwise" as const,
             onPress: () => {
               void retryHost({ environmentId, input: { inspectOnly: true } });
@@ -173,11 +174,11 @@ export function DevicePreviewScreen({
       : []),
     {
       id: "device-tools",
-      title: "Device tool versions",
+      title: tr("Device tool versions"),
       icon: "info.circle",
       onPress: () =>
         Dialog.alert(
-          "Device tool versions",
+          tr("Device tool versions"),
           deviceToolUpdateOwnership +
             "\n\n" +
             deviceToolUpdatePolicy(
@@ -196,7 +197,7 @@ export function DevicePreviewScreen({
     },
     {
       id: "reload",
-      title: "Reload stream",
+      title: tr("Reload stream"),
       icon: "arrow.clockwise" as const,
       disabled: !preview || shuttingDown,
       onPress: () => {
@@ -208,7 +209,7 @@ export function DevicePreviewScreen({
       ? [
           {
             id: "back",
-            title: "Back",
+            title: tr("Back"),
             icon: "arrow.left",
             disabled: !inputConnected,
             onPress: () => streamRef.current?.back(),
@@ -217,7 +218,7 @@ export function DevicePreviewScreen({
       : []),
     {
       id: "app-switcher",
-      title: "App switcher",
+      title: tr("App switcher"),
       icon: "square.on.square",
       disabled: !inputConnected,
       onPress: () => streamRef.current?.appSwitcher(),
@@ -226,7 +227,7 @@ export function DevicePreviewScreen({
       ? [
           {
             id: "rotate",
-            title: "Rotate device",
+            title: tr("Rotate device"),
             icon: "arrow.clockwise" as const,
             disabled: !inputConnected,
             onPress: () => streamRef.current?.rotate(),
@@ -235,7 +236,7 @@ export function DevicePreviewScreen({
       : []),
     {
       id: "shutdown",
-      title: shuttingDown ? "Shutting down…" : "Shut down device",
+      title: shuttingDown ? tr("Shutting down\u2026") : tr("Shut down device"),
       icon: "power",
       disabled: !preview || shuttingDown,
       onPress: () => void shutDownDevice(),
@@ -247,7 +248,7 @@ export function DevicePreviewScreen({
       ? [
           {
             id: "devices",
-            title: "Devices",
+            title: tr("Devices"),
             inline: true,
             items: previews.map((device) => ({
               id: device.key,
@@ -269,12 +270,12 @@ export function DevicePreviewScreen({
           className="flex-row items-center gap-1 px-2 pb-2"
           style={{ paddingTop: Math.max(insets.top, 8) }}
         >
-          <SheetCloseButton accessibilityLabel="Close device preview" onClose={onClose} />
+          <SheetCloseButton accessibilityLabel={tr("Close device preview")} onClose={onClose} />
           <AppText numberOfLines={1} className="min-w-0 flex-1 font-t3-medium text-sm">
-            {preview?.name ?? "Devices"}
+            {preview?.name ?? tr("Devices")}
           </AppText>
           <ControlPill
-            accessibilityLabel="Maximize device"
+            accessibilityLabel={tr("Maximize device")}
             icon="arrow.up.left.and.arrow.down.right"
             onPress={() => onMaximize(preview?.key ?? null)}
           />
@@ -296,7 +297,7 @@ export function DevicePreviewScreen({
                 {state.error}
               </AppText>
               <View className="items-center">
-                <Button label="Retry" tone="secondary" onPress={state.refresh} />
+                <Button label={tr("Retry")} tone="secondary" onPress={state.refresh} />
               </View>
             </>
           ) : focused && foreground ? (
@@ -310,7 +311,7 @@ export function DevicePreviewScreen({
           style={{ paddingBottom: Math.max(insets.bottom, 8) }}
         >
           <ControlPill
-            accessibilityLabel="Home"
+            accessibilityLabel={tr("Home")}
             icon="house"
             disabled={!inputConnected}
             onPress={pressHome}
@@ -326,19 +327,19 @@ export function DevicePreviewScreen({
         >
           {inputConnected ? (
             <Pressable
-              accessibilityLabel="Hide device controls"
+              accessibilityLabel={tr("Hide device controls")}
               className="absolute inset-0 bg-black/30"
               onPress={() => setControlsVisible(false)}
             />
           ) : null}
           <View className="px-3" style={{ paddingTop: Math.max(insets.top, 12) }}>
             <GlassSurface className="flex-row items-center gap-1 p-1">
-              <SheetCloseButton accessibilityLabel="Close device preview" onClose={onClose} />
+              <SheetCloseButton accessibilityLabel={tr("Close device preview")} onClose={onClose} />
               <AppText numberOfLines={1} className="flex-1 text-center font-t3-medium text-base">
-                {preview?.name ?? "Devices"}
+                {preview?.name ?? tr("Devices")}
               </AppText>
               <ControlPill
-                accessibilityLabel="Home"
+                accessibilityLabel={tr("Home")}
                 icon="house"
                 disabled={!inputConnected}
                 onPress={pressHome}
@@ -350,8 +351,8 @@ export function DevicePreviewScreen({
       ) : (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Show device controls"
-          accessibilityHint="Shaking the phone also shows them"
+          accessibilityLabel={tr("Show device controls")}
+          accessibilityHint={tr("Shaking the phone also shows them")}
           hitSlop={12}
           className="absolute h-11 w-16 items-center justify-center self-center"
           style={{
@@ -372,14 +373,14 @@ function DeviceOptionsMenu({ items }: { readonly items: ReadonlyArray<AppBarMenu
     <Menu
       actions={androidHeaderMenuActions(items)}
       isAnchoredToRight
-      title="Device options"
+      title={tr("Device options")}
       onPressAction={({ nativeEvent }) => {
         const action = findHeaderMenuAction(items, nativeEvent.event);
         if (action && !action.disabled) action.onPress();
       }}
     >
       <Pressable
-        accessibilityLabel="Device options"
+        accessibilityLabel={tr("Device options")}
         accessibilityRole="button"
         className="size-11 items-center justify-center rounded-full bg-subtle"
       >
@@ -431,13 +432,15 @@ function OpenDevicePreview({
             {error}
           </AppText>
           <View className="items-center">
-            <Button label="Retry" tone="secondary" onPress={refresh} />
+            <Button label={tr("Retry")} tone="secondary" onPress={refresh} />
           </View>
         </>
       ) : (
         <>
           <AppActivityIndicator color={themeVariables["--color-icon"]} />
-          <AppText className="text-sm text-foreground-muted">Connecting to device...</AppText>
+          <AppText className="text-sm text-foreground-muted">
+            {tr("Connecting to device...")}
+          </AppText>
         </>
       )}
     </View>

@@ -1,4 +1,5 @@
 import { EnvironmentQueryStore } from "@t3tools/client-runtime/state/query-persistence";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 
@@ -16,7 +17,7 @@ export const layer = Layer.effect(
       save: (environmentId, key, payload) =>
         database
           .saveCache(environmentId, "pull-request", `v1:${key}`, 1, payload)
-          .pipe(Effect.catch(() => Effect.logWarning("Offline query database save failed"))),
+          .pipe(Effect.catch(() => Effect.logWarning(tr("Offline query database save failed")))),
     } satisfies NonNullable<typeof EnvironmentQueryStore.Service>;
   }),
 );

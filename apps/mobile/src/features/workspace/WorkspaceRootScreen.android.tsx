@@ -1,4 +1,5 @@
 import { useAndroidFloatingTabs } from "../settings/appearance/AppearancePreferencesProvider";
+import { tr } from "@t3tools/shared/i18n";
 import { WorkspaceNoTabs } from "./WorkspaceNoTabs";
 import { useEnabledNavigationTabs } from "./navigation-tabs";
 import { NAVIGATION_TAB_ORDER } from "./navigation-tab-order";
@@ -76,11 +77,11 @@ export function WorkspaceRootScreen() {
                 ) : layout.usesSplitView ? (
                   <>
                     <NativeStackScreenOptions options={{ headerShown: false }} />
-                    <AndroidScreenHeader title="Pull requests" />
+                    <AndroidScreenHeader title={tr("Pull requests")} />
                     <View className="flex-1 items-center justify-center px-10">
                       <EmptyState
-                        title="Select a pull request"
-                        detail="Choose a pull request from the sidebar to review it."
+                        title={tr("Select a pull request")}
+                        detail={tr("Choose a pull request from the sidebar to review it.")}
                         variant="plain"
                       />
                     </View>

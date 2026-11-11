@@ -1,4 +1,5 @@
 import { uuidv4 } from "../../lib/uuid";
+import { tr } from "@t3tools/shared/i18n";
 import { ThreadUndoNotice } from "./ThreadUndoNotice";
 import { Toolbar } from "../../components/ui/Toolbar";
 import { use } from "react";
@@ -179,13 +180,13 @@ export function HomeRouteScreen() {
         {Platform.OS === "ios" ? (
           <Toolbar placement="left">
             <Toolbar.Button
-              accessibilityLabel="New task"
+              accessibilityLabel={tr("New task")}
               icon="square.and.pencil"
               onPress={startNewTask}
             />
           </Toolbar>
         ) : null}
-        {Platform.OS === "android" ? <AndroidScreenHeader title="Threads" /> : null}
+        {Platform.OS === "android" ? <AndroidScreenHeader title={tr("Threads")} /> : null}
         <WorkspaceEmptyDetail
           onAddConnection={
             Platform.OS === "android" && !catalogState.hasConnections

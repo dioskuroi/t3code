@@ -1,4 +1,5 @@
 import type { WorkspaceState } from "../../state/workspaceModel";
+import { tr } from "@t3tools/shared/i18n";
 
 export interface WorkspaceConnectionStatusPresentation {
   readonly label: string;
@@ -17,21 +18,23 @@ function shouldShowWorkspaceConnectionStatus(state: WorkspaceState): boolean {
 }
 
 function workspaceConnectionStatusLabel(state: WorkspaceState): string {
-  if (state.networkStatus === "offline") return "You are offline";
+  if (state.networkStatus === "offline") return tr("You are offline");
   if (state.hasReadyEnvironment && state.hasSyncingConnectedEnvironment) {
-    return state.hasLoadedShellSnapshot ? "Syncing threads..." : "Loading threads...";
+    return state.hasLoadedShellSnapshot ? tr("Syncing threads...") : tr("Loading threads...");
   }
   if (state.connectingEnvironments.length === 1) {
-    return `Reconnecting to ${state.connectingEnvironments[0]!.environmentLabel}`;
+    return tr("Reconnecting to {label}", {
+      label: state.connectingEnvironments[0]!.environmentLabel,
+    });
   }
   if (state.connectingEnvironments.length > 1) {
-    return `Reconnecting ${state.connectingEnvironments.length} environments`;
+    return tr("Reconnecting {count} environments", { count: state.connectingEnvironments.length });
   }
   if (state.connectionError !== null) return state.connectionError;
   if (state.hasPendingShellSnapshot) {
-    return state.hasLoadedShellSnapshot ? "Syncing threads..." : "Loading threads...";
+    return state.hasLoadedShellSnapshot ? tr("Syncing threads...") : tr("Loading threads...");
   }
-  return "Not connected";
+  return tr("Not connected");
 }
 
 export function workspaceConnectionStatusPresentation(

@@ -1,4 +1,5 @@
 import { useActiveNewTask } from "../../state/active-new-task";
+import { tr } from "@t3tools/shared/i18n";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { useAndroidControlSizing } from "../../components/ui/useAndroidControlSizing";
 import type { ThreadMoveDestination } from "../threads/threadOrder";
@@ -149,16 +150,16 @@ function deriveEmptyState(props: {
   const { catalogState } = props;
   if (catalogState.isLoadingConnections) {
     return {
-      title: "Loading environments",
-      detail: "Checking saved environments on this device.",
+      title: tr("Loading environments"),
+      detail: tr("Checking saved environments on this device."),
       loading: true,
     };
   }
 
   if (!catalogState.hasConnections) {
     return {
-      title: "No environments connected",
-      detail: "Add an environment to load projects and start coding sessions.",
+      title: tr("No environments connected"),
+      detail: tr("Add an environment to load projects and start coding sessions."),
       loading: false,
     };
   }
@@ -173,11 +174,11 @@ function deriveEmptyState(props: {
     return {
       title:
         catalogState.connectionState === "unsupported"
-          ? "Client not supported"
-          : "Environment unavailable",
+          ? tr("Client not supported")
+          : tr("Environment unavailable"),
       detail:
         catalogState.connectionError ??
-        "The saved environment is offline. Check the URL or start the environment, then retry.",
+        tr("The saved environment is offline. Check the URL or start the environment, then retry."),
       loading: false,
     };
   }
@@ -188,23 +189,23 @@ function deriveEmptyState(props: {
     catalogState.connectionError === null
   ) {
     return {
-      title: "Connecting to environment",
-      detail: "Loading projects and threads from the saved environment.",
+      title: tr("Connecting to environment"),
+      detail: tr("Loading projects and threads from the saved environment."),
       loading: true,
     };
   }
 
   if (props.projectCount === 0 && catalogState.hasLoadedShellSnapshot) {
     return {
-      title: "No projects found",
-      detail: "The connected environment did not report any projects.",
+      title: tr("No projects found"),
+      detail: tr("The connected environment did not report any projects."),
       loading: false,
     };
   }
 
   return {
-    title: "No threads yet",
-    detail: "Create a task to start a new coding runtime in one of your connected projects.",
+    title: tr("No threads yet"),
+    detail: tr("Create a task to start a new coding runtime in one of your connected projects."),
     loading: false,
   };
 }
@@ -686,12 +687,14 @@ export function HomeScreen(props: HomeScreenProps) {
             <EmptyState
               title={emptyState.title}
               detail={emptyState.detail}
-              actionLabel={!props.catalogState.hasReadyEnvironment ? "Add environment" : undefined}
+              actionLabel={
+                !props.catalogState.hasReadyEnvironment ? tr("Add environment") : undefined
+              }
               onAction={!props.catalogState.hasReadyEnvironment ? props.onAddConnection : undefined}
               action={
                 Platform.OS === "android" && !props.catalogState.hasReadyEnvironment ? (
                   <FloatingActionButton
-                    label="Add environment"
+                    label={tr("Add environment")}
                     icon="plus"
                     variant="extended"
                     tone="primary"
@@ -737,26 +740,30 @@ export function HomeScreen(props: HomeScreenProps) {
   const v2ListEmpty =
     hasSearchQuery && threadSearch.isPending ? undefined : hasSearchQuery ? (
       <EmptyState
-        title="No results"
-        detail={`No threads matching "${props.searchQuery}".`}
+        title={tr("No results")}
+        detail={tr("No threads matching {searchQuery}.", { searchQuery: props.searchQuery })}
         variant={Platform.OS === "android" ? "plain" : undefined}
       />
     ) : v2ScopedProjectGroup !== null ? (
       <EmptyState
-        title={`No threads in ${v2ScopedProjectGroup.title}`}
-        detail="Choose another project or create a new task."
+        title={tr("No threads in {selectedEnvironmentLabel}", {
+          selectedEnvironmentLabel: v2ScopedProjectGroup.title,
+        })}
+        detail={tr("Choose another project or create a new task.")}
         variant={Platform.OS === "android" ? "plain" : undefined}
       />
     ) : selectedEnvironmentLabel ? (
       <EmptyState
-        title={`No threads in ${selectedEnvironmentLabel}`}
-        detail="Choose another environment or create a new task."
+        title={tr("No threads in {selectedEnvironmentLabel}", {
+          selectedEnvironmentLabel: selectedEnvironmentLabel,
+        })}
+        detail={tr("Choose another environment or create a new task.")}
         variant={Platform.OS === "android" ? "plain" : undefined}
       />
     ) : (
       <EmptyState
-        title="No threads yet"
-        detail="Create a task to start a new coding session."
+        title={tr("No threads yet")}
+        detail={tr("Create a task to start a new coding session.")}
         variant={Platform.OS === "android" ? "plain" : undefined}
       />
     );

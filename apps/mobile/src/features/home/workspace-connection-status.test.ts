@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { tr } from "@t3tools/shared/i18n";
 import type { WorkspaceState } from "../../state/workspaceModel";
 import { workspaceConnectionStatusPresentation } from "./workspace-connection-status";
 
@@ -74,7 +75,7 @@ describe("workspace connection status", () => {
     });
 
     expect(workspaceConnectionStatusPresentation(state)).toEqual({
-      label: "Syncing threads...",
+      label: tr("Syncing threads..."),
       showsProgress: true,
     });
   });

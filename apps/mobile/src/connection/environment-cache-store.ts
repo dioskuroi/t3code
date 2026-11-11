@@ -6,6 +6,7 @@ import {
   Persistence,
   makeStoredShellSnapshotEncoder,
 } from "@t3tools/client-runtime/platform";
+import { tr } from "@t3tools/shared/i18n";
 import { type EnvironmentId, ServerConfig, VcsListRefsResult } from "@t3tools/contracts";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -46,7 +47,10 @@ type CacheOperation = Persistence.ConnectionPersistenceError["operation"];
 function persistenceError(operation: CacheOperation, cause: unknown) {
   return new Persistence.ConnectionPersistenceError({
     operation,
-    message: `Could not ${operation.replaceAll("-", " ")}: ${String(cause)}`,
+    message: tr("Could not {operation}: {cause}", {
+      operation: operation.replaceAll("-", " "),
+      cause: String(cause),
+    }),
   });
 }
 
@@ -72,7 +76,7 @@ function loadDecodedCache<A, B>(input: {
           input.decode(raw).pipe(
             Effect.map(input.select),
             Effect.catch((cause) =>
-              Effect.logWarning("Discarding corrupt mobile client cache record.", {
+              Effect.logWarning(tr("Discarding corrupt mobile client cache record."), {
                 environmentId: input.environmentId,
                 kind: input.kind,
                 cacheKey: input.cacheKey,

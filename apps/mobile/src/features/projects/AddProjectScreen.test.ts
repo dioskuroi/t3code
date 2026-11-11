@@ -7,6 +7,7 @@ import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connect
 import { workspaceDetailRouter } from "../workspace/workspace-detail-selection";
 import type { NavigationState } from "@react-navigation/native";
 import { AuthOrchestrationOperateScope, AuthSourceControlWriteScope } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { act, createElement, isValidElement, type ReactNode } from "react";
@@ -234,7 +235,7 @@ function cloneAction() {
         repositoryName: "repo",
       }),
     ),
-    "Clone project",
+    tr("Clone project"),
     true,
   );
   if (!action) throw new Error("Clone action missing");
@@ -359,12 +360,12 @@ describe("add project source environment", () => {
       for (const phase of ["available", "offline", "error"] as const) {
         state.connectionStates = { environment: phase };
         await act(() => root.render(createElement(SourceObserver)));
-        expect(findAction(screen, "Local folder")).toBeNull();
+        expect(findAction(screen, tr("Local folder"))).toBeNull();
         expect(state.dispatch).not.toHaveBeenCalled();
       }
       state.connectionStates = {};
       await act(() => root.render(createElement(SourceObserver)));
-      const reconnectedLocal = findAction(screen, "Local folder");
+      const reconnectedLocal = findAction(screen, tr("Local folder"));
       if (!reconnectedLocal) throw new Error("Reconnected local folder action missing");
       reconnectedLocal();
       expect(state.dispatch).toHaveBeenLastCalledWith({
@@ -373,11 +374,11 @@ describe("add project source environment", () => {
       });
       state.connectionStates = { environment: "offline" };
       await act(() => root.render(createElement(SourceObserver)));
-      expect(findAction(screen, "Local folder")).toBeNull();
+      expect(findAction(screen, tr("Local folder"))).toBeNull();
       const select = findAction(screen, "Another environment");
       if (!select) throw new Error("Connected environment selection missing");
       await act(() => select());
-      const local = findAction(screen, "Local folder");
+      const local = findAction(screen, tr("Local folder"));
       if (!local) throw new Error("Manually selected local folder action missing");
       local();
       expect(state.dispatch).toHaveBeenLastCalledWith({
@@ -409,14 +410,14 @@ describe("add project source environment", () => {
     }
     try {
       await act(() => root.render(createElement(SourceObserver)));
-      expect(findAction(screen, "Local folder")).toBeNull();
+      expect(findAction(screen, tr("Local folder"))).toBeNull();
       expect(navigation.getState().routes.at(-1)?.name).toBe("AddProject");
       const select = findAction(screen, "Another environment");
       if (!select) throw new Error("Connected environment selection missing");
       await act(() => select());
       state.connectionStates = {};
       await act(() => root.render(createElement(SourceObserver)));
-      const local = findAction(screen, "Local folder");
+      const local = findAction(screen, tr("Local folder"));
       if (!local) throw new Error("Local folder action missing");
       local();
       expect(navigation.getState().routes.at(-1)).toMatchObject({
@@ -444,7 +445,7 @@ describe("add project source environment", () => {
     function SourceRouteObserver(props: { environmentId?: string | string[] }) {
       const route = AddProjectSourceRoute({ route: { params: props } });
       const screen = AddProjectSourceScreen(route.props);
-      const local = findAction(screen, "Local folder");
+      const local = findAction(screen, tr("Local folder"));
       const selectEnvironment = findAction(screen, "Environment");
       if (!local || !selectEnvironment) throw new Error("Source actions missing");
       actions = { local, selectEnvironment };
@@ -502,7 +503,7 @@ describe("local project navigation", () => {
     state.waitForProject.mockReturnValue(projected.promise);
     const submit = findAction(
       renderScreen(() => AddProjectLocalFolderScreen({ environmentId: "environment" })),
-      "Add project",
+      tr("Add project"),
     );
     if (!submit) throw new Error("Add project action missing");
     return { created, projected, submit };
@@ -518,8 +519,10 @@ describe("local project navigation", () => {
     expect(state.projects).toEqual(["/tmp/t3-mobile-audit-fixture"]);
     expect(state.dispatch).not.toHaveBeenCalled();
     expect(state.alert).toHaveBeenCalledExactlyOnceWith(
-      "Project added",
-      "The project was created but has not reached this device yet. It will appear in the project list once the connection catches up.",
+      tr("Project added"),
+      tr(
+        "The project was created but has not reached this device yet. It will appear in the project list once the connection catches up.",
+      ),
     );
   });
 
@@ -585,7 +588,7 @@ describe("local project navigation", () => {
         }>(node)
       )
         return false;
-      if (node.props.placeholder === "Project name") {
+      if (node.props.placeholder === tr("Project name")) {
         node.props.onChangeText!("new-project");
         return true;
       }
@@ -596,7 +599,7 @@ describe("local project navigation", () => {
       await act(() => {
         expect(enterName(screen)).toBe(true);
       });
-      const submit = findAction(screen, "Create project");
+      const submit = findAction(screen, tr("Create project"));
       if (!submit) throw new Error("Create project action missing");
       await act(async () => {
         submit();

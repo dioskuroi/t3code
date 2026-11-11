@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 export const NAVIGATION_TAB_ORDER = ["threads", "pullRequests", "usage"] as const;
 export type NavigationTab = (typeof NAVIGATION_TAB_ORDER)[number];
 
@@ -8,9 +9,9 @@ export function navigationCustomizationAvailable(
 }
 
 export const NAVIGATION_TAB_LABELS: Readonly<Record<NavigationTab, string>> = {
-  threads: "Threads",
-  pullRequests: "Pulls",
-  usage: "Usage",
+  threads: tr("Threads"),
+  pullRequests: tr("Pulls"),
+  usage: tr("Usage"),
 };
 
 function isNavigationTab(value: unknown): value is NavigationTab {
