@@ -155,6 +155,53 @@ export function survivesWordWhitelist(text: string): boolean {
   return /[A-Za-z]{2,}/.test(rest);
 }
 
+/**
+ * 占位符集合（tr() 的 {name} 插值，见 packages/shared/src/i18n.ts）。
+ * 模板串插值经 codemod 统一改写为 {name}；UI 文案不存在裸花括号字面量。
+ */
+export function placeholderSet(text: string): Set<string> {
+  return new Set([...text.matchAll(/\{([^{}]+)\}/g)].map((m) => m[1]!));
+}
+
+/**
+ * 占位符 parity（风格指南 §6：{0}/{1} 原位保留、不增删，必要时调词序）。
+ * 词序可调 → 比较集合而非序列。返回失配描述，空数组 = 通过。
+ */
+export function placeholderMismatches(key: string, value: string): string[] {
+  const expected = placeholderSet(key);
+  const actual = placeholderSet(value);
+  return [
+    ...[...expected]
+      .filter((p) => !actual.has(p))
+      .sort()
+      .map((p) => `缺少 {${p}}`),
+    ...[...actual]
+      .filter((p) => !expected.has(p))
+      .sort()
+      .map((p) => `多出 {${p}}`),
+  ];
+}
+
+/** 破折号家族（风格指南 §2：中文 UI 文案一律不用；「——」同为 U+2014 序列） */
+const DASHES = /[\u2013\u2014\u2015]/;
+
+/**
+ * 译文内容检查：① 禁破折号 ② 白名单词之外的英文混入信号（术语表 §3 派生词表，
+ * 与裸串面共用 survivesWordWhitelist）。占位符名、HTML 实体、URL 不是文案，
+ * 先扣除再判词。返回违规描述，空数组 = 通过。
+ */
+export function translationContentIssues(value: string): string[] {
+  const issues: string[] = [];
+  const dash = DASHES.exec(value);
+  if (dash) issues.push(`破折号 U+${dash[0]!.codePointAt(0)!.toString(16).toUpperCase()}`);
+  const stripped = value
+    .replace(/\{[^{}]+\}/g, " ")
+    .replace(/&[a-zA-Z][a-zA-Z0-9]*;/g, " ")
+    .replace(/https?:\/\/\S+/g, " ");
+  if (survivesWordWhitelist(stripped)) issues.push("白名单外英文混入");
+  return issues;
+}
+
 function isWhitelisted(s: string, file: string): boolean {
   const t = s.trim();
   if (whitelist.exact.includes(t)) return true;
@@ -181,6 +228,29 @@ interface Finding {
 const trKeys = new Set<string>();
 const bareFindings: Finding[] = [];
 const dynamicKeySites: Finding[] = [];
+
+/** 字典面 finding：key + 违规描述列表 */
+interface DictIssue {
+  key: string;
+  issues: string[];
+}
+
+/**
+ * 新两面为字典内在检查（key/value 自洽），与扫描范围无关：任何模式都查全字典。
+ * 各批因此共享同一份全局干净的字典；并集合并后由本面兜底。
+ */
+function checkDictionaryValues(): { placeholder: DictIssue[]; content: DictIssue[] } {
+  const placeholder: DictIssue[] = [];
+  const content: DictIssue[] = [];
+  for (const key of Object.keys(dictionary).sort()) {
+    const value = dictionary[key]!;
+    const parity = placeholderMismatches(key, value);
+    if (parity.length > 0) placeholder.push({ key, issues: parity });
+    const contentIssues = translationContentIssues(value);
+    if (contentIssues.length > 0) content.push({ key, issues: contentIssues });
+  }
+  return { placeholder, content };
+}
 
 function checkFile(repoRelativeFile: string, source: string): void {
   if (isWhitelistedFile(repoRelativeFile)) return;
@@ -275,57 +345,78 @@ function listSourceFiles(root: string): string[] {
     .filter((file) => /\.(ts|tsx)$/.test(file));
 }
 
+function printDictSection(label: string, findings: DictIssue[]): void {
+  if (findings.length === 0) return;
+  print(`\n${label} ${findings.length} 例：`);
+  for (const f of findings.slice(0, 20)) {
+    print(`  ${JSON.stringify(f.key)} → ${f.issues.join("、")}`);
+  }
+  if (findings.length > 20) print(`  … 共 ${findings.length} 条`);
+}
+
 function printCheck(
   scannedFiles: number,
   untranslated: string[],
   stale: string[],
+  dictIssues: { placeholder: DictIssue[]; content: DictIssue[] },
   fullScan: boolean,
 ): number {
+  const { placeholder, content } = dictIssues;
   const dictionaryState =
     Object.keys(dictionary).length > 0 ? `${Object.keys(dictionary).length} entries` : "empty";
   const staleState = fullScan ? `${stale.length}` : "仅全仓扫描可判";
   print(`t3code i18n check（扫描 ${scannedFiles} 个文件）`);
   print(`  字典 ${DICTIONARY_PATH}：${dictionaryState}`);
   print(`  tr() key：${trKeys.size}（未翻译 ${untranslated.length}，字典废弃 ${staleState}）`);
-  print(`  裸英文残留：${bareFindings.length}`);
+  print(`  占位符失配：${placeholder.length} 例`);
+  print(`  译文内容违规：${content.length} 例`);
   if (dynamicKeySites.length > 0) {
     print(`  动态 key 调用点（需人工确认）：${dynamicKeySites.length}`);
   }
 
   if (untranslated.length > 0) {
-    print(`\n[1/3] 未翻译 key ${untranslated.length} 例：`);
+    print(`\n[1/5] 未翻译 key ${untranslated.length} 例：`);
     for (const k of untranslated.slice(0, 20)) print(`  ${JSON.stringify(k)}`);
     if (untranslated.length > 20) print(`  … 共 ${untranslated.length} 条`);
   }
   if (fullScan && stale.length > 0) {
-    print(`\n[2/3] 废弃译文 key ${stale.length} 例：`);
+    print(`\n[2/5] 废弃译文 key ${stale.length} 例：`);
     for (const k of stale.slice(0, 20)) print(`  ${JSON.stringify(k)}`);
     if (stale.length > 20) print(`  … 共 ${stale.length} 条`);
   }
   if (bareFindings.length > 0) {
     const byFile = new Map<string, number>();
     for (const f of bareFindings) byFile.set(f.file, (byFile.get(f.file) ?? 0) + 1);
-    print(`\n[3/3] 裸英文残留 ${bareFindings.length}（全量清单用 --json，走查面用 walkthrough）：`);
+    print(`\n[3/5] 裸英文残留 ${bareFindings.length}（全量清单用 --json，走查面用 walkthrough）：`);
     for (const [file, count] of [...byFile.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15)) {
       print(`  ${String(count).padStart(5)}  ${file}`);
     }
     print(`  … 共 ${byFile.size} 个文件`);
   }
+  printDictSection("[4/5] 占位符失配", placeholder);
+  printDictSection("[5/5] 译文内容违规", content);
 
   const failed =
     untranslated.length > 0 ||
     stale.length > 0 ||
     bareFindings.length > 0 ||
-    dynamicKeySites.length > 0;
+    dynamicKeySites.length > 0 ||
+    placeholder.length > 0 ||
+    content.length > 0;
   print(
     failed
-      ? "\n非零退出：存在未翻译/废弃/裸串面（全量汉化完成前为预期状态）。"
-      : "\n全部通过：无未翻译 key、无废弃译文、无裸英文残留。",
+      ? "\n非零退出：存在未翻译/废弃/裸串/占位符失配/译文内容面（全量汉化完成前为预期状态）。"
+      : "\n全部通过：无未翻译 key、无废弃译文、无裸英文残留、无占位符失配、无译文内容违规。",
   );
   return failed ? 1 : 0;
 }
 
-function printJson(scannedFiles: number, untranslated: string[], stale: string[]): number {
+function printJson(
+  scannedFiles: number,
+  untranslated: string[],
+  stale: string[],
+  dictIssues: { placeholder: DictIssue[]; content: DictIssue[] },
+): number {
   print(
     JSON.stringify(
       {
@@ -336,6 +427,8 @@ function printJson(scannedFiles: number, untranslated: string[], stale: string[]
         stale,
         bare: bareFindings,
         dynamicKeySites,
+        dictPlaceholder: dictIssues.placeholder,
+        dictContent: dictIssues.content,
       },
       null,
       2,
@@ -495,6 +588,7 @@ function main(): void {
     checkFile(file, NodeFS.readFileSync(NodePath.join(REPO_ROOT, file), "utf8"));
   }
 
+  const dictIssues = checkDictionaryValues();
   const untranslated = [...trKeys].filter((k) => !(k in dictionary)).sort();
   // stale（字典 key 已无调用）只在全仓扫描下可判：per-file 模式的 trKeys 不含其他文件的调用。
   const stale = fullScan
@@ -506,9 +600,9 @@ function main(): void {
   if (walkthroughMode) {
     NodeProcess.exit(printWalkthrough());
   } else if (asJson) {
-    NodeProcess.exit(printJson(files.length, untranslated, stale));
+    NodeProcess.exit(printJson(files.length, untranslated, stale, dictIssues));
   } else {
-    NodeProcess.exit(printCheck(files.length, untranslated, stale, fullScan));
+    NodeProcess.exit(printCheck(files.length, untranslated, stale, dictIssues, fullScan));
   }
 }
 
