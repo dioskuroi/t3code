@@ -1,4 +1,5 @@
 import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connection";
+import { tr } from "@t3tools/shared/i18n";
 
 export interface FloatingStatusAction {
   readonly label: string;
@@ -52,7 +53,7 @@ export function connectionFloatingStatus(input: {
   readonly environmentLabel: string | null;
   readonly onReconnect: () => void;
 }): FloatingWorkingStatus | null {
-  const environmentLabel = input.environmentLabel ?? "Environment";
+  const environmentLabel = input.environmentLabel ?? tr("Environment");
   const unavailable = (label: string): FloatingWorkingStatus => ({
     kind: "connection",
     tone: "unavailable",
@@ -68,19 +69,24 @@ export function connectionFloatingStatus(input: {
         tone: "reconnecting",
         label:
           input.connectionError === null
-            ? `Reconnecting to ${environmentLabel}...`
-            : `Failed to connect. Retrying ${environmentLabel}...`,
+            ? tr("Reconnecting to {environmentLabel}...", { environmentLabel: environmentLabel })
+            : tr("Failed to connect. Retrying {environmentLabel}...", {
+                environmentLabel: environmentLabel,
+              }),
         onPress: input.onReconnect,
       };
     case "offline":
-      return unavailable("You are offline");
+      return unavailable(tr("You are offline"));
     case "unsupported":
-      return unavailable("Client not supported");
+      return unavailable(tr("Client not supported"));
     case "error":
       return unavailable(
         input.connectionError
-          ? `Failed to connect to ${environmentLabel}: ${input.connectionError}`
-          : `Failed to connect to ${environmentLabel}`,
+          ? tr("Failed to connect to {environment}: {error}", {
+              environment: environmentLabel,
+              error: input.connectionError,
+            })
+          : tr("Failed to connect to {environmentLabel}", { environmentLabel: environmentLabel }),
       );
     case "available":
       return unavailable(`${environmentLabel} is not connected`);

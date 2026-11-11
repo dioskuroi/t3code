@@ -1,4 +1,5 @@
 import { act, type ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vite-plus/test";
 
@@ -85,16 +86,16 @@ it("recognizes both the main checkout and a linked worktree as this thread's che
   try {
     checkout.worktreePath = null;
     expect(rows()).toEqual([
-      { name: "feature/available", subtitle: "Local branch", disabled: false },
-      { name: "feature/linked", subtitle: "Checked out in another worktree", disabled: true },
-      { name: "main", subtitle: "Checked out in this thread", disabled: false },
+      { name: "feature/available", subtitle: tr("Local branch"), disabled: false },
+      { name: "feature/linked", subtitle: tr("Checked out in another worktree"), disabled: true },
+      { name: "main", subtitle: tr("Checked out in this thread"), disabled: false },
     ]);
 
     checkout.worktreePath = linked;
     expect(rows()).toEqual([
-      { name: "feature/available", subtitle: "Local branch", disabled: false },
-      { name: "feature/linked", subtitle: "Checked out in this thread", disabled: false },
-      { name: "main", subtitle: "Checked out in another worktree", disabled: true },
+      { name: "feature/available", subtitle: tr("Local branch"), disabled: false },
+      { name: "feature/linked", subtitle: tr("Checked out in this thread"), disabled: false },
+      { name: "main", subtitle: tr("Checked out in another worktree"), disabled: true },
     ]);
   } finally {
     act(() => root.unmount());

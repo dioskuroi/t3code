@@ -1,4 +1,5 @@
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
+import { tr } from "@t3tools/shared/i18n";
 import { HeaderHeightContext } from "@react-navigation/elements";
 import { useContext } from "react";
 import { Platform } from "react-native";
@@ -49,7 +50,7 @@ export function GitActionProgressOverlay(props: {
     >
       <Toast
         singleLine
-        message={progress.label ?? "Source control"}
+        message={progress.label ?? tr("Source control")}
         description={progress.description ?? undefined}
         tone={
           progress.phase === "error"
@@ -59,7 +60,7 @@ export function GitActionProgressOverlay(props: {
               : "default"
         }
         busy={progress.phase === "running"}
-        action={progress.prUrl ? { label: "View", onPress: handlePress } : undefined}
+        action={progress.prUrl ? { label: tr("View"), onPress: handlePress } : undefined}
       />
     </Animated.View>
   );

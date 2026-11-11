@@ -1,4 +1,5 @@
 import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 import type { VcsRef } from "@t3tools/client-runtime/state/vcs";
 import {
   type AtomCommandResult,
@@ -31,7 +32,7 @@ export async function checkoutNewTaskBranch<E>(input: {
 }): Promise<AtomCommandResult<VcsRef, E | Error>> {
   if (!input.project) {
     return AsyncResult.failure(
-      Cause.fail(new Error("The selected project is unavailable. Reconnect and try again.")),
+      Cause.fail(new Error(tr("The selected project is unavailable. Reconnect and try again."))),
     );
   }
   if (input.workspaceMode === "worktree" || input.branch.current) {
@@ -66,7 +67,9 @@ export async function checkoutNewTaskBranch<E>(input: {
         return AsyncResult.failure(
           Cause.fail(
             new Error(
-              "The server did not report whether this project is at the repository root, so this worktree cannot be reused safely. Update the server or choose another branch.",
+              tr(
+                "The server did not report whether this project is at the repository root, so this worktree cannot be reused safely. Update the server or choose another branch.",
+              ),
             ),
           ),
         );
@@ -75,7 +78,9 @@ export async function checkoutNewTaskBranch<E>(input: {
         return AsyncResult.failure(
           Cause.fail(
             new Error(
-              "This project is a repository subdirectory. Choose another branch or add the repository root as a project to reuse this worktree.",
+              tr(
+                "This project is a repository subdirectory. Choose another branch or add the repository root as a project to reuse this worktree.",
+              ),
             ),
           ),
         );

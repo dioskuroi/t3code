@@ -2,6 +2,7 @@ import {
   getPromptControlledTraits,
   getTraitSelectChange,
 } from "@t3tools/client-runtime/model-traits";
+import { tr } from "@t3tools/shared/i18n";
 import type {
   ManagedPolicySummary,
   ProviderOptionDescriptor,
@@ -25,21 +26,21 @@ const policy = (organization: string, maxRuntimeMode?: RuntimeMode): ManagedPoli
 describe("managed runtime mode limits", () => {
   it("disables modes above the strictest target's ceiling with that target's reason", () => {
     const choices = withManagedRuntimeModeLimits(RUNTIME_MODE_CHOICES, [
-      policy("Wide Corp", "auto"),
+      policy(tr("Wide Corp"), "auto"),
       undefined,
-      policy("Narrow Corp", "auto-accept-edits"),
+      policy(tr("Narrow Corp"), "auto-accept-edits"),
     ]);
 
     expect(choices.map((choice) => [choice.mode, choice.disabledReason])).toEqual([
       ["approval-required", undefined],
       ["auto-accept-edits", undefined],
-      ["auto", "Narrow Corp limits threads to Auto-accept edits."],
-      ["full-access", "Wide Corp limits threads to Auto."],
+      ["auto", tr("Narrow Corp limits threads to Auto-accept edits.")],
+      ["full-access", tr("Wide Corp limits threads to Auto.")],
     ]);
   });
 
   it("drops a new thread's draft mode above the ceiling for the default", () => {
-    const capped = policy("Corp", "auto");
+    const capped = policy(tr("Corp"), "auto");
     expect(resolveNewThreadRuntimeMode("full-access", "auto", capped)).toBe("auto");
     expect(resolveNewThreadRuntimeMode("approval-required", "auto", capped)).toBe(
       "approval-required",
@@ -51,14 +52,14 @@ describe("managed runtime mode limits", () => {
 
 const effortDescriptor: Extract<ProviderOptionDescriptor, { type: "select" }> = {
   id: "effort",
-  label: "Reasoning",
+  label: tr("Reasoning"),
   type: "select",
   options: [
-    { id: "low", label: "Low" },
-    { id: "medium", label: "Medium", isDefault: true },
-    { id: "high", label: "High" },
-    { id: "ultrathink", label: "Ultrathink" },
-    { id: "ultracode", label: "Ultracode" },
+    { id: "low", label: tr("Low") },
+    { id: "medium", label: tr("Medium"), isDefault: true },
+    { id: "high", label: tr("High") },
+    { id: "ultrathink", label: tr("Ultrathink") },
+    { id: "ultracode", label: tr("Ultracode") },
   ],
   currentValue: "high",
   promptInjectedValues: ["ultrathink"],

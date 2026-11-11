@@ -1,4 +1,5 @@
 import { threadSearchMatchKey } from "@t3tools/client-runtime/state/thread-search";
+import { tr } from "@t3tools/shared/i18n";
 import { createInboxReturnTracker } from "@t3tools/client-runtime/state/thread-inbox";
 import { presentThreadShell } from "@t3tools/client-runtime/state/models";
 import * as DateTime from "effect/DateTime";
@@ -162,11 +163,11 @@ describe("resolveThreadListV2Status", () => {
 
 describe("queued messages keep a settled thread active", () => {
   const threads = [
-    makeThread({ id: ThreadId.make("active"), title: "Active" }),
-    makeThread({ id: ThreadId.make("settled"), title: "Settled", settledOverride: "settled" }),
+    makeThread({ id: ThreadId.make("active"), title: tr("Active") }),
+    makeThread({ id: ThreadId.make("settled"), title: tr("Settled"), settledOverride: "settled" }),
     makeThread({
       id: ThreadId.make("settled-queued"),
-      title: "Settled with outbox",
+      title: tr("Settled with outbox"),
       settledOverride: "settled",
     }),
   ];
@@ -196,9 +197,9 @@ describe("search lists ranked matches", () => {
   it("lists matches by rank across shelves, then threads listed for their messages", () => {
     const layout = buildThreadListV2Items({
       threads: [
-        makeThread({ id: ThreadId.make("notes"), title: "Deploy notes" }),
-        makeThread({ id: ThreadId.make("mentioned"), title: "Weekly notes" }),
-        makeThread({ id: ThreadId.make("exact"), title: "Deploy", settledOverride: "settled" }),
+        makeThread({ id: ThreadId.make("notes"), title: tr("Deploy notes") }),
+        makeThread({ id: ThreadId.make("mentioned"), title: tr("Weekly notes") }),
+        makeThread({ id: ThreadId.make("exact"), title: tr("Deploy"), settledOverride: "settled" }),
       ],
       environmentId: null,
       searchQuery: "deploy",
@@ -230,34 +231,38 @@ describe("sortThreadsForListV2", () => {
 describe("getThreadListV2OrderedSection", () => {
   it("uses each saved order and excludes settled, snoozed, and archived rows", () => {
     const threads = [
-      makeThread({ id: ThreadId.make("active-later"), title: "Later", activeOrderKey: "t" }),
-      makeThread({ id: ThreadId.make("active-first"), title: "First", activeOrderKey: "f" }),
-      makeThread({ id: ThreadId.make("active-new"), title: "New" }),
+      makeThread({ id: ThreadId.make("active-later"), title: tr("Later"), activeOrderKey: "t" }),
+      makeThread({ id: ThreadId.make("active-first"), title: tr("First"), activeOrderKey: "f" }),
+      makeThread({ id: ThreadId.make("active-new"), title: tr("New") }),
       makeThread({
         id: ThreadId.make("pinned-later"),
-        title: "Pinned later",
+        title: tr("Pinned later"),
         pinnedAt: NOW,
         pinOrderKey: "t",
         activeOrderKey: "f",
       }),
       makeThread({
         id: ThreadId.make("pinned-first"),
-        title: "Pinned first",
+        title: tr("Pinned first"),
         pinnedAt: NOW,
         pinOrderKey: "f",
         activeOrderKey: "t",
       }),
-      makeThread({ id: ThreadId.make("settled"), title: "Settled", settledOverride: "settled" }),
-      makeThread({ id: ThreadId.make("archived"), title: "Archived", archivedAt: NOW }),
+      makeThread({
+        id: ThreadId.make("settled"),
+        title: tr("Settled"),
+        settledOverride: "settled",
+      }),
+      makeThread({ id: ThreadId.make("archived"), title: tr("Archived"), archivedAt: NOW }),
       makeThread({
         id: ThreadId.make("snoozed"),
-        title: "Snoozed",
+        title: tr("Snoozed"),
         snoozedUntil: "2026-06-03T10:00:00.000Z",
         snoozedAt: NOW,
       }),
       makeThread({
         id: ThreadId.make("pinned-snoozed"),
-        title: "Pinned snoozed",
+        title: tr("Pinned snoozed"),
         pinnedAt: NOW,
         snoozedUntil: "2026-06-03T10:00:00.000Z",
         snoozedAt: NOW,
@@ -280,16 +285,16 @@ describe("buildThreadListV2Items", () => {
   it("hides snoozed threads and counts them — visibility parity with web", () => {
     const layout = buildThreadListV2Items({
       threads: [
-        makeThread({ id: ThreadId.make("active"), title: "Active" }),
+        makeThread({ id: ThreadId.make("active"), title: tr("Active") }),
         makeThread({
           id: ThreadId.make("snoozed"),
-          title: "Snoozed",
+          title: tr("Snoozed"),
           snoozedUntil: "2026-06-03T09:00:00.000Z",
           snoozedAt: "2026-06-01T12:00:00.000Z",
         }),
         makeThread({
           id: ThreadId.make("woken"),
-          title: "Woken",
+          title: tr("Woken"),
           snoozedUntil: "2026-06-01T18:00:00.000Z",
           snoozedAt: "2026-06-01T12:00:00.000Z",
         }),
@@ -306,10 +311,10 @@ describe("buildThreadListV2Items", () => {
   it("moves a settled pinned thread into the settled shelf — parity with web (#7969)", () => {
     const layout = buildThreadListV2Items({
       threads: [
-        makeThread({ id: ThreadId.make("active"), title: "Active" }),
+        makeThread({ id: ThreadId.make("active"), title: tr("Active") }),
         makeThread({
           id: ThreadId.make("pinned-settled"),
-          title: "Pinned while settled",
+          title: tr("Pinned while settled"),
           pinnedAt: "2026-06-01T12:00:00.000Z",
           settledOverride: "settled",
           settledAt: "2026-06-01T12:00:00.000Z",
@@ -328,10 +333,10 @@ describe("buildThreadListV2Items", () => {
   it("snooze hides a pinned thread and wake restores it to the pinned block", () => {
     const snoozedInput = {
       threads: [
-        makeThread({ id: ThreadId.make("active"), title: "Active" }),
+        makeThread({ id: ThreadId.make("active"), title: tr("Active") }),
         makeThread({
           id: ThreadId.make("pinned-snoozed"),
-          title: "Pinned and snoozed",
+          title: tr("Pinned and snoozed"),
           pinnedAt: "2026-06-01T12:00:00.000Z",
           snoozedUntil: "2026-06-03T09:00:00.000Z",
           snoozedAt: "2026-06-01T11:00:00.000Z",
@@ -354,22 +359,22 @@ describe("buildThreadListV2Items", () => {
   it("builds snoozed rows between active and settled when the shelf is expanded", () => {
     const layout = buildThreadListV2Items({
       threads: [
-        makeThread({ id: ThreadId.make("active"), title: "Active" }),
+        makeThread({ id: ThreadId.make("active"), title: tr("Active") }),
         makeThread({
           id: ThreadId.make("settled"),
-          title: "Settled",
+          title: tr("Settled"),
           settledOverride: "settled",
           settledAt: NOW,
         }),
         makeThread({
           id: ThreadId.make("later"),
-          title: "Wakes later",
+          title: tr("Wakes later"),
           snoozedUntil: "2026-06-03T09:00:00.000Z",
           snoozedAt: "2026-06-01T12:00:00.000Z",
         }),
         makeThread({
           id: ThreadId.make("sooner"),
-          title: "Wakes sooner",
+          title: tr("Wakes sooner"),
           snoozedUntil: "2026-06-02T09:00:00.000Z",
           snoozedAt: "2026-06-01T12:00:00.000Z",
         }),
@@ -396,13 +401,13 @@ describe("buildThreadListV2Items", () => {
       threads: [
         makeThread({
           id: ThreadId.make("open"),
-          title: "Open",
+          title: tr("Open"),
           snoozedUntil: "2026-06-03T09:00:00.000Z",
           snoozedAt: "2026-06-01T12:00:00.000Z",
         }),
         makeThread({
           id: ThreadId.make("other"),
-          title: "Other",
+          title: tr("Other"),
           snoozedUntil: "2026-06-03T10:00:00.000Z",
           snoozedAt: "2026-06-01T12:00:00.000Z",
         }),
@@ -423,7 +428,7 @@ describe("buildThreadListV2Items", () => {
       threads: [
         makeThread({
           id: ThreadId.make("snoozed"),
-          title: "Snoozed",
+          title: tr("Snoozed"),
           snoozedUntil: "2026-06-03T09:00:00.000Z",
           snoozedAt: "2026-06-01T12:00:00.000Z",
         }),
@@ -441,16 +446,16 @@ describe("buildThreadListV2Items", () => {
   it("partitions settled threads into a slim shelf", () => {
     const layout = buildThreadListV2Items({
       threads: [
-        makeThread({ id: ThreadId.make("active"), title: "Active" }),
+        makeThread({ id: ThreadId.make("active"), title: tr("Active") }),
         makeThread({
           id: ThreadId.make("settled"),
-          title: "Settled",
+          title: tr("Settled"),
           settledOverride: "settled",
           settledAt: NOW,
         }),
         makeThread({
           id: ThreadId.make("settled-2"),
-          title: "Settled 2",
+          title: tr("Settled 2"),
           settledOverride: "settled",
           settledAt: NOW,
         }),
@@ -473,11 +478,11 @@ describe("buildThreadListV2Items", () => {
   it("keeps settled threads in the tail and filters by search query", () => {
     const { items } = buildThreadListV2Items({
       threads: [
-        makeThread({ id: ThreadId.make("match"), title: "Fix login bug" }),
-        makeThread({ id: ThreadId.make("miss"), title: "Greeting" }),
+        makeThread({ id: ThreadId.make("match"), title: tr("Fix login bug") }),
+        makeThread({ id: ThreadId.make("miss"), title: tr("Greeting") }),
         makeThread({
           id: ThreadId.make("settled"),
-          title: "Fix login again",
+          title: tr("Fix login again"),
           settledOverride: "settled",
           settledAt: NOW,
         }),
@@ -496,8 +501,8 @@ describe("buildThreadListV2Items", () => {
   it("forgives a typo even when a hidden thread matches the query exactly", () => {
     const { items } = buildThreadListV2Items({
       threads: [
-        makeThread({ id: ThreadId.make("visible"), title: "Restore drag handles" }),
-        makeThread({ id: ThreadId.make("archived"), title: "Drga notes", archivedAt: NOW }),
+        makeThread({ id: ThreadId.make("visible"), title: tr("Restore drag handles") }),
+        makeThread({ id: ThreadId.make("archived"), title: tr("Drga notes"), archivedAt: NOW }),
       ],
       environmentId: null,
       searchQuery: "drga",
@@ -512,12 +517,12 @@ describe("buildThreadListV2Items", () => {
     const projectId = ProjectId.make("project-1");
     const { items } = buildThreadListV2Items({
       threads: [
-        makeThread({ id: ThreadId.make("local"), projectId, title: "Local" }),
+        makeThread({ id: ThreadId.make("local"), projectId, title: tr("Local") }),
         makeThread({
           environmentId: remoteEnvironmentId,
           id: ThreadId.make("remote"),
           projectId,
-          title: "Remote",
+          title: tr("Remote"),
         }),
       ],
       environmentId: null,
@@ -536,11 +541,11 @@ describe("buildThreadListV2Items", () => {
 describe("buildThreadListV2Items settled paging", () => {
   it("caps the settled tail at settledLimit and reports the hidden count", () => {
     const threads = [
-      makeThread({ id: ThreadId.make("active"), title: "Active" }),
+      makeThread({ id: ThreadId.make("active"), title: tr("Active") }),
       ...Array.from({ length: 4 }, (_, index) =>
         makeThread({
           id: ThreadId.make(`settled-${index}`),
-          title: `Settled ${index}`,
+          title: tr("Settled {index}", { index: index }),
           settledOverride: "settled",
           settledAt: `2026-06-01T0${index}:10:00.000Z`,
           latestUserMessageAt: `2026-06-01T0${index}:00:00.000Z`,
@@ -577,7 +582,7 @@ describe("buildThreadListV2Items settled paging", () => {
     const settled = (index: number) =>
       makeThread({
         id: ThreadId.make(`settled-${index}`),
-        title: `Settled ${index}`,
+        title: tr("Settled {index}", { index: index }),
         settledOverride: "settled",
         settledAt: `2026-06-0${index}T00:00:00.000Z`,
       });
@@ -964,7 +969,7 @@ describe("mobile move availability", () => {
     return keys.map((key, index) =>
       makeThread({
         id: ThreadId.make(`move-${index}`),
-        title: `Move ${index}`,
+        title: tr("Move {index}", { index: index }),
         environmentId: index === 1 ? oldEnvironment : environmentId,
         activeOrderKey: section === "active" ? key : null,
         pinOrderKey: section === "pinned" ? key : null,
@@ -1217,15 +1222,15 @@ describe("cross-section thread drops", () => {
 });
 
 it("excludes subagents from navigation, search and ordering while retaining user forks", () => {
-  const root = makeThread({ id: ThreadId.make("root"), title: "Root" });
+  const root = makeThread({ id: ThreadId.make("root"), title: tr("Root") });
   const child = makeThread({
     id: ThreadId.make("child"),
-    title: "Child",
+    title: tr("Child"),
     lineage: { parentThreadId: root.id, rootThreadId: root.id, relationshipToParent: "subagent" },
   });
   const fork = makeThread({
     id: ThreadId.make("fork"),
-    title: "Fork",
+    title: tr("Fork"),
     lineage: { parentThreadId: root.id, rootThreadId: root.id, relationshipToParent: "fork" },
   });
   const threads = [root, child, fork];
@@ -1235,7 +1240,8 @@ it("excludes subagents from navigation, search and ordering while retaining user
     ),
   ).toEqual([fork.id, root.id]);
   expect(
-    buildThreadListV2Items({ threads, environmentId: null, searchQuery: "Child", now: NOW }).items,
+    buildThreadListV2Items({ threads, environmentId: null, searchQuery: tr("Child"), now: NOW })
+      .items,
   ).toEqual([]);
   expect(
     getThreadListV2OrderedSection({ threads, section: "active", now: NOW }).map(
@@ -1404,7 +1410,7 @@ describe("thread list Woke marker", () => {
   const wokeAt = isoAt(BASE_MS - MINUTE_MS);
   const thread = makeThread({
     id: ThreadId.make("woke"),
-    title: "Woke",
+    title: tr("Woke"),
     latestUserMessageAt: isoAt(BASE_MS - 90 * MINUTE_MS),
     snoozedAt: isoAt(BASE_MS - 60 * MINUTE_MS),
     snoozedUntil: wokeAt,
@@ -1447,8 +1453,8 @@ describe("thread list Woke marker", () => {
         status: "failed",
         activeRunId: null,
         providerInstanceId: ProviderInstanceId.make("codex"),
-        providerName: "Codex",
-        lastError: "Run failed",
+        providerName: tr("Codex"),
+        lastError: tr("Run failed"),
         updatedAt: completedAt,
       },
       latestRun: {
@@ -1556,12 +1562,12 @@ describe("buildThreadListV2ListItems row-state stamps", () => {
   });
 });
 
-describe("Working section beta", () => {
+describe(tr("Working section beta"), () => {
   const running = {
     status: "running" as const,
     activeRunId: null,
     providerInstanceId: ProviderInstanceId.make("codex"),
-    providerName: "Codex",
+    providerName: tr("Codex"),
     lastError: null,
     updatedAt: NOW,
   };

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { act, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import { AsyncResult } from "effect/reactivity";
@@ -61,7 +62,11 @@ vi.mock("./ThreadScreenHost", () => ({
 vi.mock("./NewTaskDraftScreen", () => ({
   NewTaskDraftScreen: (props: { initialProjectRef: { branch?: string | null } }) => {
     harness.draftProjectRefs.push(props.initialProjectRef);
-    return <p>draft on {props.initialProjectRef.branch}</p>;
+    return (
+      <p>
+        {tr("draft on")} {props.initialProjectRef.branch}
+      </p>
+    );
   },
 }));
 vi.mock("./new-task-context-presentation", () => ({

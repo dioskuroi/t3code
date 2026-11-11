@@ -1,4 +1,5 @@
 import { ActiveNewTaskContext } from "../../state/active-new-task";
+import { tr } from "@t3tools/shared/i18n";
 import { resolveNewThreadModelSelection } from "@t3tools/shared/usageLimits";
 import { useNowMinuteMs } from "../../lib/clock";
 import * as Dialog from "../../components/ui/Dialog";
@@ -626,10 +627,10 @@ export function NewTaskFlowProvider(
     if (!isAtomCommandInterrupted(result)) {
       const error = squashAtomCommandFailure(result);
       Dialog.alert(
-        "Could not switch machine",
+        tr("Could not switch machine"),
         error instanceof Error
           ? error.message
-          : "The folder for threads without a project could not be created.",
+          : tr("The folder for threads without a project could not be created."),
       );
     }
     return false;

@@ -4,6 +4,7 @@ import type {
   OrchestrationV2NativeChildWork,
   ThreadId,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -33,7 +34,7 @@ export function NativeChildWorkSheet(props: {
   );
   const children = query.data?.children;
   return (
-    <Sheet title="Subagent work" onClose={props.onClose}>
+    <Sheet title={tr("Subagent work")} onClose={props.onClose}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{
@@ -44,24 +45,24 @@ export function NativeChildWorkSheet(props: {
         }}
       >
         <Text className="font-sans text-xs text-foreground-secondary">
-          Read only. These subagents cannot take messages.
+          {tr("Read only. These subagents cannot take messages.")}
         </Text>
         {query.error !== null ? (
           <Text selectable className="font-sans text-sm text-danger-foreground">
             {query.error}
           </Text>
         ) : children === undefined ? (
-          <Text className="font-sans text-sm text-foreground-secondary">Loading…</Text>
+          <Text className="font-sans text-sm text-foreground-secondary">{tr("Loading\u2026")}</Text>
         ) : children.length === 0 ? (
           <Text className="font-sans text-sm text-foreground-secondary">
-            The provider has no record of which subagents this call started.
+            {tr("The provider has no record of which subagents this call started.")}
           </Text>
         ) : (
           children.map((child) => <NativeChild key={child.conversationId} child={child} />)
         )}
         <View className="flex-row justify-end">
           <Button
-            label="Refresh"
+            label={tr("Refresh")}
             tone="secondary"
             disabled={query.isPending}
             onPress={query.refresh}
@@ -76,17 +77,19 @@ function NativeChild(props: { readonly child: OrchestrationV2NativeChildWork }) 
   const { child } = props;
   return (
     <View className="gap-2">
-      <Text className="font-t3-bold text-sm text-foreground">{child.role || "Subagent"}</Text>
+      <Text className="font-t3-bold text-sm text-foreground">{child.role || tr("Subagent")}</Text>
       <Text selectable className="font-sans text-sm text-foreground-secondary">
         {child.prompt}
       </Text>
       {child.truncated ? (
         <Text className="font-sans text-xs text-foreground-secondary">
-          Earlier steps are not shown.
+          {tr("Earlier steps are not shown.")}
         </Text>
       ) : null}
       {child.steps === null ? (
-        <Text className="font-sans text-xs text-foreground-secondary">No transcript yet.</Text>
+        <Text className="font-sans text-xs text-foreground-secondary">
+          {tr("No transcript yet.")}
+        </Text>
       ) : (
         <View className="gap-2 border-l border-border ps-3">
           {child.steps.map((step) => (

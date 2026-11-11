@@ -1,4 +1,5 @@
 import { EnvironmentId, MessageId, RunId, ThreadId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 import { describe, expect, it } from "vite-plus/test";
@@ -41,7 +42,7 @@ describe("resumeThread", () => {
     const { calls, base } = setup();
     const result = await resumeThread({ ...base, resumableRunId: runId, queueHeld: true });
 
-    expect(result._tag).toBe("Success");
+    expect(result._tag).toBe(tr("Success"));
     expect(calls.map((call) => call.command)).toEqual(["startTurn", "resumeQueue"]);
     expect(calls[0]?.input).toMatchObject({
       manualContinuationOfRunId: runId,

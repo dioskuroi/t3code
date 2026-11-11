@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import type { ChatAttachment, EnvironmentId } from "@t3tools/contracts";
 import { Image } from "expo-image";
 import { Pressable, ScrollView, View } from "react-native";
@@ -16,12 +17,12 @@ export function ComposerQueuedEditBanner(props: {
     <View className="flex-row items-center gap-2 px-4 pb-2">
       <SymbolView name="pencil" size={12} tintColorClassName="accent-foreground-muted" />
       <Text className="min-w-0 flex-1 text-xs text-foreground-muted" numberOfLines={1}>
-        Editing queued message
+        {tr("Editing queued message")}
       </Text>
       <Button
-        label="Cancel"
+        label={tr("Cancel")}
         tone="text"
-        accessibilityLabel="Cancel editing queued message"
+        accessibilityLabel={tr("Cancel editing queued message")}
         disabled={props.saving}
         onPress={props.onCancel}
       />
@@ -98,7 +99,7 @@ function QueuedEditAttachmentChip(props: {
       </Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Remove ${attachment.name}`}
+        accessibilityLabel={tr("Remove {name}", { name: attachment.name })}
         disabled={props.disabled}
         hitSlop={8}
         onPress={() => props.onRemove(attachment.id)}

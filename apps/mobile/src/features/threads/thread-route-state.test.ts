@@ -1,4 +1,5 @@
 import * as NodeModule from "node:module";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 import {
   draftRouteIdentity,
@@ -20,14 +21,18 @@ const { StackRouter, CommonActions, StackActions } = requireNavigation(
 describe("draft thread handoff", () => {
   it("submits in the existing route and stops suppressing the live thread selection", () => {
     const router = StackRouter({});
-    const options = { routeNames: ["Home", "Thread"], routeParamList: {}, routeGetIdList: {} };
+    const options = {
+      routeNames: [tr("Home"), tr("Thread")],
+      routeParamList: {},
+      routeGetIdList: {},
+    };
     const initial = router.getInitialState(options);
     const draft = router.getStateForAction(
       initial,
       CommonActions.navigate("Thread", { draft: { projectId: "project" } }),
       options,
     )!;
-    if (!draft || draft.stale !== false) throw new Error("Draft route was not initialized");
+    if (!draft || draft.stale !== false) throw new Error(tr("Draft route was not initialized"));
     expect(isDraftThreadRoute(draft.routes.at(-1))).toBe(true);
     const submitted = router.getStateForAction(
       draft,
@@ -51,7 +56,7 @@ describe("missing shared-content project recovery", () => {
   it("replaces the stale draft before selecting the replacement project", () => {
     const router = StackRouter({});
     const options = {
-      routeNames: ["Home", "Thread", "NewTaskProject"],
+      routeNames: [tr("Home"), tr("Thread"), "NewTaskProject"],
       routeParamList: {},
       routeGetIdList: {},
     };
@@ -63,13 +68,13 @@ describe("missing shared-content project recovery", () => {
       }),
       options,
     )!;
-    if (staleDraft.stale !== false) throw new Error("Draft route was not initialized");
+    if (staleDraft.stale !== false) throw new Error(tr("Draft route was not initialized"));
     const picker = router.getStateForAction(
       staleDraft,
       StackActions.replace("NewTaskProject", { incomingShareId: "share" }),
       options,
     )!;
-    if (picker.stale !== false) throw new Error("Project picker was not initialized");
+    if (picker.stale !== false) throw new Error(tr("Project picker was not initialized"));
     expect(picker.routes.some(isDraftThreadRoute)).toBe(false);
     expect(picker.routes.at(-1)?.params).toEqual({ incomingShareId: "share" });
     const recovered = router.getStateForAction(
@@ -103,8 +108,8 @@ describe("draft route identity", () => {
 
   it("normalizes link parameters without resetting for display metadata", () => {
     expect(
-      draftRouteIdentity({ environmentId: ["env"], projectId: ["project"], title: "Old" }),
-    ).toBe(draftRouteIdentity({ environmentId: "env", projectId: "project", title: "New" }));
+      draftRouteIdentity({ environmentId: ["env"], projectId: ["project"], title: tr("Old") }),
+    ).toBe(draftRouteIdentity({ environmentId: "env", projectId: "project", title: tr("New") }));
   });
 });
 

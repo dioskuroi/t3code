@@ -1,4 +1,5 @@
 import * as Option from "effect/Option";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -122,7 +123,7 @@ describe("threadRouteOpensDraft", () => {
 });
 
 describe("threadDetailErrorIsCurrent", () => {
-  const oldError = Option.some("Could not synchronize the thread.");
+  const oldError = Option.some(tr("Could not synchronize the thread."));
 
   it("ignores the error a thread kept from before the connection came back", () => {
     const detailHasError = threadDetailErrorIsCurrent({
@@ -140,7 +141,7 @@ describe("threadDetailErrorIsCurrent", () => {
     expect(
       threadDetailErrorIsCurrent({
         connectionState: "connected",
-        error: Option.some("Could not synchronize the thread."),
+        error: Option.some(tr("Could not synchronize the thread.")),
         errorBeforeConnected: oldError,
       }),
     ).toBe(true);

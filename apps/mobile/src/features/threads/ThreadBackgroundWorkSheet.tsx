@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { StackActions, useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import {
@@ -22,10 +23,10 @@ import { useAdaptiveWorkspaceLayout } from "../layout/AdaptiveWorkspaceLayout";
 
 const HEADER_SCROLL_EDGE_EFFECTS = nativeHeaderScrollEdgeEffects(Platform.OS, Platform.Version);
 const KIND_LABELS = {
-  subagent: "Subagent",
-  command: "Command",
-  monitor: "Monitor",
-  background_task: "Background task",
+  subagent: tr("Subagent"),
+  command: tr("Command"),
+  monitor: tr("Monitor"),
+  background_task: tr("Background task"),
 } as const;
 
 type BackgroundWorkTarget = { readonly environmentId: EnvironmentId; readonly threadId: ThreadId };
@@ -56,7 +57,7 @@ export function ThreadBackgroundWorkSheet({ route }: StaticScreenProps<Backgroun
     >
       {presentation === null ? (
         <Text className="pt-6 text-center text-sm text-foreground-muted">
-          Nothing running in the background.
+          {tr("Nothing running in the background.")}
         </Text>
       ) : (
         presentation.items.map((item) => (
@@ -83,7 +84,7 @@ export function ThreadBackgroundWorkSheet({ route }: StaticScreenProps<Backgroun
               tintColorClassName="accent-foreground"
               hideBackButton
               hideShadow={false}
-              title="Background work"
+              title={tr("Background work")}
               titleColorClassName="accent-foreground"
               titleFontSize={18}
               titleFontWeight="800"
@@ -97,7 +98,7 @@ export function ThreadBackgroundWorkSheet({ route }: StaticScreenProps<Backgroun
   return (
     <View collapsable={false} className="flex-1 bg-sheet">
       <NativeStackScreenOptions options={{ sheetCornerRadius: 28 }} />
-      <AndroidSheetHeader title="Background work" onBack={() => navigation.goBack()} />
+      <AndroidSheetHeader title={tr("Background work")} onBack={() => navigation.goBack()} />
       <ScreenContent insetHorizontal={layout.usesSplitView}>{content}</ScreenContent>
     </View>
   );
@@ -133,7 +134,7 @@ function BackgroundWorkRow(props: {
   ) : (
     <Pressable
       accessibilityRole="link"
-      accessibilityLabel={`Open subagent ${item.label}`}
+      accessibilityLabel={tr("Open subagent {label}", { label: item.label })}
       onPress={() => props.onOpen(childThreadId)}
       className="active:opacity-70"
     >

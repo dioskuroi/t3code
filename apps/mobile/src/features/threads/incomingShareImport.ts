@@ -1,4 +1,5 @@
 import { Atom, type AtomRegistry } from "effect/reactivity";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { DraftComposerAttachment } from "../../lib/composerImages";
 import type { ComposerDraft } from "../../state/use-composer-drafts";
@@ -210,10 +211,10 @@ export function makeIncomingShareImports(deps: ShareImportDeps) {
       if (stopped()) return;
       advance(entry, "reserved");
       const share = deps.getShare(shareId);
-      if (!share) throw new Error("The shared content is no longer in the inbox.");
+      if (!share) throw new Error(tr("The shared content is no longer in the inbox."));
       const selected = deps.selectAttachments(share, destination.environmentId);
       if (selected.status === "pending") {
-        throw new Error("Server attachment support is still loading.");
+        throw new Error(tr("Server attachment support is still loading."));
       }
       entry.needsRestore = true;
       let skippedAttachmentCount: number;

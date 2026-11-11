@@ -2,6 +2,7 @@ import {
   formatProviderSubagentStatus,
   type ProviderSubagentStatus,
 } from "@t3tools/client-runtime/state/thread-execution";
+import { tr } from "@t3tools/shared/i18n";
 import { isOrchestrationV2WorkActive, type EnvironmentId, type ThreadId } from "@t3tools/contracts";
 import { useState } from "react";
 import { View } from "react-native";
@@ -61,14 +62,14 @@ export function ProviderSubagentBar(props: {
           className="font-sans text-xs text-foreground-secondary"
           style={{ fontVariant: ["tabular-nums"] }}
         >
-          {statusLabel} · Runs on its own
+          {statusLabel} {tr("\u00B7 Runs on its own")}
         </Text>
       </View>
       {props.inspect ? (
-        <Button label="Work" tone="secondary" onPress={() => setInspecting(true)} />
+        <Button label={tr("Work")} tone="secondary" onPress={() => setInspecting(true)} />
       ) : null}
       {props.onOpenParent ? (
-        <Button label="Open parent" tone="secondary" onPress={props.onOpenParent} />
+        <Button label={tr("Open parent")} tone="secondary" onPress={props.onOpenParent} />
       ) : null}
       {props.inspect && inspecting ? (
         <NativeChildWorkSheet {...props.inspect} onClose={() => setInspecting(false)} />

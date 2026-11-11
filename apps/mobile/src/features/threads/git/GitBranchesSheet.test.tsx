@@ -1,4 +1,5 @@
 import { act, type ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vite-plus/test";
 
@@ -105,7 +106,7 @@ function setup(branch: string | null = null) {
       act(() => state.inputs.get(label)!.onChangeText(value));
     },
     create() {
-      act(() => state.actions.get("Create worktree")!.onPress());
+      act(() => state.actions.get(tr("Create worktree"))!.onPress());
     },
     [Symbol.dispose]() {
       act(() => root.unmount());
@@ -117,7 +118,7 @@ it.each([null, "stale-branch"])(
   "uses the loaded checkout branch when thread metadata is %s",
   (branch) => {
     using screen = setup(branch);
-    screen.edit("Worktree branch name", "feature/new-worktree");
+    screen.edit(tr("Worktree branch name"), "feature/new-worktree");
     state.refName = "release/stable";
     screen.render();
     screen.create();
@@ -129,12 +130,12 @@ it.each([null, "stale-branch"])(
 
 it.each(["custom-base", ""])("preserves an edited base %j when status arrives", (base) => {
   using screen = setup();
-  screen.edit("Worktree base branch", base);
-  screen.edit("Worktree branch name", "feature/new-worktree");
+  screen.edit(tr("Worktree base branch"), base);
+  screen.edit(tr("Worktree branch name"), "feature/new-worktree");
   state.refName = "release/stable";
   screen.render();
-  expect(state.inputs.get("Worktree base branch")!.value).toBe(base);
-  expect(state.actions.get("Create worktree")!.disabled).toBe(base === "");
+  expect(state.inputs.get(tr("Worktree base branch"))!.value).toBe(base);
+  expect(state.actions.get(tr("Create worktree"))!.disabled).toBe(base === "");
   screen.create();
   expect(state.worktrees).toEqual(
     base === "" ? [] : [{ baseBranch: base, newBranch: "feature/new-worktree" }],

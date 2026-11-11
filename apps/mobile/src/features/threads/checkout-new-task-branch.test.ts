@@ -1,4 +1,5 @@
 import * as NodeChildProcess from "node:child_process";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeFSP from "node:fs/promises";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
@@ -23,7 +24,7 @@ beforeEach(async () => {
   );
   cwd = NodePath.join(directory, "project");
   await exec("git", ["init", "-b", "main", cwd]);
-  await git("config", "user.name", "Branch test");
+  await git("config", "user.name", tr("Branch test"));
   await git("config", "user.email", "branch-test@example.com");
   await NodeFSP.writeFile(NodePath.join(cwd, "file.txt"), "main\n");
   await git("add", ".");
@@ -94,7 +95,7 @@ const readRefs: CheckoutInput["readRefs"] = (request) =>
   });
 
 const refuseSwitch: CheckoutInput["switchRef"] = () => {
-  throw new Error("An occupied branch must not trigger checkout");
+  throw new Error(tr("An occupied branch must not trigger checkout"));
 };
 
 function selectBranch(switchRef: CheckoutInput["switchRef"]) {
@@ -146,8 +147,8 @@ describe("new-task branch checkout", () => {
       readRefs,
       switchRef,
     });
-    expect(result._tag).toBe("Success");
-    if (result._tag !== "Success") throw new Error("Checkout failed");
+    expect(result._tag).toBe(tr("Success"));
+    if (result._tag !== "Success") throw new Error(tr("Checkout failed"));
     expect(result.value.name).toBe("feature/a");
     expect(result.value.current).toBe(true);
     expect(result.value.worktreePath).toBeNull();
@@ -171,15 +172,15 @@ describe("new-task branch checkout", () => {
     expect(completed).toBe(false);
     expect((await git("branch", "--show-current")).stdout.trim()).toBe("main");
     release.resolve();
-    expect((await selection)._tag).toBe("Success");
+    expect((await selection)._tag).toBe(tr("Success"));
     expect((await git("branch", "--show-current")).stdout.trim()).toBe("feature/a");
   });
 
   it("returns checkout failure without selecting the branch or losing dirty files", async () => {
     await NodeFSP.writeFile(NodePath.join(cwd, "file.txt"), "unsaved local changes\n");
     const result = await selectBranch(switchRef);
-    expect(result._tag).toBe("Failure");
-    if (result._tag !== "Failure") throw new Error("Expected checkout to fail");
+    expect(result._tag).toBe(tr("Failure"));
+    if (result._tag !== "Failure") throw new Error(tr("Expected checkout to fail"));
     expect(String(squashAtomCommandFailure(result))).toContain("would be overwritten");
     expect((await git("branch", "--show-current")).stdout.trim()).toBe("main");
     expect(await NodeFSP.readFile(NodePath.join(cwd, "file.txt"), "utf8")).toBe(
@@ -196,11 +197,11 @@ describe("new-task branch checkout", () => {
       workspaceMode: "local",
       readRefs,
       switchRef: () => {
-        throw new Error("Existing worktrees must not switch the project checkout");
+        throw new Error(tr("Existing worktrees must not switch the project checkout"));
       },
     });
-    expect(result._tag).toBe("Success");
-    if (result._tag !== "Success") throw new Error("Worktree selection failed");
+    expect(result._tag).toBe(tr("Success"));
+    if (result._tag !== "Success") throw new Error(tr("Worktree selection failed"));
     expect(result.value.worktreePath).toBe(worktreePath);
     expect((await git("branch", "--show-current")).stdout.trim()).toBe("main");
     expect(await NodeFSP.readFile(NodePath.join(worktreePath, "file.txt"), "utf8")).toBe(
@@ -233,8 +234,8 @@ describe("new-task branch checkout", () => {
     expect(
       result._tag,
       result._tag === "Failure" ? String(squashAtomCommandFailure(result)) : undefined,
-    ).toBe("Success");
-    if (result._tag !== "Success") throw new Error("Symlink-root worktree selection failed");
+    ).toBe(tr("Success"));
+    if (result._tag !== "Success") throw new Error(tr("Symlink-root worktree selection failed"));
     expect(result.value.worktreePath).toBe(worktreePath);
   });
 
@@ -255,8 +256,8 @@ describe("new-task branch checkout", () => {
       switchRef: refuseSwitch,
     });
 
-    expect(result._tag).toBe("Success");
-    if (result._tag !== "Success") throw new Error("Historical branch selection failed");
+    expect(result._tag).toBe(tr("Success"));
+    if (result._tag !== "Success") throw new Error(tr("Historical branch selection failed"));
     expect(result.value).toMatchObject({
       name,
       worktreePath,
@@ -281,8 +282,8 @@ describe("new-task branch checkout", () => {
       switchRef: refuseSwitch,
     });
 
-    expect(result._tag).toBe("Success");
-    if (result._tag !== "Success") throw new Error("Remote branch selection failed");
+    expect(result._tag).toBe(tr("Success"));
+    if (result._tag !== "Success") throw new Error(tr("Remote branch selection failed"));
     expect(result.value).toMatchObject({
       name: branch.name,
       isRemote: false,
@@ -312,8 +313,8 @@ describe("new-task branch checkout", () => {
       switchRef,
     });
 
-    expect(result._tag).toBe("Success");
-    if (result._tag !== "Success") throw new Error("Remote checkout failed");
+    expect(result._tag).toBe(tr("Success"));
+    if (result._tag !== "Success") throw new Error(tr("Remote checkout failed"));
     expect(result.value.worktreePath).toBeNull();
     expect((await git("rev-parse", "HEAD")).stdout.trim()).toBe(selectedCommit);
     expect(await NodeFSP.readFile(NodePath.join(cwd, "file.txt"), "utf8")).toBe(
@@ -367,10 +368,14 @@ describe("new-task branch checkout", () => {
       expect(await NodeFSP.readFile(NodePath.join(worktreePath, "file.txt"), "utf8")).toBe(
         "feature\n",
       );
-      expect(result._tag).toBe("Failure");
-      if (result._tag !== "Failure") throw new Error("Expected unsafe worktree reuse to fail");
+      expect(result._tag).toBe(tr("Failure"));
+      if (result._tag !== "Failure") throw new Error(tr("Expected unsafe worktree reuse to fail"));
       if (nested) {
-        expect(String(squashAtomCommandFailure(result))).toMatch(/subdirectory/i);
+        expect(String(squashAtomCommandFailure(result))).toContain(
+          tr(
+            "This project is a repository subdirectory. Choose another branch or add the repository root as a project to reuse this worktree.",
+          ),
+        );
       }
     },
   );
@@ -382,8 +387,8 @@ describe("new-task branch checkout", () => {
 
     const result = await selectBranch(refuseSwitch);
 
-    expect(result._tag).toBe("Success");
-    if (result._tag !== "Success") throw new Error("Current branch selection failed");
+    expect(result._tag).toBe(tr("Success"));
+    if (result._tag !== "Success") throw new Error(tr("Current branch selection failed"));
     expect(result.value).toMatchObject({
       name: branch.name,
       current: true,

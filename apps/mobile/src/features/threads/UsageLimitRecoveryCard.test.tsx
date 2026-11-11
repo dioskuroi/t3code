@@ -1,4 +1,5 @@
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentId } from "@t3tools/contracts";
 import type { ReactNode } from "react";
 import { act } from "react";
@@ -55,7 +56,7 @@ describe("UsageLimitRecoveryCard", () => {
     );
     const snooze = () =>
       [...container.querySelectorAll("button")].find(
-        (button) => button.textContent === "Snooze until reset",
+        (button) => button.textContent === tr("Snooze until reset"),
       );
     expect(snooze()?.disabled).toBe(false);
 

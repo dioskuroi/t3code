@@ -2,6 +2,7 @@ import type {
   NativeStackHeaderItem,
   NativeStackHeaderItemMenu,
 } from "@react-navigation/native-stack";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { HomeListFilterMenu } from "../home/home-list-filter-menu";
 import { withNativeGlassHeaderItem } from "../layout/native-glass-header-items";
@@ -41,7 +42,7 @@ export function createSidebarHeaderItems(input: {
       type: "menu",
       axisBehavior: "horizontalOnly",
       label: "",
-      accessibilityLabel: "Filter threads",
+      accessibilityLabel: tr("Filter threads"),
       icon: sfSymbolIcon(input.filterIcon),
       menu: {
         title: input.filterMenu.title,
@@ -51,8 +52,8 @@ export function createSidebarHeaderItems(input: {
     withNativeGlassHeaderItem({
       type: "button",
       axisBehavior: "horizontalOnly",
-      label: "Settings",
-      accessibilityLabel: "Open settings",
+      label: tr("Settings"),
+      accessibilityLabel: tr("Open settings"),
       icon: sfSymbolIcon("gearshape"),
       onPress: input.onOpenSettings,
     }),

@@ -1,4 +1,5 @@
 import { resolveDefaultBranchActionDialogCopy } from "@t3tools/client-runtime/state/vcs";
+import { tr } from "@t3tools/shared/i18n";
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
 import { resolveAutoFeatureBranchName } from "@t3tools/shared/git";
 import * as Arr from "effect/Array";
@@ -131,7 +132,7 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
       ) : null}
       {Platform.OS === "android" ? (
         <AndroidSheetHeader
-          title="Confirm action"
+          title={tr("Confirm action")}
           onBack={() => navigation.goBack()}
           hideBottomBorder
         />
@@ -154,14 +155,14 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
           <View className="android:gap-2 android:rounded-[20px] android:bg-card android:p-3 ios:items-center ios:gap-1 ios:px-5 ios:pb-3 ios:pt-4">
             {Platform.OS !== "android" ? (
               <Text className="text-xs font-t3-bold tracking-[1px] uppercase text-foreground-muted">
-                Confirm
+                {tr("Confirm")}
               </Text>
             ) : null}
             <Text className="android:text-xl android:font-t3-medium ios:text-center ios:text-3xl ios:font-t3-bold">
-              {copy?.title ?? "Run action on default branch?"}
+              {copy?.title ?? tr("Run action on default branch?")}
             </Text>
             <Text className="text-foreground-secondary leading-normal android:text-base ios:text-center ios:text-sm ios:font-medium">
-              {copy?.description ?? "Choose how to continue."}
+              {copy?.description ?? tr("Choose how to continue.")}
             </Text>
           </View>
 
@@ -175,13 +176,13 @@ export function GitConfirmSheet(props: GitConfirmSheetProps) {
           >
             <SheetActionButton
               icon="arrow.right.circle"
-              label={copy?.continueLabel ?? "Continue"}
+              label={copy?.continueLabel ?? tr("Continue")}
               disabled={!canWriteSourceControl}
               onPress={() => void continuePendingAction()}
             />
             <SheetActionButton
               icon="arrow.branch"
-              label="Feature branch & continue"
+              label={tr("Feature branch & continue")}
               disabled={!canChangeThreadBranch}
               tone="primary"
               onPress={() => void movePendingActionToFeatureBranch()}

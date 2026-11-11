@@ -1,4 +1,5 @@
 import { SymbolView } from "../../components/ui/AppSymbol";
+import { tr } from "@t3tools/shared/i18n";
 import { Pressable, View } from "react-native";
 
 export interface SidebarHeaderActionsProps {
@@ -32,7 +33,7 @@ export function SidebarHeaderActions(props: SidebarHeaderActionsProps) {
   return (
     <View className="flex-row items-center gap-0.5">
       <FallbackHeaderButton
-        accessibilityLabel="Open settings"
+        accessibilityLabel={tr("Open settings")}
         icon="gearshape"
         onPress={props.onOpenSettings}
       />

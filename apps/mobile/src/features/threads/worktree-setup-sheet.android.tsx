@@ -1,4 +1,5 @@
 import { Host, ModalBottomSheet, RNHostView } from "@expo/ui/jetpack-compose";
+import { tr } from "@t3tools/shared/i18n";
 import { View, useWindowDimensions } from "react-native";
 import { withUniwind } from "uniwind";
 import { AndroidSheetHeader } from "../../components/ui/AndroidScreenHeader";
@@ -25,9 +26,9 @@ export function WorktreeSetupSheet({ children, height, onClose }: WorktreeSetupS
             }}
           >
             <AndroidSheetHeader
-              title="Worktree setup"
+              title={tr("Worktree setup")}
               actions={[
-                { accessibilityLabel: "Close setup details", icon: "xmark", onPress: onClose },
+                { accessibilityLabel: tr("Close setup details"), icon: "xmark", onPress: onClose },
               ]}
             />
             {children}

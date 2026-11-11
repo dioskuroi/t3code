@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { AuthOrchestrationOperateScope, type ScopedThreadRef } from "@t3tools/contracts";
 import type { ChildThreadApproval } from "@t3tools/client-runtime/state/thread-requests";
 import {
@@ -22,7 +23,7 @@ function ChildApproval({ entry }: { entry: ChildThreadApproval }) {
   return (
     <View className="mx-3.5 my-2 gap-2">
       <AppText className="font-t3-bold text-sm text-foreground">
-        Approval from {entry.title}
+        {tr("Approval from")} {entry.title}
       </AppText>
       <PendingApprovalCard
         canOperateThread={canRespond}
@@ -39,7 +40,9 @@ function ChildApproval({ entry }: { entry: ChildThreadApproval }) {
           if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
             const failure = squashAtomCommandFailure(result);
             setError(
-              failure instanceof Error ? failure.message : "Failed to submit approval decision.",
+              failure instanceof Error
+                ? failure.message
+                : tr("Failed to submit approval decision."),
             );
           }
           setResponding(false);

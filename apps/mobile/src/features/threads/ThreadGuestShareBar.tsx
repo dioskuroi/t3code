@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   type AtomCommandResult,
   isAtomCommandInterrupted,
@@ -48,7 +49,7 @@ export function useThreadGuestShare(threadRef: ScopedThreadRef | null): ThreadGu
 function alertOnFailure(failureTitle: string, result: AtomCommandResult<unknown, unknown>) {
   if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
     const error = squashAtomCommandFailure(result);
-    Dialog.alert(failureTitle, error instanceof Error ? error.message : "Try again.");
+    Dialog.alert(failureTitle, error instanceof Error ? error.message : tr("Try again."));
   }
 }
 
@@ -84,9 +85,9 @@ export function ThreadGuestShareBar(props: {
   const disabled = busy || !props.canOperateThread;
   const stopSharing = () =>
     Dialog.confirm({
-      title: "Stop sharing?",
-      message: "The guest loses access and the link stops working.",
-      confirmText: "Stop sharing",
+      title: tr("Stop sharing?"),
+      message: tr("The guest loses access and the link stops working."),
+      confirmText: tr("Stop sharing"),
       destructive: true,
       onConfirm: () => {
         if (disabled) return;
@@ -96,7 +97,7 @@ export function ThreadGuestShareBar(props: {
           input: { threadId: threadRef.threadId },
         }).then((result) => {
           setBusy(false);
-          alertOnFailure("Could not stop sharing", result);
+          alertOnFailure(tr("Could not stop sharing"), result);
         });
       },
     });
@@ -106,12 +107,12 @@ export function ThreadGuestShareBar(props: {
       <SymbolView name="person.2" size={12} tintColorClassName="accent-foreground-muted" />
       <Text className="min-w-0 flex-1 text-xs text-foreground-muted" numberOfLines={1}>
         {expiredAt === share.expiresAt
-          ? "Guest link expired"
+          ? tr("Guest link expired")
           : share.guestName === null
-            ? "Guest link active"
+            ? tr("Guest link active")
             : `${share.guestName} is a guest`}
       </Text>
-      <Button label="Stop sharing" tone="text" disabled={disabled} onPress={stopSharing} />
+      <Button label={tr("Stop sharing")} tone="text" disabled={disabled} onPress={stopSharing} />
     </View>
   );
 }
@@ -151,7 +152,9 @@ export function ThreadGuestPendingMessage(props: {
     });
     setBusy(false);
     alertOnFailure(
-      decision === "send" ? "Could not send guest message" : "Could not dismiss guest message",
+      decision === "send"
+        ? tr("Could not send guest message")
+        : tr("Could not dismiss guest message"),
       result,
     );
   };
@@ -170,16 +173,16 @@ export function ThreadGuestPendingMessage(props: {
       {canOperate ? (
         <View className="mt-1.5 flex-row gap-2">
           <Button
-            label="Dismiss"
+            label={tr("Dismiss")}
             tone="secondary"
-            accessibilityLabel={`Dismiss message from ${guestName}`}
+            accessibilityLabel={tr("Dismiss message from {guestName}", { guestName: guestName })}
             disabled={busy}
             onPress={() => void resolve("dismiss")}
           />
           <Button
-            label="Send"
+            label={tr("Send")}
             tone="primary"
-            accessibilityLabel={`Send message from ${guestName}`}
+            accessibilityLabel={tr("Send message from {guestName}", { guestName: guestName })}
             disabled={busy}
             onPress={() => void resolve("send")}
           />

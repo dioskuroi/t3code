@@ -1,4 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { formatAttachmentSize } from "@t3tools/client-runtime/state/attachments";
 import { useAudioPlayerStatus } from "expo-audio";
 import { useContext, useEffect, useRef, useState } from "react";
@@ -32,7 +33,7 @@ function FileCardHeader(props: PreviewProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Open ${props.source.name}`}
+      accessibilityLabel={tr("Open {name}", { name: props.source.name ?? "" })}
       onPress={props.onOpen}
       onLongPress={props.onLongPress}
       className="h-[72px] flex-row items-center gap-3 p-3 active:bg-subtle"
@@ -45,7 +46,7 @@ function FileCardHeader(props: PreviewProps) {
           {props.source.name}
         </Text>
         <Text className="text-xs text-foreground-muted" numberOfLines={1}>
-          Audio
+          {tr("Audio")}
           {props.sizeBytes !== undefined ? ` · ${formatAttachmentSize(props.sizeBytes)}` : ""}
         </Text>
       </View>
@@ -188,7 +189,11 @@ function InlineAudio(props: PreviewProps & { readonly resolveUri: () => Promise<
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={
-            playing ? "Pause audio" : error || status.error ? "Retry audio" : "Play audio"
+            playing
+              ? tr("Pause audio")
+              : error || status.error
+                ? tr("Retry audio")
+                : tr("Play audio")
           }
           accessibilityState={{ busy }}
           onPress={toggle}
@@ -210,9 +215,9 @@ function InlineAudio(props: PreviewProps & { readonly resolveUri: () => Promise<
           </View>
           <Text className="text-xs text-foreground-muted" numberOfLines={1}>
             {error || status.error
-              ? "Unavailable · tap play to retry"
+              ? tr("Unavailable \u00B7 tap play to retry")
               : busy
-                ? "Loading…"
+                ? tr("Loading\u2026")
                 : `${timestamp(status.currentTime)} / ${status.isLoaded ? timestamp(status.duration) : "--:--"}`}
           </Text>
         </View>

@@ -1,4 +1,5 @@
 import { SegmentedControl } from "../../components/ui/SegmentedControl";
+import { tr } from "@t3tools/shared/i18n";
 import {
   BasicAlertDialog,
   Column,
@@ -45,13 +46,13 @@ type Props = Parameters<typeof SharedCustomSnoozeSheet>[0];
 const roundedCorner = Shape.RoundedCorner;
 
 const modes = [
-  { value: "date", label: "Date and time" },
-  { value: "duration", label: "Duration" },
+  { value: "date", label: tr("Date and time") },
+  { value: "duration", label: tr("Duration") },
 ] as const;
 const units = [
-  { value: "minutes", label: "Minutes" },
-  { value: "hours", label: "Hours" },
-  { value: "days", label: "Days" },
+  { value: "minutes", label: tr("Minutes") },
+  { value: "hours", label: tr("Hours") },
+  { value: "days", label: tr("Days") },
 ] as const;
 
 function systemUses24HourClock() {
@@ -85,7 +86,9 @@ export function CustomSnoozeSheet(props: Props) {
     const snoozedUntil = resolveCustomSnooze(input, new Date());
     if (!snoozedUntil) {
       setError(
-        mode === "date" ? "Choose a date and time in the future." : "Enter a positive duration.",
+        mode === "date"
+          ? tr("Choose a date and time in the future.")
+          : tr("Enter a positive duration."),
       );
       return;
     }
@@ -142,7 +145,7 @@ export function CustomSnoozeSheet(props: Props) {
                 verticalArrangement={{ spacedBy: 16 }}
                 modifiers={[fillMaxWidth(), padding(24, 24, 24, 16)]}
               >
-                <Text style={titleTypography}>Custom snooze</Text>
+                <Text style={titleTypography}>{tr("Custom snooze")}</Text>
                 <RNHostView matchContents={{ vertical: true }} modifiers={[fillMaxWidth()]}>
                   <SegmentedControl
                     variant="card"
@@ -256,13 +259,13 @@ export function CustomSnoozeSheet(props: Props) {
                     onClick={props.onClose}
                     colors={{ contentColor: colors["--color-foreground"] }}
                   >
-                    <Text style={bodyTypography}>Cancel</Text>
+                    <Text style={bodyTypography}>{tr("Cancel")}</Text>
                   </TextButton>
                   <TextButton
                     onClick={submit}
                     colors={{ contentColor: colors["--color-foreground"] }}
                   >
-                    <Text style={bodyTypography}>Snooze</Text>
+                    <Text style={bodyTypography}>{tr("Snooze")}</Text>
                   </TextButton>
                 </Row>
               </Column>

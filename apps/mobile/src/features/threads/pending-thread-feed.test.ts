@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 import {
   CommandId,
   ComposerContextId,
@@ -34,7 +35,7 @@ describe("pending timeline messages", () => {
       [pending("first"), pending("second"), pending("third")],
     );
     if (first?.type !== "message" || second?.type !== "message" || third?.type !== "message") {
-      throw new Error("Expected message rows");
+      throw new Error(tr("Expected message rows"));
     }
     const reply = {
       ...third,
@@ -151,7 +152,7 @@ describe("pending timeline messages", () => {
     const entries = appendPendingThreadMessages([], [], [{ ...pending("context"), text, context }]);
     const entry = entries[0];
     expect(entry?.type).toBe("message");
-    if (entry?.type !== "message") throw new Error("Expected a pending message");
+    if (entry?.type !== "message") throw new Error(tr("Expected a pending message"));
     expect(entry.message.text).toBe(text);
     expect(entry.message.context).toEqual(context);
   });

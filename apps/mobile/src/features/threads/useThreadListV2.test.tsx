@@ -1,4 +1,5 @@
 import { act, useLayoutEffect } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { createRoot } from "react-dom/client";
 import { RegistryContext } from "@effect/atom-react";
 import type { OlderSettledShelfEnvironment } from "@t3tools/client-runtime/state/threads";
@@ -32,7 +33,7 @@ it("reuses a large thread list across tab renders and updates when its inputs ch
       index % 2 === 0 ? environmentId : otherEnvironmentId,
       makeRawThreadShell({
         id: ThreadId.make(`thread-${index}`),
-        title: `Thread ${index}`,
+        title: tr("Thread {index}", { index: index }),
         settledOverride: index < 150 ? "active" : "settled",
         settledAt: index < 150 ? null : DateTime.makeUnsafe("2026-01-01T00:00:00.000Z"),
       }),
@@ -122,35 +123,35 @@ it("reuses a large thread list across tab renders and updates when its inputs ch
   expect(seen.at(-1)!.layout.items).toHaveLength(185);
 
   const updatedThreads = threads.map((thread) =>
-    thread.id === "thread-0" ? { ...thread, title: "Updated title" } : thread,
+    thread.id === "thread-0" ? { ...thread, title: tr("Updated title") } : thread,
   );
   await act(async () =>
     root.render(<Probe input={{ ...input, threads: updatedThreads }} tab="chats" />),
   );
   expect(
     seen.at(-1)!.layout.items.find((item) => item.thread.id === "thread-0")?.thread.title,
-  ).toBe("Updated title");
+  ).toBe(tr("Updated title"));
 
   await act(async () =>
     root.render(
       <Probe
-        input={{ ...input, threads: updatedThreads, searchQuery: "Updated title" }}
+        input={{ ...input, threads: updatedThreads, searchQuery: tr("Updated title") }}
         tab="chats"
       />,
     ),
   );
-  expect(seen.at(-1)!.layout.items.map((item) => item.thread.title)).toEqual(["Updated title"]);
+  expect(seen.at(-1)!.layout.items.map((item) => item.thread.title)).toEqual([tr("Updated title")]);
   const search = seen.at(-1)!;
   await act(async () =>
     root.render(
       <Probe
-        input={{ ...nextMinute, threads: updatedThreads, searchQuery: "Updated title" }}
+        input={{ ...nextMinute, threads: updatedThreads, searchQuery: tr("Updated title") }}
         tab="chats"
       />,
     ),
   );
   expect(seen.at(-1)!.layout).not.toBe(search.layout);
-  expect(seen.at(-1)!.layout.items.map((item) => item.thread.title)).toEqual(["Updated title"]);
+  expect(seen.at(-1)!.layout.items.map((item) => item.thread.title)).toEqual([tr("Updated title")]);
 
   const clockThreads = threads.map((thread) =>
     thread.id === "thread-0" ? { ...thread, snoozedUntil: "2026-01-02T00:00:30.000Z" } : thread,

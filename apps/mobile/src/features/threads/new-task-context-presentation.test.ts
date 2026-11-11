@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   fillNewTaskWorkspaceBranch,
@@ -50,8 +51,14 @@ describe("resolveNewTaskWorkspaceSelection", () => {
 
 describe("resolveNewTaskBranchLabel", () => {
   it.each([
-    ["https://github.com/acme/repo/pull/123", "From PR #123"],
-    ["https://gitlab.com/acme/repo/-/merge_requests/123", "From MR #123"],
+    [
+      "https://github.com/acme/repo/pull/123",
+      tr("From {label} #{number}", { label: "PR", number: 123 }),
+    ],
+    [
+      "https://gitlab.com/acme/repo/-/merge_requests/123",
+      tr("From {label} #{number}", { label: "MR", number: 123 }),
+    ],
   ])("names the change request a worktree starts from (%s)", (pullRequestReference, label) => {
     expect(
       resolveNewTaskBranchLabel({

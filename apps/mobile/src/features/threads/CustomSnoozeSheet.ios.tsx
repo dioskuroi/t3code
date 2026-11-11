@@ -1,4 +1,5 @@
 import { SheetHeader } from "../../components/ui/SheetHeader";
+import { tr } from "@t3tools/shared/i18n";
 import {
   DatePicker,
   Host,
@@ -40,13 +41,13 @@ import { useAppearancePreferences } from "../settings/appearance/AppearancePrefe
 const durationAmounts = Array.from({ length: 99 }, (_, index) => index + 1);
 const SnoozeStack = createNativeStackNavigator<{ CustomSnooze: undefined }>();
 const modes = [
-  { value: "date", label: "Date and time" },
-  { value: "duration", label: "Duration" },
+  { value: "date", label: tr("Date and time") },
+  { value: "duration", label: tr("Duration") },
 ] as const;
 const units = [
-  { value: "minutes", label: "Minutes" },
-  { value: "hours", label: "Hours" },
-  { value: "days", label: "Days" },
+  { value: "minutes", label: tr("Minutes") },
+  { value: "hours", label: tr("Hours") },
+  { value: "days", label: tr("Days") },
 ] as const;
 
 export function CustomSnoozeSheet(props: {
@@ -75,7 +76,9 @@ export function CustomSnoozeSheet(props: {
     const snoozedUntil = resolveCustomSnooze(input, new Date());
     if (!snoozedUntil) {
       setError(
-        mode === "date" ? "Choose a date and time in the future." : "Enter a positive duration.",
+        mode === "date"
+          ? tr("Choose a date and time in the future.")
+          : tr("Enter a positive duration."),
       );
       return;
     }
@@ -117,7 +120,7 @@ export function CustomSnoozeSheet(props: {
                 modifiers={[padding({ all: 16 }), foregroundStyle(colors["--color-foreground"])]}
               >
                 <Picker
-                  label="Snooze mode"
+                  label={tr("Snooze mode")}
                   selection={mode}
                   onSelectionChange={(value: CustomSnoozeInput["mode"]) => {
                     setMode(value);
@@ -133,7 +136,7 @@ export function CustomSnoozeSheet(props: {
                 </Picker>
                 {mode === "date" ? (
                   <DatePicker
-                    title="Snooze until"
+                    title={tr("Snooze until")}
                     selection={date}
                     displayedComponents={["date", "hourAndMinute"]}
                     onDateChange={updateDate}
@@ -146,7 +149,7 @@ export function CustomSnoozeSheet(props: {
                 ) : (
                   <HStack spacing={0}>
                     <Picker
-                      label="Duration amount"
+                      label={tr("Duration amount")}
                       selection={amount}
                       onSelectionChange={(value: number) => {
                         setAmount(value);
@@ -169,7 +172,7 @@ export function CustomSnoozeSheet(props: {
                       ))}
                     </Picker>
                     <Picker
-                      label="Duration unit"
+                      label={tr("Duration unit")}
                       selection={unit}
                       onSelectionChange={(value: typeof unit) => {
                         setUnit(value);
@@ -243,17 +246,17 @@ function SnoozePopoverNavigation(props: {
                   headerTintColor: colors["--color-foreground"],
                   headerTitleStyle: { fontSize: 17, fontWeight: "700" },
                   headerTransparent: NATIVE_LIQUID_GLASS_SUPPORTED,
-                  title: "Custom snooze",
+                  title: tr("Custom snooze"),
                 }}
               >
                 <SnoozeStack.Screen name="CustomSnooze">
                   {() => (
                     <>
                       <SheetHeader
-                        title="Custom snooze"
+                        title={tr("Custom snooze")}
                         onCancel={props.onClose}
-                        accessibilityLabel="Cancel custom snooze"
-                        confirm={{ label: "Snooze", onPress: props.onSubmit }}
+                        accessibilityLabel={tr("Cancel custom snooze")}
+                        confirm={{ label: tr("Snooze"), onPress: props.onSubmit }}
                       />
                       <ScrollView
                         contentInsetAdjustmentBehavior="automatic"
