@@ -265,7 +265,7 @@ const layerEnvironmentOwnedDataCleanup = Layer.succeed(
         { concurrency: "unbounded", discard: true },
       ).pipe(
         Effect.catch((cause) =>
-          Effect.logWarning(tr("Could not clear mobile environment-owned data."), {
+          Effect.logWarning("Could not clear mobile environment-owned data.", {
             environmentId,
             cause,
           }),

@@ -1,5 +1,4 @@
 import { installPermissionUpdateNotice } from "./features/connection/permissionUpdateNotice";
-import { tr } from "@t3tools/shared/i18n";
 import { installComposerAttachmentUploads } from "./state/composer-attachment-uploads";
 import { installThreadOutboxDelivery } from "./state/threadOutboxDelivery";
 import * as Linking from "expo-linking";
@@ -150,8 +149,7 @@ const appLinking = {
 
 function appLinkAction(href: string): NavigationAction {
   const state = getAppStateFromPath(href, linkingConfig);
-  if (!state)
-    throw new Error(tr("Failed to parse the href to a navigation state ({href}).", { href: href }));
+  if (!state) throw new Error(`Failed to parse the href to a navigation state (${href}).`);
   return appLinking.getActionFromState(state, linkingConfig) ?? CommonActions.reset(state);
 }
 

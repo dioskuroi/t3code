@@ -759,7 +759,9 @@ function useCreateProject(environment: EnvironmentOption | null) {
         )._tag === "Success";
       Dialog.alert(
         tr("Project already exists"),
-        unarchived ? existing.title : `${existing.title} is still archived. Try again later.`,
+        unarchived
+          ? existing.title
+          : tr("{title} is still archived. Try again later.", { title: existing.title }),
       );
       openNewTaskDraft(
         {

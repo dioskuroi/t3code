@@ -32,7 +32,9 @@ export function DevicePreviewButton(props: {
       />
       {!compact ? (
         <AppText className="font-t3-medium text-xs text-foreground">
-          {props.count === 1 ? tr("One device open") : `${props.count} devices open`}
+          {props.count === 1
+            ? tr("One device open")
+            : tr("{count} devices open", { count: props.count })}
         </AppText>
       ) : props.count > 1 ? (
         <View className="absolute right-1.5 top-1.5 min-w-4 items-center rounded-full bg-primary px-1">

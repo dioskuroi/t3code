@@ -76,7 +76,7 @@ function loadDecodedCache<A, B>(input: {
           input.decode(raw).pipe(
             Effect.map(input.select),
             Effect.catch((cause) =>
-              Effect.logWarning(tr("Discarding corrupt mobile client cache record."), {
+              Effect.logWarning("Discarding corrupt mobile client cache record.", {
                 environmentId: input.environmentId,
                 kind: input.kind,
                 cacheKey: input.cacheKey,

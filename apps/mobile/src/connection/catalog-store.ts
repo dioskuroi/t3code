@@ -71,7 +71,7 @@ export const make = Effect.fn("mobile.connectionStorage.makeCatalogStore")(funct
         : yield* migrateLegacyConnectionCatalog(legacyRaw).pipe(
             Effect.mapError((cause) => catalogError("migrate", cause)),
             Effect.catch((error) =>
-              Effect.logWarning(tr("Discarding corrupt legacy mobile connections"), error).pipe(
+              Effect.logWarning("Discarding corrupt legacy mobile connections", error).pipe(
                 Effect.as(EMPTY_CONNECTION_CATALOG_DOCUMENT),
               ),
             ),
@@ -94,7 +94,7 @@ export const make = Effect.fn("mobile.connectionStorage.makeCatalogStore")(funct
     if (raw !== null && raw.trim() !== "") {
       catalog = yield* decodeCatalog(raw).pipe(
         Effect.catch((error) =>
-          Effect.logWarning(tr("Discarding corrupt mobile connection catalog"), error).pipe(
+          Effect.logWarning("Discarding corrupt mobile connection catalog", error).pipe(
             Effect.andThen(deleteItem(CONNECTION_CATALOG_KEY)),
             Effect.andThen(loadLegacyCatalog()),
           ),
