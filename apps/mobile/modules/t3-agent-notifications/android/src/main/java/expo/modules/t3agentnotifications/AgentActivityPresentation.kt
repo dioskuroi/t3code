@@ -18,41 +18,41 @@ internal enum class ActivityPhase(
   val action: String,
   val color: Int
 ) {
-  STARTING("Connecting", "Starting", "Working", "Open", R.color.agent_activity_working),
-  RUNNING("Working", "Working", "Working", "Open", R.color.agent_activity_working),
+  STARTING("Connecting", "启动中", "工作中", "打开", R.color.agent_activity_working),
+  RUNNING("Working", "工作中", "工作中", "打开", R.color.agent_activity_working),
   APPROVAL(
     "Approval",
-    "Approval needed",
-    "Approve",
-    "Approve",
+    "需要批准",
+    "批准",
+    "批准",
     R.color.agent_activity_attention
   ),
   INPUT(
     "Input",
-    "Question for you",
-    "Answer",
-    "Answer",
+    "需要你回答",
+    "回答",
+    "回答",
     R.color.agent_activity_input
   ),
   STALE(
     "Waiting",
-    "Waiting for an update",
-    "Waiting",
-    "Open",
+    "等待更新",
+    "等待中",
+    "打开",
     R.color.agent_activity_waiting
   ),
   COMPLETED(
     "Done",
-    "Finished",
-    "Done",
-    "Open",
+    "已完成",
+    "完成",
+    "打开",
     R.color.agent_activity_done
   ),
   FAILED(
     "Failed",
-    "Failed",
-    "Failed",
-    "Open",
+    "失败",
+    "失败",
+    "打开",
     R.color.agent_activity_failed
   );
 
@@ -104,25 +104,25 @@ internal class ActivityPresentation(data: Map<String, String>, private val activ
 
   val summary = when {
     hero == null -> data["activity_title"]?.takeIf { it.isNotBlank() }?.take(120)
-      ?: "Agent activity"
+      ?: "Agent 活动"
     rows.size == 1 -> hero.title
-    attentionCount == 1 -> "1 needs you"
-    attentionCount > 1 -> "$attentionCount need you"
-    activeCount > 0 && failedCount > 0 -> "$failedCount failed"
-    activeCount > 0 -> "$activeCount working"
-    failedCount > 0 -> "Finished, $failedCount failed"
-    else -> "All finished"
+    attentionCount == 1 -> "1 项需要你处理"
+    attentionCount > 1 -> "$attentionCount 项需要你处理"
+    activeCount > 0 && failedCount > 0 -> "$failedCount 个失败"
+    activeCount > 0 -> "$activeCount 个工作中"
+    failedCount > 0 -> "已结束，$failedCount 个失败"
+    else -> "全部完成"
   }
 
   val chip = when {
     !active -> null
-    phase == null -> data["activity_chip"]?.takeIf { it.isNotBlank() }?.take(7) ?: "Active"
+    phase == null -> data["activity_chip"]?.takeIf { it.isNotBlank() }?.take(7) ?: "活跃"
     phase == ActivityPhase.RUNNING && activeCount > 1 ->
-      "${if (activeCount > 9) "9+" else activeCount} live"
+      "${if (activeCount > 9) "9+" else activeCount} 个活跃"
     else -> phase.chip
   }
 
-  val action = if (active) phase?.action ?: "Open" else null
+  val action = if (active) phase?.action ?: "打开" else null
 
   fun applyTo(builder: NotificationCompat.Builder, context: Context) {
     val tint = phase?.let { ContextCompat.getColor(context, it.color) }
@@ -137,7 +137,7 @@ internal class ActivityPresentation(data: Map<String, String>, private val activ
       builder.setSubText(
         listOfNotNull(
           hero!!.project.takeIf { singleProject && it.isNotBlank() },
-          if (activeCount > 0) "$activeCount active" else "$threadCount threads"
+          if (activeCount > 0) "$activeCount 个活跃" else "$threadCount 个 Thread"
         ).joinToString(" · ")
       )
     }

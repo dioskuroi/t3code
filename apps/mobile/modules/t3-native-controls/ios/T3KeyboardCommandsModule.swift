@@ -36,27 +36,27 @@ public final class T3KeyboardCommandsView: ExpoView {
   public override var keyCommands: [UIKeyCommand]? {
     let isPad = UIDevice.current.userInterfaceIdiom == .pad
     var commands = [
-      enabledCommand("newTask", input: "n", modifiers: .command, action: #selector(newTask), title: "New Task"),
-      enabledCommand("focusSearch", input: "f", modifiers: .command, action: #selector(focusSearch), title: "Find"),
+      enabledCommand("newTask", input: "n", modifiers: .command, action: #selector(newTask), title: "新建任务"),
+      enabledCommand("focusSearch", input: "f", modifiers: .command, action: #selector(focusSearch), title: "查找"),
       isPad
-        ? enabledCommand("commandPalette", input: "k", modifiers: .command, action: #selector(openCommandPalette), title: "Command Palette")
-        : enabledCommand("focusSearch", input: "k", modifiers: .command, action: #selector(focusSearch), title: "Focus Search"),
-      enabledCommand("paletteNext", input: UIKeyCommand.inputDownArrow, modifiers: [], action: #selector(paletteNext), title: "Next Result"),
-      enabledCommand("palettePrevious", input: UIKeyCommand.inputUpArrow, modifiers: [], action: #selector(palettePrevious), title: "Previous Result"),
-      enabledCommand("paletteDismiss", input: UIKeyCommand.inputEscape, modifiers: [], action: #selector(paletteDismiss), title: "Close Command Palette"),
-      enabledCommand("back", input: "[", modifiers: .command, action: #selector(goBack), title: "Back"),
-      enabledCommand("files", input: "f", modifiers: [.command, .shift], action: #selector(openFiles), title: "Open Files"),
-      enabledCommand("terminal", input: "t", modifiers: [.command, .shift], action: #selector(openTerminal), title: "Open Terminal"),
-      enabledCommand("review", input: "r", modifiers: [.command, .shift], action: #selector(openReview), title: "Open Review"),
+        ? enabledCommand("commandPalette", input: "k", modifiers: .command, action: #selector(openCommandPalette), title: "命令面板")
+        : enabledCommand("focusSearch", input: "k", modifiers: .command, action: #selector(focusSearch), title: "聚焦搜索"),
+      enabledCommand("paletteNext", input: UIKeyCommand.inputDownArrow, modifiers: [], action: #selector(paletteNext), title: "下一个结果"),
+      enabledCommand("palettePrevious", input: UIKeyCommand.inputUpArrow, modifiers: [], action: #selector(palettePrevious), title: "上一个结果"),
+      enabledCommand("paletteDismiss", input: UIKeyCommand.inputEscape, modifiers: [], action: #selector(paletteDismiss), title: "关闭命令面板"),
+      enabledCommand("back", input: "[", modifiers: .command, action: #selector(goBack), title: "返回"),
+      enabledCommand("files", input: "f", modifiers: [.command, .shift], action: #selector(openFiles), title: "打开文件"),
+      enabledCommand("terminal", input: "t", modifiers: [.command, .shift], action: #selector(openTerminal), title: "打开终端"),
+      enabledCommand("review", input: "r", modifiers: [.command, .shift], action: #selector(openReview), title: "打开评审"),
       enabledCommand(
         "copyThreadReference",
         input: "c",
         modifiers: [.command, .shift],
         action: #selector(copyThreadReference),
-        title: "Copy PR Link or Thread"
+        title: "复制 PR 链接或 Thread"
       ),
-      enabledCommand("toggleSidebar", input: "\\", modifiers: .command, action: #selector(handleToggleSidebar), title: "Toggle Sidebar"),
-      enabledCommand("cycleHost", input: "h", modifiers: [.command, .shift], action: #selector(cycleHost), title: "Next Machine"),
+      enabledCommand("toggleSidebar", input: "\\", modifiers: .command, action: #selector(handleToggleSidebar), title: "切换侧边栏"),
+      enabledCommand("cycleHost", input: "h", modifiers: [.command, .shift], action: #selector(cycleHost), title: "下一台机器"),
     ].compactMap { $0 }
     if isPad {
       commands += (1...9).compactMap { index in
@@ -65,7 +65,7 @@ public final class T3KeyboardCommandsView: ExpoView {
           input: String(index),
           modifiers: .command,
           action: #selector(jumpToThread(_:)),
-          title: "Go to Thread \(index)"
+          title: "转到 Thread \(index)"
         )
       }
     }

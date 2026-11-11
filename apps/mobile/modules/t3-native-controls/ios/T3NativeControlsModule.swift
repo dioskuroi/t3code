@@ -245,7 +245,7 @@ public final class T3NativeControlsModule: Module {
       throw NSError(
         domain: "T3NativeVideo",
         code: 2,
-        userInfo: [NSLocalizedDescriptionKey: "The video preview is no longer available."]
+        userInfo: [NSLocalizedDescriptionKey: "视频预览已不可用。"]
       )
     }
     let presentation = T3NativeVideoPresentation(
@@ -296,7 +296,7 @@ public final class T3NativeControlsModule: Module {
       throw NSError(
         domain: "T3NativePresentation",
         code: 2,
-        userInfo: [NSLocalizedDescriptionKey: "The presenting screen is no longer open."]
+        userInfo: [NSLocalizedDescriptionKey: "展示屏幕已关闭。"]
       )
     }
     try presentFileShare(
