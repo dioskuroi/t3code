@@ -1,4 +1,5 @@
 import { View } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { Button } from "../../../components/ui/Button";
 import { AppText as Text } from "../../../components/ui/AppText";
@@ -12,15 +13,15 @@ export function SettingsProjectOverridesSection(props: {
   readonly onClear: () => void;
 }) {
   return (
-    <SettingsSection title="Project">
+    <SettingsSection title={tr("Project")}>
       <View className="min-h-16 flex-row items-center gap-3 px-4 py-3">
         <Text className="min-w-0 flex-1 text-base text-foreground" numberOfLines={2}>
           {props.projectLabel}
         </Text>
         {!props.pending && props.hasOverrides ? (
           <Button
-            label="Use defaults"
-            accessibilityHint="Use environment defaults for this project"
+            label={tr("Use defaults")}
+            accessibilityHint={tr("Use environment defaults for this project")}
             tone="text"
             disabled={props.disabled}
             onPress={props.onClear}

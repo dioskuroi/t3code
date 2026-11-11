@@ -1,4 +1,5 @@
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useNavigation } from "@react-navigation/native";
 import { AsyncResult } from "effect/reactivity";
@@ -23,13 +24,13 @@ const ENTER_BEHAVIOR_OPTIONS: ReadonlyArray<{
 }> = [
   {
     behavior: "send",
-    label: "Send message",
-    description: "Return sends the message. Shift-Return inserts a new line.",
+    label: tr("Send message"),
+    description: tr("Return sends the message. Shift-Return inserts a new line."),
   },
   {
     behavior: "newline",
-    label: "Insert new line",
-    description: "Return inserts a new line. Command-Return sends the message.",
+    label: tr("Insert new line"),
+    description: tr("Return inserts a new line. Command-Return sends the message."),
   },
 ];
 
@@ -48,7 +49,7 @@ export function SettingsKeyboardRouteScreen() {
       {Platform.OS === "android" ? (
         <>
           <NativeStackScreenOptions options={{ headerShown: false }} />
-          <AndroidScreenHeader title="Keyboard" onBack={() => navigation.goBack()} />
+          <AndroidScreenHeader title={tr("Keyboard")} onBack={() => navigation.goBack()} />
         </>
       ) : null}
       <ScrollView
@@ -58,7 +59,7 @@ export function SettingsKeyboardRouteScreen() {
         contentContainerClassName="gap-3 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) + 18 }}
       >
-        <SettingsSection title="Return key">
+        <SettingsSection title={tr("Return key")}>
           {ENTER_BEHAVIOR_OPTIONS.map((option, index) => (
             <SettingsChoiceRow
               key={option.behavior}
@@ -72,7 +73,7 @@ export function SettingsKeyboardRouteScreen() {
           ))}
         </SettingsSection>
         <Text className="px-2 text-sm text-foreground-muted">
-          Applies to the composer when a hardware keyboard is connected.
+          {tr("Applies to the composer when a hardware keyboard is connected.")}
         </Text>
       </ScrollView>
     </View>

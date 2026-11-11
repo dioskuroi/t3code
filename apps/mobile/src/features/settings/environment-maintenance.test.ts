@@ -123,7 +123,7 @@ describe("environment release checks", () => {
       ),
     );
     await expect(findEnvironmentUpdate("1.0.0-nightly.20260923.1", signal)).rejects.toThrow(
-      "No nightly release",
+      "未找到 Nightly 发布版本。",
     );
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ error: "invalid" })));
     await expect(findEnvironmentUpdate("1.0.0", signal)).rejects.toThrow();

@@ -3,6 +3,7 @@ import {
   MAX_BASE_FONT_SIZE,
   MIN_BASE_FONT_SIZE,
 } from "../../../../lib/appearancePreferences";
+import { tr } from "@t3tools/shared/i18n";
 import { SettingsSection } from "../../components/SettingsSection";
 import { useAppearancePreferences } from "../AppearancePreferencesProvider";
 import {
@@ -17,13 +18,13 @@ export function TextAppearanceSection() {
     useAppearancePreferences();
 
   return (
-    <SettingsSection title="Text">
+    <SettingsSection title={tr("Text")}>
       <TextAppearancePreview fontSize={appearance.baseFontSize} />
       <AppearancePreviewSeparator />
       <FontSizeSliderRow
         disabled={!isReady}
         icon="textformat.size"
-        label="Text size"
+        label={tr("Text size")}
         max={MAX_BASE_FONT_SIZE}
         min={MIN_BASE_FONT_SIZE}
         onChange={setBaseFontSize}
@@ -34,7 +35,7 @@ export function TextAppearanceSection() {
       <SettingsSwitchRow
         disabled={!isReady}
         icon="plusminus"
-        label="Render math"
+        label={tr("Render math")}
         value={mathRenderingEnabled}
         onValueChange={setMathRenderingEnabled}
       />

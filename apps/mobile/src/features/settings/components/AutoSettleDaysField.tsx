@@ -2,6 +2,7 @@ import {
   MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS,
   MIN_SIDEBAR_AUTO_SETTLE_AFTER_DAYS,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { ComponentProps } from "react";
 import { NumberField } from "../../../components/ui/NumberField";
 
@@ -16,7 +17,7 @@ export function AutoSettleDaysField(props: AutoSettleDaysFieldProps) {
       {...props}
       min={MIN_SIDEBAR_AUTO_SETTLE_AFTER_DAYS}
       max={MAX_SIDEBAR_AUTO_SETTLE_AFTER_DAYS}
-      label="Days before auto-settle"
+      label={tr("Days before auto-settle")}
       formatValue={(value) => `${value} ${value === 1 ? "day" : "days"}`}
     />
   );

@@ -1,4 +1,5 @@
 import { Platform, ScrollView, type StyleProp, type TextStyle, View } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { AppText as Text } from "../../../../components/ui/AppText";
 import {
@@ -27,13 +28,13 @@ export function TextAppearancePreview(props: { readonly fontSize: number }) {
         className="text-foreground"
         style={{ fontSize: sizes.m, lineHeight: sizes.bodyLineHeight }}
       >
-        The quick brown fox jumps over the lazy dog.
+        {tr("The quick brown fox jumps over the lazy dog.")}
       </Text>
       <Text
         className="text-foreground-muted"
         style={{ fontSize: sizes.s, lineHeight: Math.round(sizes.s * 1.4) }}
       >
-        Messages, labels, and headings scale with this size.
+        {tr("Messages, labels, and headings scale with this size.")}
       </Text>
     </View>
   );
@@ -77,9 +78,9 @@ export function TerminalAppearancePreview(props: { readonly fontSize: number }) 
         </Text>
       </Text>
       <Text style={span(theme.foreground)}>
-        <Text style={span(theme.palette[2])}>✓ 85 passed</Text>
-        <Text style={span(theme.palette[3])}> △ 2 warnings</Text>
-        <Text style={span(theme.palette[1])}> ✗ 0 failed</Text>
+        <Text style={span(theme.palette[2])}>{"\u2713 85 passed"}</Text>
+        <Text style={span(theme.palette[3])}> {"\u25B3 2 warnings"}</Text>
+        <Text style={span(theme.palette[1])}> {"\u2717 0 failed"}</Text>
       </Text>
       <Text style={span(theme.foreground)}>
         <Text style={span(theme.background, { backgroundColor: theme.palette[2] })}>
