@@ -2442,7 +2442,7 @@
   "Force stop the agent": "强制停止 Agent",
   "Force stop the agent?": "强制停止 Agent？",
   "Force stopping...": "正在强制停止…",
-  "Forget": "遗忘",
+  "Forget": "忽略",
   "Forget {label} and its cached threads on this device.": "忽略 {label} 及其缓存的 Thread。",
   "Forget {label} and its cached threads on this device. Switch it off instead to keep it saved.": "忽略 {label} 及其缓存的 Thread。若要保留记录，请改为将其关闭。",
   "Forget {title}": "忽略 {title}",
