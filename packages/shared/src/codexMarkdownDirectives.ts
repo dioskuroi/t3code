@@ -1,4 +1,5 @@
 import { directiveFromMarkdown } from "mdast-util-directive";
+import { tr } from "@t3tools/shared/i18n";
 import { directive } from "micromark-extension-directive";
 import {
   markdownLineEnding,
@@ -68,7 +69,7 @@ export type CodexArtifactTemplateMarkdownSegment =
 
 function asConstruct(value: Construct | Construct[] | undefined, label: string): Construct {
   const construct = Array.isArray(value) ? value[0] : value;
-  if (!construct) throw new Error(`Missing ${label} directive construct`);
+  if (!construct) throw new Error(tr("Missing {label} directive construct", { label: label }));
   return construct;
 }
 
@@ -130,7 +131,11 @@ function codexDirectiveSyntax(): Extension {
     ? flowDirectives.find((construct) => construct.concrete !== true)
     : flowDirectives;
   if (!leafDirective)
-    throw new Error(`Missing ${CODEX_ARTIFACT_TEMPLATE_NAME} directive construct`);
+    throw new Error(
+      tr("Missing {CODEX_ARTIFACT_TEMPLATE_NAME} directive construct", {
+        CODEX_ARTIFACT_TEMPLATE_NAME: CODEX_ARTIFACT_TEMPLATE_NAME,
+      }),
+    );
 
   return {
     text: {

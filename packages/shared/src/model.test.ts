@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 import { ProviderInstanceId, type ModelCapabilities } from "@t3tools/contracts";
 
 import {
@@ -156,7 +157,7 @@ describe("provider-reported option display", () => {
   };
 
   it("shows explicit reports without adding a choice or a dispatch option", () => {
-    expect(getProviderOptionCurrentLabel(descriptor, selection, reported)).toBe("Default");
+    expect(getProviderOptionCurrentLabel(descriptor, selection, reported)).toBe(tr("Default"));
     expect(
       getProviderOptionCurrentLabel(descriptor, selection, {
         ...reported,
@@ -172,7 +173,7 @@ describe("provider-reported option display", () => {
     ).toBe("None");
     expect(descriptor.options.map((option) => option.id)).toEqual(["none", "thinking"]);
     expect(buildProviderOptionSelectionsFromDescriptors([descriptor])).toBeUndefined();
-    expect(getProviderOptionCurrentLabel(descriptor, selection)).toBe("Unknown");
+    expect(getProviderOptionCurrentLabel(descriptor, selection)).toBe(tr("Unknown"));
     const effortDescriptor = { ...descriptor, id: "effort", currentValue: "default" };
     expect(getProviderOptionCurrentLabel(effortDescriptor, selection)).toBeUndefined();
     expect(
@@ -187,10 +188,10 @@ describe("provider-reported option display", () => {
         ...reported,
         options: [{ id: "effort", value: "default" }],
       }),
-    ).toBe("Default");
+    ).toBe(tr("Default"));
     expect(
       getProviderOptionCurrentLabel({ ...descriptor, currentValue: "thinking" }, selection),
-    ).toBe("Unknown");
+    ).toBe(tr("Unknown"));
   });
 
   it.each([
@@ -198,6 +199,6 @@ describe("provider-reported option display", () => {
     { ...selection, instanceId: ProviderInstanceId.make("other") },
     { ...selection, options: [{ id: "variant", value: "none" }] },
   ])("ignores reports after changing the model, instance, or option: %j", (selected) => {
-    expect(getProviderOptionCurrentLabel(descriptor, selected, reported)).toBe("Unknown");
+    expect(getProviderOptionCurrentLabel(descriptor, selected, reported)).toBe(tr("Unknown"));
   });
 });

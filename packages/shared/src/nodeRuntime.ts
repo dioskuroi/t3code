@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as Option from "effect/Option";
@@ -8,10 +9,10 @@ import * as HostProcess from "./HostProcess.ts";
 import { CommandResolutionCache, resolveCommandPath } from "./shell.ts";
 
 const NodeRuntimeFeature = Schema.Literals([
-  "Local device support",
-  "Device automation",
-  "Antigravity",
-  "Antigravity sign-in",
+  tr("Local device support"),
+  tr("Device automation"),
+  tr("Antigravity"),
+  tr("Antigravity sign-in"),
 ]);
 
 export const nodeRuntimeUnavailableMessage = (feature: typeof NodeRuntimeFeature.Type): string =>

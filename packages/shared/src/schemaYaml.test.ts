@@ -1,6 +1,7 @@
 import * as Schema from "effect/Schema";
 import { describe, expect, it } from "vite-plus/test";
 
+import { tr } from "./i18n.ts";
 import { fromYaml } from "./schemaYaml.ts";
 
 describe("schemaYaml helpers", () => {
@@ -19,7 +20,12 @@ describe("schemaYaml helpers", () => {
     if (!Schema.isSchemaError(error)) {
       throw new Error("Expected a schema error");
     }
-    expect(error.message).toBe("Invalid YAML (code=BLOCK_AS_IMPLICIT_KEY, line=1, column=7).");
+    expect(error.message).toBe(
+      tr("Invalid YAML (code={code}{location}).", {
+        code: "BLOCK_AS_IMPLICIT_KEY",
+        location: "，行 1，列 7",
+      }),
+    );
     expect(error.message).not.toContain(secret);
   });
 
@@ -42,7 +48,7 @@ describe("schemaYaml helpers", () => {
     if (!Schema.isSchemaError(error)) {
       throw new Error("Expected a schema error");
     }
-    expect(error.message).toBe("Failed to stringify YAML.");
+    expect(error.message).toBe(tr("Failed to stringify YAML."));
     expect(error.message).not.toContain(secret);
   });
 });

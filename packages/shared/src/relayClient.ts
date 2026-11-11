@@ -1,5 +1,6 @@
 // @effect-diagnostics-next-line nodeBuiltinImport:off -- FileSystem.remove cannot remove an empty directory nonrecursively.
 import * as NodeFSP from "node:fs/promises";
+import { tr } from "@t3tools/shared/i18n";
 import * as Cache from "effect/Cache";
 import * as Clock from "effect/Clock";
 import type {
@@ -447,7 +448,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
         (cause) =>
           new RelayClientInstallError({
             reason: "download_failed",
-            message: "Could not download the relay client.",
+            message: tr("Could not download the relay client."),
             cause,
           }),
       ),
@@ -459,7 +460,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
           (cause) =>
             new RelayClientInstallError({
               reason: "download_failed",
-              message: "Could not read the downloaded relay client binary.",
+              message: tr("Could not read the downloaded relay client binary."),
               cause,
             }),
         ),
@@ -471,7 +472,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
         (cause) =>
           new RelayClientInstallError({
             reason: "validation_failed",
-            message: "Could not verify the downloaded relay client checksum.",
+            message: tr("Could not verify the downloaded relay client checksum."),
             cause,
           }),
       ),
@@ -479,7 +480,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
     if (Hex.encode(checksum) !== asset.sha256) {
       return yield* new RelayClientInstallError({
         reason: "invalid_checksum",
-        message: "Downloaded relay client checksum did not match the pinned release.",
+        message: tr("Downloaded relay client checksum did not match the pinned release."),
       });
     }
     return bytes;
@@ -549,7 +550,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
     }
     return yield* new RelayClientInstallError({
       reason: "install_locked",
-      message: "Another relay client installation is still in progress.",
+      message: tr("Another relay client installation is still in progress."),
     });
   });
 
@@ -571,7 +572,10 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
     if (!releaseAsset) {
       return yield* new RelayClientInstallError({
         reason: "unsupported_platform",
-        message: `T3 Code does not provide a managed relay client binary for ${platform}-${arch}.`,
+        message: tr(
+          "T3 Code does not provide a managed relay client binary for {platform}-{arch}.",
+          { platform: platform, arch: arch },
+        ),
       });
     }
 
@@ -580,7 +584,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
     yield* fileSystem
       .makeDirectory(managedDirectory, { recursive: true })
       .pipe(
-        wrapInstallFailure("write_failed", "Could not create the relay client tool directory."),
+        wrapInstallFailure("write_failed", tr("Could not create the relay client tool directory.")),
       );
     yield* report("waiting_for_lock");
     yield* acquireInstallLock(lockPath).pipe(
@@ -589,7 +593,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
           Effect.fail(
             new RelayClientInstallError({
               reason: "write_failed",
-              message: "Could not acquire the relay client installation lock.",
+              message: tr("Could not acquire the relay client installation lock."),
               cause,
             }),
           ),
@@ -611,18 +615,20 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
       yield* report("installing");
       yield* fileSystem
         .writeFile(archivePath, download)
-        .pipe(wrapInstallFailure("write_failed", "Could not write the relay client download."));
+        .pipe(wrapInstallFailure("write_failed", tr("Could not write the relay client download.")));
 
       const executablePath = path.join(tempDirectory, executableFileName(platform));
       if (releaseAsset.archive === "tgz") {
         yield* runCommand("tar", ["-xzf", archivePath, "-C", tempDirectory]).pipe(
-          wrapInstallFailure("write_failed", "Could not extract the relay client."),
+          wrapInstallFailure("write_failed", tr("Could not extract the relay client.")),
         );
       }
       if (platform !== "win32") {
         yield* fileSystem
           .chmod(executablePath, 0o755)
-          .pipe(wrapInstallFailure("write_failed", "Could not make the relay client executable."));
+          .pipe(
+            wrapInstallFailure("write_failed", tr("Could not make the relay client executable.")),
+          );
       }
       yield* report("validating");
       // Verify the pin so mislabeled assets cannot cause repeated redownloads.
@@ -632,18 +638,21 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
           reason: "validation_failed",
           message:
             installedVersion === null
-              ? "The downloaded relay client binary did not run."
-              : `The downloaded relay client reports version ${installedVersion}, not ${CLOUDFLARED_VERSION}.`,
+              ? tr("The downloaded relay client binary did not run.")
+              : tr(
+                  "The downloaded relay client reports version {installedVersion}, not {CLOUDFLARED_VERSION}.",
+                  { installedVersion: installedVersion, CLOUDFLARED_VERSION: CLOUDFLARED_VERSION },
+                ),
         });
       }
 
       const stagedPath = `${managedPath}.${yield* random.uuidV4()}.tmp`;
       yield* report("activating");
       yield* renameWhenUnlocked(executablePath, stagedPath).pipe(
-        wrapInstallFailure("write_failed", "Could not stage the relay client."),
+        wrapInstallFailure("write_failed", tr("Could not stage the relay client.")),
       );
       yield* renameWhenUnlocked(stagedPath, managedPath).pipe(
-        wrapInstallFailure("write_failed", "Could not activate the relay client."),
+        wrapInstallFailure("write_failed", tr("Could not activate the relay client.")),
         Effect.ensuring(fileSystem.remove(stagedPath, { force: true }).pipe(Effect.ignore)),
       );
       return {
@@ -660,7 +669,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
           Effect.fail(
             new RelayClientInstallError({
               reason: "write_failed",
-              message: "Could not install the relay client.",
+              message: tr("Could not install the relay client."),
               cause,
             }),
           ),

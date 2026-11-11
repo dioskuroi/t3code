@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import type { BrowserSearchEngine } from "@t3tools/contracts";
 import * as Schema from "effect/Schema";
 
@@ -66,7 +67,10 @@ export class PreviewUrlNormalizationError extends Schema.TaggedError<PreviewUrlN
 ) {
   override get message(): string {
     const protocol = this.protocol === undefined ? "" : `: ${this.protocol}`;
-    return `Invalid preview URL (${this.reason}${protocol}; input length ${this.inputLength}). Use an http(s) URL or a schemeless host such as localhost:5173. With preview_open, omit url when creating a new tab to open a blank tab.`;
+    return tr(
+      "Invalid preview URL ({reason}{protocol}; input length {inputLength}). Use an http(s) URL or a schemeless host such as localhost:5173. With preview_open, omit url when creating a new tab to open a blank tab.",
+      { reason: this.reason, protocol, inputLength: this.inputLength },
+    );
   }
 }
 

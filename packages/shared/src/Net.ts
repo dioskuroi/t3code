@@ -1,4 +1,5 @@
 import * as NodeNet from "node:net";
+import { tr } from "@t3tools/shared/i18n";
 
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
@@ -142,7 +143,9 @@ export const make = () => {
       };
 
       probe.once("error", (cause) => {
-        settle(Effect.fail(new NetError({ message: "Failed to reserve loopback port", cause })));
+        settle(
+          Effect.fail(new NetError({ message: tr("Failed to reserve loopback port"), cause })),
+        );
       });
 
       probe.listen(0, host, () => {
@@ -153,7 +156,7 @@ export const make = () => {
             settle(Effect.succeed(port));
             return;
           }
-          settle(Effect.fail(new NetError({ message: "Failed to reserve loopback port" })));
+          settle(Effect.fail(new NetError({ message: tr("Failed to reserve loopback port") })));
         });
       });
 

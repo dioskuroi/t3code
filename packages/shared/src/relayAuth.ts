@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 
 const ClerkPublishableKeyPrefix = Schema.Literals(["pk_test", "pk_live", "unknown"]);
@@ -10,7 +11,9 @@ export class ClerkPublishableKeyDecodeError extends Schema.TaggedError<ClerkPubl
   },
 ) {
   override get message(): string {
-    return `Failed to decode Clerk publishable key (${this.keyPrefix}).`;
+    return tr("Failed to decode Clerk publishable key ({keyPrefix}).", {
+      keyPrefix: this.keyPrefix,
+    });
   }
 }
 
@@ -24,7 +27,10 @@ export class ClerkPublishableKeyFrontendApiError extends Schema.TaggedError<Cler
   },
 ) {
   override get message(): string {
-    return `Invalid Clerk frontend API decoded from publishable key (${this.keyPrefix}; ${this.reason}).`;
+    return tr("Invalid Clerk frontend API decoded from publishable key ({keyPrefix}; {reason}).", {
+      keyPrefix: this.keyPrefix,
+      reason: this.reason,
+    });
   }
 }
 

@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import {
   COMPOSER_CONTEXT_LABEL_MAX_CHARS,
   type ComposerContextId,
@@ -125,7 +126,7 @@ export function threadLinkContextReferences(
         const known = title(ref);
         return known === undefined ? [] : [threadContextRecord(ref, known)];
       })[0] ??
-      threadContextRecord(candidates[0]!, label?.trim() || "Thread");
+      threadContextRecord(candidates[0]!, label?.trim() || tr("Thread"));
     const contextId = accept(record);
     if (contextId === undefined) return undefined;
     records.set(record.contextId, record);

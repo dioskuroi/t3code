@@ -4,6 +4,7 @@ import {
   backgroundWorkHoldsCompletion,
   derivePendingBackgroundWork,
 } from "./orchestrationV2PendingBackgroundWork.ts";
+import { tr } from "./i18n.ts";
 
 describe("backgroundWorkHoldsCompletion", () => {
   it.each([
@@ -406,13 +407,13 @@ describe("derivePendingBackgroundWork kinds", () => {
       expect(tasks).toEqual([
         {
           taskId: "pull-request-watch:github.com/acme/app#1",
-          description: "Watching pull request #1",
+          description: tr("Watching pull request #{number}", { number: 1 }),
           kind: "monitor",
           awaited: true,
         },
         {
           taskId: "pull-request-watch:github.com/acme/app#5",
-          description: "Watching pull request #5",
+          description: tr("Watching pull request #{number}", { number: 5 }),
           kind: "monitor",
           awaited: true,
         },

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vite-plus/test";
 import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@t3tools/contracts";
 
+import { tr } from "./i18n.ts";
 import {
   formatHostedThreadLink,
   formatThreadLink,
@@ -111,7 +112,7 @@ describe("thread links", () => {
         local,
         () => undefined,
       ),
-    ).toBe("Thread on another machine, Thread no longer available, Old title");
+    ).toBe(`${tr("Thread on another machine")}, ${tr("Thread no longer available")}, Old title`);
     expect(relabelThreadLinks("[Old](t3-thread://v1/t1)", local, () => undefined)).toBe(
       "[Old](t3-thread://v1/t1)",
     );
@@ -231,7 +232,7 @@ describe("hosted thread links", () => {
     );
     expect(
       relabelThreadLinks("https://app.t3.codes/threads/there/t1", local, () => undefined),
-    ).toBe("Thread on another machine");
+    ).toBe(tr("Thread on another machine"));
     expect(threadLinkRefs("Open https://app.t3.codes/threads/there/t%3A1", local)).toEqual([
       ref("there", "t:1"),
     ]);

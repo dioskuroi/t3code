@@ -18,6 +18,7 @@ import * as TestClock from "effect/testing/TestClock";
 import { HttpClient, HttpClientResponse } from "effect/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as HostProcess from "./HostProcess.ts";
+import { tr } from "./i18n.ts";
 
 import * as RelayClient from "./relayClient.ts";
 
@@ -814,7 +815,7 @@ describe("RelayClient", () => {
 
       const error = yield* manager.install.pipe(Effect.flip);
 
-      expect(error.message).toBe("Could not stage the relay client.");
+      expect(error.message).toBe(tr("Could not stage the relay client."));
       expect(renames.attempts).toBe(1);
     }).pipe(Effect.scoped, Effect.provide(layerInstallRuntime(platform))),
   );

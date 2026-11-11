@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import type {
   PreviewAutomationResizeInput,
   PreviewViewportPresetId,
@@ -151,7 +152,8 @@ export function resolvePreviewViewport(
   if (input.mode === "fill") return { _tag: "fill" };
   if (input.mode === "preset" && input.preset !== undefined) {
     const preset = PREVIEW_VIEWPORT_PRESETS.find((candidate) => candidate.id === input.preset);
-    if (!preset) throw new Error(`Unknown preview viewport preset: ${input.preset}`);
+    if (!preset)
+      throw new Error(tr("Unknown preview viewport preset: {preset}", { preset: input.preset }));
     const landscape = input.orientation === "landscape";
     const portrait = input.orientation === "portrait";
     const nativePortrait = preset.height >= preset.width;
@@ -164,7 +166,7 @@ export function resolvePreviewViewport(
     };
   }
   if (input.width === undefined || input.height === undefined) {
-    throw new Error("Custom preview viewport requires width and height");
+    throw new Error(tr("Custom preview viewport requires width and height"));
   }
   return {
     _tag: "freeform",

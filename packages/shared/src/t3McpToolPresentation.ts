@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 export type T3McpToolLogo = "t3-code";
 
 export interface T3McpToolPresentation {
@@ -97,281 +98,415 @@ const T3_MCP_SERVER_ALIASES = new Set([
 
 const T3_MCP_TOOLS: Readonly<Record<string, T3McpToolDefinition>> = {
   link_pull_request: tool(
-    ["Link", "Linking", "Linked", "a pull request"],
+    [tr("Link"), tr("Linking"), tr("Linked"), tr("a pull request")],
     "link-pr",
     "pull-request",
   ),
   link_pull_requests: tool(
-    ["Link", "Linking", "Linked", "pull requests"],
+    [tr("Link"), tr("Linking"), tr("Linked"), tr("pull requests")],
     "link-pr",
     "pull-request",
   ),
   unlink_pull_request: tool(
-    ["Unlink", "Unlinking", "Unlinked", "a pull request"],
+    [tr("Unlink"), tr("Unlinking"), tr("Unlinked"), tr("a pull request")],
     "unlink-pr",
     "pull-request",
   ),
   unlink_pull_requests: tool(
-    ["Unlink", "Unlinking", "Unlinked", "pull requests by state"],
+    [tr("Unlink"), tr("Unlinking"), tr("Unlinked"), tr("pull requests by state")],
     "unlink-pr",
     "pull-request",
   ),
   list_thread_pull_requests: tool(
-    ["Check", "Checking", "Checked", "linked pull requests"],
+    [tr("Check"), tr("Checking"), tr("Checked"), tr("linked pull requests")],
     "list-prs",
     "pull-request",
   ),
   watch_pull_request: tool(
-    ["Watch", "Watching", "Watching", "a pull request"],
+    [tr("Watch"), tr("Watching"), tr("Watching"), tr("a pull request")],
     "watch-pr",
     "pull-request",
   ),
   unwatch_pull_request: tool(
-    ["Stop watching", "Unwatching", "Stopped watching", "a pull request"],
+    [tr("Stop watching"), tr("Unwatching"), tr("Stopped watching"), tr("a pull request")],
     "unwatch-pr",
     "pull-request",
   ),
   write_pull_request_guides: tool(
-    ["Write", "Writing", "Started writing", "review guides"],
+    [tr("Write"), tr("Writing"), tr("Started writing"), tr("review guides")],
     "write-pr-guides",
     "pull-request",
   ),
   read_pull_request_guide: tool(
-    ["Read", "Reading", "Read", "a review guide"],
+    [tr("Read"), tr("Reading"), tr("Read"), tr("a review guide")],
     "read-pr-guide",
     "pull-request",
   ),
   orchestrator_capabilities: tool(
-    ["Get", "Getting", "Got", "orchestration capabilities"],
+    [tr("Get"), tr("Getting"), tr("Got"), tr("orchestration capabilities")],
     "capabilities",
   ),
-  delegate_task: tool(["Delegate", "Delegating", "Delegated", "a child task"], "delegate"),
-  task_status: tool(["Get", "Getting", "Got", "delegated task status"], "task-status"),
+  delegate_task: tool(
+    [tr("Delegate"), tr("Delegating"), tr("Delegated"), tr("a child task")],
+    "delegate",
+  ),
+  task_status: tool(
+    [tr("Get"), tr("Getting"), tr("Got"), tr("delegated task status")],
+    "task-status",
+  ),
   task_cancel: tool(
-    ["Cancel", "Canceling", "Requested cancellation of", "a delegated task"],
+    [tr("Cancel"), tr("Canceling"), tr("Requested cancellation of"), "a delegated task"],
     "task-cancel",
   ),
-  schedule_task: tool(["Schedule", "Scheduling", "Scheduled", "a task"], "schedule-create"),
-  list_scheduled_tasks: tool(["List", "Listing", "Listed", "scheduled tasks"], "schedule-list"),
+  schedule_task: tool(
+    [tr("Schedule"), tr("Scheduling"), tr("Scheduled"), "a task"],
+    "schedule-create",
+  ),
+  list_scheduled_tasks: tool(
+    [tr("List"), tr("Listing"), tr("Listed"), "scheduled tasks"],
+    "schedule-list",
+  ),
   update_scheduled_task: tool(
-    ["Update", "Updating", "Updated", "a scheduled task"],
+    [tr("Update"), tr("Updating"), tr("Updated"), tr("a scheduled task")],
     "schedule-update",
   ),
   delete_scheduled_task: tool(
-    ["Delete", "Deleting", "Requested deletion of", "a scheduled task"],
+    [tr("Delete"), tr("Deleting"), tr("Requested deletion of"), tr("a scheduled task")],
     "schedule-delete",
   ),
-  request_secret: tool(["Ask for", "Asking for", "Asked for", "a secret"], "secret-request"),
-  create_threads: tool(["Create", "Creating", "Created", "T3 threads"], "thread-create"),
-  t3_thread_start: tool(["Start", "Starting", "Started", "a T3 thread"], "thread-create"),
-  t3_thread_list: tool(["List", "Listing", "Listed", "T3 threads"], "thread-list"),
-  t3_thread_read: tool(["Read", "Reading", "Read", "a T3 thread"], "thread-read"),
-  t3_thread_send: tool(["Send", "Sending", "Sent", "to a T3 thread"], "thread-send"),
-  t3_thread_wait: tool(["Wait", "Waiting", "Waited", "for a T3 thread"], "thread-wait"),
+  request_secret: tool(
+    [tr("Ask for"), tr("Asking for"), tr("Asked for"), "a secret"],
+    "secret-request",
+  ),
+  create_threads: tool(
+    [tr("Create"), tr("Creating"), tr("Created"), tr("T3 threads")],
+    "thread-create",
+  ),
+  t3_thread_start: tool(
+    [tr("Start"), tr("Starting"), tr("Started"), tr("a T3 thread")],
+    "thread-create",
+  ),
+  t3_thread_list: tool([tr("List"), tr("Listing"), tr("Listed"), tr("T3 threads")], "thread-list"),
+  t3_thread_read: tool([tr("Read"), tr("Reading"), tr("Read"), tr("a T3 thread")], "thread-read"),
+  t3_thread_send: tool(
+    [tr("Send"), tr("Sending"), tr("Sent"), tr("to a T3 thread")],
+    "thread-send",
+  ),
+  t3_thread_wait: tool(
+    [tr("Wait"), tr("Waiting"), tr("Waited"), tr("for a T3 thread")],
+    "thread-wait",
+  ),
   t3_workflow_stop: tool(
-    ["Stop", "Stopping", "Requested a stop for", "a workflow"],
+    [tr("Stop"), tr("Stopping"), tr("Requested a stop for"), tr("a workflow")],
     "workflow-stop",
   ),
   t3_background_wait: tool(
-    ["Update", "Updating", "Updated", "background waits"],
+    [tr("Update"), tr("Updating"), tr("Updated"), tr("background waits")],
     "background-wait",
   ),
   t3_thread_interrupt: tool(
-    ["Interrupt", "Interrupting", "Requested an interrupt of", "a T3 thread"],
+    [tr("Interrupt"), tr("Interrupting"), tr("Requested an interrupt of"), tr("a T3 thread")],
     "thread-interrupt",
   ),
   t3_worktree_handoff: tool(
-    ["Hand off", "Handing off", "Handed off", "thread to a git worktree"],
+    [tr("Hand off"), tr("Handing off"), tr("Handed off"), tr("thread to a git worktree")],
     "worktree-handoff",
   ),
-  t3_worktree_status: tool(["Get", "Getting", "Got", "thread worktree status"], "worktree-status"),
-  preview_status: tool(["Get", "Getting", "Got", "preview browser status"], "browser", "browser"),
+  t3_worktree_status: tool(
+    [tr("Get"), tr("Getting"), tr("Got"), tr("thread worktree status")],
+    "worktree-status",
+  ),
+  preview_status: tool(
+    [tr("Get"), tr("Getting"), tr("Got"), tr("preview browser status")],
+    "browser",
+    "browser",
+  ),
   preview_open: tool(
-    ["Open", "Opening", "Opened", "a page in the preview browser"],
+    [tr("Open"), tr("Opening"), tr("Opened"), tr("a page in the preview browser")],
     "browser",
     "browser",
   ),
   preview_navigate: tool(
-    ["Navigate", "Navigating", "Navigated", "the preview browser"],
+    [tr("Navigate"), tr("Navigating"), tr("Navigated"), tr("the preview browser")],
     "browser",
     "browser",
   ),
   preview_dialog: tool(
-    ["Respond", "Responding", "Responded", "to a preview browser dialog"],
+    [tr("Respond"), tr("Responding"), tr("Responded"), tr("to a preview browser dialog")],
     "browser",
     "browser",
   ),
   preview_snapshot: tool(
-    ["Take a snapshot of", "Taking a snapshot of", "Took a snapshot of", "the preview page"],
+    [
+      tr("Take a snapshot of"),
+      tr("Taking a snapshot of"),
+      tr("Took a snapshot of"),
+      tr("the preview page"),
+    ],
     "browser",
     "browser",
-    "Snapshot the preview page",
+    tr("Snapshot the preview page"),
   ),
-  preview_act: tool(["Use", "Using", "Used", "the preview browser"], "browser", "browser"),
+  preview_act: tool(
+    [tr("Use"), tr("Using"), tr("Used"), tr("the preview browser")],
+    "browser",
+    "browser",
+  ),
   preview_click: tool(
-    ["Click", "Clicking", "Clicked", "in the preview browser"],
+    [tr("Click"), tr("Clicking"), tr("Clicked"), tr("in the preview browser")],
     "browser",
     "browser",
   ),
   preview_press: tool(
-    ["Press", "Pressing", "Pressed", "a key in the preview browser"],
+    [tr("Press"), tr("Pressing"), tr("Pressed"), tr("a key in the preview browser")],
     "browser",
     "browser",
   ),
-  preview_type: tool(["Type", "Typing", "Typed", "in the preview browser"], "browser", "browser"),
+  preview_type: tool(
+    [tr("Type"), tr("Typing"), tr("Typed"), tr("in the preview browser")],
+    "browser",
+    "browser",
+  ),
   preview_hover: tool(
-    ["Hover", "Hovering", "Hovered", "in the preview browser"],
+    [tr("Hover"), tr("Hovering"), tr("Hovered"), tr("in the preview browser")],
     "browser",
     "browser",
   ),
   preview_select: tool(
-    ["Choose", "Choosing", "Chose", "an option in the preview browser"],
+    [tr("Choose"), tr("Choosing"), tr("Chose"), tr("an option in the preview browser")],
     "browser",
     "browser",
   ),
   preview_drag: tool(
-    ["Drag", "Dragging", "Dragged", "in the preview browser"],
+    [tr("Drag"), tr("Dragging"), tr("Dragged"), tr("in the preview browser")],
     "browser",
     "browser",
   ),
   preview_upload: tool(
-    ["Upload", "Uploading", "Uploaded", "files to the preview browser"],
+    [tr("Upload"), tr("Uploading"), tr("Uploaded"), tr("files to the preview browser")],
     "browser",
     "browser",
   ),
   preview_scroll: tool(
-    ["Scroll", "Scrolling", "Scrolled", "the preview browser"],
+    [tr("Scroll"), tr("Scrolling"), tr("Scrolled"), tr("the preview browser")],
     "browser",
     "browser",
   ),
   preview_resize: tool(
-    ["Resize", "Resizing", "Resized", "the preview browser"],
+    [tr("Resize"), tr("Resizing"), tr("Resized"), tr("the preview browser")],
     "browser",
     "browser",
   ),
   preview_evaluate: tool(
-    ["Evaluate", "Evaluating", "Evaluated", "script in the preview browser"],
+    [tr("Evaluate"), tr("Evaluating"), tr("Evaluated"), tr("script in the preview browser")],
     "browser",
     "browser",
   ),
   preview_wait_for: tool(
-    ["Wait", "Waiting", "Waited", "for the preview page"],
+    [tr("Wait"), tr("Waiting"), tr("Waited"), "for the preview page"],
     "browser",
     "browser",
   ),
   preview_set_appearance: tool(
-    ["Set", "Setting", "Set", "preview browser appearance"],
+    [tr("Set"), tr("Setting"), tr("Set"), tr("preview browser appearance")],
     "browser",
     "browser",
   ),
   preview_recording_start: tool(
-    ["Start", "Starting", "Started", "recording the preview browser"],
+    [tr("Start"), tr("Starting"), tr("Started"), tr("recording the preview browser")],
     "browser",
     "browser",
   ),
   preview_recording_stop: tool(
-    ["Stop", "Stopping", "Stopped", "recording the preview browser"],
+    [tr("Stop"), tr("Stopping"), tr("Stopped"), tr("recording the preview browser")],
     "browser",
     "browser",
   ),
-  device_list: tool(["List", "Listing", "Listed", "simulators and emulators"], "device", "device"),
+  device_list: tool(
+    [tr("List"), tr("Listing"), tr("Listed"), tr("simulators and emulators")],
+    "device",
+    "device",
+  ),
   device_open: tool(
-    ["Open", "Opening", "Opened", "a device in the Device panel"],
+    [tr("Open"), tr("Opening"), tr("Opened"), tr("a device in the Device panel")],
     "device",
     "device",
   ),
   device_screenshot: tool(
-    ["Take a screenshot of", "Taking a screenshot of", "Took a screenshot of", "the device"],
+    [
+      tr("Take a screenshot of"),
+      tr("Taking a screenshot of"),
+      tr("Took a screenshot of"),
+      tr("the device"),
+    ],
     "device",
     "device",
   ),
-  device_close: tool(["Close", "Closing", "Closed", "a device"], "device", "device"),
+  device_close: tool(
+    [tr("Close"), tr("Closing"), tr("Closed"), tr("a device")],
+    "device",
+    "device",
+  ),
   run_scheduled_task_now: tool(
-    ["Run", "Running", "Requested a run of", "a scheduled task"],
+    [tr("Run"), tr("Running"), tr("Requested a run of"), tr("a scheduled task")],
     "schedule-run",
   ),
-  t3_queue: tool(["Manage", "Managing", "Managed", "queued messages"], "queue-edit"),
+  t3_queue: tool(
+    [tr("Manage"), tr("Managing"), tr("Managed"), tr("queued messages")],
+    "queue-edit",
+  ),
   t3_pending_request: tool(
-    ["Handle", "Handling", "Handled", "pending questions"],
+    [tr("Handle"), tr("Handling"), tr("Handled"), tr("pending questions")],
     "question-respond",
   ),
-  t3_queue_list: tool(["List", "Listing", "Listed", "queued messages"], "queue-list"),
-  t3_queue_read: tool(["Read", "Reading", "Read", "a queued message"], "queue-read"),
-  t3_queue_edit: tool(["Edit", "Editing", "Edited", "a queued message"], "queue-edit"),
+  t3_queue_list: tool(
+    [tr("List"), tr("Listing"), tr("Listed"), tr("queued messages")],
+    "queue-list",
+  ),
+  t3_queue_read: tool(
+    [tr("Read"), tr("Reading"), tr("Read"), tr("a queued message")],
+    "queue-read",
+  ),
+  t3_queue_edit: tool(
+    [tr("Edit"), tr("Editing"), tr("Edited"), tr("a queued message")],
+    "queue-edit",
+  ),
   t3_queue_cancel: tool(
-    ["Cancel", "Canceling", "Requested cancellation of", "a queued run"],
+    [tr("Cancel"), tr("Canceling"), tr("Requested cancellation of"), tr("a queued run")],
     "queue-cancel",
   ),
-  t3_queue_reorder: tool(["Reorder", "Reordering", "Reordered", "a queued run"], "queue-reorder"),
+  t3_queue_reorder: tool(
+    [tr("Reorder"), tr("Reordering"), tr("Reordered"), tr("a queued run")],
+    "queue-reorder",
+  ),
   t3_queue_promote_to_steer: tool(
-    ["Steer with", "Steering with", "Requested steering with", "a queued message"],
+    [tr("Steer with"), tr("Steering with"), tr("Requested steering with"), tr("a queued message")],
     "queue-steer",
   ),
   t3_pending_request_list: tool(
-    ["List", "Listing", "Listed", "pending questions"],
+    [tr("List"), tr("Listing"), tr("Listed"), tr("pending questions")],
     "question-list",
   ),
-  t3_pending_request_read: tool(["Read", "Reading", "Read", "pending questions"], "question-read"),
+  t3_pending_request_read: tool(
+    [tr("Read"), tr("Reading"), tr("Read"), tr("pending questions")],
+    "question-read",
+  ),
   t3_pending_request_respond: tool(
-    ["Answer", "Answering", "Answered", "pending questions"],
+    [tr("Answer"), tr("Answering"), tr("Answered"), tr("pending questions")],
     "question-respond",
   ),
   t3_thread_configuration: tool(
-    ["Read", "Reading", "Read", "thread configuration"],
+    [tr("Read"), tr("Reading"), tr("Read"), tr("thread configuration")],
     "thread-configuration",
   ),
-  t3_thread_configure: tool(["Use", "Using", "Used", "thread model settings"], "thread-configure"),
-  t3_thread_transfer: tool(["Use", "Using", "Used", "thread transfers"], "thread-fork"),
-  t3_thread_fork: tool(["Fork", "Forking", "Requested a fork of", "this thread"], "thread-fork"),
+  t3_thread_configure: tool(
+    [tr("Use"), tr("Using"), tr("Used"), tr("thread model settings")],
+    "thread-configure",
+  ),
+  t3_thread_transfer: tool(
+    [tr("Use"), tr("Using"), tr("Used"), tr("thread transfers")],
+    "thread-fork",
+  ),
+  t3_thread_fork: tool(
+    [tr("Fork"), tr("Forking"), tr("Requested a fork of"), tr("this thread")],
+    "thread-fork",
+  ),
   t3_thread_merge_back: tool(
-    ["Merge", "Merging", "Requested a merge of", "thread context"],
+    [tr("Merge"), tr("Merging"), tr("Requested a merge of"), tr("thread context")],
     "thread-merge",
   ),
-  t3_thread_search: tool(["Search", "Searching", "Searched", "thread content"], "thread-search"),
-  t3_thread_transfers: tool(["Read", "Reading", "Read", "thread transfers"], "thread-transfers"),
-  t3_thread_organize: tool(["Organize", "Organizing", "Organized", "a thread"], "thread-organize"),
-  t3_thread_update: tool(["Update", "Updating", "Updated", "T3 thread metadata"], "thread-update"),
-  t3_worktree_list: tool(["List", "Listing", "Listed", "workspace branches"], "worktree-list"),
-  t3_preview_list: tool(["List", "Listing", "Listed", "preview tabs"], "browser", "browser"),
-  t3_preview_close: tool(["Close", "Closing", "Closed", "a preview tab"], "browser", "browser"),
+  t3_thread_search: tool(
+    [tr("Search"), tr("Searching"), tr("Searched"), tr("thread content")],
+    "thread-search",
+  ),
+  t3_thread_transfers: tool(
+    [tr("Read"), tr("Reading"), tr("Read"), tr("thread transfers")],
+    "thread-transfers",
+  ),
+  t3_thread_organize: tool(
+    [tr("Organize"), tr("Organizing"), tr("Organized"), tr("a thread")],
+    "thread-organize",
+  ),
+  t3_thread_update: tool(
+    [tr("Update"), tr("Updating"), tr("Updated"), tr("T3 thread metadata")],
+    "thread-update",
+  ),
+  t3_worktree_list: tool(
+    [tr("List"), tr("Listing"), tr("Listed"), tr("workspace branches")],
+    "worktree-list",
+  ),
+  t3_preview_list: tool(
+    [tr("List"), tr("Listing"), tr("Listed"), tr("preview tabs")],
+    "browser",
+    "browser",
+  ),
+  t3_preview_close: tool(
+    [tr("Close"), tr("Closing"), tr("Closed"), tr("a preview tab")],
+    "browser",
+    "browser",
+  ),
   t3_environment_read: tool(
-    ["Read", "Reading", "Read", "environment preferences"],
+    [tr("Read"), tr("Reading"), tr("Read"), tr("environment preferences")],
     "environment-read",
   ),
   t3_environment_links: tool(
-    ["List", "Listing", "Listed", "linked environments"],
+    [tr("List"), tr("Listing"), tr("Listed"), tr("linked environments")],
     "environment-links",
   ),
   t3_environment_link: tool(
-    ["Ask to link", "Asking to link", "Asked to link", "an environment"],
+    [tr("Ask to link"), tr("Asking to link"), tr("Asked to link"), tr("an environment")],
     "environment-link",
   ),
   t3_environment_unlink: tool(
-    ["Forget", "Forgetting", "Forgot", "a linked environment"],
+    [tr("Forget"), tr("Forgetting"), tr("Forgot"), "a linked environment"],
     "environment-unlink",
   ),
   t3_environment_preferences_update: tool(
-    ["Update", "Updating", "Updated", "environment preferences"],
+    [tr("Update"), tr("Updating"), tr("Updated"), tr("environment preferences")],
     "environment-update",
   ),
-  t3_thread_launch: tool(["Launch", "Launching", "Launched", "a project thread"], "thread-create"),
-  t3_project_list: tool(["List", "Listing", "Listed", "projects"], "project-list"),
-  t3_project_read: tool(["Read", "Reading", "Read", "a project"], "project-read"),
-  t3_project_create: tool(["Register", "Registering", "Registered", "a project"], "project-create"),
-  t3_project_update: tool(["Update", "Updating", "Updated", "a project"], "project-update"),
-  t3_project_delete: tool(["Delete", "Deleting", "Deleted", "a project"], "project-delete"),
-  t3_project_clone: tool(["Clone", "Cloning", "Cloned", "a repository"], "project-clone"),
+  t3_thread_launch: tool(
+    [tr("Launch"), tr("Launching"), tr("Launched"), tr("a project thread")],
+    "thread-create",
+  ),
+  t3_project_list: tool([tr("List"), tr("Listing"), tr("Listed"), tr("projects")], "project-list"),
+  t3_project_read: tool([tr("Read"), tr("Reading"), tr("Read"), tr("a project")], "project-read"),
+  t3_project_create: tool(
+    [tr("Register"), tr("Registering"), tr("Registered"), tr("a project")],
+    "project-create",
+  ),
+  t3_project_update: tool(
+    [tr("Update"), tr("Updating"), tr("Updated"), tr("a project")],
+    "project-update",
+  ),
+  t3_project_delete: tool(
+    [tr("Delete"), tr("Deleting"), tr("Deleted"), tr("a project")],
+    "project-delete",
+  ),
+  t3_project_clone: tool(
+    [tr("Clone"), tr("Cloning"), tr("Cloned"), tr("a repository")],
+    "project-clone",
+  ),
   t3_attachment_prepare_upload: tool(
-    ["Prepare", "Preparing", "Prepared", "an attachment upload"],
+    [tr("Prepare"), tr("Preparing"), tr("Prepared"), tr("an attachment upload")],
     "attachment-prepare",
   ),
   t3_attachment_discard: tool(
-    ["Discard", "Discarding", "Discarded", "a pending attachment"],
+    [tr("Discard"), tr("Discarding"), tr("Discarded"), tr("a pending attachment")],
     "attachment-discard",
   ),
-  t3_thread_send_attachments: tool(["Send", "Sending", "Sent", "attachments"], "attachment-send"),
-  html_preview: tool(["Preview", "Previewing", "Previewed", "an HTML page"], "html-preview"),
-  html_render: tool(["Render", "Rendering", "Rendered", "an HTML page"], "html-render"),
+  t3_thread_send_attachments: tool(
+    [tr("Send"), tr("Sending"), tr("Sent"), tr("attachments")],
+    "attachment-send",
+  ),
+  html_preview: tool(
+    [tr("Preview"), tr("Previewing"), tr("Previewed"), tr("an HTML page")],
+    "html-preview",
+  ),
+  html_render: tool(
+    [tr("Render"), tr("Rendering"), tr("Rendered"), tr("an HTML page")],
+    "html-render",
+  ),
 };
 
 export const T3_MCP_TOOL_NAMES: ReadonlySet<string> = new Set(Object.keys(T3_MCP_TOOLS));

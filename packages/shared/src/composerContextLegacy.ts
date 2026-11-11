@@ -6,6 +6,7 @@ import {
   ReviewCommentContextRecord,
   type TerminalContextRecord,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 
 import { formatComposerContextReference } from "./composerContextReferences.ts";
@@ -201,7 +202,7 @@ function previewRecord(body: string, index: number): PreviewAnnotationContextRec
     version: 1,
     contextId: legacyId("preview-annotation", index),
     kind: "preview-annotation",
-    label: page || "Preview annotation",
+    label: page || tr("Preview annotation"),
     annotationId: read("Id: "),
     pageUrl: pageIsUrl ? page : (elements[0]?.pageUrl ?? ""),
     pageTitle: pageIsUrl ? null : page || null,
@@ -246,7 +247,7 @@ function reviewRecord(
     kind: "review-comment",
     label: `${basename} ${rangeLabel}`,
     sectionId,
-    sectionTitle: attributes.sectionTitle?.trim() || "Review",
+    sectionTitle: attributes.sectionTitle?.trim() || tr("Review"),
     filePath,
     startIndex: Math.min(Number(startIndex), Number(endIndex)),
     endIndex: Math.max(Number(startIndex), Number(endIndex)),

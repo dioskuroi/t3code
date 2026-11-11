@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeSqlite from "node:sqlite";
 import * as NodeUtil from "node:util";
 import * as NodeWorkerThreads from "node:worker_threads";
@@ -113,7 +114,10 @@ export class UnsupportedNodeSqliteVersionError extends Schema.TaggedError<Unsupp
   },
 ) {
   override get message(): string {
-    return `Node.js ${this.nodeVersion} is missing required node:sqlite APIs. Upgrade to ${this.requirement}.`;
+    return tr(
+      "Node.js {nodeVersion} is missing required node:sqlite APIs. Upgrade to {requirement}.",
+      { nodeVersion: this.nodeVersion, requirement: this.requirement },
+    );
   }
 }
 
@@ -122,7 +126,7 @@ export class UnsupportedNodeSqliteOperationError extends Schema.TaggedError<Unsu
   {},
 ) {
   override get message(): string {
-    return "Node SQLite does not support executeStream.";
+    return tr("Node SQLite does not support executeStream.");
   }
 }
 
@@ -136,7 +140,7 @@ const checkNodeSqliteCompat = Effect.fn("checkNodeSqliteCompat")(function () {
     return Effect.die(
       new UnsupportedNodeSqliteVersionError({
         nodeVersion: process.versions.node,
-        requirement: "Node.js >=22.16, >=23.11, or >=24",
+        requirement: tr("Node.js >=22.16, >=23.11, or >=24"),
       }),
     );
   }
@@ -282,9 +286,9 @@ type ReaderReply =
     };
 
 const readerFailureMessages = {
-  open: "Failed to open database",
-  prepare: "Failed to prepare statement",
-  execute: "Failed to execute statement",
+  open: tr("Failed to open database"),
+  prepare: tr("Failed to prepare statement"),
+  execute: tr("Failed to execute statement"),
 } as const;
 
 const failed = (cause: unknown, message: string, operation: string) =>
@@ -354,7 +358,7 @@ const makeReader = Effect.fnUntraced(function* (
       request.resume(reply);
     });
     worker.on("error", (cause) => stop(`Database reader failed: ${cause.message}`));
-    worker.on("exit", (code) => stop(`Database reader exited with code ${code}`));
+    worker.on("exit", (code) => stop(tr("Database reader exited with code {code}", { code })));
 
     const request = (input: ReaderRequest) =>
       Effect.withFiber<ReadonlyArray<any>, SqlError>((fiber) => {
@@ -718,7 +722,7 @@ const startCheckpointWorker = Effect.fnUntraced(function* (
       const nextLog = readSafeSqliteInteger(state?.log);
       const nextCheckpointed = readSafeSqliteInteger(state?.checkpointed);
       if (nextLog === undefined || nextCheckpointed === undefined)
-        throw new Error("Invalid WAL frame counts");
+        throw new Error(tr("Invalid WAL frame counts"));
       log = nextLog;
       checkpointed = nextCheckpointed;
       unknown = false;
@@ -870,7 +874,7 @@ const make = Effect.fn("makeWithDatabase")(function* (
         }),
       catch: (cause) =>
         new SqlError({
-          reason: classifyError(cause, "Failed to open database", "open"),
+          reason: classifyError(cause, tr("Failed to open database"), "open"),
         }),
     });
     yield* Scope.addFinalizer(
@@ -879,7 +883,7 @@ const make = Effect.fn("makeWithDatabase")(function* (
         try: () => db.close(),
         catch: (cause) =>
           new SqlError({
-            reason: classifyError(cause, "Failed to close database", "close"),
+            reason: classifyError(cause, tr("Failed to close database"), "close"),
           }),
       }).pipe(Effect.orDie),
     );
@@ -1013,7 +1017,7 @@ const make = Effect.fn("makeWithDatabase")(function* (
           } catch (cause) {
             result = Exit.fail(
               new SqlError({
-                reason: classifyError(cause, "Failed to execute statement", "execute"),
+                reason: classifyError(cause, tr("Failed to execute statement"), "execute"),
               }),
             );
           } finally {

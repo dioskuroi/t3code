@@ -5,16 +5,22 @@ import * as Layer from "effect/Layer";
 import * as OtlpResource from "effect/observability/OtlpResource";
 
 import * as OtelEnvironment from "./otelEnvironment.ts";
+import { tr } from "./i18n.ts";
 
 const load = (env: Record<string, string>) =>
   OtelEnvironment.load.pipe(Effect.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env }))));
 
-const SPEC_OFF =
-  "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set T3CODE_OTEL_SDK_DISABLED=false to export anyway";
-const T3_OFF =
-  "T3CODE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it";
+const SPEC_OFF = tr(
+  "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set T3CODE_OTEL_SDK_DISABLED=false to export anyway",
+);
+const T3_OFF = tr(
+  "T3CODE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it",
+);
 const specIgnored = (value: string) =>
-  `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or T3CODE_OTEL_SDK_DISABLED to say it any other way`;
+  tr(
+    "OTEL_SDK_DISABLED={value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or T3CODE_OTEL_SDK_DISABLED to say it any other way",
+    { value },
+  );
 
 describe("OtelEnvironment", () => {
   it.effect.each([
@@ -37,7 +43,12 @@ describe("OtelEnvironment", () => {
       name: "unreadable t3 warns and falls through",
       env: { T3CODE_OTEL_SDK_DISABLED: "maybe", OTEL_SDK_DISABLED: "true" },
       disabled: true,
-      warnings: ["T3CODE_OTEL_SDK_DISABLED=maybe is not a yes or a no and was ignored", SPEC_OFF],
+      warnings: [
+        tr("T3CODE_OTEL_SDK_DISABLED={value} is not a yes or a no and was ignored", {
+          value: "maybe",
+        }),
+        SPEC_OFF,
+      ],
     },
   ])("$name", ({ env, disabled, warnings }) =>
     Effect.gen(function* () {
@@ -126,7 +137,9 @@ describe("OtelEnvironment", () => {
         metrics: "https://collector:4318/base/v1/metrics",
         logs: "https://collector:4318/base/v1/logs",
         warnings: [
-          "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT is not an http or https URL, so the signals it configures are not exported",
+          tr("{name} is not an http or https URL, so the signals it configures are not exported", {
+            name: "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+          }),
         ],
       },
       {
@@ -136,7 +149,9 @@ describe("OtelEnvironment", () => {
         metrics: "Off",
         logs: "Off",
         warnings: [
-          "OTEL_EXPORTER_OTLP_ENDPOINT is not an http or https URL, so the signals it configures are not exported",
+          tr("{name} is not an http or https URL, so the signals it configures are not exported", {
+            name: "OTEL_EXPORTER_OTLP_ENDPOINT",
+          }),
         ],
       },
       {

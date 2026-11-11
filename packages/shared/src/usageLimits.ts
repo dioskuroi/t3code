@@ -15,6 +15,7 @@ import {
   type ServerProviderUsageWindow,
   type UsageLimitSourceSnapshots,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import * as DateTime from "effect/DateTime";
 
@@ -117,18 +118,18 @@ export function usesChatGptSharing(provider: ServerProvider | null | undefined):
 export const CURSOR_USAGE_WINDOWS = [
   {
     id: "totalPercentUsed",
-    label: "Overall",
-    description: "Combined usage across both allowances, not a third quota.",
+    label: tr("Overall"),
+    description: tr("Combined usage across both allowances, not a third quota."),
   },
   {
     id: "autoPercentUsed",
-    label: "Cursor Models",
-    description: "Grok and Composer use this first. Auto can use either pool.",
+    label: tr("Cursor Models"),
+    description: tr("Grok and Composer use this first. Auto can use either pool."),
   },
   {
     id: "apiPercentUsed",
-    label: "Other Models",
-    description: "Claude, GPT, and Gemini use this pool. Grok and Composer fall back here.",
+    label: tr("Other Models"),
+    description: tr("Claude, GPT, and Gemini use this pool. Grok and Composer fall back here."),
   },
 ] as const;
 
@@ -616,12 +617,12 @@ function poolWindows(accounts: readonly LimitAccount[], now: number): readonly L
 
 export function limitsNotice(limits: ServerProviderUsageLimits): string | null {
   if (limits.unavailable?.reason === "unsupported") {
-    return limits.unavailable.message ?? "This account has no subscription limits.";
+    return limits.unavailable.message ?? tr("This account has no subscription limits.");
   }
   if (limits.unavailable?.reason === "probeFailed") {
-    return limits.unavailable.message ?? "Could not read limits.";
+    return limits.unavailable.message ?? tr("Could not read limits.");
   }
-  return limits.windows.length === 0 ? "No limits reported." : null;
+  return limits.windows.length === 0 ? tr("No limits reported.") : null;
 }
 
 export function remainingPercent(window: ServerProviderUsageWindow): number {
@@ -679,13 +680,13 @@ export function formatResetsIn(window: ServerProviderUsageWindow, now: number): 
   const resetsAt = resetMillis(window);
   if (resetsAt === null) return null;
   if (resetsAt <= now) return "resets now";
-  if (resetsAt - now < MINUTE) return "Resets momentarily";
+  if (resetsAt - now < MINUTE) return tr("Resets momentarily");
   return `resets in ${formatDuration(resetsAt - now)}`;
 }
 
 export const USAGE_LIMITS_COMMAND = {
   name: "usage-limits",
-  description: "Show this provider's usage limits",
+  description: tr("Show this provider's usage limits"),
 } satisfies ServerProviderSlashCommand;
 
 export function isUsageLimitsCommand(prompt: string): boolean {
@@ -856,7 +857,7 @@ export function collectProviderUsageLimits(
         id: `${source.id}:${account.id}`,
         driver: account.driver,
         label: `${source.label} · ${hubAccountName(account)}`,
-        sourceLabel: "CLI Proxy",
+        sourceLabel: tr("CLI Proxy"),
         ...(account.usageLimits.resetCredits?.nextCreditId
           ? {
               resetCreditInput: {
