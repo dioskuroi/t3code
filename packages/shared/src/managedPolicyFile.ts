@@ -3,6 +3,7 @@ import {
   ManagedPolicyDocument,
   SERVER_EXIT_CODE_MANAGED_POLICY,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -28,7 +29,10 @@ export class ManagedPolicyFileError extends Schema.TaggedError<ManagedPolicyFile
   override readonly [Runtime.errorExitCode] = SERVER_EXIT_CODE_MANAGED_POLICY;
 
   override get message(): string {
-    return `T3 Code cannot use the managed policy at ${this.path}: ${this.reason}. It will not start until an administrator fixes this.`;
+    return tr(
+      "T3 Code cannot use the managed policy at {path}: {reason}. It will not start until an administrator fixes this.",
+      { path: this.path, reason: this.reason },
+    );
   }
 }
 
@@ -145,7 +149,9 @@ export class WindowsRegistryError extends Schema.TaggedError<WindowsRegistryErro
   },
 ) {
   override get message(): string {
-    return this.code === undefined ? "the registry API cannot load" : `Windows error ${this.code}`;
+    return this.code === undefined
+      ? "the registry API cannot load"
+      : tr("Windows error {code}", { code: this.code });
   }
 }
 
@@ -189,7 +195,7 @@ const MAX_NAME_CHARS = 16_384;
 class Win32Failure extends Error {
   readonly code: number;
   constructor(code: number) {
-    super(`Windows error ${code}`);
+    super(tr("Windows error {code}", { code: code }));
     this.code = code;
   }
 }
@@ -559,11 +565,14 @@ const readPlatformPolicy = Effect.fnUntraced(function* (
       const list = Object.keys(WINDOWS_POLICY_LISTS).find(
         (name) => name.toLowerCase() === subkey.toLowerCase(),
       );
-      if (list === undefined) return yield* refuse(`${subkey} is not a T3 Code policy key`);
+      if (list === undefined)
+        return yield* refuse(tr("{key} is not a T3 Code policy key", { key: subkey }));
       const checkboxes = yield* readKey(`${WINDOWS_POLICY_SUBKEY}\\${subkey}`);
       if (checkboxes === undefined) continue;
       if (checkboxes.subkeys.length > 0) {
-        return yield* refuse(`${subkey}\\${checkboxes.subkeys[0]} is not a T3 Code policy key`);
+        return yield* refuse(
+          tr("{key} is not a T3 Code policy key", { key: `${subkey}\\${checkboxes.subkeys[0]}` }),
+        );
       }
       values.push(...checkboxes.values.map((value) => ({ ...value, key: list })));
     }

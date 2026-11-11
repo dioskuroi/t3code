@@ -1,5 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 
+import { tr } from "./i18n.ts";
+
 import type {
   EnvironmentId,
   OrchestrationV2ThreadShell,
@@ -94,7 +96,7 @@ describe("projectThreadAwarenessV2", () => {
         project,
         thread: v2Thread({ status: "cancelled", activityRunStatus: "running" }),
       }),
-    ).toMatchObject({ phase: "running", headline: "Agent is working" });
+    ).toMatchObject({ phase: "running", headline: tr("Agent is working") });
   });
 
   it.each(["completed", "failed"] as const)("removes settled %s work", (status) => {
@@ -198,7 +200,7 @@ describe("projectThreadAwarenessV2", () => {
     };
     expect(projectThreadAwarenessV2(input)).toMatchObject({
       phase: "waiting_for_input",
-      headline: "Waiting for input",
+      headline: tr("Waiting for input"),
     });
   });
 
@@ -215,6 +217,6 @@ describe("projectThreadAwarenessV2", () => {
           },
         }),
       }),
-    ).toMatchObject({ phase: "running", headline: "Agent is working" });
+    ).toMatchObject({ phase: "running", headline: tr("Agent is working") });
   });
 });

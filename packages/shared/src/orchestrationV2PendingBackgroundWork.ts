@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import type {
   OrchestrationV2PendingBackgroundTask,
   OrchestrationV2ProviderThread,
@@ -303,7 +304,7 @@ function pullRequestWatchTasks(
             // Links store their normalized identity, and this id only has to be unique within the
             // thread, so it reads those fields instead of parsing the URL.
             taskId: `pull-request-watch:${link.host.toLowerCase()}/${link.repository.toLowerCase()}#${link.number}`,
-            description: `Watching pull request #${link.number}`,
+            description: tr("Watching pull request #{number}", { number: link.number }),
             kind: "monitor" as const,
             awaited: true as const,
           },

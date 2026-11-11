@@ -7,6 +7,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { ChildProcessSpawner } from "effect/process";
 
+import { tr } from "@t3tools/shared/i18n";
 import * as HostProcess from "./HostProcess.ts";
 
 import {
@@ -182,7 +183,7 @@ describe("readManagedPolicy", () => {
         for (const files of [{}, file]) {
           assert.include(
             yield* win32(files, new WindowsRegistryError({ code: 5 })),
-            "the registry cannot be read (Windows error 5)",
+            `the registry cannot be read (${tr("Windows error {code}", { code: 5 })})`,
           );
         }
         assert.include(
@@ -295,13 +296,16 @@ describe("readManagedPolicy", () => {
       for (const [registry, reason] of [
         [policyKey([organization, dword("Telemetry", 2)]), "DWORD of 0 or 1"],
         [policyKey([organization, text("MaxMode", "auto")]), "not a T3 Code policy value"],
-        [policyKey([organization], { Other: { x: 1 } }), "Other is not a T3 Code policy key"],
+        [
+          policyKey([organization], { Other: { x: 1 } }),
+          tr("{key} is not a T3 Code policy key", { key: "Other" }),
+        ],
         [
           {
             ...policyKey([organization, dword("Clients", 1)], { Clients: { desktop: 1 } }),
             Clients: { values: [dword("desktop", 1)], subkeys: ["Nested"] },
           },
-          "Clients\\Nested is not a T3 Code policy key",
+          tr("{key} is not a T3 Code policy key", { key: "Clients\\Nested" }),
         ],
         [policyKey([organization, text("Settings", "{")]), "not valid JSON"],
         [policyKey([organization, dword("Clients", 2)]), "DWORD of 0 or 1"],

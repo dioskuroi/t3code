@@ -15,6 +15,7 @@ import {
   type SearchTermsMatch,
   type ThreadSearchSubject,
 } from "./paletteSearch.ts";
+import { tr } from "./i18n.ts";
 
 const NOW = Date.UTC(2026, 9, 23);
 const scoreMessageMatch = (text: string, query: string) => messageMatcher(query)(text);
@@ -291,7 +292,7 @@ describe("scoreThreadSearch beyond Latin text and titles", () => {
     }
     // The app's own worktree prefix is not part of what the branch says.
     expect(scoreThreadSearch("cleanup", subject, NOW)?.explain?.()).toEqual({
-      label: "Branch",
+      label: tr("Branch"),
       text: "cleanup-payloads",
       ranges: [{ start: 0, end: 7 }],
     });

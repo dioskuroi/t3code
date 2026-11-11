@@ -1,4 +1,5 @@
 import { EnvironmentId, ProviderInstanceId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 import { providerAuthReturnUrl } from "./providerAuthReturnUrl.ts";
 
@@ -33,10 +34,10 @@ export function codexAuthorizationRequest(value: string) {
     url.password ||
     url.hash
   )
-    throw new Error("Invalid ChatGPT sign-in request.");
+    throw new Error(tr("Invalid ChatGPT sign-in request."));
   const single = (key: string) => {
     const values = url.searchParams.getAll(key);
-    if (values.length !== 1 || !values[0]) throw new Error("Invalid ChatGPT sign-in request.");
+    if (values.length !== 1 || !values[0]) throw new Error(tr("Invalid ChatGPT sign-in request."));
     return values[0];
   };
   const redirectUri = single("redirect_uri");
@@ -51,7 +52,7 @@ export function codexAuthorizationRequest(value: string) {
     !/^[\w-]{43}$/u.test(single("code_challenge")) ||
     !/^(dynamic_agent_client|oaiapp_[\w-]+)$/u.test(single("client_id"))
   )
-    throw new Error("Invalid ChatGPT sign-in request.");
+    throw new Error(tr("Invalid ChatGPT sign-in request."));
   return { authorizationUrl: url.toString(), redirectUri, state };
 }
 
@@ -82,7 +83,7 @@ export function codexCallbackUrl(value: string, redirectUri: string, state: stri
       (errors.length === 1 && Boolean(errors[0]) && codes.length === 0)
     )
   )
-    throw new Error("This redirect URL does not belong to the current sign-in.");
+    throw new Error(tr("This redirect URL does not belong to the current sign-in."));
   return callback;
 }
 
@@ -120,7 +121,7 @@ export function codexAuthDeliveryUrl(input: CodexAuthHandoff, callbackUrl: strin
   const request = codexAuthorizationRequest(input.authorizationUrl);
   codexCallbackUrl(callbackUrl, request.redirectUri, request.state);
   const destination = providerAuthReturnUrl(input.returnUrl);
-  if (!destination) throw new Error("Invalid T3 Code return address.");
+  if (!destination) throw new Error(tr("Invalid T3 Code return address."));
   const url = new URL(destination);
   const delivery = {
     environmentId: input.environmentId,

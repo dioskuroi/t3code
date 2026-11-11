@@ -3,6 +3,7 @@ import {
   isWorkspaceImagePreviewPath,
   mediaMimeTypeFromExtension,
 } from "./mediaPreview.ts";
+import { tr } from "@t3tools/shared/i18n";
 export {
   isWorkspaceAudioPreviewPath,
   isWorkspaceImagePreviewPath,
@@ -171,7 +172,7 @@ export function officePreviewKind(file: {
 export function decodeFilePreviewText(bytes: Uint8Array, truncated = false) {
   const bounded = bytes.subarray(0, FILE_TEXT_PREVIEW_MAX_BYTES);
   if (bounded.some((byte) => byte === 0))
-    throw new Error("This file contains binary data and cannot be shown as text.");
+    throw new Error(tr("This file contains binary data and cannot be shown as text."));
   const decoder = new TextDecoder("utf-8", { fatal: true });
   try {
     return {
@@ -179,7 +180,9 @@ export function decodeFilePreviewText(bytes: Uint8Array, truncated = false) {
       truncated: truncated || bytes.length > bounded.length,
     };
   } catch {
-    throw new Error("This file is not UTF-8 text. Open it in another app to view its contents.");
+    throw new Error(
+      tr("This file is not UTF-8 text. Open it in another app to view its contents."),
+    );
   }
 }
 

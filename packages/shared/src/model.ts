@@ -8,6 +8,7 @@ import {
   type ProviderOptionDescriptor,
   type ProviderOptionSelection,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { copySorted } from "./Array.ts";
@@ -272,16 +273,16 @@ export function getProviderOptionCurrentLabel(
     return typeof descriptor.currentValue === "boolean"
       ? descriptor.currentValue
         ? "On"
-        : "Off"
+        : tr("Off")
       : undefined;
   }
   const currentValue = getProviderOptionCurrentValue(descriptor, selection, reportedSelection);
   return (
     descriptor.options.find((option) => option.id === currentValue)?.label ??
     (getReportedOptionValue(descriptor.id, selection, reportedSelection) === "default"
-      ? "Default"
+      ? tr("Default")
       : descriptor.id === "variant"
-        ? "Unknown"
+        ? tr("Unknown")
         : undefined)
   );
 }

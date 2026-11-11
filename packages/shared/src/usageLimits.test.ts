@@ -8,6 +8,7 @@ import {
 } from "@t3tools/contracts";
 import { describe, expect, it } from "vite-plus/test";
 
+import { tr } from "./i18n.ts";
 import {
   type LimitAccount,
   collectProviderUsageLimits,
@@ -1246,7 +1247,7 @@ describe("/usage-limits", () => {
     });
     expect(report?.accounts[2]).toMatchObject({
       label: "Accounts · oss",
-      sourceLabel: "CLI Proxy",
+      sourceLabel: tr("CLI Proxy"),
       plan: "Codex OSS",
     });
     expect(report?.notices).toEqual([]);

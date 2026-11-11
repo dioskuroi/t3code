@@ -39,6 +39,7 @@ import * as Schema from "effect/Schema";
 import * as Tracer from "effect/Tracer";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Statement from "effect/sql/Statement";
+import { tr } from "@t3tools/shared/i18n";
 import { projectThreadAwarenessV2 } from "@t3tools/shared/agentAwareness";
 
 import * as SqlitePersistence from "../persistence/Sqlite.ts";
@@ -7906,7 +7907,7 @@ it.layer(layerTest)("ProjectionStoreV2", (it) => {
       assert.deepEqual((yield* store.getThreadShell(threadId))?.pendingBackgroundTasks, [
         {
           taskId: "pull-request-watch:github.com/pingdotgg/t3code#7",
-          description: "Watching pull request #7",
+          description: tr("Watching pull request #{number}", { number: 7 }),
           kind: "monitor",
           awaited: true,
         },

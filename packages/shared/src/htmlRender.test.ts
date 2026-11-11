@@ -5,6 +5,7 @@ import {
   readHtmlRenderImageRequest,
   readHtmlRenderLinkRequest,
 } from "./htmlRender.ts";
+import { tr } from "@t3tools/shared/i18n";
 import { htmlRenderFromToolItem } from "./toolOutput.ts";
 
 const reference = { attachmentId: "thread-abc-123.html", title: "Chart", height: 420 };
@@ -110,7 +111,7 @@ describe("readHtmlRenderImageRequest", () => {
     });
     expect(readHtmlRenderImageRequest(image({ src: "https://example.com/a.png" }))).toEqual({
       src: "https://example.com/a.png",
-      name: "Image",
+      name: tr("Image"),
     });
     expect(readHtmlRenderImageRequest(image({ src: "javascript:alert(1)" }))).toBeUndefined();
     expect(readHtmlRenderImageRequest(image({ src: "data:text/html,<p>" }))).toBeUndefined();

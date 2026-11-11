@@ -1,4 +1,5 @@
 import { pipe } from "effect/Function";
+import { tr } from "@t3tools/shared/i18n";
 import { p256 } from "@noble/curves/nist";
 import { sha256 } from "@noble/hashes/sha2";
 import * as Base64Url from "effect/encoding/Base64Url";
@@ -111,7 +112,7 @@ function publicKeyBytesFromJwk(jwk: DpopPublicJwkType): Uint8Array {
   const x = base64UrlToBytes(jwk.x);
   const y = base64UrlToBytes(jwk.y);
   if (x.length !== 32 || y.length !== 32) {
-    throw new Error("Invalid P-256 public key coordinate length.");
+    throw new Error(tr("Invalid P-256 public key coordinate length."));
   }
   const publicKey = new Uint8Array(65);
   publicKey[0] = 0x04;
@@ -130,34 +131,34 @@ export function verifyDpopProof(input: {
   readonly maxAgeSeconds?: number;
 }): DpopVerificationResult {
   if (!input.proof?.trim()) {
-    return { ok: false, code: "missing_proof", reason: "Missing DPoP proof." };
+    return { ok: false, code: "missing_proof", reason: tr("Missing DPoP proof.") };
   }
 
   const parts = input.proof.split(".");
   if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) {
-    return { ok: false, code: "malformed_proof", reason: "Invalid DPoP compact JWT." };
+    return { ok: false, code: "malformed_proof", reason: tr("Invalid DPoP compact JWT.") };
   }
 
   try {
     const header = decodeBase64UrlDpopJwtHeader(parts[0]);
     const payload = decodeBase64UrlDpopJwtPayload(parts[1]);
     if (Option.isNone(header)) {
-      return { ok: false, code: "malformed_proof", reason: "Invalid DPoP JWT header." };
+      return { ok: false, code: "malformed_proof", reason: tr("Invalid DPoP JWT header.") };
     }
     if (Option.isNone(payload)) {
-      return { ok: false, code: "malformed_proof", reason: "Invalid DPoP JWT payload." };
+      return { ok: false, code: "malformed_proof", reason: tr("Invalid DPoP JWT payload.") };
     }
 
     const thumbprint = computeDpopJwkThumbprint(header.value.jwk);
     if (input.expectedThumbprint && thumbprint !== input.expectedThumbprint) {
-      return { ok: false, code: "key_mismatch", reason: "DPoP key thumbprint mismatch." };
+      return { ok: false, code: "key_mismatch", reason: tr("DPoP key thumbprint mismatch.") };
     }
     if (payload.value.htm.toUpperCase() !== input.method.toUpperCase()) {
-      return { ok: false, code: "method_mismatch", reason: "DPoP method mismatch." };
+      return { ok: false, code: "method_mismatch", reason: tr("DPoP method mismatch.") };
     }
     const normalizedHtu = normalizeDpopHtu(input.url);
     if (normalizedHtu === null || payload.value.htu !== normalizedHtu) {
-      return { ok: false, code: "url_mismatch", reason: "DPoP URL mismatch." };
+      return { ok: false, code: "url_mismatch", reason: tr("DPoP URL mismatch.") };
     }
     if (input.expectedAccessToken) {
       const expectedAth = computeDpopAccessTokenHash(input.expectedAccessToken);
@@ -165,7 +166,7 @@ export function verifyDpopProof(input: {
         return {
           ok: false,
           code: "access_token_hash_mismatch",
-          reason: "DPoP access token hash mismatch.",
+          reason: tr("DPoP access token hash mismatch."),
         };
       }
     }
@@ -182,7 +183,7 @@ export function verifyDpopProof(input: {
       },
     );
     if (!verified) {
-      return { ok: false, code: "invalid_signature", reason: "Invalid DPoP signature." };
+      return { ok: false, code: "invalid_signature", reason: tr("Invalid DPoP signature.") };
     }
 
     const maxAgeSeconds = input.maxAgeSeconds ?? DPOP_MAX_CLOCK_SKEW_SECONDS;
@@ -190,7 +191,7 @@ export function verifyDpopProof(input: {
       return {
         ok: false,
         code: "time_window",
-        reason: "DPoP proof is outside the allowed time window.",
+        reason: tr("DPoP proof is outside the allowed time window."),
       };
     }
 
@@ -201,6 +202,6 @@ export function verifyDpopProof(input: {
       iat: payload.value.iat,
     };
   } catch {
-    return { ok: false, code: "invalid_proof", reason: "Invalid DPoP proof." };
+    return { ok: false, code: "invalid_proof", reason: tr("Invalid DPoP proof.") };
   }
 }

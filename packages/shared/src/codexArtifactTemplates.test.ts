@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { tr } from "./i18n.ts";
+
 import {
   appendCodexArtifactTemplateUsePrompt,
   resolveCodexArtifactTemplate,
@@ -47,7 +49,9 @@ describe("resolveCodexArtifactTemplate", () => {
 });
 
 describe("appendCodexArtifactTemplateUsePrompt", () => {
-  const prompt = "Create a document using this $artifact-template-hello-world about…";
+  const prompt = tr("Create a document using this {skill} about\u2026", {
+    skill: "$artifact-template-hello-world",
+  });
 
   it("preserves existing draft text", () => {
     expect(appendCodexArtifactTemplateUsePrompt("Write about otters", HELLO_WORLD_TEMPLATE)).toBe(

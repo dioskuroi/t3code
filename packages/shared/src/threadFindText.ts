@@ -3,6 +3,7 @@ import {
   formatProviderSkillDisplayName,
   type InlineSkill,
 } from "./inlineSkills.ts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   artifactTemplateFromHastProperties,
   renderCodexInlineDirectivesAsMarkdown,
@@ -208,7 +209,7 @@ function markdownThreadFindText(
 /** Plans render `$skill` tokens literally (no skill chips), so they are indexed as written. */
 export function searchablePlanSegments(markdown: string, cwd?: string): readonly string[] {
   return [
-    proposedPlanTitle(markdown) ?? "Proposed plan",
+    proposedPlanTitle(markdown) ?? tr("Proposed plan"),
     ...markdownThreadFindText(stripDisplayedPlanMarkdown(markdown), false, cwd, []),
   ];
 }

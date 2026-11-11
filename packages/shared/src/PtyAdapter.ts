@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
@@ -13,8 +14,12 @@ export class PtySpawnError extends Schema.TaggedError<PtySpawnError>()("PtySpawn
     const attemptedShells =
       this.attemptedShells === undefined || this.attemptedShells.length === 0
         ? ""
-        : ` Tried shells: ${this.attemptedShells.join(", ")}.`;
-    return `Failed to spawn PTY process${shell} with ${this.adapter}.${attemptedShells}`;
+        : `${tr("Tried shells: {shells}.", { shells: this.attemptedShells.join(", ") })}`;
+    return tr("Failed to spawn PTY process{shell} with {adapter}{attemptedShells}", {
+      shell,
+      adapter: this.adapter,
+      attemptedShells,
+    });
   }
 }
 

@@ -11,6 +11,7 @@ import {
   mediaKindFromPath,
   officePreviewKind,
 } from "./filePreview.ts";
+import { tr } from "./i18n.ts";
 
 describe("workspace file previews", () => {
   it.each([
@@ -194,7 +195,9 @@ describe("attachment preview classification", () => {
     expect(filePreviewKind({ name, mimeType })).toBe(expected);
   });
   it("rejects binary and invalid UTF-8 data", () => {
-    expect(() => decodeFilePreviewText(new Uint8Array([65, 0, 66]))).toThrow("binary");
+    expect(() => decodeFilePreviewText(new Uint8Array([65, 0, 66]))).toThrow(
+      tr("This file contains binary data and cannot be shown as text."),
+    );
     expect(() => decodeFilePreviewText(new Uint8Array([255]))).toThrow("UTF-8");
   });
   it.each(["doc", "xls", "ppt", "7z", "rar"])(

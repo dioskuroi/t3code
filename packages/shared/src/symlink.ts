@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
@@ -43,7 +44,7 @@ export const resolveSymlinkTarget = Effect.fn("symlink.resolveSymlinkTarget")(fu
     _tag: "Unknown",
     module: "FileSystem",
     method: "readLink",
-    description: "Too many levels of symbolic links",
+    description: tr("Too many levels of symbolic links"),
     pathOrDescriptor: filePath,
   });
 });

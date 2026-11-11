@@ -1,4 +1,5 @@
 import { decodeJwt, importPKCS8, importSPKI, jwtVerify, SignJWT, type JWTPayload } from "jose";
+import { tr } from "@t3tools/shared/i18n";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Predicate from "effect/Predicate";
@@ -22,7 +23,10 @@ export class RelayJwtError extends Schema.TaggedError<RelayJwtError>()("RelayJwt
   cause: Schema.Defect(),
 }) {
   override get message(): string {
-    return `Failed to ${this.operation} relay JWT of type "${this.typ}".`;
+    return tr('Failed to {operation} relay JWT of type "{typ}".', {
+      operation: this.operation,
+      typ: this.typ,
+    });
   }
 
   static diagnosticCode(error: RelayJwtError): string {

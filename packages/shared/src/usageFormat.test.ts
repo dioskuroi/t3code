@@ -146,10 +146,10 @@ describe("hourly usage formatting", () => {
     expect(formatHourShort("2026-11-01T05:37:00.000Z", "America/New_York")).toBe("1 AM EDT");
     expect(formatHourShort("2026-11-01T06:37:00.000Z", "America/New_York")).toBe("1 AM EST");
     expect(formatHourShort("2026-11-01T05:37:00.000Z", "America/New_York", false)).toBe(
-      "01:00 EDT",
+      "01:00h EDT",
     );
     expect(formatHourShort("2026-11-01T06:37:00.000Z", "America/New_York", false)).toBe(
-      "01:00 EST",
+      "01:00h EST",
     );
   });
 

@@ -1,4 +1,5 @@
 import type { TerminalSummary } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 function terminalNumber(terminalId: string): string | undefined {
   return /^term(?:inal)?-(\d+)(?:-[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12})?$/i.exec(
@@ -9,7 +10,7 @@ function terminalNumber(terminalId: string): string | undefined {
 export function getTerminalLabel(terminalId: string): string {
   const numericSuffix = terminalNumber(terminalId);
   if (numericSuffix) {
-    return `Terminal ${numericSuffix}`;
+    return tr("Terminal {numericSuffix}", { numericSuffix: numericSuffix });
   }
 
   return terminalId;

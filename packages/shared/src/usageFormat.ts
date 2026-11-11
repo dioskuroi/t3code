@@ -5,6 +5,7 @@ import {
   type UsageSource,
   type UsageSummaryInput,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { UsageContractMismatch } from "./usageMerge.ts";
 
@@ -92,25 +93,28 @@ export function formatUsageContractMismatch(
 ): string {
   return mismatch.direction === "serverBehind"
     ? `${environmentLabel} runs an older server version and is excluded from totals.`
-    : `This client is older than the server on ${environmentLabel}; its usage is excluded from totals.`;
+    : tr(
+        "This client is older than the server on {environmentLabel}; its usage is excluded from totals.",
+        { environmentLabel: environmentLabel },
+      );
 }
 
 export function formatDayShort(day: string): string {
   const [year, month, dayOfMonth] = day.split("-").map((part) => Number(part));
   if (year === undefined || month === undefined || dayOfMonth === undefined) return day;
   const MONTHS = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    tr("Jan"),
+    tr("Feb"),
+    tr("Mar"),
+    tr("Apr"),
+    tr("May"),
+    tr("Jun"),
+    tr("Jul"),
+    tr("Aug"),
+    tr("Sep"),
+    tr("Oct"),
+    tr("Nov"),
+    tr("Dec"),
   ];
   return `${MONTHS[month - 1] ?? ""} ${dayOfMonth}`;
 }

@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 const OAUTH_SCOPE_TOKEN = /^[\u0021\u0023-\u005b\u005d-\u007e]+$/u;
 
@@ -11,7 +12,7 @@ export class OAuthScopeEncodingError extends Schema.TaggedError<OAuthScopeEncodi
   },
 ) {
   override get message(): string {
-    return "OAuth scopes must be non-empty, syntactically valid, and unique.";
+    return tr("OAuth scopes must be non-empty, syntactically valid, and unique.");
   }
 }
 
