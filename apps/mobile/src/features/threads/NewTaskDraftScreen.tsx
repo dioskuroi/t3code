@@ -543,12 +543,7 @@ export function NewTaskDraftScreen(props: {
     workspaceMode: flow.workspaceMode,
     worktreePath: flow.selectedWorktreePath,
   });
-  const workspaceLabelText =
-    workspaceLabel === "New worktree"
-      ? tr("New worktree")
-      : workspaceLabel === "Current worktree"
-        ? tr("Current worktree")
-        : tr("Current checkout");
+
   const showBranchLoading =
     environmentConnected && flow.branchesLoading && flow.availableBranches.length === 0;
 
@@ -839,7 +834,7 @@ export function NewTaskDraftScreen(props: {
           target:
             flow.workspaceMode === "local" ? tr("a new worktree") : tr("the current checkout"),
         })}
-        accessibilityLabel={workspaceLabelText}
+        accessibilityLabel={workspaceLabel}
         disabled={isComposerInteractionLocked || !flow.isGitRepo}
         renderIcon={(size) => (
           <NewTaskWorkspaceIcon
@@ -848,7 +843,7 @@ export function NewTaskDraftScreen(props: {
             size={size}
           />
         )}
-        label={workspaceLabelText}
+        label={workspaceLabel}
         maxWidth="100%"
         onPress={() => flow.setWorkspaceMode(flow.workspaceMode === "local" ? "worktree" : "local")}
         showChevron={false}

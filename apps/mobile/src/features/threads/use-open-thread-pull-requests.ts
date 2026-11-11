@@ -1,4 +1,5 @@
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 import { useNavigation } from "@react-navigation/native";
 
 import * as Dialog from "../../components/ui/Dialog";
@@ -26,8 +27,8 @@ export function useOpenThreadPullRequests() {
     }).then((opened) => {
       if (!opened)
         Dialog.alert(
-          `Unable to open ${pr.changeRequest.shortLabel}`,
-          `The ${pr.changeRequest.singular} could not be opened.`,
+          tr("Unable to open {shortLabel}", { shortLabel: pr.changeRequest.shortLabel }),
+          tr("The {singular} could not be opened.", { singular: pr.changeRequest.singular }),
         );
     });
   };

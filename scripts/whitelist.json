@@ -9,15 +9,7 @@
     "words 派生自术语表 §3 硬规则（含第 6 条单位）与 §2 保留词条，另含少量常见技术缩写（API/URL/HTTP 等单向放宽豁免）。",
     "身份词复数（agents/providers/threads/tokens）与品牌 ChatGPT 由 i18n-check 译文内容面回填（§3.1/§2 保留词的形态变体）。"
   ],
-  "exact": [
-    "@favorites",
-    "0deg",
-    "180deg",
-    "Failure",
-    "Current checkout",
-    "Current worktree",
-    "New worktree"
-  ],
+  "exact": ["@favorites", "0deg", "180deg", "Failure", "-mx-1 px-1", "-mx-1 mb-1 px-1"],
   "contains": [],
   "globs": [
     "**/*.test.{ts,tsx,js,jsx,mjs,cjs}",
@@ -121,7 +113,6 @@
     "svg",
     "data uri",
     "detached head",
-    "head",
     "t3 connect",
     "ultrathink"
   ]
