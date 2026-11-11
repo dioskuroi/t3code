@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { Pressable, View } from "react-native";
 import ImageViewing from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,12 +27,12 @@ function ImagePreviewHeader(header: { readonly imageIndex: number }) {
     <View className="bg-black/70" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center gap-2 px-3">
         <AppText className="flex-1 text-base text-white" numberOfLines={2}>
-          {source.name ?? "Image"}
+          {source.name ?? tr("Image")}
         </AppText>
         <MediaActionsMenu media={mediaActions} inModal />
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close image"
+          accessibilityLabel={tr("Close image")}
           onPress={props.onRequestClose}
           className="min-h-11 min-w-11 items-center justify-center"
         >

@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -75,7 +76,7 @@ describe("preparing native PDFs", () => {
     mocks.read.mockResolvedValue(new TextEncoder().encode("<html"));
     await expect(
       preparePdfPreview("https://remote.test/a.pdf", new AbortController().signal),
-    ).rejects.toThrow("did not return a PDF");
+    ).rejects.toThrow(tr("The server did not return a PDF. Check the connection and try again."));
     expect(mocks.close).toHaveBeenCalledOnce();
     expect(mocks.dispose).toHaveBeenCalledOnce();
   });

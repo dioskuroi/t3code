@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -164,7 +165,7 @@ describe("downloadAndShareAttachment", () => {
     mocks.available.mockResolvedValue(false);
     await expect(
       downloadAndShareAttachment({ ...input, signal: new AbortController().signal }),
-    ).rejects.toThrow("Saving and sharing files is unavailable on this device.");
+    ).rejects.toThrow(tr("Saving and sharing files is unavailable on this device."));
     expect(mocks.download).not.toHaveBeenCalled();
     expect(mocks.directories.size).toBe(0);
   });
@@ -208,7 +209,7 @@ describe("downloadAndShareAttachment", () => {
     mocks.share.mockRejectedValue(new Error("No activity can open this file"));
     await expect(
       downloadAndShareAttachment({ ...input, signal: new AbortController().signal }),
-    ).rejects.toThrow("Could not open the share sheet. Try again.");
+    ).rejects.toThrow(tr("Could not open the share sheet. Try again."));
     expect(mocks.deleted).toHaveBeenCalledTimes(1);
   });
 

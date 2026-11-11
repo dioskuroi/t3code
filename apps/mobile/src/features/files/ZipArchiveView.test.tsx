@@ -147,6 +147,7 @@ vi.mock("../settings/appearance/AppearancePreferencesProvider", () => ({
   }),
 }));
 
+import { tr } from "@t3tools/shared/i18n";
 import { ZipArchiveView } from "./ZipArchiveView";
 import { AttachmentFileScreen } from "./AttachmentFileScreen";
 import { appAtomRegistry } from "../../state/atom-registry";
@@ -244,7 +245,7 @@ it("opens a ZIP chat attachment as a browsable archive on the attachment file sc
     expect(screen.container.querySelector("pre")?.textContent).toBe("First archive contents"),
   );
   const add = Array.from(screen.container.querySelectorAll("button")).find(
-    (button) => button.textContent === "Add to chat",
+    (button) => button.textContent === tr("Add to chat"),
   );
   expect(add?.disabled).toBe(false);
 });
@@ -256,7 +257,7 @@ it("keeps the ZIP filter and archive open when native Back closes a selected ent
     expect(screen.container.querySelector('[aria-label="first.txt"]')).not.toBeNull(),
   );
   const filter = screen.container.querySelector<HTMLInputElement>(
-    '[aria-label="Filter files in ZIP"]',
+    `[aria-label="${tr("Filter files in ZIP")}"]`,
   )!;
   await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(
@@ -278,7 +279,8 @@ it("keeps the ZIP filter and archive open when native Back closes a selected ent
   expect(screen.container.querySelector("pre")).toBeNull();
   expect(screen.container.querySelector('[aria-label="first.txt"]')).not.toBeNull();
   expect(
-    screen.container.querySelector<HTMLInputElement>('[aria-label="Filter files in ZIP"]')?.value,
+    screen.container.querySelector<HTMLInputElement>(`[aria-label="${tr("Filter files in ZIP")}"]`)
+      ?.value,
   ).toBe("first");
 });
 

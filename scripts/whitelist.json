@@ -909,6 +909,7 @@
     "squash",
     "vpr",
     "csv",
-    "Mermaid"
+    "Mermaid",
+    "zip"
   ]
 }

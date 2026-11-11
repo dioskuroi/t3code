@@ -1,4 +1,5 @@
 import * as Dialog from "./ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { requireNativeModule } from "expo";
 import { useEffect, useEffectEvent, useId } from "react";
 
@@ -31,7 +32,11 @@ function NativeFilePreview(props: {
   const onRequestClose = useEffectEvent(props.onRequestClose);
   const onOpenError = useEffectEvent((error: unknown) => {
     if (props.onOpenError) props.onOpenError(error);
-    else Dialog.alert("Could not open preview", "The file could not be loaded. Please try again.");
+    else
+      Dialog.alert(
+        tr("Could not open preview"),
+        tr("The file could not be loaded. Please try again."),
+      );
   });
 
   // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- presents the native file preview and dismisses it on cleanup
@@ -41,7 +46,7 @@ function NativeFilePreview(props: {
       gallery && gallery.length > 1
         ? NativeControls.presentFiles(
             gallery.map((item) => item.uri),
-            gallery.map((item) => item.name ?? "Preview"),
+            gallery.map((item) => item.name ?? tr("Preview")),
             Math.max(
               0,
               gallery.findIndex((item) => item.uri === uri),
@@ -49,7 +54,12 @@ function NativeFilePreview(props: {
             gallery.map((item) => item.sourceIdentifier ?? ""),
             identifier,
           )
-        : NativeControls.presentFile(uri, name ?? "Preview", sourceIdentifier ?? "", identifier);
+        : NativeControls.presentFile(
+            uri,
+            name ?? tr("Preview"),
+            sourceIdentifier ?? "",
+            identifier,
+          );
     void presentation
       .catch((error: unknown) => {
         if (!canceled) onOpenError(error);

@@ -1,4 +1,5 @@
 import { useAtomMount, useAtomSubscribe } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { executeAtomQuery } from "@t3tools/client-runtime/state/runtime";
 import { ProjectListEntriesError, type EnvironmentId, type ProjectEntry } from "@t3tools/contracts";
 import * as Cause from "effect/Cause";
@@ -266,7 +267,7 @@ export function useFileTreeEntries(input: {
           validatedDirectories,
           errors: new Map(current.errors).set(
             directoryPath,
-            error instanceof Error ? error.message : "Files unavailable",
+            error instanceof Error ? error.message : tr("Files unavailable"),
           ),
         };
       });
