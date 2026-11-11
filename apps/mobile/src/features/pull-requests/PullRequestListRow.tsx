@@ -2,6 +2,7 @@ import {
   capitalizeTerm,
   sourceControlClients,
 } from "@t3tools/client-runtime/source-control-clients";
+import { tr } from "@t3tools/shared/i18n";
 import { memo } from "react";
 import { Pressable, View } from "react-native";
 import { AppText as Text } from "../../components/ui/AppText";
@@ -74,8 +75,35 @@ export const PullRequestListRow = memo(
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ selected: props.selected, busy: props.busy }}
-            accessibilityLabel={`${capitalizeTerm(sourceControlClients.get(item.provider).changeRequest.singular)} ${item.number}, ${item.title}, ${status.label}${conflict ? `, ${conflict.label.toLowerCase()}` : ""}, by ${item.author?.login ?? "unknown author"}${review ? `, ${review.accessibleLabel}` : ""}${item.checksState ? `, checks ${item.checksState}` : ""}${item.stack ? `, stack ${item.stack.position} of ${item.stack.size}` : ""}${item.labels.length ? `, ${item.labels.map((label) => label.name).join(", ")}` : ""}, ${item.additions} additions, ${item.deletions} deletions`}
-            accessibilityHint="Double tap to open. Touch and hold for quick actions."
+            accessibilityLabel={tr(
+              "{singular} {number}, {title}, {status}{conflict}, by {author}{review}{checks}{stack}{labels}, {additions} additions, {deletions} deletions",
+              {
+                singular: capitalizeTerm(
+                  sourceControlClients.get(item.provider).changeRequest.singular,
+                ),
+                number: item.number,
+                title: item.title,
+                status: status.label,
+                conflict: conflict ? tr(", {label}", { label: conflict.label.toLowerCase() }) : "",
+                author: item.author?.login ?? tr("unknown author"),
+                review: review ? tr(", {label}", { label: review.accessibleLabel }) : "",
+                checks: item.checksState ? tr(", checks {state}", { state: item.checksState }) : "",
+                stack: item.stack
+                  ? tr(", stack {position} of {size}", {
+                      position: item.stack.position,
+                      size: item.stack.size,
+                    })
+                  : "",
+                labels: item.labels.length
+                  ? tr(", {labels}", {
+                      labels: item.labels.map((label) => label.name).join(", "),
+                    })
+                  : "",
+                additions: item.additions,
+                deletions: item.deletions,
+              },
+            )}
+            accessibilityHint={tr("Double tap to open. Touch and hold for quick actions.")}
             onPress={() => props.onSelect(item)}
             disabled={props.busy}
             style={props.sidebar ? THREAD_LIST_V2_SIDEBAR_ROW_STYLE : undefined}
@@ -176,7 +204,12 @@ export const PullRequestListRow = memo(
                   ) : null}
                 </View>
                 {checks ? (
-                  <View className="shrink-0" accessibilityLabel={`Checks ${item.checksState}`}>
+                  <View
+                    className="shrink-0"
+                    accessibilityLabel={tr("Checks {state}", {
+                      state: item.checksState ?? "",
+                    })}
+                  >
                     <SymbolView name={checks.icon} size={13} tintColorClassName={checks.tint} />
                   </View>
                 ) : null}

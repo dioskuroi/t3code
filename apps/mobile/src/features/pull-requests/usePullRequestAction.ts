@@ -1,4 +1,5 @@
 import { AsyncResult } from "effect/reactivity";
+import { tr } from "@t3tools/shared/i18n";
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomRefresh } from "@effect/atom-react";
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
@@ -38,8 +39,10 @@ export function usePullRequestAction(params: PullRequestParams, pr: PullRequestD
     if (AsyncResult.isFailure(response)) {
       const cause = squashAtomCommandFailure(response);
       Dialog.alert(
-        `Couldn't update this ${sourceControlClients.get(pr?.provider).changeRequest.singular}`,
-        cause instanceof Error ? cause.message : "Try again.",
+        tr("Couldn't update this {singular}", {
+          singular: sourceControlClients.get(pr?.provider).changeRequest.singular,
+        }),
+        cause instanceof Error ? cause.message : tr("Try again."),
       );
       return;
     }
@@ -48,7 +51,7 @@ export function usePullRequestAction(params: PullRequestParams, pr: PullRequestD
   };
   const confirm = (action: PullRequestAction, title: string, message: string) =>
     Dialog.alert(title, message, [
-      { text: "Cancel", style: "cancel" },
+      { text: tr("Cancel"), style: "cancel" },
       {
         text: title,
         style: action === "close" || action === "delete-branch" ? "destructive" : "default",
@@ -60,7 +63,9 @@ export function usePullRequestAction(params: PullRequestParams, pr: PullRequestD
     confirm(
       "close",
       pullRequestActionLabel("close", terminology),
-      `Close this ${terminology.singular} without merging its changes?`,
+      tr("Close this {singular} without merging its changes?", {
+        singular: terminology.singular,
+      }),
     );
   };
   return { available, perform, confirm, confirmClose, busy };

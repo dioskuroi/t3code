@@ -1,4 +1,5 @@
 import { Toolbar } from "../../components/ui/Toolbar";
+import { tr } from "@t3tools/shared/i18n";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { Chip } from "../../components/ui/Chip";
 import { pullRequestTabOffset } from "./pullRequestTabScroll";
@@ -164,7 +165,7 @@ function usePullRequestActivityRows(params: PullRequestParams, filter: ActivityF
         date: "",
         content: (
           <Text className="py-6 text-sm text-foreground-muted">
-            No activity matches these filters.
+            {tr("No activity matches these filters.")}
           </Text>
         ),
       });
@@ -210,16 +211,16 @@ function PullRequestIdentity(props: {
       <View className="flex-row items-center gap-2">
         <PullRequestAvatar actor={pr.author} size={20} />
         <Text className="min-w-0 flex-1 text-xs font-t3-medium" numberOfLines={1}>
-          {pr.author?.login ?? "Unknown author"}
+          {pr.author?.login ?? tr("Unknown author")}
         </Text>
         <Text className="shrink text-right text-2xs text-foreground-muted" numberOfLines={1}>
-          Updated <RelativeTime timestamp={pr.updatedAt} /> ago
+          {tr("Updated")} <RelativeTime timestamp={pr.updatedAt} /> {tr("ago")}
         </Text>
       </View>
       <View className="flex-row items-start gap-1.5">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Copy base branch ${pr.baseBranch}`}
+          accessibilityLabel={tr("Copy base branch {branch}", { branch: pr.baseBranch })}
           onPress={() => void Clipboard.setStringAsync(pr.baseBranch)}
           className="min-w-0 shrink active:opacity-70"
           hitSlop={8}
@@ -231,7 +232,7 @@ function PullRequestIdentity(props: {
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Copy head branch ${pr.headBranch}`}
+          accessibilityLabel={tr("Copy head branch {branch}", { branch: pr.headBranch })}
           onPress={() => void Clipboard.setStringAsync(pr.headBranch)}
           className="min-w-0 shrink active:opacity-70"
           hitSlop={8}
@@ -280,10 +281,10 @@ function PullRequestLabels(props: {
       })}
       {editable ? (
         <Chip
-          label={props.pr.labels.length ? "Edit" : "Add labels"}
+          label={props.pr.labels.length ? tr("Edit") : tr("Add labels")}
           icon="tag"
           size="small"
-          accessibilityLabel="Edit labels"
+          accessibilityLabel={tr("Edit labels")}
           onPress={() => navigation.navigate("PullRequestLabels", props.params)}
         />
       ) : null}
@@ -435,7 +436,10 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
     action.confirm(
       "delete-branch",
       pullRequestActionLabel("delete-branch", terminology),
-      `Delete ${pr.headBranch} from ${pr.headRepositoryNameWithOwner ?? pr.repository}? Local branches and worktrees are not changed.`,
+      tr("Delete {branch} from {repo}? Local branches and worktrees are not changed.", {
+        branch: pr.headBranch,
+        repo: pr.headRepositoryNameWithOwner ?? pr.repository,
+      }),
     );
   const stack = usePullRequestStack(params, pr);
   const refreshActivity = useAtomRefresh(composerPullRequests.activity(requestTarget(params)));
@@ -480,14 +484,14 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
             headerTitle: `#${params.number}`,
             unstable_headerSubtitle: connected
               ? params.repository
-              : `${params.repository} · Offline`,
+              : tr("{repository} · Offline", { repository: params.repository }),
             unstable_headerLeftItems: layout.usesSplitView ? () => [sidebarHeaderItem] : undefined,
           }}
           optionsVersion={[layout.usesSplitView, sidebarHeaderItem]}
         />
         {Platform.OS === "android" ? (
           <AndroidScreenHeader
-            title={`#${params.number}${connected ? "" : " · Offline"}`}
+            title={`#${params.number}${connected ? "" : tr(" \u00B7 Offline")}`}
             subtitle={params.repository}
             onBack={layout.usesSplitView ? undefined : returnToList}
             leading={layout.usesSplitView ? <AndroidWorkspaceSidebarButton /> : undefined}
@@ -495,7 +499,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
               ...(permissions.verdicts.length
                 ? [
                     {
-                      accessibilityLabel: "Submit review",
+                      accessibilityLabel: tr("Submit review"),
                       icon: "text.bubble" as const,
                       onPress: () =>
                         navigation.navigate("PullRequestReview", { ...params, mode: "review" }),
@@ -505,7 +509,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
               ...(permissions.canComment
                 ? [
                     {
-                      accessibilityLabel: "Add comment",
+                      accessibilityLabel: tr("Add comment"),
                       icon: "plus.bubble" as const,
                       onPress: () =>
                         navigation.navigate("PullRequestReview", { ...params, mode: "comment" }),
@@ -515,14 +519,14 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
               ...(permissions.canEditChangeRequest
                 ? [
                     {
-                      accessibilityLabel: "Edit title",
+                      accessibilityLabel: tr("Edit title"),
                       icon: "pencil" as const,
                       overflowOnly: true,
                       onPress: () =>
                         navigation.navigate("PullRequestEdit", { ...params, field: "title" }),
                     },
                     {
-                      accessibilityLabel: "Edit description",
+                      accessibilityLabel: tr("Edit description"),
                       icon: "doc.text" as const,
                       overflowOnly: true,
                       onPress: () =>
@@ -533,7 +537,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
               ...(maintainerEdits.visible
                 ? [
                     {
-                      accessibilityLabel: "Allow edits from maintainers",
+                      accessibilityLabel: tr("Allow edits from maintainers"),
                       icon: "pencil" as const,
                       selected: maintainerEdits.value,
                       disabled: maintainerEdits.saving,
@@ -551,13 +555,13 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                       onPress: () => void Linking.openURL(identity.url),
                     },
                     {
-                      accessibilityLabel: "Copy link",
+                      accessibilityLabel: tr("Copy link"),
                       icon: "link" as const,
                       overflowOnly: true,
                       onPress: () => copyPullRequestLink(identity),
                     },
                     {
-                      accessibilityLabel: "Share…",
+                      accessibilityLabel: tr("Share\u2026"),
                       icon: "square.and.arrow.up" as const,
                       overflowOnly: true,
                       onPress: () => sharePullRequestLink(identity),
@@ -603,7 +607,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                   navigation.navigate("PullRequestReview", { ...params, mode: "review" })
                 }
               >
-                <Toolbar.Label>Submit review</Toolbar.Label>
+                <Toolbar.Label>{tr("Submit review")}</Toolbar.Label>
               </Toolbar.MenuAction>
             ) : null}
             {permissions.canComment ? (
@@ -613,7 +617,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                   navigation.navigate("PullRequestReview", { ...params, mode: "comment" })
                 }
               >
-                <Toolbar.Label>Add comment</Toolbar.Label>
+                <Toolbar.Label>{tr("Add comment")}</Toolbar.Label>
               </Toolbar.MenuAction>
             ) : null}
             {permissions.canEditChangeRequest ? (
@@ -623,7 +627,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                   navigation.navigate("PullRequestEdit", { ...params, field: "title" })
                 }
               >
-                <Toolbar.Label>Edit title</Toolbar.Label>
+                <Toolbar.Label>{tr("Edit title")}</Toolbar.Label>
               </Toolbar.MenuAction>
             ) : null}
             {permissions.canEditChangeRequest ? (
@@ -631,7 +635,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                 icon="doc.text"
                 onPress={() => navigation.navigate("PullRequestEdit", { ...params, field: "body" })}
               >
-                <Toolbar.Label>Edit description</Toolbar.Label>
+                <Toolbar.Label>{tr("Edit description")}</Toolbar.Label>
               </Toolbar.MenuAction>
             ) : null}
             {maintainerEdits.visible ? (
@@ -642,7 +646,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                 subtitle={maintainerEdits.subtitle}
                 onPress={maintainerEdits.toggle}
               >
-                <Toolbar.Label>Allow edits from maintainers</Toolbar.Label>
+                <Toolbar.Label>{tr("Allow edits from maintainers")}</Toolbar.Label>
               </Toolbar.MenuAction>
             ) : null}
             {identity ? (
@@ -655,7 +659,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
             ) : null}
             {identity ? (
               <Toolbar.MenuAction icon="link" onPress={() => copyPullRequestLink(identity)}>
-                <Toolbar.Label>Copy link</Toolbar.Label>
+                <Toolbar.Label>{tr("Copy link")}</Toolbar.Label>
               </Toolbar.MenuAction>
             ) : null}
             {identity ? (
@@ -663,7 +667,7 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                 icon="square.and.arrow.up"
                 onPress={() => sharePullRequestLink(identity)}
               >
-                <Toolbar.Label>Share…</Toolbar.Label>
+                <Toolbar.Label>{tr("Share\u2026")}</Toolbar.Label>
               </Toolbar.MenuAction>
             ) : null}
             {stateAction ? (
@@ -682,10 +686,10 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                 disabled={!action.available("delete-branch")}
                 subtitle={
                   action.busy
-                    ? "Deleting…"
+                    ? tr("Deleting\u2026")
                     : connected
                       ? pr.headBranch
-                      : "Reconnect to delete this branch."
+                      : tr("Reconnect to delete this branch.")
                 }
                 onPress={confirmDeleteBranch}
               >
@@ -905,11 +909,11 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                           {Platform.OS !== "ios" || section === tab ? (
                             <SegmentedControl
                               options={[
-                                { value: "overview", label: "Overview" },
+                                { value: "overview", label: tr("Overview") },
                                 ...(guidesEnabled
-                                  ? [{ value: "guide" as const, label: "Guide" }]
+                                  ? [{ value: "guide" as const, label: tr("Guide") }]
                                   : []),
-                                { value: "activity", label: "Activity" },
+                                { value: "activity", label: tr("Activity") },
                               ]}
                               selected={section}
                               onSelect={selectSection}
@@ -952,7 +956,7 @@ export function PullRequestFileRouteScreen(props: PullRequestFileRouteProps) {
     useNavigation<NativeStackNavigationProp<ReactNavigation.RootParamList, "PullRequestFile">>();
   const ready = usePullRequestDiffEntry(navigation);
   if (ready) return <PullRequestFileRouteContent {...props} />;
-  const title = props.route.params.commit ? "Commit changes" : "Changes";
+  const title = props.route.params.commit ? tr("Commit changes") : tr("Changes");
   return (
     <View className="flex-1 bg-screen">
       <NativeStackScreenOptions options={{ title, headerTitle: title }} />
@@ -960,7 +964,7 @@ export function PullRequestFileRouteScreen(props: PullRequestFileRouteProps) {
         <AndroidScreenHeader title={title} onBack={() => navigation.goBack()} />
       ) : null}
       <View className="flex-1 items-center justify-center">
-        <AppActivityIndicator accessibilityLabel="Loading changes" />
+        <AppActivityIndicator accessibilityLabel={tr("Loading changes")} />
       </View>
     </View>
   );
@@ -1141,7 +1145,7 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
     setSelectedRowId(null);
     filter.toggle();
   };
-  const title = commit ? "Commit changes" : "Changes";
+  const title = commit ? tr("Commit changes") : tr("Changes");
   const seekingFile = !targetFile && result.nextCursor !== null;
   const loadingDiff = (result.isPending && !data.rows.length) || (seekingFile && !result.error);
   return (
@@ -1150,7 +1154,7 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
         options={{
           title,
           headerTitle: title,
-          unstable_headerSubtitle: `${commit ? commit.slice(0, 7) : `#${route.params.number}`} · ${data.files.length} ${data.files.length === 1 ? "file" : "files"}${filter.hideTestFiles && filter.hiddenCount ? ` · ${filter.hiddenCount} ${filter.hiddenCount === 1 ? "test" : "tests"} hidden` : ""}`,
+          unstable_headerSubtitle: `${commit ? commit.slice(0, 7) : `#${route.params.number}`} · ${data.files.length === 1 ? tr("{count} file", { count: data.files.length }) : tr("{count} files", { count: data.files.length })}${filter.hideTestFiles && filter.hiddenCount ? tr(" · {count} {unit} hidden", { count: filter.hiddenCount, unit: filter.hiddenCount === 1 ? tr("test") : tr("tests") }) : ""}`,
         }}
       />
       {Platform.OS === "android" ? (
@@ -1162,26 +1166,28 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
               actions={[
                 {
                   id: "word-wrap",
-                  title: "Word wrap",
+                  title: tr("Word wrap"),
                   image: "text.alignleft",
                   state: appearance.codeWordBreak ? "on" : "off",
                 },
                 {
                   id: "hide-tests",
-                  title: "Hide test files",
+                  title: tr("Hide test files"),
                   image: "line.3.horizontal.decrease",
                   state: filter.hideTestFiles ? "on" : "off",
                 },
                 ...(permissions.verdicts.length
-                  ? [{ id: "submit-review", title: "Submit review", image: "text.bubble" }]
+                  ? [{ id: "submit-review", title: tr("Submit review"), image: "text.bubble" }]
                   : []),
                 ...(permissions.canComment
-                  ? [{ id: "comment-on-pr", title: "Add comment", image: "plus.bubble" }]
+                  ? [{ id: "comment-on-pr", title: tr("Add comment"), image: "plus.bubble" }]
                   : []),
                 ...(selectedRow && selectedFile
                   ? [
-                      ...(canCommentOnDiff ? [{ id: "comment", title: "Add review comment" }] : []),
-                      { id: "copy", title: "Copy line" },
+                      ...(canCommentOnDiff
+                        ? [{ id: "comment", title: tr("Add review comment") }]
+                        : []),
+                      { id: "copy", title: tr("Copy line") },
                     ]
                   : []),
               ]}
@@ -1201,14 +1207,18 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
               }}
             >
               <View pointerEvents="none">
-                <IconButton icon="ellipsis" accessibilityLabel="Diff options" />
+                <IconButton icon="ellipsis" accessibilityLabel={tr("Diff options")} />
               </View>
             </Menu>
           }
         />
       ) : null}
       <Toolbar placement="right">
-        <Toolbar.Menu title="Diff options" accessibilityLabel="Diff options" icon="ellipsis">
+        <Toolbar.Menu
+          title={tr("Diff options")}
+          accessibilityLabel={tr("Diff options")}
+          icon="ellipsis"
+        >
           {permissions.verdicts.length ? (
             <Toolbar.MenuAction
               icon="text.bubble"
@@ -1216,7 +1226,7 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
                 navigation.navigate("PullRequestReview", { ...route.params, mode: "review" })
               }
             >
-              <Toolbar.Label>Submit review</Toolbar.Label>
+              <Toolbar.Label>{tr("Submit review")}</Toolbar.Label>
             </Toolbar.MenuAction>
           ) : null}
           {permissions.canComment ? (
@@ -1226,7 +1236,7 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
                 navigation.navigate("PullRequestReview", { ...route.params, mode: "comment" })
               }
             >
-              <Toolbar.Label>Add comment</Toolbar.Label>
+              <Toolbar.Label>{tr("Add comment")}</Toolbar.Label>
             </Toolbar.MenuAction>
           ) : null}
           <Toolbar.MenuAction
@@ -1234,19 +1244,21 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
             isOn={appearance.codeWordBreak}
             onPress={() => setCodeWordBreak(!appearance.codeWordBreak)}
           >
-            <Toolbar.Label>Word wrap</Toolbar.Label>
+            <Toolbar.Label>{tr("Word wrap")}</Toolbar.Label>
           </Toolbar.MenuAction>
           <Toolbar.MenuAction
             icon="line.3.horizontal.decrease"
             isOn={filter.hideTestFiles}
             onPress={toggleTestFiles}
           >
-            <Toolbar.Label>Hide test files</Toolbar.Label>
+            <Toolbar.Label>{tr("Hide test files")}</Toolbar.Label>
           </Toolbar.MenuAction>
           {selectedRow && selectedFile && canCommentOnDiff ? (
             <Toolbar.MenuAction icon="bubble.left" onPress={() => commentOnLine()}>
               <Toolbar.Label>
-                {route.params.replacingDraftId ? "Move draft to this line" : "Add review comment"}
+                {route.params.replacingDraftId
+                  ? tr("Move draft to this line")
+                  : tr("Add review comment")}
               </Toolbar.Label>
             </Toolbar.MenuAction>
           ) : null}
@@ -1255,14 +1267,16 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
               icon="document.on.document"
               onPress={() => void Clipboard.setStringAsync(selectedRow.content ?? "")}
             >
-              <Toolbar.Label>Copy line</Toolbar.Label>
+              <Toolbar.Label>{tr("Copy line")}</Toolbar.Label>
             </Toolbar.MenuAction>
           ) : null}
         </Toolbar.Menu>
       </Toolbar>
       {route.params.replacingDraftId ? (
         <Text className="px-4 py-2 text-xs text-foreground-muted">
-          Select a current line, then choose “Move draft to this line” from its menu.
+          {tr(
+            "Select a current line, then choose \u201CMove draft to this line\u201D from its menu.",
+          )}
         </Text>
       ) : null}
       {viewed.error ? (
@@ -1274,10 +1288,10 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
           style={{ paddingTop: Platform.OS === "ios" ? insets.top + 8 : 8 }}
         >
           <Text className="min-w-0 flex-1 text-xs text-foreground-muted">
-            The branch changed. Reload before adding line comments.
+            {tr("The branch changed. Reload before adding line comments.")}
           </Text>
           <Button
-            label="Reload changes"
+            label={tr("Reload changes")}
             onPress={() => {
               result.refresh();
               setDiffHead({ scopeKey, sha: detail.data?.headSha ?? null });
@@ -1386,28 +1400,36 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
           !seekingFile ? (
           <View style={{ paddingTop: Platform.OS === "ios" ? insets.top : 0 }}>
             <EmptyState
-              title="Only test files changed"
-              detail="Test files are hidden from this review."
-              action={<Button label="Show test files" tone="contrast" onPress={filter.showAll} />}
+              title={tr("Only test files changed")}
+              detail={tr("Test files are hidden from this review.")}
+              action={
+                <Button label={tr("Show test files")} tone="contrast" onPress={filter.showAll} />
+              }
               variant="plain"
             />
           </View>
         ) : !result.isPending && !result.error && !seekingFile ? (
           <EmptyState
-            title="Diff unavailable"
-            detail={`Open this ${terminology.singular} on its provider to view the changes.`}
+            title={tr("Diff unavailable")}
+            detail={tr("Open this {singular} on its provider to view the changes.", {
+              singular: terminology.singular,
+            })}
             variant="plain"
           />
         ) : null}
         {result.nextCursor && result.isPending && data.rows.length && !seekingFile ? (
           <View className="flex-row items-center justify-center gap-2 py-2">
             <AppActivityIndicator size="small" />
-            <Text className="text-xs text-foreground-muted">Loading more files…</Text>
+            <Text className="text-xs text-foreground-muted">{tr("Loading more files\u2026")}</Text>
           </View>
         ) : null}
         {result.error && result.nextCursor ? (
           <View className="self-center">
-            <Button label="Retry loading remaining files" tone="text" onPress={result.refresh} />
+            <Button
+              label={tr("Retry loading remaining files")}
+              tone="text"
+              onPress={result.refresh}
+            />
           </View>
         ) : null}
         {parsed.kind === "files" && parsed.notice ? (

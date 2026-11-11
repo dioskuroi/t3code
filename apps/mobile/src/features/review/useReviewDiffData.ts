@@ -1,4 +1,5 @@
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { formatDiffCount } from "@t3tools/client-runtime/diff-count";
 
 import { parseReviewInlineComments } from "./reviewCommentSelection";
@@ -69,15 +70,15 @@ function getCachedReviewFile(
     deletions: stat.deletions,
     ...(patch?._tag === "Success"
       ? patch.value.source.truncated
-        ? { notice: "File preview exceeds the size limit. Counts include all changes." }
+        ? { notice: tr("File preview exceeds the size limit. Counts include all changes.") }
         : loaded
           ? {}
-          : { notice: "Could not display file preview." }
+          : { notice: tr("Could not display file preview.") }
       : {
           notice:
             patch?._tag === "Failure"
-              ? "Could not load diff. Select the file to retry."
-              : "Loading diff…",
+              ? tr("Could not load diff. Select the file to retry.")
+              : tr("Loading diff\u2026"),
         }),
   };
   if (patch) normalizedFiles.set(patch, { stat, diffHash, file });

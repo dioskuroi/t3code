@@ -2,6 +2,7 @@ import {
   sourceControlClients,
   type ChangeRequestTerminology,
 } from "@t3tools/client-runtime/source-control-clients";
+import { tr } from "@t3tools/shared/i18n";
 import type { PullRequestDetail, PullRequestLinkedThreadsResult } from "@t3tools/contracts";
 
 export type PullRequestAgentTask = "ask" | "explain" | "feedback" | "conflicts" | "watch";
@@ -23,13 +24,25 @@ export function pullRequestAgentPrompt(
     case "ask":
       return "";
     case "explain":
-      return `Explain this ${singular}. Read the diff and walk through its purpose, the changes, the risks, and what I should read closely before approving. Do not change any code.`;
+      return tr(
+        "Explain this {singular}. Read the diff and walk through its purpose, the changes, the risks, and what I should read closely before approving. Do not change any code.",
+        { singular: singular },
+      );
     case "feedback":
-      return `Address the actionable feedback and failing checks on this ${singular}. Fetch the latest review threads and check results, skip resolved feedback, and verify each finding before changing code. First confirm this thread is on the ${shortLabel}'s branch; if it isn't, prepare the ${shortLabel} in its own worktree. Keep the fixes focused and run the relevant checks.`;
+      return tr(
+        "Address the actionable feedback and failing checks on this {singular}. Fetch the latest review threads and check results, skip resolved feedback, and verify each finding before changing code. First confirm this thread is on the {shortLabel}'s branch; if it isn't, prepare the {shortLabel} in its own worktree. Keep the fixes focused and run the relevant checks.",
+        { singular: singular, shortLabel: shortLabel },
+      );
     case "conflicts":
-      return `Resolve this ${singular}'s conflicts with its base branch. First confirm this thread is on the ${shortLabel}'s branch; if it isn't, prepare the ${shortLabel} in its own worktree. Bring it up to date using this repository's convention, preserve the intent of both sides, and run the relevant checks before pushing.`;
+      return tr(
+        "Resolve this {singular}'s conflicts with its base branch. First confirm this thread is on the {shortLabel}'s branch; if it isn't, prepare the {shortLabel} in its own worktree. Bring it up to date using this repository's convention, preserve the intent of both sides, and run the relevant checks before pushing.",
+        { singular: singular, shortLabel: shortLabel },
+      );
     case "watch":
-      return `Watch this ${singular} for check results, new feedback, and conflicts using T3's pull request watch. End the turn once the watch is armed. When it wakes you, assess what changed and report what needs attention.`;
+      return tr(
+        "Watch this {singular} for check results, new feedback, and conflicts using T3's pull request watch. End the turn once the watch is armed. When it wakes you, assess what changed and report what needs attention.",
+        { singular: singular },
+      );
   }
 }
 
@@ -38,26 +51,31 @@ export function pullRequestAgentActions(pr: PullRequestDetail, canWatch: boolean
   return [
     {
       task: "ask",
-      title: "Ask a question",
+      title: tr("Ask a question"),
       icon: "bubble.left.and.text.bubble.right",
       disabled: false,
     },
-    { task: "explain", title: `Explain this ${shortLabel}`, icon: "book", disabled: false },
+    {
+      task: "explain",
+      title: tr("Explain this {shortLabel}", { shortLabel: shortLabel }),
+      icon: "book",
+      disabled: false,
+    },
     {
       task: "feedback",
-      title: "Address feedback",
+      title: tr("Address feedback"),
       icon: "wrench.and.screwdriver",
       disabled: pr.state !== "open",
     },
     {
       task: "conflicts",
-      title: "Resolve conflicts",
+      title: tr("Resolve conflicts"),
       icon: "arrow.triangle.branch",
       disabled: pr.state !== "open" || pr.mergeability !== "conflicting",
     },
     {
       task: "watch",
-      title: `Watch ${shortLabel}`,
+      title: tr("Watch {shortLabel}", { shortLabel: shortLabel }),
       icon: "eye",
       disabled: pr.state !== "open" || !canWatch,
     },

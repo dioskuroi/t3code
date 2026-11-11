@@ -1,4 +1,5 @@
 import { RegistryContext, useAtomMount, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { executeAtomQuery, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
 import type { EnvironmentId, PullRequestDiffStat, PullRequestListInput } from "@t3tools/contracts";
 import * as Cause from "effect/Cause";
@@ -95,7 +96,7 @@ async function loadNextPages(
         JSON.stringify(Object.entries(input.cursors).sort()) ===
           JSON.stringify(Object.entries(next.nextCursors).sort())
       )
-        throw new Error("Couldn't advance the list. Try again.");
+        throw new Error(tr("Couldn't advance the list. Try again."));
     }),
   );
   return requestErrors(responses);
@@ -308,7 +309,7 @@ export function usePullRequestList(targets: readonly ListTarget[]) {
           {
             environmentId: target.environmentId,
             projectTitle: "",
-            message: cause instanceof Error ? cause.message : "Couldn't load pull requests.",
+            message: cause instanceof Error ? cause.message : tr("Couldn't load pull requests."),
           },
         ];
       }),
@@ -345,7 +346,7 @@ function requestErrors(results: readonly PromiseSettledResult<unknown>[]) {
           ? [
               result.reason instanceof Error
                 ? result.reason.message
-                : "Couldn't load pull requests.",
+                : tr("Couldn't load pull requests."),
             ]
           : [],
       )

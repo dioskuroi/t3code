@@ -1,4 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { useEffect, useRef } from "react";
 import { BackHandler, Keyboard, View, type TextInputInstance } from "react-native";
 import { AndroidHeaderIconButton } from "../../components/ui/AndroidScreenHeader";
@@ -64,17 +65,17 @@ export function PullRequestToolbar(props: {
         searchField={
           <SearchField
             inputRef={input}
-            accessibilityLabel="Search pull requests"
-            clearAccessibilityLabel="Clear search"
-            placeholder="Search pull requests"
+            accessibilityLabel={tr("Search pull requests")}
+            clearAccessibilityLabel={tr("Clear search")}
+            placeholder={tr("Search pull requests")}
             value={tab.query}
             onChangeText={(query) => dispatch({ type: "query", tab: "pullRequests", query })}
           />
         }
         onCloseSearch={closeSearch}
         onOpenSearch={openSearch}
-        searchAccessibilityLabel="Search pull requests"
-        titleAccessibilityLabel="T3 Code, Pull requests"
+        searchAccessibilityLabel={tr("Search pull requests")}
+        titleAccessibilityLabel={tr("T3 Code, Pull requests")}
         onOpenEnvironments={() => openSettings(navigation, "SettingsEnvironments")}
         filter={
           filters ? (
@@ -84,7 +85,7 @@ export function PullRequestToolbar(props: {
             >
               {(open) => (
                 <AndroidHeaderIconButton
-                  accessibilityLabel="Filter pull requests"
+                  accessibilityLabel={tr("Filter pull requests")}
                   icon={
                     filters.customized
                       ? "line.3.horizontal.decrease.circle.fill"

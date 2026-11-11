@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { useFocusEffect } from "@react-navigation/native";
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
 import { AsyncResult } from "effect/reactivity";
@@ -51,7 +52,7 @@ export function useReviewGuide(params: PullRequestParams, visible = true) {
     setStarting(false);
     if (AsyncResult.isFailure(result)) {
       const cause = squashAtomCommandFailure(result);
-      setError(cause instanceof Error ? cause.message : "Could not start the review guide.");
+      setError(cause instanceof Error ? cause.message : tr("Could not start the review guide."));
     }
   };
   return { ...query, enabled, canWrite, running, write, startError: error };
