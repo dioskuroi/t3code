@@ -2,6 +2,7 @@
 // @effect-diagnostics nodeBuiltinImport:off -- This desktop-only platform check reads procfs and resolves Wayland socket paths with Node.
 
 import * as NodeFS from "node:fs";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodePath from "node:path";
 
 import {
@@ -43,23 +44,23 @@ export function snapShotShortcutRegistrationFailureMessage(
         snapShotShortcutModifierPair(shortcut),
         platform === "darwin",
       )} is not available on this system.`
-    : "This shortcut is already used by the system or another app.";
+    : tr("This shortcut is already used by the system or another app.");
 }
 
 const COMMON_MOD_ACTIONS: Readonly<Record<string, string>> = {
-  a: "Select All",
-  c: "Copy",
-  f: "Find",
-  n: "New",
-  o: "Open",
-  p: "Print",
-  q: "Quit",
-  s: "Save",
-  t: "New Tab",
-  v: "Paste",
-  w: "Close Window",
-  x: "Cut",
-  z: "Undo",
+  a: tr("Select All"),
+  c: tr("Copy"),
+  f: tr("Find"),
+  n: tr("New"),
+  o: tr("Open"),
+  p: tr("Print"),
+  q: tr("Quit"),
+  s: tr("Save"),
+  t: tr("New Tab"),
+  v: tr("Paste"),
+  w: tr("Close Window"),
+  x: tr("Cut"),
+  z: tr("Undo"),
 };
 
 export function snapShotShortcutSystemConflict(shortcut: SnapShotKeyChord): string | null {
@@ -72,19 +73,19 @@ export function snapShotShortcutSystemConflict(shortcut: SnapShotKeyChord): stri
   ].filter(Boolean).length;
   if (modifierCount !== 1) return null;
   if (shortcut.shiftKey) {
-    return "Shift combinations are used for typing and text selection. Add another modifier.";
+    return tr("Shift combinations are used for typing and text selection. Add another modifier.");
   }
   const key = shortcut.key.toLowerCase();
   if (shortcut.modKey) {
     const action = COMMON_MOD_ACTIONS[key];
-    return action ? `This shortcut is ${action} in most apps.` : null;
+    return action ? tr("This shortcut is {action} in most apps.", { action: action }) : null;
   }
   if (shortcut.ctrlKey && ["c", "d", "z"].includes(key)) {
-    return "This shortcut controls running commands in terminals.";
+    return tr("This shortcut controls running commands in terminals.");
   }
-  if (shortcut.altKey && key === "tab") return "The system uses Alt+Tab to switch apps.";
+  if (shortcut.altKey && key === "tab") return tr("The system uses Alt+Tab to switch apps.");
   if (shortcut.metaKey && ["l", " "].includes(key)) {
-    return "The system already uses this shortcut.";
+    return tr("The system already uses this shortcut.");
   }
   return null;
 }

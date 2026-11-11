@@ -1,4 +1,5 @@
 import * as Brand from "effect/Brand";
+import { tr } from "@t3tools/shared/i18n";
 import * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -953,7 +954,9 @@ export const makeBackendInstance = Effect.fn("makeBackendInstance")(function* (
               yield* backendOutputLog.persistFailureSnapshot({
                 details: error.message,
               });
-              yield* reportStartupFailure("The server started but did not become ready in time.");
+              yield* reportStartupFailure(
+                tr("The server started but did not become ready in time."),
+              );
             },
           ),
           onOutput: (streamName, chunk) =>
@@ -1012,7 +1015,10 @@ export const makeBackendInstance = Effect.fn("makeBackendInstance")(function* (
         // Retrying cannot fix a policy refusal, so say so at once; retries still pick up a fix.
         const managedPolicy = exitCode === SERVER_EXIT_CODE_MANAGED_POLICY;
         if (managedPolicy || attempt >= STARTUP_FAILURE_RESTART_ATTEMPTS) {
-          yield* reportStartupFailure(`The server could not start (${reason}).`, managedPolicy);
+          yield* reportStartupFailure(
+            tr("The server could not start ({reason}).", { reason: reason }),
+            managedPolicy,
+          );
         }
         const restartFiber = yield* Effect.forkIn(
           Effect.sleep(delay).pipe(

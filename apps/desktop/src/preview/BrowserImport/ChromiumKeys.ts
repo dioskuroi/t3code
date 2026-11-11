@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off - `node:crypto` implements the
 // OSCrypt key derivation Chromium uses; Effect has no equivalent.
 import * as NodeCrypto from "node:crypto";
+import { tr } from "@t3tools/shared/i18n";
 
 import * as HostProcess from "@t3tools/shared/HostProcess";
 
@@ -180,7 +181,7 @@ export const unwrapWindowsDpapiKey = Effect.fn("ChromiumKeys.unwrapWindowsDpapiK
               "-NoProfile",
               "-NonInteractive",
               "-WindowStyle",
-              "Hidden",
+              tr("Hidden"),
               "-Command",
               WINDOWS_DPAPI_SCRIPT,
             ],

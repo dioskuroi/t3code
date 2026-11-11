@@ -1,4 +1,5 @@
 import type { Session, WebContents } from "electron";
+import { tr } from "@t3tools/shared/i18n";
 import { BrowserWindow, session } from "electron";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -247,9 +248,11 @@ export const make = Effect.gen(function* BrowserSessionMake() {
     promptPermission(
       requester,
       {
-        buttons: ["Open", "Cancel"],
-        message: `Open this ${new URL(url).protocol.slice(0, -1)} link?`,
-        detail: `A page in the browser wants to open another application:\n\n${truncateForPrompt(url)}`,
+        buttons: [tr("Open"), tr("Cancel")],
+        message: tr("Open this {protocol} link?", { protocol: new URL(url).protocol.slice(0, -1) }),
+        detail: tr("A page in the browser wants to open another application:\n\n{url}", {
+          url: truncateForPrompt(url),
+        }),
       },
       (answer) => callback(answer === true),
     );
@@ -306,8 +309,10 @@ export const make = Effect.gen(function* BrowserSessionMake() {
             promptPermission(
               requester,
               {
-                buttons: ["Allow", "Block"],
-                message: `${truncateForPrompt(origin)} wants to see text and images copied to the clipboard`,
+                buttons: [tr("Allow"), tr("Block")],
+                message: tr("{origin} wants to see text and images copied to the clipboard", {
+                  origin: truncateForPrompt(origin),
+                }),
               },
               (answer) => {
                 if (answer !== undefined) clipboardReadDecisions.set(origin, answer);

@@ -2,6 +2,7 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Read the portal file through one bounded file descriptor at the native adapter boundary.
 
 import * as NodeCrypto from "node:crypto";
+import { tr } from "@t3tools/shared/i18n";
 import {
   DBusError,
   Message,
@@ -133,7 +134,7 @@ class LinuxCaptureConnection {
         pending,
         this.disconnected,
         new Promise<never>((_, reject) => {
-          timer = setTimeout(() => reject(new Error("Snapshot timed out.")), timeoutMs);
+          timer = setTimeout(() => reject(new Error(tr("Snapshot timed out."))), timeoutMs);
         }),
       ]);
     } finally {
@@ -143,7 +144,7 @@ class LinuxCaptureConnection {
 
   private async call(message: MessageLike) {
     const reply = await this.wait(this.bus.call(new Message(message)));
-    if (!reply) throw new Error("Missing D-Bus reply.");
+    if (!reply) throw new Error(tr("Missing D-Bus reply."));
     this.uniqueName = reply.destination;
     return reply;
   }
@@ -269,7 +270,7 @@ class LinuxCaptureConnection {
         ],
       });
       handle = decodeString(reply.body[0]);
-      if (!handle.startsWith(namespace)) throw new Error("Invalid screenshot request handle.");
+      if (!handle.startsWith(namespace)) throw new Error(tr("Invalid screenshot request handle."));
       const body = await this.wait(
         new Promise<unknown>((resolve) => {
           deliver = resolve;
@@ -279,8 +280,8 @@ class LinuxCaptureConnection {
       );
       const [status, results] = decodeResponse(body);
       completed = true;
-      if (status === 1) throw new Error("Snapshot was cancelled.");
-      if (status !== 0) throw new Error("Your desktop did not allow the snapshot.");
+      if (status === 1) throw new Error(tr("Snapshot was cancelled."));
+      if (status !== 0) throw new Error(tr("Your desktop did not allow the snapshot."));
       const uri = decodeUri(results.uri).value;
       return { png: await readPortalPng(uri) };
     } finally {
@@ -304,7 +305,7 @@ class LinuxCaptureConnection {
       this.bus.requestName(`${appId}.SnapShot`, NameFlag.DO_NOT_QUEUE),
     );
     if (result !== RequestNameReply.PRIMARY_OWNER) {
-      throw new Error("Another T3 Code instance is capturing a window. Try again.");
+      throw new Error(tr("Another T3 Code instance is capturing a window. Try again."));
     }
     const withFeedback = this.feedbackAvailable && options !== undefined;
     const reply = await this.call({
@@ -315,7 +316,7 @@ class LinuxCaptureConnection {
       ...(withFeedback ? { signature: "bb", body: [options.flash, options.animate] } : {}),
     });
     const bytes: unknown = reply.body[0];
-    if (!(bytes instanceof Uint8Array)) throw new Error("Invalid extension screenshot.");
+    if (!(bytes instanceof Uint8Array)) throw new Error(tr("Invalid extension screenshot."));
     const window = decodeWindow(reply.body[1]);
     const png = resizeLinuxCapture(Buffer.from(bytes));
     if (!withFeedback) return { png, window };
@@ -388,7 +389,7 @@ export async function captureLinuxWindow(
   hyprlandPaths?: HyprlandCapturePaths,
 ): Promise<LinuxWindowSnapshot | undefined> {
   if (isHyprlandCaptureSession()) {
-    if (!hyprlandPaths) throw new Error("Hyprland capture setup is unavailable in this build.");
+    if (!hyprlandPaths) throw new Error(tr("Hyprland capture setup is unavailable in this build."));
     const { captureHyprlandWindow } = await import("./HyprlandSnapShot.ts");
     return captureHyprlandWindow(hyprlandPaths, options);
   }
@@ -400,7 +401,7 @@ export async function captureLinuxWindow(
   try {
     switch (await connection.backend(appId)) {
       case "kde": {
-        if (!kdePaths) throw new Error("KDE capture setup is unavailable in this build.");
+        if (!kdePaths) throw new Error(tr("KDE capture setup is unavailable in this build."));
         const { captureKdeWindow } = await import("./KdeSnapShot.ts");
         return await captureKdeWindow(kdePaths, options);
       }

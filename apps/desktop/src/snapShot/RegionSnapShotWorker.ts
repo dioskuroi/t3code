@@ -1,5 +1,6 @@
 // Isolate native screenshot crashes and stalls in a Node-mode child.
 import type { RegionSnapShotRequest, RegionSnapShotResult } from "./RegionSnapShot.ts";
+import { tr } from "@t3tools/shared/i18n";
 
 process.once("disconnect", () => process.exit(0));
 
@@ -23,6 +24,6 @@ async function capture() {
 void capture().catch((error: unknown) =>
   process.send?.({
     type: "error",
-    message: error instanceof Error ? error.message : "Windows window capture failed.",
+    message: error instanceof Error ? error.message : tr("Windows window capture failed."),
   } satisfies RegionSnapShotResult),
 );

@@ -2,6 +2,7 @@
 // @effect-diagnostics globalTimers:off -- Bound native socket operations outside Effect fibers.
 
 import * as NodeFSP from "node:fs/promises";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
@@ -69,7 +70,7 @@ class NiriConnection {
       pending += chunk;
       // Bound even an unterminated or malicious reply; ignore unrelated events without retaining them.
       if (Buffer.byteLength(pending) > MAX_MESSAGE_BYTES) {
-        this.close(new Error("Niri returned an oversized message."));
+        this.close(new Error(tr("Niri returned an oversized message.")));
         return;
       }
       let end: number;
@@ -80,13 +81,13 @@ class NiriConnection {
           const value = decodeJson(line);
           for (const listener of this.listeners) listener(value);
         } catch {
-          this.close(new Error("Niri returned an invalid message."));
+          this.close(new Error(tr("Niri returned an invalid message.")));
           return;
         }
       }
     });
     this.socket.on("error", (error) => this.close(error));
-    this.socket.on("close", () => this.close(new Error("Niri disconnected.")));
+    this.socket.on("close", () => this.close(new Error(tr("Niri disconnected."))));
   }
 
   waitFor<T>(select: (value: unknown) => T | undefined): Promise<T> {
@@ -109,10 +110,10 @@ class NiriConnection {
             resolve(selected);
           }
         } catch (error) {
-          fail(error instanceof Error ? error : new Error("Invalid Niri response."));
+          fail(error instanceof Error ? error : new Error(tr("Invalid Niri response.")));
         }
       };
-      const timer = setTimeout(() => fail(new Error("Niri snapshot timed out.")), TIMEOUT_MS);
+      const timer = setTimeout(() => fail(new Error(tr("Niri snapshot timed out."))), TIMEOUT_MS);
       this.listeners.add(listener);
       this.failures.add(fail);
     });
@@ -122,7 +123,7 @@ class NiriConnection {
     this.socket.write(`${JSON.stringify(request)}\n`);
   }
 
-  close(error = new Error("Niri connection closed.")) {
+  close(error = new Error(tr("Niri connection closed."))) {
     if (this.failure) return;
     this.failure = error;
     for (const fail of this.failures) fail(error);
@@ -148,13 +149,13 @@ export async function checkNiriCaptureSupport(path: string): Promise<void> {
   // 25.11 introduced both caller-selected screenshot paths and completion events.
   const match = /^(?:niri )?(\d+)\.(\d+)/.exec(version);
   if (!match || Number(match[1]) < 25 || (Number(match[1]) === 25 && Number(match[2]) < 11))
-    throw new Error("SnapShots require Niri 25.11 or newer.");
+    throw new Error(tr("SnapShots require Niri 25.11 or newer."));
 }
 
 async function activateNiriWindow(path: string, title: string, signal: AbortSignal): Promise<void> {
   signal.throwIfAborted();
   const connection = new NiriConnection(path);
-  const abort = () => connection.close(new Error("Niri activation cancelled."));
+  const abort = () => connection.close(new Error(tr("Niri activation cancelled.")));
   signal.addEventListener("abort", abort, { once: true });
   const windows = new Map<number, typeof Window.Type>();
   try {
@@ -173,7 +174,7 @@ async function activateNiriWindow(path: string, title: string, signal: AbortSign
         (window) => window.pid === process.pid && window.title === title,
       );
       if (matches.length > 1)
-        throw new Error("More than one T3 Code window matches the capture destination.");
+        throw new Error(tr("More than one T3 Code window matches the capture destination."));
       return matches[0];
     });
     connection.send("EventStream");
@@ -196,7 +197,7 @@ export async function captureNiriWindow(path: string): Promise<LinuxWindowSnapsh
     events.send("EventStream");
     await ready;
     const window = decodeFocused(await request(path, "FocusedWindow")).FocusedWindow;
-    if (!window) throw new Error("Niri has no focused window to capture.");
+    if (!window) throw new Error(tr("Niri has no focused window to capture."));
     const captured = events.waitFor((value) =>
       isScreenshotCaptured(value) && value.ScreenshotCaptured.path === imagePath ? true : undefined,
     );
@@ -231,7 +232,7 @@ export async function captureNiriWindow(path: string): Promise<LinuxWindowSnapsh
         ? {
             window: {
               title: window.title ?? "",
-              appName: window.app_id ?? "Application",
+              appName: window.app_id ?? tr("Application"),
               appIdentifier: window.app_id ?? "",
               processId: window.pid ?? 0,
               // Niri reports logical size, not a globally comparable screen origin.

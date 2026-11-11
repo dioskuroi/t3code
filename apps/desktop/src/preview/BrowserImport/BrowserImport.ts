@@ -4,6 +4,7 @@ import type {
   BrowserImportSource,
   BrowserImportUnavailableReason,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   BrowserImportFailureReason,
   type ManagedPolicyDocument,
@@ -243,7 +244,7 @@ export const make = Effect.gen(function* BrowserImportMake() {
 
     if (platform === "darwin" && definition.engine === "chromium") {
       // macOS attributes Keychain prompts and ACL grants to the executable, which differs in dev and packaged builds.
-      yield* Effect.logInfo("Reading browser cookie key from the keychain", {
+      yield* Effect.logInfo(tr("Reading browser cookie key from the keychain"), {
         sourceId: definition.id,
         executablePath,
       });

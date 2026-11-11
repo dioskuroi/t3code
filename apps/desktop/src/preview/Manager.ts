@@ -1,4 +1,5 @@
 import * as NodeZlib from "node:zlib";
+import { tr } from "@t3tools/shared/i18n";
 import {
   DesktopPreviewRecordingInputSchema,
   DESKTOP_PREVIEW_RECORDING_CAPTURE_TRIGGER,
@@ -685,7 +686,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
         return setFrameCaptureWebContentsBackgroundThrottling(wc, true).pipe(
           Effect.retry({ times: 2 }),
           Effect.catch((error) =>
-            Effect.logWarning("Failed to restore preview webview frame capture throttling.", {
+            Effect.logWarning(tr("Failed to restore preview webview frame capture throttling."), {
               webContentsId,
               error,
             }),
@@ -781,7 +782,9 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
           yield* setFrameCaptureBackgroundThrottling(true).pipe(
             Effect.retry({ times: 2 }),
             Effect.catch((error) =>
-              Effect.logWarning("Failed to restore preview frame capture throttling.", { error }),
+              Effect.logWarning(tr("Failed to restore preview frame capture throttling."), {
+                error,
+              }),
             ),
           );
         }
@@ -1344,7 +1347,11 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
           Effect.catch((error) =>
             controller.signal.aborted
               ? Effect.void
-              : Effect.logDebug("Favicon capture failed.", { error, tabId, webContentsId: wc.id }),
+              : Effect.logDebug(tr("Favicon capture failed."), {
+                  error,
+                  tabId,
+                  webContentsId: wc.id,
+                }),
           ),
           Effect.ensuring(
             Effect.sync(() => {
@@ -1897,7 +1904,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
     });
     yield* ensureControlSession(wc).pipe(
       Effect.catchCause((cause) =>
-        Effect.logDebug("Preview webview control session was not opened on attach.", {
+        Effect.logDebug(tr("Preview webview control session was not opened on attach."), {
           webContentsId,
           cause,
         }),
@@ -2551,7 +2558,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
       });
     }).pipe(
       Effect.catch((error) =>
-        Effect.logWarning("Picture-in-picture frame delivery failed.", {
+        Effect.logWarning(tr("Picture-in-picture frame delivery failed."), {
           tabId,
           error,
         }),
@@ -2566,7 +2573,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
     const captureNextFrame = Effect.sleep(PICTURE_IN_PICTURE_FRAME_INTERVAL_MS).pipe(
       Effect.andThen(capturePreviewFrame(tabId)),
       Effect.catch((error) =>
-        Effect.logWarning("Background preview frame capture failed.", {
+        Effect.logWarning(tr("Background preview frame capture failed."), {
           tabId,
           error,
         }),
@@ -2641,11 +2648,14 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
     if (!captureInitialFrame) return;
     yield* capturePreviewFrame(tabId).pipe(
       Effect.catch((error) =>
-        Effect.logWarning("Initial background preview frame was not ready; capture will retry.", {
-          tabId,
-          consumer,
-          error,
-        }),
+        Effect.logWarning(
+          tr("Initial background preview frame was not ready; capture will retry."),
+          {
+            tabId,
+            consumer,
+            error,
+          },
+        ),
       ),
     );
   });
@@ -2752,7 +2762,10 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
               height: PICTURE_IN_PICTURE_INITIAL_HEIGHT,
               minWidth: PICTURE_IN_PICTURE_MIN_WIDTH,
               minHeight: PICTURE_IN_PICTURE_MIN_HEIGHT,
-              title: title.length > 0 ? `Preview · ${title}` : "Browser preview",
+              title:
+                title.length > 0
+                  ? tr("Preview \u00B7 {title}", { title: title })
+                  : tr("Browser preview"),
               show: false,
               alwaysOnTop: true,
               autoHideMenuBar: true,
@@ -2862,7 +2875,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
               operation: "pictureInPicture.showExisting",
               tabId,
               webContentsId: pictureInPictureSession.webContentsId,
-              cause: new Error("Picture-in-picture session closed before it became visible."),
+              cause: new Error(tr("Picture-in-picture session closed before it became visible.")),
             });
           }
           yield* attempt(
@@ -2895,7 +2908,7 @@ const makeNativeOperations = Effect.fn("PreviewManager.makeOperations")(function
           operation: "pictureInPicture.validateWebContents",
           tabId,
           webContentsId: pictureInPictureSession.webContentsId,
-          cause: new Error("Preview webview changed while picture-in-picture was opening."),
+          cause: new Error(tr("Preview webview changed while picture-in-picture was opening.")),
         });
       }
       yield* startFrameCapture(tabId, "picture-in-picture");

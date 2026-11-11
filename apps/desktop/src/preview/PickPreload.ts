@@ -1,5 +1,6 @@
 // @effect-diagnostics globalDate:off globalTimers:off - This isolated Electron preload does not run inside an Effect runtime.
 import { ipcRenderer } from "electron";
+import { tr } from "@t3tools/shared/i18n";
 import { getElementContext } from "react-grab/primitives";
 import type {
   DesktopPreviewAnnotationTheme,
@@ -448,7 +449,7 @@ function createButton(label: string, title: string): HTMLButtonElement {
 }
 
 function styleControl(input: HTMLInputElement | HTMLSelectElement): void {
-  input.setAttribute("aria-label", input.getAttribute("aria-label") ?? "Style value");
+  input.setAttribute("aria-label", input.getAttribute("aria-label") ?? tr("Style value"));
   input.className =
     "h-7 min-w-0 w-full appearance-none rounded-md border border-input bg-background px-2 font-mono text-xs text-foreground shadow-xs outline-none";
 }
@@ -578,8 +579,8 @@ function startAnnotation(sendEnabled: boolean): void {
   const composerRow = document.createElement("div");
   composerRow.className = "flex items-start gap-2 p-2";
 
-  const adjust = createButton("", "Expand annotation editor");
-  adjust.setAttribute("aria-label", "Expand annotation editor");
+  const adjust = createButton("", tr("Expand annotation editor"));
+  adjust.setAttribute("aria-label", tr("Expand annotation editor"));
   adjust.setAttribute("aria-expanded", "false");
   adjust.className +=
     " h-8 w-8 shrink-0 bg-muted p-0 text-muted-foreground hover:bg-accent hover:text-accent-foreground";
@@ -588,7 +589,7 @@ function startAnnotation(sendEnabled: boolean): void {
   composerRow.appendChild(adjust);
 
   const comment = document.createElement("textarea");
-  comment.placeholder = "Describe the change…";
+  comment.placeholder = tr("Describe the change\u2026");
   comment.setAttribute("dir", "auto");
   comment.rows = 1;
   comment.className =
@@ -598,16 +599,16 @@ function startAnnotation(sendEnabled: boolean): void {
   const dragHandle = document.createElement("button");
   dragHandle.type = "button";
   dragHandle.textContent = "⠿";
-  dragHandle.title = "Drag annotation editor";
+  dragHandle.title = tr("Drag annotation editor");
   dragHandle.className =
     "hidden h-8 w-6 shrink-0 cursor-grab select-none border-0 bg-transparent p-0 font-sans text-lg font-bold leading-5 text-muted-foreground";
   composerRow.appendChild(dragHandle);
 
-  const submit = createButton("Attach", "Attach annotation and screenshot (Enter)");
+  const submit = createButton(tr("Attach"), tr("Attach annotation and screenshot (Enter)"));
   const updateSendHint = () => {
     submit.title = sendEnabled
-      ? "Attach annotation and screenshot (Enter). Send with Cmd/Ctrl+Enter."
-      : "Attach annotation and screenshot (Enter)";
+      ? tr("Attach annotation and screenshot (Enter). Send with Cmd/Ctrl+Enter.")
+      : tr("Attach annotation and screenshot (Enter)");
   };
   updateSendHint();
   submit.className +=
@@ -766,7 +767,7 @@ function startAnnotation(sendEnabled: boolean): void {
     fontFamily.appendChild(option);
   }
   fontFamily.addEventListener("change", () => setStyleForSelected("font-family", fontFamily.value));
-  textSection.appendChild(createField("Font", fontFamily));
+  textSection.appendChild(createField(tr("Font"), fontFamily));
 
   const fontSize = createUnitInput("px", "16");
   fontSize.min = "1";
@@ -774,7 +775,7 @@ function startAnnotation(sendEnabled: boolean): void {
   fontSize.addEventListener("input", () => {
     if (fontSize.value) setStyleForSelected("font-size", `${fontSize.value}px`);
   });
-  textSection.appendChild(createField("Font size", fontSize));
+  textSection.appendChild(createField(tr("Font size"), fontSize));
 
   const fontWeight = document.createElement("select");
   for (const value of ["300", "400", "500", "600", "700", "800", "900"]) {
@@ -784,7 +785,7 @@ function startAnnotation(sendEnabled: boolean): void {
     fontWeight.appendChild(option);
   }
   fontWeight.addEventListener("change", () => setStyleForSelected("font-weight", fontWeight.value));
-  textSection.appendChild(createField("Font weight", fontWeight));
+  textSection.appendChild(createField(tr("Font weight"), fontWeight));
 
   const lineHeight = document.createElement("input");
   lineHeight.type = "text";
@@ -792,7 +793,7 @@ function startAnnotation(sendEnabled: boolean): void {
   lineHeight.addEventListener("change", () => {
     if (lineHeight.value.trim()) setStyleForSelected("line-height", lineHeight.value.trim());
   });
-  textSection.appendChild(createField("Line height", lineHeight));
+  textSection.appendChild(createField(tr("Line height"), lineHeight));
 
   const createColorRow = (
     labelText: string,
@@ -833,8 +834,8 @@ function startAnnotation(sendEnabled: boolean): void {
     return { row, color, text };
   };
 
-  const textColor = createColorRow("Text color", "color", colorsSection);
-  const backgroundColor = createColorRow("Background", "background-color", colorsSection);
+  const textColor = createColorRow(tr("Text color"), "color", colorsSection);
+  const backgroundColor = createColorRow(tr("Background"), "background-color", colorsSection);
 
   const opacity = document.createElement("input");
   opacity.type = "range";
@@ -844,7 +845,7 @@ function startAnnotation(sendEnabled: boolean): void {
   opacity.value = "1";
   opacity.style.accentColor = PRIMARY;
   opacity.addEventListener("input", () => setStyleForSelected("opacity", opacity.value));
-  colorsSection.appendChild(createField("Opacity", opacity));
+  colorsSection.appendChild(createField(tr("Opacity"), opacity));
 
   const radius = createUnitInput("px", "0");
   radius.min = "0";
@@ -852,9 +853,9 @@ function startAnnotation(sendEnabled: boolean): void {
   radius.addEventListener("input", () => {
     if (radius.value) setStyleForSelected("border-radius", `${radius.value}px`);
   });
-  bordersSection.appendChild(createField("Radius", radius));
+  bordersSection.appendChild(createField(tr("Radius"), radius));
 
-  const borderColor = createColorRow("Border color", "border-color", bordersSection);
+  const borderColor = createColorRow(tr("Border color"), "border-color", bordersSection);
 
   const borderWidth = createUnitInput("px", "0");
   borderWidth.min = "0";
@@ -865,7 +866,7 @@ function startAnnotation(sendEnabled: boolean): void {
       setStyleForSelected("border-width", `${borderWidth.value}px`);
     }
   });
-  bordersSection.appendChild(createField("Border width", borderWidth));
+  bordersSection.appendChild(createField(tr("Border width"), borderWidth));
 
   const dimensions = document.createElement("div");
   dimensions.style.cssText =
@@ -879,7 +880,7 @@ function startAnnotation(sendEnabled: boolean): void {
   const heightInput = createUnitInput("px", "auto");
   styleControl(widthInput);
   styleControl(heightInput);
-  const aspectLock = createButton("", "Lock aspect ratio");
+  const aspectLock = createButton("", tr("Lock aspect ratio"));
   aspectLock.setAttribute("aria-pressed", "true");
   aspectLock.style.cssText +=
     ";position:absolute;left:0;top:50%;transform:translateY(-50%);width:18px;height:38px;padding:0";
@@ -944,9 +945,9 @@ function startAnnotation(sendEnabled: boolean): void {
     sizingSection.appendChild(createField(label, input));
     return input;
   };
-  const padding = addSpacingField("Padding", "padding", "0 0 0 0");
-  const margin = addSpacingField("Margin", "margin", "0 0 0 0");
-  const gap = addSpacingField("Gap", "gap", "0px");
+  const padding = addSpacingField(tr("Padding"), "padding", "0 0 0 0");
+  const margin = addSpacingField(tr("Margin"), "margin", "0 0 0 0");
+  const gap = addSpacingField(tr("Gap"), "gap", "0px");
 
   const syncStyleControls = (): void => {
     const first = selected.values().next().value as SelectedElement | undefined;
@@ -976,10 +977,10 @@ function startAnnotation(sendEnabled: boolean): void {
   };
 
   const tools: ReadonlyArray<[AnnotationTool, string, string]> = [
-    ["select", "Select", "Select elements (V)"],
-    ["marquee", "Region", "Draw a region or marquee-select elements (R)"],
-    ["draw", "Draw", "Draw freehand (D)"],
-    ["erase", "Erase", "Remove an annotation target (E)"],
+    ["select", tr("Select"), tr("Select elements (V)")],
+    ["marquee", tr("Region"), tr("Draw a region or marquee-select elements (R)")],
+    ["draw", tr("Draw"), tr("Draw freehand (D)")],
+    ["erase", tr("Erase"), tr("Remove an annotation target (E)")],
   ];
   for (const [candidate, label, title] of tools) {
     const button = createButton(label, title);
@@ -1075,8 +1076,8 @@ function startAnnotation(sendEnabled: boolean): void {
       stylePanel.style.display = selected.size > 0 ? "grid" : "none";
       dragHandle.style.display = "block";
       adjust.setAttribute("aria-expanded", "true");
-      adjust.title = "Collapse annotation editor";
-      adjust.setAttribute("aria-label", "Collapse annotation editor");
+      adjust.title = tr("Collapse annotation editor");
+      adjust.setAttribute("aria-label", tr("Collapse annotation editor"));
       if (selected.size > 0) syncStyleControls();
     } else {
       editorExpanded = false;
@@ -1084,8 +1085,8 @@ function startAnnotation(sendEnabled: boolean): void {
       stylePanel.style.display = "none";
       dragHandle.style.display = "none";
       adjust.setAttribute("aria-expanded", "false");
-      adjust.title = "Expand annotation editor";
-      adjust.setAttribute("aria-label", "Expand annotation editor");
+      adjust.title = tr("Expand annotation editor");
+      adjust.setAttribute("aria-label", tr("Expand annotation editor"));
     }
     queueEditorLayout();
   });
@@ -1386,7 +1387,7 @@ function startAnnotation(sendEnabled: boolean): void {
       return;
     pendingCapture = true;
     submit.disabled = true;
-    submit.textContent = "Capturing…";
+    submit.textContent = tr("Capturing\u2026");
     // Snapshot the submitted comment before context lookup lets the user edit it.
     const submittedComment = comment.value.trim();
     const submittedRegions = [...regions];

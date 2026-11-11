@@ -5,6 +5,7 @@ import {
   DesktopBrowserEvent,
   type DesktopBrowserEvent as DesktopBrowserEventType,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Context from "effect/Context";
 import * as NodePath from "node:path";
 import * as Effect from "effect/Effect";
@@ -146,7 +147,7 @@ export const make = Effect.gen(function* () {
       const waiting = {
         start: () => {
           if (!live()) {
-            reject(new Error("The preview connection that asked for this screenshot closed."));
+            reject(new Error(tr("The preview connection that asked for this screenshot closed.")));
             nextScreenshot(tab);
             return;
           }
@@ -329,7 +330,7 @@ export const make = Effect.gen(function* () {
             const run = () =>
               tab.relay === relay && (current === undefined || current())
                 ? send(method, params, sessionId)
-                : Promise.reject(new Error("The page this screenshot was for has moved on."));
+                : Promise.reject(new Error(tr("The page this screenshot was for has moved on.")));
             return change === null ? run() : change.then(run);
           };
           return method === "Page.captureScreenshot"

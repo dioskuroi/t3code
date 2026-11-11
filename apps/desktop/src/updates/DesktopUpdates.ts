@@ -7,6 +7,7 @@ import {
   type DesktopUpdateCheckResult,
   type DesktopUpdateState,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { errorTag } from "@t3tools/shared/observability";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
@@ -247,7 +248,7 @@ function summarizeCause(cause: unknown, depth: number): string {
           ? summarizeCause(reason.error, depth + 1)
           : reason._tag === "Die"
             ? summarizeCause(reason.defect, depth + 1)
-            : "Interrupted",
+            : tr("Interrupted"),
       )
       .join("; ");
   }
@@ -339,19 +340,19 @@ function getAutoUpdateDisabledReason(args: {
   hasUpdateFeedConfig: boolean;
 }): string | null {
   if (args.policy.mode === "off") {
-    return args.policy.message ?? "Updates are turned off on this machine.";
+    return args.policy.message ?? tr("Updates are turned off on this machine.");
   }
   if (!args.hasUpdateFeedConfig) {
-    return "Automatic updates are not available because no update feed is configured.";
+    return tr("Automatic updates are not available because no update feed is configured.");
   }
   if (args.isDevelopment || !args.isPackaged) {
-    return "Automatic updates are only available in packaged production builds.";
+    return tr("Automatic updates are only available in packaged production builds.");
   }
   if (args.disabledByEnv) {
-    return "Automatic updates are disabled by the T3CODE_DISABLE_AUTO_UPDATE setting.";
+    return tr("Automatic updates are disabled by the T3CODE_DISABLE_AUTO_UPDATE setting.");
   }
   if (args.platform === "linux" && !args.appImage && !args.isDebPackage) {
-    return "Automatic updates on Linux require the AppImage or the .deb package.";
+    return tr("Automatic updates on Linux require the AppImage or the .deb package.");
   }
   return null;
 }
@@ -479,7 +480,7 @@ export const make = Effect.gen(function* () {
   const channelBlockedReason = (channel: DesktopUpdateChannel): Option.Option<string> =>
     channel === "nightly" && !policy.allowNightly
       ? Option.some(
-          `${policy.message ?? "Nightly updates are turned off on this machine."} Switch to the stable channel to keep getting updates.`,
+          `${policy.message ?? tr("Nightly updates are turned off on this machine.")} ${tr("Switch to the stable channel to keep getting updates.")}`,
         )
       : Option.none();
 
@@ -657,7 +658,9 @@ export const make = Effect.gen(function* () {
     .pipe(
       Effect.andThen(fileSystem.writeFileString(updateRestartMarkerPath, "")),
       Effect.catch((error) =>
-        logUpdaterWarning("Could not write the update restart marker.", { errorTag: error._tag }),
+        logUpdaterWarning(tr("Could not write the update restart marker."), {
+          errorTag: error._tag,
+        }),
       ),
     );
 
@@ -674,7 +677,7 @@ export const make = Effect.gen(function* () {
     encodeInstallRecord({ fromVersion: environment.appVersion, targetVersion }).pipe(
       Effect.flatMap((text) => fileSystem.writeFileString(installRecordPath, text)),
       Effect.catch((error) =>
-        logUpdaterWarning("Could not record the update install.", { errorTag: error._tag }),
+        logUpdaterWarning(tr("Could not record the update install."), { errorTag: error._tag }),
       ),
     );
   const removeInstallRecord = fileSystem
@@ -745,11 +748,13 @@ export const make = Effect.gen(function* () {
       }).pipe(Effect.exit);
       yield* updateState((current) => reduceDesktopUpdateStateOnInstallFailure(current, message));
       if (Exit.isFailure(restartExit)) {
-        yield* logUpdaterError("Desktop update install recovery could not restart every backend.");
+        yield* logUpdaterError(
+          tr("Desktop update install recovery could not restart every backend."),
+        );
       }
     }).pipe(
       Effect.catchCause(() =>
-        logUpdaterError("Desktop update install recovery failed unexpectedly."),
+        logUpdaterError(tr("Desktop update install recovery failed unexpectedly.")),
       ),
       Effect.ensuring(finishUpdateAction("install-recovery")),
     );
@@ -1201,7 +1206,7 @@ export const make = Effect.gen(function* () {
       if (Option.isSome(channelBlockedReason(nextChannel))) {
         return yield* new DesktopUpdateChannelManagedError({
           channel: nextChannel,
-          policyMessage: policy.message ?? "Your administrator manages T3 Code updates.",
+          policyMessage: policy.message ?? tr("Your administrator manages T3 Code updates."),
         });
       }
       // A background check holds the updater only briefly, so wait it out instead of refusing.

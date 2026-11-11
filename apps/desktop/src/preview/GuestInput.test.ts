@@ -1,4 +1,5 @@
 import * as NodeVM from "node:vm";
+import { tr } from "@t3tools/shared/i18n";
 
 import { describe, expect, it, vi } from "vite-plus/test";
 
@@ -243,7 +244,9 @@ describe("preview guest input", () => {
   it("refuses input when a cross-site frame holds the unfocused page's focus", async () => {
     const guest = makeGuest({ focused: false, focusedDocument: false });
     await expect(guest.send("Input.insertText", { text: "secret" })).rejects.toThrow(
-      /cross-site frame/,
+      tr(
+        "The page's focus is inside a cross-site frame, which takes typed input only while the preview has focus. Click the field first.",
+      ),
     );
     expect(guest.webContents.insertText).not.toHaveBeenCalled();
   });
