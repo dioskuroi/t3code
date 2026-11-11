@@ -245,9 +245,12 @@ export function PullRequestReviewSheet({
       ) : null}
       {reviewing && !canSubmitComments ? (
         <Text className="text-sm text-danger-foreground">
-          {tr("You can no longer submit line comments on this")}{" "}
-          {sourceControlClients.get(result.data?.provider).changeRequest.singular}
-          {tr(". Your drafts are\n          kept here.")}
+          {tr(
+            "You can no longer submit line comments on this {singular}. Your drafts are kept here.",
+            {
+              singular: sourceControlClients.get(result.data?.provider).changeRequest.singular,
+            },
+          )}
         </Text>
       ) : null}
       {submission.error || result.error || store.error ? (

@@ -195,7 +195,9 @@ export function PullRequestReviewersScreen({ route }: StaticScreenProps<PullRequ
               ) : null}
               {!allowed ? (
                 <Text className="text-xs text-foreground-muted">
-                  {tr("Requesting reviews requires write access and an open")} {singular}.
+                  {tr("Requesting reviews requires write access and an open {singular}.", {
+                    singular: singular,
+                  })}
                 </Text>
               ) : null}
               {error ? (

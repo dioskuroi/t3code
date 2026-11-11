@@ -3,6 +3,7 @@ import { Pressable, View } from "react-native";
 import type { FileDiffMetadata } from "@pierre/diffs";
 import type { PullRequestReviewGuideExcerpt } from "@t3tools/contracts";
 import { excerptRows, fileDiffRows, rowsToPatch } from "@t3tools/client-runtime/review-guide-tour";
+import { tr } from "@t3tools/shared/i18n";
 import { AppText as Text } from "../../../components/ui/AppText";
 import { SymbolView } from "../../../components/ui/AppSymbol";
 import { resolveNativeReviewDiffView } from "../../diffs/nativeReviewDiffSurface";
@@ -61,7 +62,10 @@ export function ReviewGuideExcerpt({
       <View className="overflow-hidden rounded-lg border border-border-subtle">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Open ${excerpt.path} at line ${excerpt.start} in full diff`}
+          accessibilityLabel={tr("Open {path} at line {start} in full diff", {
+            path: excerpt.path,
+            start: excerpt.start,
+          })}
           onPress={onOpen}
           className="min-h-11 flex-row items-center gap-3 border-b border-border-subtle px-3 py-2 active:opacity-60"
         >
@@ -115,8 +119,12 @@ export function ReviewGuideExcerpt({
         ) : (
           <Text className="p-3 text-xs text-foreground-muted">
             {loading
-              ? `Loading ${excerpt.path}…`
-              : `${excerpt.path}:${excerpt.start}–${excerpt.end} is not in the loaded diff.`}
+              ? tr("Loading {path}…", { path: excerpt.path })
+              : tr("{path}:{start}–{end} is not in the loaded diff.", {
+                  path: excerpt.path,
+                  start: excerpt.start,
+                  end: excerpt.end,
+                })}
           </Text>
         )}
       </View>
