@@ -2,6 +2,7 @@ import {
   navigationCustomizationAvailable,
   overflowNavigationTabs,
 } from "../workspace/navigation-tab-order";
+import { tr } from "@t3tools/shared/i18n";
 import {
   NAVIGATION_TAB_ICONS,
   WORKSPACE_TAB_LABELS,
@@ -74,7 +75,7 @@ export function SettingsListScreen(props: {
         <SettingsEnvironmentFilterHeader />
         {Platform.OS === "android" ? (
           <SettingsScreen
-            title="Settings"
+            title={tr("Settings")}
             workspaceRoot={inSidebar}
             trailing={<AndroidSettingsEnvironmentFilter />}
             search={
@@ -83,7 +84,7 @@ export function SettingsListScreen(props: {
                     value: workspace.state.tabs.settings.query,
                     onChangeText: (query) =>
                       workspace.dispatch({ type: "query", tab: "settings", query }),
-                    placeholder: "Search settings",
+                    placeholder: tr("Search settings"),
                   }
                 : undefined
             }
@@ -111,10 +112,10 @@ function ConfiguredSettingsRouteScreen() {
   const { user } = useUser();
   const { savedConnectionsById } = useSavedRemoteConnections();
   const accountLabel = !isLoaded
-    ? "Checking"
+    ? tr("Checking")
     : !isSignedIn
-      ? "Sign in"
-      : (user?.primaryEmailAddress?.emailAddress ?? "Signed in");
+      ? tr("Sign in")
+      : (user?.primaryEmailAddress?.emailAddress ?? tr("Signed in"));
 
   return (
     <SettingsList
@@ -122,7 +123,7 @@ function ConfiguredSettingsRouteScreen() {
         {
           id: "account",
           icon: "person.crop.circle",
-          label: "T3 Account",
+          label: tr("T3 Account"),
           value: accountLabel,
           disabled: !isLoaded,
           onPress: () => navigation.navigate("SettingsAuth"),
@@ -131,7 +132,7 @@ function ConfiguredSettingsRouteScreen() {
         {
           id: "SettingsNotifications",
           icon: "bell.badge",
-          label: "Notifications",
+          label: tr("Notifications"),
           target: "SettingsNotifications",
         },
       ]}
@@ -148,7 +149,7 @@ function environmentsRow(count: number): SettingsListRow {
   return {
     id: "SettingsEnvironments",
     icon: "desktopcomputer",
-    label: "Environments",
+    label: tr("Environments"),
     value: `${count}`,
     valuePosition: "trailing",
     target: "SettingsEnvironments",
@@ -168,7 +169,11 @@ function SettingsList(props: { readonly connections: readonly SettingsListRow[] 
   const overflowRows = useOverflowRows();
   const indexSections = useSettingsIndexSections();
   const sections = filterSettingsSections(
-    [{ rows: overflowRows }, { title: "Connections", rows: props.connections }, ...indexSections],
+    [
+      { rows: overflowRows },
+      { title: tr("Connections"), rows: props.connections },
+      ...indexSections,
+    ],
     query,
   );
 
@@ -200,8 +205,8 @@ function SettingsList(props: { readonly connections: readonly SettingsListRow[] 
         ) : (
           <EmptyState
             variant="plain"
-            title="No results"
-            detail={`No settings match “${query.trim()}”.`}
+            title={tr("No results")}
+            detail={tr("No settings match “{query}”.", { query: query.trim() })}
           />
         )}
       </ScrollView>
@@ -225,7 +230,7 @@ function useSettingsIndexSections(): SettingsListSection[] {
           representative: scopedProjectMembers[0]!,
           members: scopedProjectMembers,
         })
-      : (selectedProject?.label ?? "Unavailable project");
+      : (selectedProject?.label ?? tr("Unavailable project"));
   const page = (
     target: SettingsPageTarget,
     icon: SettingsListRow["icon"],
@@ -238,43 +243,47 @@ function useSettingsIndexSections(): SettingsListSection[] {
   return [
     {
       rows: [
-        page("SettingsOrganization", "gearshape", "General"),
-        page("SettingsAppearance", "paintbrush", "Appearance"),
-        page("SettingsFollowUp", "bubble.left.and.bubble.right", "Chat"),
+        page("SettingsOrganization", "gearshape", tr("General")),
+        page("SettingsAppearance", "paintbrush", tr("Appearance")),
+        page("SettingsFollowUp", "bubble.left.and.bubble.right", tr("Chat")),
         ...(navigationCustomizationAvailable()
-          ? [page("SettingsNavigation", "line.3.horizontal", "Navigation tabs")]
+          ? [page("SettingsNavigation", "line.3.horizontal", tr("Navigation tabs"))]
           : []),
-        ...(Platform.OS === "ios" ? [page("SettingsKeyboard", "keyboard", "Keyboard")] : []),
-        page("SettingsMicrophone", "mic", "Microphone"),
+        ...(Platform.OS === "ios" ? [page("SettingsKeyboard", "keyboard", tr("Keyboard"))] : []),
+        page("SettingsMicrophone", "mic", tr("Microphone")),
       ],
     },
     {
-      title: "Agents",
+      title: tr("Agents"),
       rows: [
-        serverPage("SettingsProviderAccounts", "person.crop.circle", "Providers"),
-        serverPage("SettingsThreads", "text.bubble", "Threads"),
-        page("SettingsScheduledTasks", "clock", "Scheduled tasks"),
+        serverPage("SettingsProviderAccounts", "person.crop.circle", tr("Providers")),
+        serverPage("SettingsThreads", "text.bubble", tr("Threads")),
+        page("SettingsScheduledTasks", "clock", tr("Scheduled tasks")),
       ],
     },
     {
-      title: "Code",
+      title: tr("Code"),
       rows: [
         page(
           "SettingsProjectOverview",
           "folder",
-          "Projects",
+          tr("Projects"),
           selectedProjectKey !== null ? { value: projectLabel } : undefined,
         ),
-        serverPage("SettingsEnvironmentSourceControl", "arrow.triangle.branch", "Source control"),
-        serverPage("SettingsWorktrees", "square.on.square", "Worktrees"),
+        serverPage(
+          "SettingsEnvironmentSourceControl",
+          "arrow.triangle.branch",
+          tr("Source control"),
+        ),
+        serverPage("SettingsWorktrees", "square.on.square", tr("Worktrees")),
       ],
     },
     {
       rows: [
-        serverPage("SettingsEnvironmentMaintenance", "arrow.clockwise", "Maintenance"),
-        page("SettingsLabs", "sparkles", "Labs"),
-        page("SettingsAbout", "info.circle", "About"),
-        page("SettingsArchive", "archivebox", "Archive"),
+        serverPage("SettingsEnvironmentMaintenance", "arrow.clockwise", tr("Maintenance")),
+        page("SettingsLabs", "sparkles", tr("Labs")),
+        page("SettingsAbout", "info.circle", tr("About")),
+        page("SettingsArchive", "archivebox", tr("Archive")),
       ],
     },
   ];
