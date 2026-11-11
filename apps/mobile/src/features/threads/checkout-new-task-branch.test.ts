@@ -147,7 +147,7 @@ describe("new-task branch checkout", () => {
       readRefs,
       switchRef,
     });
-    expect(result._tag).toBe(tr("Success"));
+    expect(result._tag).toBe("Success");
     if (result._tag !== "Success") throw new Error(tr("Checkout failed"));
     expect(result.value.name).toBe("feature/a");
     expect(result.value.current).toBe(true);
@@ -172,14 +172,14 @@ describe("new-task branch checkout", () => {
     expect(completed).toBe(false);
     expect((await git("branch", "--show-current")).stdout.trim()).toBe("main");
     release.resolve();
-    expect((await selection)._tag).toBe(tr("Success"));
+    expect((await selection)._tag).toBe("Success");
     expect((await git("branch", "--show-current")).stdout.trim()).toBe("feature/a");
   });
 
   it("returns checkout failure without selecting the branch or losing dirty files", async () => {
     await NodeFSP.writeFile(NodePath.join(cwd, "file.txt"), "unsaved local changes\n");
     const result = await selectBranch(switchRef);
-    expect(result._tag).toBe(tr("Failure"));
+    expect(result._tag).toBe("Failure");
     if (result._tag !== "Failure") throw new Error(tr("Expected checkout to fail"));
     expect(String(squashAtomCommandFailure(result))).toContain("would be overwritten");
     expect((await git("branch", "--show-current")).stdout.trim()).toBe("main");
@@ -200,7 +200,7 @@ describe("new-task branch checkout", () => {
         throw new Error(tr("Existing worktrees must not switch the project checkout"));
       },
     });
-    expect(result._tag).toBe(tr("Success"));
+    expect(result._tag).toBe("Success");
     if (result._tag !== "Success") throw new Error(tr("Worktree selection failed"));
     expect(result.value.worktreePath).toBe(worktreePath);
     expect((await git("branch", "--show-current")).stdout.trim()).toBe("main");
@@ -234,7 +234,7 @@ describe("new-task branch checkout", () => {
     expect(
       result._tag,
       result._tag === "Failure" ? String(squashAtomCommandFailure(result)) : undefined,
-    ).toBe(tr("Success"));
+    ).toBe("Success");
     if (result._tag !== "Success") throw new Error(tr("Symlink-root worktree selection failed"));
     expect(result.value.worktreePath).toBe(worktreePath);
   });
@@ -256,7 +256,7 @@ describe("new-task branch checkout", () => {
       switchRef: refuseSwitch,
     });
 
-    expect(result._tag).toBe(tr("Success"));
+    expect(result._tag).toBe("Success");
     if (result._tag !== "Success") throw new Error(tr("Historical branch selection failed"));
     expect(result.value).toMatchObject({
       name,
@@ -282,7 +282,7 @@ describe("new-task branch checkout", () => {
       switchRef: refuseSwitch,
     });
 
-    expect(result._tag).toBe(tr("Success"));
+    expect(result._tag).toBe("Success");
     if (result._tag !== "Success") throw new Error(tr("Remote branch selection failed"));
     expect(result.value).toMatchObject({
       name: branch.name,
@@ -313,7 +313,7 @@ describe("new-task branch checkout", () => {
       switchRef,
     });
 
-    expect(result._tag).toBe(tr("Success"));
+    expect(result._tag).toBe("Success");
     if (result._tag !== "Success") throw new Error(tr("Remote checkout failed"));
     expect(result.value.worktreePath).toBeNull();
     expect((await git("rev-parse", "HEAD")).stdout.trim()).toBe(selectedCommit);
@@ -368,7 +368,7 @@ describe("new-task branch checkout", () => {
       expect(await NodeFSP.readFile(NodePath.join(worktreePath, "file.txt"), "utf8")).toBe(
         "feature\n",
       );
-      expect(result._tag).toBe(tr("Failure"));
+      expect(result._tag).toBe("Failure");
       if (result._tag !== "Failure") throw new Error(tr("Expected unsafe worktree reuse to fail"));
       if (nested) {
         expect(String(squashAtomCommandFailure(result))).toContain(
@@ -387,7 +387,7 @@ describe("new-task branch checkout", () => {
 
     const result = await selectBranch(refuseSwitch);
 
-    expect(result._tag).toBe(tr("Success"));
+    expect(result._tag).toBe("Success");
     if (result._tag !== "Success") throw new Error(tr("Current branch selection failed"));
     expect(result.value).toMatchObject({
       name: branch.name,

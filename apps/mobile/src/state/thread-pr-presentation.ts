@@ -1,4 +1,5 @@
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 import type { ThreadPullRequestLink, VcsStatusResult } from "@t3tools/contracts";
 import {
   sourceControlClients,
@@ -122,8 +123,14 @@ export function resolveThreadPrSource(
 
 export function resolveThreadPrBadgeAction(pr: ThreadPrPresentation) {
   return pr.kind === "stack" || pr.others > 0
-    ? { kind: "list" as const, accessibilityLabel: `Show ${pr.accessibilityLabel}` }
-    : { kind: "open" as const, accessibilityLabel: `Open ${pr.accessibilityLabel}` };
+    ? {
+        kind: "list" as const,
+        accessibilityLabel: tr("Show {label}", { label: pr.accessibilityLabel }),
+      }
+    : {
+        kind: "open" as const,
+        accessibilityLabel: tr("Open {label}", { label: pr.accessibilityLabel }),
+      };
 }
 
 /** Records `value` as the newest entry, evicting the least recently answered beyond `limit`. */

@@ -34,8 +34,8 @@ describe("managed runtime mode limits", () => {
     expect(choices.map((choice) => [choice.mode, choice.disabledReason])).toEqual([
       ["approval-required", undefined],
       ["auto-accept-edits", undefined],
-      ["auto", tr("Narrow Corp limits threads to Auto-accept edits.")],
-      ["full-access", tr("Wide Corp limits threads to Auto.")],
+      ["auto", `Narrow Corp limits threads to ${tr("Auto-accept edits")}.`],
+      ["full-access", `Wide Corp limits threads to ${tr("Auto")}.`],
     ]);
   });
 

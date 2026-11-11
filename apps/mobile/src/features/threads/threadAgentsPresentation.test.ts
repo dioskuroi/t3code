@@ -213,7 +213,7 @@ describe("workflow member rows", () => {
     expect(workflowMemberMetadata(completed!, undefined)).toEqual({
       model: tr("Claude Opus 5.5"),
       effort: tr("High"),
-      speed: tr("Fast"),
+      speed: "Fast",
       fast: true,
     });
     expect(workflowMemberDetail(completed!)).toEqual({

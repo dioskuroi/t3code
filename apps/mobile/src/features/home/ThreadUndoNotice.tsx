@@ -79,7 +79,14 @@ export function ThreadUndoNotice(props: { readonly visible: boolean }) {
       pointerEvents="box-none"
     >
       <Toast
-        message={tr("{action} thread", { action: notice.action })}
+        message={tr("{action} thread", {
+          action:
+            notice.action === "Settled"
+              ? tr("Settled")
+              : notice.action === "Snoozed"
+                ? tr("Snoozed")
+                : tr("Unpinned"),
+        })}
         action={{
           label: tr("Undo"),
           onPress: () => {
