@@ -369,12 +369,12 @@ function ZipArchiveProgress(props: {
   return (
     <View className="flex-1 justify-center gap-3 bg-sheet px-8">
       <Text className="text-xl font-t3-semibold text-foreground">
-        {formatAttachmentSize(props.receivedBytes)}
-        {props.totalBytes > 0 ? (
-          <Text className="text-xl text-foreground-muted">
-            {` of ${formatAttachmentSize(props.totalBytes)}`}
-          </Text>
-        ) : null}
+        {props.totalBytes > 0
+          ? tr("{loaded} of {total}", {
+              loaded: formatAttachmentSize(props.receivedBytes),
+              total: formatAttachmentSize(props.totalBytes),
+            })
+          : formatAttachmentSize(props.receivedBytes)}
       </Text>
       <Progress
         value={props.totalBytes > 0 ? props.receivedBytes / props.totalBytes : undefined}
@@ -382,7 +382,9 @@ function ZipArchiveProgress(props: {
       />
       <Text className="text-sm text-foreground-muted">
         {timeLeft
-          ? tr("Downloading the ZIP so its files can be listed. {timeLeft}", { timeLeft })
+          ? tr("Downloading the ZIP so its files can be listed. {timeLeft} on this connection.", {
+              timeLeft,
+            })
           : tr("Downloading the ZIP so its files can be listed.")}
       </Text>
       <Button label={tr("Cancel")} onPress={props.onCancel} />
@@ -720,7 +722,10 @@ function ZipEntryView(props: {
         if (controller.signal.aborted) return;
         setBusy(null);
         if (kind === "attach")
-          Dialog.alert(tr("Added to chat"), `${entry.name} is attached to your message.`);
+          Dialog.alert(
+            tr("Added to chat"),
+            tr("{name} is attached to your message.", { name: entry.name }),
+          );
       },
       (cause: unknown) => {
         if (controller.signal.aborted) return;
