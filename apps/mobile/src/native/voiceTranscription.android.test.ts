@@ -37,10 +37,10 @@ it.each([false, true])(
 );
 
 it.each([
-  ["preparation", "storage", /disk|storage|space/i],
-  ["preparation", "quota", /quota|limit/i],
-  ["transcription", "storage", /disk|storage|space/i],
-  ["transcription", "quota", /quota|limit/i],
+  ["preparation", "storage", /存储/],
+  ["preparation", "quota", /配额/],
+  ["transcription", "storage", /存储/],
+  ["transcription", "quota", /配额/],
 ] as const)("preserves an actionable %s error: %s", async (phase, code, expected) => {
   vi.resetAllMocks();
   resetVoiceInputGlobalsForTests();

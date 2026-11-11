@@ -1,4 +1,4 @@
-/**
+import { tr } from "@t3tools/shared/i18n"; /**
  * Root routes listed as presented over the workspace, including ones that are plain cards on
  * Android but still sit above the workspace there.
  */
@@ -6,7 +6,7 @@ const LISTED_OVERLAY_ROUTES: ReadonlySet<string> = new Set([
   "PullRequestReview",
   "PullRequestInlineComment",
   "ConnectOnboarding",
-  "Connections",
+  tr("Connections"),
   "ConnectionsNew",
   "GitBranches",
   "GitCommit",

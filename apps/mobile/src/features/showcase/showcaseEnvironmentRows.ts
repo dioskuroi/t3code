@@ -1,4 +1,5 @@
 import { EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { RelayEnvironmentView } from "../connection/useConnectionController";
 import type { ConnectedEnvironmentSummary } from "../../state/remote-runtime-types";
@@ -40,7 +41,7 @@ const pocketPiEndpoint = {
 export const SHOWCASE_CONNECTED_CLOUD_ENVIRONMENTS: ReadonlyArray<ConnectedEnvironmentSummary> = [
   {
     environmentId: EnvironmentId.make("showcase-aurora-gpu"),
-    environmentLabel: "Aurora GPU Pod",
+    environmentLabel: tr("Aurora GPU Pod"),
     displayUrl: "https://aurora-gpu.t3.sh",
     isRelayManaged: true,
     isEnabled: true,
@@ -54,7 +55,7 @@ export const SHOWCASE_AVAILABLE_CLOUD_ENVIRONMENTS: ReadonlyArray<RelayEnvironme
   {
     environment: {
       environmentId: pocketPiId,
-      label: "Pocket Pi",
+      label: tr("Pocket Pi"),
       endpoint: pocketPiEndpoint,
       linkedAt: "2026-07-16T08:00:00.000Z",
     },

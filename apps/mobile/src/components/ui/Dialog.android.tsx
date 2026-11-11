@@ -1,4 +1,5 @@
 import { NativeThemeHost } from "./NativeThemeHost.android";
+import { tr } from "@t3tools/shared/i18n";
 import {
   AlertDialog,
   Button,
@@ -153,7 +154,7 @@ function DialogPresentation(props: DialogPresentationProps) {
     props.onConfirm(value);
   };
   const actions = props.alertActions ?? [
-    { text: props.request.cancelText ?? "Cancel", onPress: props.onCancel },
+    { text: props.request.cancelText ?? tr("Cancel"), onPress: props.onCancel },
     {
       text: props.request.confirmText,
       style: props.request.destructive ? ("destructive" as const) : ("default" as const),

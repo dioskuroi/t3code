@@ -1,4 +1,5 @@
 import type { EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { ComponentProps } from "react";
 import { View } from "react-native";
 
@@ -36,8 +37,9 @@ export function LocalEnvironmentList({
           />
         </View>
         <Text className="text-center text-sm leading-normal text-foreground-muted">
-          No environments connected yet.{"\n"}Tap{" "}
-          <Text className="font-t3-bold text-foreground">+</Text> to add one.
+          {tr("No environments connected yet.")}
+          {"\n"}
+          {tr("Tap")} <Text className="font-t3-bold text-foreground">+</Text> {tr("to add one.")}
         </Text>
       </View>
     );

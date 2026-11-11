@@ -1,4 +1,5 @@
 import { Toolbar } from "./Toolbar";
+import { tr } from "@t3tools/shared/i18n";
 import { AppActivityIndicator } from "./AppActivityIndicator";
 import type { HeaderBarButtonMailSearchToolbarItem } from "react-native-screens";
 import { useId } from "react";
@@ -130,8 +131,8 @@ export function AppBar(props: AppBarProps) {
               axisBehavior={usesNativeWorkspaceColumns ? "horizontalOnly" : undefined}
               accessibilityLabel={
                 panes.primarySidebarVisible
-                  ? `Maximize ${props.title.toLowerCase()}`
-                  : "Show threads"
+                  ? tr("Maximize {title}", { title: props.title.toLowerCase() })
+                  : tr("Show threads")
               }
               icon={
                 panes.primarySidebarVisible ? "arrow.up.left.and.arrow.down.right" : "sidebar.left"

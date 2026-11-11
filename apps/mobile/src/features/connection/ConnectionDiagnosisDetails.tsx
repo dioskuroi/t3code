@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   AVAILABLE_CONNECTION_STATE,
   type ConnectionDiagnosis,
@@ -20,7 +21,11 @@ import { cn } from "../../lib/cn";
 import { copyTextWithHaptic } from "../../lib/copyTextWithHaptic";
 
 const HOP_MARK = { ok: "✓", failed: "✕", unchecked: "–" } as const;
-const HOP_NOTE = { ok: "", failed: " · Failed", unchecked: " · Not checked" } as const;
+const HOP_NOTE = {
+  ok: "",
+  failed: tr(" \u00B7 Failed"),
+  unchecked: tr(" \u00B7 Not checked"),
+} as const;
 
 /** Same model as the web Settings row; null while connected, off, or not failed. */
 export function useConnectionDiagnosis(
@@ -68,7 +73,7 @@ export function ConnectionDiagnosisDetails(props: {
         ))}
       </View>
       <View className="gap-0.5">
-        <Text className="text-sm font-t3-bold text-foreground">What to try</Text>
+        <Text className="text-sm font-t3-bold text-foreground">{tr("What to try")}</Text>
         {diagnosis.steps.map((step, index) => (
           <Text key={step} className="text-sm text-foreground-muted">
             {`${index + 1}. ${step}`}
@@ -79,7 +84,7 @@ export function ConnectionDiagnosisDetails(props: {
         {diagnosis.facts.map(([label, value]) => `${label}: ${value}`).join("\n")}
       </Text>
       <Button
-        label="Copy diagnostics"
+        label={tr("Copy diagnostics")}
         icon="doc.on.doc"
         onPress={() => {
           copyTextWithHaptic(connectionDiagnosisText(props.hostLabel, diagnosis), {
@@ -89,7 +94,7 @@ export function ConnectionDiagnosisDetails(props: {
       />
       {moreInfoUrl ? (
         <Button
-          label="More info"
+          label={tr("More info")}
           icon="safari"
           tone="secondary"
           onPress={() => void Linking.openURL(moreInfoUrl).catch(() => undefined)}

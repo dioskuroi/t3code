@@ -1,4 +1,5 @@
 import { resolveFilesystemReadAccess } from "@t3tools/client-runtime/state/filesystem";
+import { tr } from "@t3tools/shared/i18n";
 import { useEnvironmentPresentation } from "../state/presentation";
 import { useEnvironmentQuery } from "../state/query";
 import { resolveMobileMarkdownMediaSource } from "../lib/markdownMediaSource";
@@ -51,11 +52,11 @@ export function useMarkdownImageSource(props: {
         connectionPhase === "unsupported" ||
         connectionPhase === "reconnecting"
       )
-        throw new Error("Markdown image is unavailable");
+        throw new Error(tr("Markdown image is unavailable"));
       const result = await createUrl({ environmentId, input: { resource: media.resource } });
-      if (result._tag !== "Success") throw new Error("Could not authorize Markdown image");
+      if (result._tag !== "Success") throw new Error(tr("Could not authorize Markdown image"));
       const uri = resolveAssetUrl(httpBaseUrl, result.value.relativeUrl);
-      if (uri === null) throw new Error("Markdown image URL is invalid");
+      if (uri === null) throw new Error(tr("Markdown image URL is invalid"));
       return { uri };
     },
     [

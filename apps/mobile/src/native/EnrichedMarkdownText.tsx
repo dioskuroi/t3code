@@ -1,4 +1,5 @@
 import { decodeComposerContextFragment } from "@t3tools/shared/composerContextClipboard";
+import { tr } from "@t3tools/shared/i18n";
 import {
   collectComposerContextReferences,
   formatComposerContextHref,
@@ -37,7 +38,7 @@ function enrichedStyle(
   dark: boolean,
   fontScale: number,
 ): MarkdownStyle {
-  const monospace = Platform.OS === "ios" ? "Menlo" : "monospace";
+  const monospace = Platform.OS === "ios" ? tr("Menlo") : "monospace";
   // Keep the radius modest: iOS clips square table-cell borders without stroking the corner arcs.
   const block = {
     marginTop: 4,
@@ -222,9 +223,9 @@ export function MobileEnrichedMarkdownText(props: SelectableMarkdownTextProps) {
             const menu = fileContextMenu?.(url) ?? {
               title: url,
               actions: [
-                { id: "enriched-open-link", title: "Open link" },
-                { id: "enriched-copy-link", title: "Copy link" },
-                { id: "enriched-share-link", title: "Share link" },
+                { id: "enriched-open-link", title: tr("Open link") },
+                { id: "enriched-copy-link", title: tr("Copy link") },
+                { id: "enriched-share-link", title: tr("Share link") },
               ],
             };
             return [
@@ -294,8 +295,8 @@ export function MobileEnrichedMarkdownText(props: SelectableMarkdownTextProps) {
             const menu = props.fileContextMenu?.(url) ?? {
               title: url,
               actions: [
-                { id: "enriched-open-link", title: "Open link" },
-                { id: "enriched-copy-link", title: "Copy link" },
+                { id: "enriched-open-link", title: tr("Open link") },
+                { id: "enriched-copy-link", title: tr("Copy link") },
               ],
             };
             setActiveMenu({ url, menu });

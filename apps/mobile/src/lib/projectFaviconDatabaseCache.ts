@@ -5,6 +5,7 @@ import {
   PROJECT_FAVICON_THUMBNAIL_SIZE,
   type ProjectFaviconEntry,
 } from "@t3tools/client-runtime/project-favicon-cache";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 
 import * as MobileDatabase from "../persistence/mobile-database";
@@ -23,7 +24,7 @@ const runDatabase = <A, E>(
 ) =>
   database
     ? Effect.runPromise(use(database))
-    : Promise.reject(new Error("Project icon storage is not attached."));
+    : Promise.reject(new Error(tr("Project icon storage is not attached.")));
 
 /** expo-image encodes only through disk cache; remove the temporary frame after reading bytes. */
 export async function downscaleProjectFavicon(
@@ -41,11 +42,11 @@ export async function downscaleProjectFavicon(
     try {
       signal.throwIfAborted();
       if (decoded.width > size || decoded.height > size) {
-        throw new Error("Project icon was not resized.");
+        throw new Error(tr("Project icon was not resized."));
       }
       await Image.writeToCacheAsync(decoded, cacheKey);
       const path = await Image.getCachePathAsync(cacheKey);
-      if (!path) throw new Error("Project icon thumbnail was not written.");
+      if (!path) throw new Error(tr("Project icon thumbnail was not written."));
       const file = new File(path.startsWith("file:") ? path : `file://${path}`);
       try {
         if (file.size > PROJECT_FAVICON_MAX_DATA_URL_LENGTH) continue;
@@ -56,7 +57,7 @@ export async function downscaleProjectFavicon(
           : base64.startsWith("iVBORw0KGgo")
             ? "image/png"
             : null;
-        if (!mimeType) throw new Error("Unsupported project icon thumbnail encoding.");
+        if (!mimeType) throw new Error(tr("Unsupported project icon thumbnail encoding."));
         const dataUrl = `data:${mimeType};base64,${base64}`;
         if (dataUrl.length <= PROJECT_FAVICON_MAX_DATA_URL_LENGTH) return dataUrl;
       } finally {
@@ -66,7 +67,7 @@ export async function downscaleProjectFavicon(
       decoded.release();
     }
   }
-  throw new Error("Project icon thumbnail exceeds the cache limit.");
+  throw new Error(tr("Project icon thumbnail exceeds the cache limit."));
 }
 
 export const projectFaviconDatabaseCache = createSharedProjectFaviconCache({

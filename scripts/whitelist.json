@@ -24,7 +24,8 @@
     "批 W2（#59，web 对话域 ChatView/composer）新增：exact 为 composerInlineChip 的 SKILL_CHIP_ICON_SVG 常量，SVG 标记串非 UI 文案，不翻；exact 补 \"Icon\"（ThreadPullRequestBadgePresentation 的类型成员名，§3 代码标识符精神）；words 新增 Mermaid（图表渲染库名，随 §3 品牌/技术词精神）。",
     "批 W3（#60，web 命令面板域）新增：exact \":disabled\" 为 getCommandPaletteReturnFocus 的 CSS 选择器（matches() 参数，§3 代码标识符精神，不翻）；contains \"~/projects/my-app\" 为输入示例路径（路径不译精神）；review 修复：words \"projects\"/\"my-app\" 会静默豁免 Projects 分区标签等真 UI 串（WelcomeWizard/settingsSearch 实证）故删除，改用 contains 收窄；Linux/Win32 平台标识由既有 words 豁免覆盖。",
     "批 W4（#61，web 设置域 SettingsPanels）新增：contains \"/default\" 为斜杠命令字面量（Legacy 面板描述 \"Restore Build/Plan, /plan, /default, and Shift+Tab.\"，§3.2 命令字面量精神），命令名不译。",
-    "批 W6（#63，web 设置域定时任务与诊断遥测）words 新增：Span/Spans/Trace/Traces（追踪域技术词，UI 展示层保留英文）、Sidecar（T3 组件名）、SIGKILL（POSIX 信号名）、Sentry（品牌名），供译文内容面豁免（术语表 §3 品牌/技术词精神）。"
+    "批 W6（#63，web 设置域定时任务与诊断遥测）words 新增：Span/Spans/Trace/Traces（追踪域技术词，UI 展示层保留英文）、Sidecar（T3 组件名）、SIGKILL（POSIX 信号名）、Sentry（品牌名），供译文内容面豁免（术语表 §3 品牌/技术词精神）。",
+    "批 M7b（#84，mobile 杂项 2/2 收尾）新增：exact 为批内日志/TaggedError message getter 诊断面语句（M6/D2 先例，退英文）、原生崩溃日志判等前缀（ErrorRecovery/Description/Unhandled）、SQL/PRAGMA 语句、附加文件 id 片段（:file:/:image:）、主题样式表解析正则模板、路由名判等键（showcase 环境名映射）与品牌型号名（Aurora GPU Pod/Pocket Pi/Material You/T3 Account/t3 pair/Native token/Moonbase Terminal/Suspense Station/Kernel Cabin）；words 新增 vm/refs/macbook/suspense/testflight/href（技术词与代码标识符，术语表 §3 精神），供裸串面与译文内容面豁免。"
   ],
   "contains": [
     "/side",
@@ -48,7 +49,14 @@
     "View relay",
     "Manage relay",
     "claude mcp add --transport http t3",
-    "Claude Code"
+    "Claude Code",
+    "Aurora GPU Pod",
+    "Material You",
+    "Pocket Pi",
+    "T3 Account",
+    "t3 pair",
+    "Native token",
+    "口袋 Pi"
   ],
   "exact": [
     " READY ",
@@ -633,7 +641,44 @@
     "30d",
     "90d",
     "7d",
-    "Usage"
+    "Usage",
+    "Could not restore Live Activity preference for environment .",
+    "Could not restore Live Activity device preference.",
+    "Failed to  the last notification response.",
+    "Agent awareness operation  failed.",
+    "Incoming share storage operation  failed for .",
+    "Failed to trigger  haptic feedback after copying .",
+    "Failed to open  URL with the  scheme.",
+    "Failed to resolve native view .",
+    "Mobile database operation failed: .",
+    "Mobile secure storage operation  failed for key .",
+    "Failed to decode mobile storage value for key .",
+    "Failed to encode mobile storage value for key .",
+    "ErrorRecovery fatal exception:",
+    "Description:",
+    "Unhandled JS Exception:",
+    "Failed to load mobile preferences.",
+    "Failed to save mobile preferences.",
+    "Database unavailable; saving preferences to secure storage.",
+    "Could not remove the mobile preferences fallback.",
+    "Database unavailable; loading fallback preferences.",
+    "Could not inspect the mobile preferences fallback.",
+    "Could not remove a stale mobile preferences fallback.",
+    "Could not remove migrated mobile preferences.",
+    "Failed to generate the mobile agent-awareness device id.",
+    ":file:",
+    ":image:",
+    "@variant  \\{([\\s\\S]*?)\\n    \\}",
+    "PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;",
+    "PRAGMA user_version",
+    "PRAGMA user_version = ;",
+    "SELECT payload FROM client_cache WHERE kind = ? ORDER BY updated_at",
+    "DELETE FROM client_cache WHERE environment_id = ? AND kind = ?",
+    "DELETE FROM client_cache WHERE environment_id = ?",
+    "DELETE FROM client_cache",
+    "Moonbase Terminal",
+    "Suspense Station",
+    "Kernel Cabin"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -1014,6 +1059,12 @@
     "node_modules",
     ".env",
     "alpha",
-    "keybindings.json"
+    "keybindings.json",
+    "vm",
+    "refs",
+    "macbook",
+    "suspense",
+    "testflight",
+    "href"
   ]
 }

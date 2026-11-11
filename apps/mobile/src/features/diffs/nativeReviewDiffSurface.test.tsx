@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import {
   act,
   useLayoutEffect,
@@ -290,7 +291,7 @@ function setup(integrated = false) {
     },
     retry() {
       const button = container.querySelector("button");
-      expect(button?.textContent).toBe("Retry diff");
+      expect(button?.textContent).toBe(tr("Retry diff"));
       act(() => button!.click());
     },
     decodeFailure() {
@@ -368,7 +369,7 @@ it.each(["retry", "comment update"])(
     expect(screen.tokenRows).toBe("r0,r400");
 
     screen.decodeFailure();
-    expect(screen.container.textContent).toContain("Could not display diff");
+    expect(screen.container.textContent).toContain(tr("Could not display diff"));
     if (recovery === "retry") await act(async () => screen.retry());
     else await screen.updateComment();
     await screen.deliverPayloads();

@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 import type { NavigationContainerRef } from "@react-navigation/native";
 
@@ -70,7 +71,7 @@ it("rejects an href without a leading slash, as useLinkTo does", () => {
   const { dispatched } = rootNavigationRef as unknown as { dispatched: Array<unknown> };
 
   expect(() => linkToRootPath("threads/env/t1", toAction)).toThrow(
-    "The href must start with '/' (threads/env/t1).",
+    tr("The href must start with '/' ({href}).", { href: "threads/env/t1" }),
   );
   expect(toAction).not.toHaveBeenCalled();
 

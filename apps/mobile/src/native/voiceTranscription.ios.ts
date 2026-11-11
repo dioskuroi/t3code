@@ -1,4 +1,5 @@
 import AppleTranscription from "@react-native-ai/apple/src/NativeAppleTranscription";
+import { tr } from "@t3tools/shared/i18n";
 import { File } from "expo-file-system";
 
 import {
@@ -47,7 +48,7 @@ async function prepareVoiceTranscription(
   if (!AppleTranscription.isAvailable(locale)) {
     throw new VoiceTranscriptionError(
       "unavailable",
-      "Voice transcription requires a supported device with iOS 26 or later.",
+      tr("Voice transcription requires a supported device with iOS 26 or later."),
     );
   }
 
@@ -63,14 +64,14 @@ async function prepareVoiceTranscription(
     if (getNativeErrorCode(error) === "AppleTranscriptionUnsupportedLocale") {
       throw new VoiceTranscriptionError(
         "unsupported-locale",
-        "Voice transcription does not support this device language.",
+        tr("Voice transcription does not support this device language."),
         { cause: error },
       );
     }
 
     throw wrapError(
       "preparation-failed",
-      "Voice transcription could not prepare this language.",
+      tr("Voice transcription could not prepare this language."),
       error,
     );
   }
@@ -93,6 +94,6 @@ async function transcribeVoiceRecording(
       .trim();
   } catch (error) {
     throwIfVoiceTranscriptionAborted(signal);
-    throw wrapError("transcription-failed", "Voice transcription failed.", error);
+    throw wrapError("transcription-failed", tr("Voice transcription failed."), error);
   }
 }

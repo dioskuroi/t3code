@@ -3,6 +3,7 @@ import {
   type NavigationAction,
   type NavigationContainerRef,
 } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 
 /**
  * The app's single navigation container. Work that outlives a screen (a draft
@@ -52,7 +53,8 @@ export function flushRootNavigationQueue(): void {
  * leading-'/' guard, then the href's action dispatched at the root once ready.
  */
 export function linkToRootPath(href: string, toAction: (href: string) => NavigationAction): void {
-  if (!href.startsWith("/")) throw new Error(`The href must start with '/' (${href}).`);
+  if (!href.startsWith("/"))
+    throw new Error(tr("The href must start with '/' ({href}).", { href: href }));
   whenRootNavigationReady(() => {
     rootNavigationRef.dispatch({
       target: rootNavigationRef.getRootState()?.key,

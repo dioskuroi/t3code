@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it, vi } from "@effect/vitest";
 import type { SharePayload } from "expo-sharing";
 
@@ -170,7 +171,7 @@ describe("IncomingShareInbox", () => {
         environmentId: "environment-1",
         projectId: "project-2",
       }),
-    ).rejects.toThrow("already reserved");
+    ).rejects.toThrow(tr("The shared content is already reserved for another project draft."));
     expect(persisted.get("share-stable")?.destination?.projectId).toBe("project-1");
   });
 
@@ -209,7 +210,7 @@ describe("IncomingShareInbox", () => {
         environmentId: "environment-1",
         projectId: "project-1",
       }),
-    ).rejects.toThrow("reservation changed");
+    ).rejects.toThrow(tr("The shared content reservation changed before it could be released."));
     expect(persisted.get("share-stable")?.destination?.projectId).toBe("project-2");
   });
 

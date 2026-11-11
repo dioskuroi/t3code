@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { AndroidHeaderIconButton } from "../../components/ui/AndroidScreenHeader";
 
@@ -10,7 +11,7 @@ export function AndroidWorkspaceSidebarButton() {
 
   return (
     <AndroidHeaderIconButton
-      accessibilityLabel={panes.primarySidebarVisible ? "Maximize content" : "Show sidebar"}
+      accessibilityLabel={panes.primarySidebarVisible ? tr("Maximize content") : tr("Show sidebar")}
       icon={panes.primarySidebarVisible ? "arrow.up.left.and.arrow.down.right" : "sidebar.left"}
       onPress={togglePrimarySidebar}
     />
