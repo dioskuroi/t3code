@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import type { SnapShotSource } from "@t3tools/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
@@ -48,7 +49,9 @@ describe("ExpandedImageDialog", () => {
         { router: false },
       );
 
-      const viewer = screen.getByRole("region", { name: "Pipeline, zoomable image" });
+      const viewer = screen.getByRole("region", {
+        name: tr("{name}, zoomable image", { name: "Pipeline" }),
+      });
       const availableWidth = window.innerWidth * 0.92 - (window.innerWidth >= 640 ? 96 : 0);
       await vi.waitFor(() =>
         expect(viewer.element().getBoundingClientRect().width).toBeCloseTo(availableWidth, 0),
@@ -67,15 +70,19 @@ describe("ExpandedImageDialog", () => {
       { router: false },
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "No accessibility data" }));
-    await expect.element(screen.getByText("Accessibility data")).toBeVisible();
+    await userEvent.click(screen.getByRole("button", { name: tr("No accessibility data") }));
+    await expect.element(screen.getByText(tr("Accessibility data"))).toBeVisible();
 
     await userEvent.keyboard("{Escape}");
     await expect.element(screen.getByText("Accessibility data")).not.toBeInTheDocument();
     expect(onClose).not.toHaveBeenCalled();
 
     // Focus returns to the popup's trigger and opens its tooltip; leave it for a plain control.
-    (screen.getByRole("button", { name: "Close image preview" }).element() as HTMLElement).focus();
+    (
+      screen
+        .getByRole("button", { name: tr("Close {mediaLabel} preview", { mediaLabel: "image" }) })
+        .element() as HTMLElement
+    ).focus();
     await userEvent.keyboard("{Escape}");
     await vi.waitFor(() => expect(onClose).toHaveBeenCalledOnce());
   });

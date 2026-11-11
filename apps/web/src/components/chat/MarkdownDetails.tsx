@@ -1,4 +1,5 @@
 import { ChevronRightIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   Children,
   isValidElement,
@@ -30,7 +31,7 @@ export function MarkdownDetails({
   const summary =
     isValidElement<{ children?: ReactNode }>(summaryNode) && summaryNode.props.children
       ? summaryNode.props.children
-      : "Details";
+      : tr("Details");
   const content = childNodes.filter((_, index) => index !== summaryIndex);
 
   return (

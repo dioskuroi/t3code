@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId } from "@t3tools/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
@@ -31,7 +32,7 @@ describe("HtmlRenderFrame", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "Open full screen" }));
+    await userEvent.click(screen.getByRole("button", { name: tr("Open full screen") }));
     await expect.element(screen.getByRole("dialog")).toBeVisible();
     expect(onFullscreenChange).toHaveBeenLastCalledWith(true);
 

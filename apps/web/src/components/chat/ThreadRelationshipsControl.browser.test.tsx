@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import * as DateTime from "effect/DateTime";
 import { EnvironmentId, NodeId, ThreadId } from "@t3tools/contracts";
 import * as Cause from "effect/Cause";
@@ -70,8 +71,8 @@ function setup() {
 }
 
 it.each([
-  ["merge", "Could not merge back"],
-  ["disconnect", "Could not disconnect agent session"],
+  ["merge", tr("Could not merge back")],
+  ["disconnect", tr("Could not disconnect agent session")],
 ])("reports a rejected %s command and clears the busy state", async (action, title) => {
   setup();
   await using screen = await render(
@@ -86,25 +87,26 @@ it.each([
   );
 
   if (action === "merge") {
-    await screen.getByRole("button", { name: "Merge back to source conversation" }).click();
+    await screen.getByRole("button", { name: tr("Merge back to source conversation") }).click();
   } else {
-    await screen.getByRole("button", { name: "More thread actions" }).click();
-    await page.getByRole("menuitem", { name: "Disconnect agent session" }).click();
+    await screen.getByRole("button", { name: tr("More thread actions") }).click();
+    await page.getByRole("menuitem", { name: tr("Disconnect agent session") }).click();
   }
 
   await expect.element(page.getByText(title, { exact: true })).toBeVisible();
   await expect
     .element(
       screen.getByRole("button", {
-        name: action === "merge" ? "Merge back to source conversation" : "More thread actions",
+        name:
+          action === "merge" ? tr("Merge back to source conversation") : tr("More thread actions"),
       }),
     )
     .toBeEnabled();
 });
 
 it.each([
-  ["merge", "Could not merge back"],
-  ["disconnect", "Could not disconnect agent session"],
+  ["merge", tr("Could not merge back")],
+  ["disconnect", tr("Could not disconnect agent session")],
 ])("clears the previous %s error after a successful retry", async (action, title) => {
   setup();
   await using screen = await render(
@@ -121,10 +123,10 @@ it.each([
 
   const runAction = async () => {
     if (action === "merge") {
-      await screen.getByRole("button", { name: "Merge back to source conversation" }).click();
+      await screen.getByRole("button", { name: tr("Merge back to source conversation") }).click();
     } else {
-      await screen.getByRole("button", { name: "More thread actions" }).click();
-      await page.getByRole("menuitem", { name: "Disconnect agent session" }).click();
+      await screen.getByRole("button", { name: tr("More thread actions") }).click();
+      await page.getByRole("menuitem", { name: tr("Disconnect agent session") }).click();
     }
   };
 
@@ -142,7 +144,9 @@ it.each([
     );
   });
   if (action === "disconnect") {
-    await expect.element(screen.getByRole("button", { name: "More thread actions" })).toBeEnabled();
+    await expect
+      .element(screen.getByRole("button", { name: tr("More thread actions") }))
+      .toBeEnabled();
   }
 });
 
@@ -185,7 +189,7 @@ it("opens an idle child from Lineage when its shell has not been loaded", async 
       showSideChats
     />,
   );
-  await screen.getByRole("button", { name: /Previous agents/ }).click();
+  await screen.getByRole("button", { name: new RegExp("^" + tr("Previous agents")) }).click();
   const child = screen.getByRole("button", { name: /Idle child/ });
   await expect.element(child).toBeEnabled();
   await child.click();
@@ -302,7 +306,7 @@ it("shows a remote subagent's full title in its tooltip even when its environmen
     expect(document.querySelector('[data-slot="tooltip-popup"]')?.textContent).toContain(longTitle),
   );
   expect(document.querySelector('[data-slot="tooltip-popup"]')?.textContent).toContain(
-    "Runs on Remote VM. Connect to it to open the thread there.",
+    tr("Runs on {name}. Connect to it to open the thread there.", { name: "Remote VM" }),
   );
 
   await row.click({ force: true });
@@ -339,7 +343,9 @@ it("shows a delegated-from thread's full title in its tooltip even when its envi
     expect(document.querySelector('[data-slot="tooltip-popup"]')?.textContent).toContain(longTitle),
   );
   expect(document.querySelector('[data-slot="tooltip-popup"]')?.textContent).toContain(
-    "Delegated from a linked environment. Connect to it to open the parent thread.",
+    tr("Delegated from {name}. Connect to it to open the parent thread.", {
+      name: tr("a linked environment"),
+    }),
   );
 
   await row.click({ force: true });

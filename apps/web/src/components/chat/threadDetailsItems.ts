@@ -1,19 +1,20 @@
 import type { ClientSettings } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 // Ids are stored in client settings, so never rename one.
 export const THREAD_DETAILS_ITEMS = [
-  { id: "environment", label: "Environment and worktree", defaultVisible: true },
-  { id: "openIn", label: "Open in editor", defaultVisible: true },
-  { id: "scripts", label: "Project scripts", defaultVisible: true },
-  { id: "branch", label: "Branch and pull request", defaultVisible: true },
-  { id: "gitActions", label: "Git actions", defaultVisible: true },
-  { id: "changes", label: "Changes", defaultVisible: true },
-  { id: "servers", label: "Servers", defaultVisible: true },
-  { id: "automations", label: "Automations", defaultVisible: true },
-  { id: "lineage", label: "Lineage", defaultVisible: true },
-  { id: "sideChats", label: "Side chats", defaultVisible: true },
-  { id: "usage", label: "Usage limits", defaultVisible: false },
-  { id: "context", label: "Context window", defaultVisible: false },
+  { id: "environment", label: tr("Environment and worktree"), defaultVisible: true },
+  { id: "openIn", label: tr("Open in editor"), defaultVisible: true },
+  { id: "scripts", label: tr("Project scripts"), defaultVisible: true },
+  { id: "branch", label: tr("Branch and pull request"), defaultVisible: true },
+  { id: "gitActions", label: tr("Git actions"), defaultVisible: true },
+  { id: "changes", label: tr("Changes"), defaultVisible: true },
+  { id: "servers", label: tr("Servers"), defaultVisible: true },
+  { id: "automations", label: tr("Automations"), defaultVisible: true },
+  { id: "lineage", label: tr("Lineage"), defaultVisible: true },
+  { id: "sideChats", label: tr("Side chats"), defaultVisible: true },
+  { id: "usage", label: tr("Usage limits"), defaultVisible: false },
+  { id: "context", label: tr("Context window"), defaultVisible: false },
 ] as const;
 
 export type ThreadDetailsItemId = (typeof THREAD_DETAILS_ITEMS)[number]["id"];

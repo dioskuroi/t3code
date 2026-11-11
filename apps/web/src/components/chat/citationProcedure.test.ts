@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { MessageId, RunId } from "@t3tools/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import type { TimelineEntry } from "../../session-logic";
@@ -53,7 +54,7 @@ describe("loadCitedHistory", () => {
     const history = scriptedHistory([notLoaded, { message: null, hasMoreHistory: false }]);
     await expect(history.run()).resolves.toMatchObject({
       _tag: "failed",
-      title: "The cited response is unavailable",
+      title: tr("The cited response is unavailable"),
     });
   });
 
@@ -61,7 +62,7 @@ describe("loadCitedHistory", () => {
     const history = scriptedHistory([{ message: "other", hasMoreHistory: false }]);
     await expect(history.run()).resolves.toMatchObject({
       _tag: "failed",
-      title: "The citation does not refer to an assistant response",
+      title: tr("The citation does not refer to an assistant response"),
     });
   });
 
@@ -69,7 +70,7 @@ describe("loadCitedHistory", () => {
     const history = scriptedHistory([notLoaded]);
     await expect(history.run(["error"])).resolves.toMatchObject({
       _tag: "failed",
-      title: "Could not load the cited response",
+      title: tr("Could not load the cited response"),
     });
     expect(history.loads).toBe(1);
   });
@@ -78,7 +79,7 @@ describe("loadCitedHistory", () => {
     const history = scriptedHistory([notLoaded]);
     await expect(history.run(["noop"])).resolves.toMatchObject({
       _tag: "failed",
-      title: "The cited response is unavailable",
+      title: tr("The cited response is unavailable"),
     });
     expect(history.loads).toBe(1);
   });
@@ -87,7 +88,7 @@ describe("loadCitedHistory", () => {
     const history = scriptedHistory([notLoaded]);
     await expect(history.run()).resolves.toMatchObject({
       _tag: "failed",
-      title: "Could not load the cited response",
+      title: tr("Could not load the cited response"),
     });
     expect(history.loads).toBe(20);
   });
@@ -126,7 +127,7 @@ describe("citedThreadSnapshot", () => {
     expect(snapshot).not.toBeNull();
     await expect(scriptedHistory([snapshot]).run()).resolves.toMatchObject({
       _tag: "failed",
-      title: "Could not load the cited response",
+      title: tr("Could not load the cited response"),
     });
   });
 });

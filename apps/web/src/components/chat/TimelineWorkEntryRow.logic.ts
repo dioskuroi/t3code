@@ -1,4 +1,5 @@
 import type { PluggableList } from "unified";
+import { tr } from "@t3tools/shared/i18n";
 import type { Root, RootContent } from "mdast";
 import {
   resolveWorkEntryToolPresentation,
@@ -239,5 +240,5 @@ export function remarkThoughtPreview(fallback: string) {
   };
 }
 
-export const THOUGHT_PREVIEW_PLUGINS: PluggableList = [[remarkThoughtPreview, "Thought"]];
-export const THINKING_PREVIEW_PLUGINS: PluggableList = [[remarkThoughtPreview, "Thinking"]];
+export const THOUGHT_PREVIEW_PLUGINS: PluggableList = [[remarkThoughtPreview, tr("Thought")]];
+export const THINKING_PREVIEW_PLUGINS: PluggableList = [[remarkThoughtPreview, tr("Thinking")]];

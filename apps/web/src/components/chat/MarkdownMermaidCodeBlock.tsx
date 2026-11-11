@@ -1,4 +1,5 @@
 import { CodeIcon, WorkflowIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 import { Suspense, use, useState, type ReactNode } from "react";
 
 import { RenderErrorBoundary } from "../RenderErrorBoundary";
@@ -28,7 +29,7 @@ export function MarkdownMermaidCodeBlock({
   const revealSource = () => setShowCode(true);
   const sourceRevealRef = findRevealRef(revealSource);
   const showDiagram = !showCode && !isStreaming && code.trim().length > 0;
-  const toggleLabel = showCode ? "Show diagram" : "Show code";
+  const toggleLabel = showCode ? tr("Show diagram") : tr("Show code");
   return (
     <MarkdownCodeBlock
       code={code}

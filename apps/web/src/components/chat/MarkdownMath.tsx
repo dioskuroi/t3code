@@ -1,4 +1,5 @@
 import { lazy, memo, Suspense, useLayoutEffect, useRef, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import { observeResize } from "../../lib/observeResize";
 
@@ -47,8 +48,8 @@ export const MarkdownMath = memo(function MarkdownMath(props: {
         props.focusable === false
           ? undefined
           : props.display
-            ? "Display equation"
-            : "Inline equation"
+            ? tr("Display equation")
+            : tr("Inline equation")
       }
     >
       <span
@@ -59,8 +60,8 @@ export const MarkdownMath = memo(function MarkdownMath(props: {
           !scrollable
             ? undefined
             : props.display
-              ? "Scroll display equation"
-              : "Scroll inline equation"
+              ? tr("Scroll display equation")
+              : tr("Scroll inline equation")
         }
       >
         <span

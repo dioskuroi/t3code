@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import {
   AuthPreviewOperateScope,
@@ -83,12 +84,12 @@ function ThreadServersList(props: ThreadServersPanelProps) {
       const url = resolveDiscoveredServerUrl(props.environmentId, server.url);
       await readLocalApi()
         ?.shell.openExternal(url)
-        .catch((error: unknown) => reportFailure("Unable to open in browser", error));
+        .catch((error: unknown) => reportFailure(tr("Unable to open in browser"), error));
       return;
     }
     const result = await openDiscoveredPort({ threadRef, port: server, openPreview });
     if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
-      reportFailure("Unable to open preview", squashAtomCommandFailure(result));
+      reportFailure(tr("Unable to open preview"), squashAtomCommandFailure(result));
     }
   };
 
@@ -101,12 +102,12 @@ function ThreadServersList(props: ThreadServersPanelProps) {
     });
     setStoppingKey(null);
     if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
-      reportFailure("Could not stop server", squashAtomCommandFailure(result));
+      reportFailure(tr("Could not stop server"), squashAtomCommandFailure(result));
     }
   };
 
   return (
-    <ThreadDetailsSection headingId="thread-details-servers-heading" title="Servers">
+    <ThreadDetailsSection headingId="thread-details-servers-heading" title={tr("Servers")}>
       <ul className="m-0 list-none p-0">
         {servers.slice(0, visibleCount).map((server, index) => {
           const key = serverKey(server);
@@ -139,14 +140,16 @@ function ThreadServersList(props: ThreadServersPanelProps) {
                       localhost:{server.port}
                     </span>
                     <span className="truncate text-2xs font-normal leading-4 text-muted-foreground">
-                      {[server.terminal === null ? "Agent" : "Terminal", server.processName]
+                      {[server.terminal === null ? tr("Agent") : tr("Terminal"), server.processName]
                         .filter(Boolean)
                         .join(" · ")}
                     </span>
                   </span>
                 </TooltipTrigger>
                 <TooltipPopup side="left">
-                  Open in the browser panel. {externalClickLabel} for your browser.
+                  {tr("Open in the browser panel. {label} for your browser.", {
+                    label: externalClickLabel,
+                  })}
                 </TooltipPopup>
               </Tooltip>
               {stoppable ? (
@@ -159,7 +162,7 @@ function ThreadServersList(props: ThreadServersPanelProps) {
                           variant="ghost"
                           part="icon"
                           tone="destructive"
-                          aria-label={`Stop localhost:${server.port}`}
+                          aria-label={tr("Stop localhost:{port}", { port: server.port })}
                           disabled={stoppingKey !== null}
                           onClick={() => void stop(server)}
                         />
@@ -171,7 +174,7 @@ function ThreadServersList(props: ThreadServersPanelProps) {
                         <SquareIcon aria-hidden className="size-3 fill-current" />
                       )}
                     </TooltipTrigger>
-                    <TooltipPopup side="left">Stop server</TooltipPopup>
+                    <TooltipPopup side="left">{tr("Stop server")}</TooltipPopup>
                   </Tooltip>
                 </div>
               ) : null}
@@ -195,7 +198,9 @@ function ThreadServersList(props: ThreadServersPanelProps) {
             className="size-4 shrink-0"
             icon={hiddenCount > 0 ? ChevronDown : ChevronUp}
           />
-          {hiddenCount > 0 ? `Show ${Math.min(hiddenCount, SERVER_PAGE_COUNT)} more` : "Show less"}
+          {hiddenCount > 0
+            ? tr("Show {count} more", { count: Math.min(hiddenCount, SERVER_PAGE_COUNT) })
+            : tr("Show less")}
         </ThreadDetailsControl>
       ) : null}
     </ThreadDetailsSection>

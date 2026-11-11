@@ -8,7 +8,9 @@
     "扣除后整串再无英文词则豁免。多词品牌按完整短语列出，避免单词条误伤普通词。",
     "words 派生自术语表 §3 硬规则（含第 6 条单位）与 §2 保留词条，另含少量常见技术缩写（API/URL/HTTP 等单向放宽豁免）。",
     "身份词复数（agents/providers/threads/tokens）与品牌 ChatGPT 由 i18n-check 译文内容面回填（§3.1/§2 保留词的形态变体）。",
-    "nodeSqliteClient 三条（prepare/reset 诊断 reason、BEGIN IMMEDIATE SQL）系 .ts 解析修复后暴露的禁译区串，i18n/main a6f36a2 回填。"
+    "nodeSqliteClient 三条（prepare/reset 诊断 reason、BEGIN IMMEDIATE SQL）系 .ts 解析修复后暴露的禁译区串，i18n/main a6f36a2 回填。",
+    "W1b (#58) 增：批内模板串残留的非展示字面量——CSS 尺寸/类名（22rem、负偏移类）、RunId/DOM id 分隔片段（:steer:、:details）、thread-find 选择器片段.",
+    "W1b (#58) 增：键位名 Enter/Command 与 CSV 格式名（键位写法保留英文、格式名同 API 级缩写放宽）."
   ],
   "contains": ["/side", "@container", "xdg-mime exit code", "update-desktop-database exit code"],
   "exact": [
@@ -323,7 +325,15 @@
     "Unsupported Windows window handle size:  bytes.",
     "Update",
     "V1 Local Storage ready to import",
-    "Written by T3 Code: runs the desktop app's bundled t3 CLI."
+    "Written by T3 Code: runs the desktop app's bundled t3 CLI.",
+    "22rem",
+    ":details",
+    ":steer:",
+    "-left-1 -top-1",
+    "-bottom-1 -right-1",
+    "-left-px -top-px",
+    "-right-px -bottom-px",
+    ", [role=\"toolbar\"]"
   ],
   "globs": [
     "**/*.test.{ts,tsx,js,jsx,mjs,cjs}",
@@ -466,6 +476,9 @@
     "png",
     "webp",
     "chromium",
-    "ipc"
+    "ipc",
+    "enter",
+    "csv",
+    "command"
   ]
 }

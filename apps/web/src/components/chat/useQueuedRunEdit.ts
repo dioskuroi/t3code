@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   makeQueuedRunEditStore,
   makeQueuedRunsAtom,
@@ -114,7 +115,7 @@ async function submitQueuedRunEdit(input: {
     await awaitAttachmentUploads(files.map((file) => file.id));
     validateFiles();
     const uploaded = getUploadedAttachments({ environmentId, images: files });
-    if (uploaded === null) throw new Error("Retry or remove failed uploads before saving.");
+    if (uploaded === null) throw new Error(tr("Retry or remove failed uploads before saving."));
     return uploaded;
   };
   try {
@@ -166,9 +167,9 @@ async function submitQueuedRunEdit(input: {
         },
       },
     });
-    return result._tag === "Failure" ? "Could not save the edited queued message." : null;
+    return result._tag === "Failure" ? tr("Could not save the edited queued message.") : null;
   } catch (error) {
-    return error instanceof Error ? error.message : "Could not save the edited queued message.";
+    return error instanceof Error ? error.message : tr("Could not save the edited queued message.");
   }
 }
 
@@ -270,15 +271,18 @@ export function useQueuedRunEdit(input: {
           const title = appAtomRegistry.get(
             environmentThreadShells.threadShellAtom(threadRef),
           )?.title;
-          const where = title === undefined ? "" : ` in “${title}”`;
           toastManager.add(
             stackedThreadToast({
               type: recovery === "kept" ? "info" : "warning",
-              title: "Queued message is no longer queued",
+              title: tr("Queued message is no longer queued"),
               description:
                 recovery === "kept"
-                  ? `Your unsaved edit${where} was kept in the composer.`
-                  : `Your unsaved edit${where} was discarded.`,
+                  ? title === undefined
+                    ? tr("Your unsaved edit was kept in the composer.")
+                    : tr("Your unsaved edit (in “{title}”) was kept in the composer.", { title })
+                  : title === undefined
+                    ? tr("Your unsaved edit was discarded.")
+                    : tr("Your unsaved edit (in “{title}”) was discarded.", { title }),
             }),
           );
         },
@@ -313,7 +317,9 @@ export function useQueuedRunEdit(input: {
     ) {
       setThreadError(
         editing.threadId,
-        `A message can have at most ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} attachments.`,
+        tr("A message can have at most {PROVIDER_SEND_TURN_MAX_ATTACHMENTS} attachments.", {
+          PROVIDER_SEND_TURN_MAX_ATTACHMENTS: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+        }),
       );
       return;
     }

@@ -4,6 +4,7 @@ import type {
   OrchestrationV2ProviderGoal,
   ThreadId,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentThreadShell, ThreadStructure } from "@t3tools/client-runtime/state/shell";
 import {
   presentPendingBackgroundWork,
@@ -51,8 +52,8 @@ export function childInputNowItem(input: {
     ),
     title: childThreadInputsTitle(childThreadInputs),
     waitingLabel: childThreadInputs.every((child) => child.lineage.sideChat === true)
-      ? "Side chat waiting"
-      : "Subagent waiting",
+      ? tr("Side chat waiting")
+      : tr("Subagent waiting"),
     description: childThreadInputs.map((child, index) => (
       <Fragment key={child.id}>
         {index > 0 ? " " : null}
@@ -66,7 +67,7 @@ export function childInputNowItem(input: {
     )),
     actions: (
       <InlineButton onClick={() => onOpenThread(first.id, first.environmentId)}>
-        {first.hasPendingApprovals ? "Open approval" : "Open question"}
+        {first.hasPendingApprovals ? tr("Open approval") : tr("Open question")}
       </InlineButton>
     ),
   };
@@ -95,18 +96,18 @@ export function goalNowItem(input: {
         {presentation.canResume && !isWorking ? (
           <>
             <InlineButton
-              onClick={() => void onSendCommand("/goal resume", "Failed to resume goal.")}
+              onClick={() => void onSendCommand("/goal resume", tr("Failed to resume goal."))}
             >
-              Resume
+              {tr("Resume")}
             </InlineButton>
             <span aria-hidden>·</span>
           </>
         ) : null}
         <InlineButton
           tone="muted"
-          onClick={() => void onSendCommand("/goal clear", "Failed to clear goal.")}
+          onClick={() => void onSendCommand("/goal clear", tr("Failed to clear goal."))}
         >
-          Clear
+          {tr("Clear")}
         </InlineButton>
       </>
     ),
@@ -130,9 +131,9 @@ export function runStopNowItem(input: {
     ) : (
       <CircleStopIcon />
     ),
-    title: unresponsive ? "Agent not responding to Stop" : "Stopping",
+    title: unresponsive ? tr("Agent not responding to Stop") : tr("Stopping"),
     description: unresponsive
-      ? "It may be short on memory. Force stop kills its processes."
+      ? tr("It may be short on memory. Force stop kills its processes.")
       : undefined,
     actions: (
       <>
@@ -145,7 +146,7 @@ export function runStopNowItem(input: {
         />
         {unresponsive && input.canForceStop ? (
           <InlineButton disabled={input.forceStopping} onClick={input.onForceStop}>
-            {input.forceStopping ? "Force stopping..." : "Force stop"}
+            {input.forceStopping ? tr("Force stopping...") : tr("Force stop")}
           </InlineButton>
         ) : null}
       </>
@@ -203,7 +204,7 @@ export function backgroundWorkNowItem(input: {
     title:
       only && typeof only.label !== "string" && only.task.label !== only.task.kind ? (
         <>
-          {presentation.waiting ? "Waiting" : "Running"} · {only.label}
+          {presentation.waiting ? tr("Waiting") : tr("Running")} · {only.label}
         </>
       ) : (
         presentation.title
@@ -235,11 +236,11 @@ export function backgroundWorkNowItem(input: {
         )}
         {onlyThreadId === undefined ? null : (
           <InlineButton tone="muted" onClick={() => onOpenThread(onlyThreadId)}>
-            Open
+            {tr("Open")}
           </InlineButton>
         )}
         <InlineButton disabled={input.stopDisabled} onClick={() => void input.onStop()}>
-          {input.stopping ? "Stopping..." : "Stop"}
+          {input.stopping ? tr("Stopping...") : tr("Stop")}
         </InlineButton>
       </>
     ),
@@ -262,7 +263,9 @@ export function branchMismatchBannerItem(input: {
     icon: <GitBranchIcon />,
     title: (
       <span className="flex min-w-0 items-baseline gap-1.5">
-        <span className="shrink-0 font-normal text-muted-foreground">Branch changed from</span>
+        <span className="shrink-0 font-normal text-muted-foreground">
+          {tr("Branch changed from")}
+        </span>
         <Tooltip>
           <TooltipTrigger
             render={
@@ -272,18 +275,20 @@ export function branchMismatchBannerItem(input: {
             }
           />
           <TooltipPopup side="top">
-            This thread last ran on {mismatch.threadBranch}. Sending will continue on{" "}
-            {mismatch.currentBranch}.
+            {tr("This thread last ran on {branch}. Sending will continue on {current}.", {
+              branch: mismatch.threadBranch,
+              current: mismatch.currentBranch,
+            })}
           </TooltipPopup>
         </Tooltip>
       </span>
     ),
     actions: (
       <Button size="xs" variant="ghost" disabled={input.restoreDisabled} onClick={input.onRestore}>
-        {input.restoring ? "Restoring..." : "Restore branch"}
+        {input.restoring ? tr("Restoring...") : tr("Restore branch")}
       </Button>
     ),
-    dismissLabel: "Dismiss branch change notice",
+    dismissLabel: tr("Dismiss branch change notice"),
     onDismiss: input.onDismiss,
   };
 }

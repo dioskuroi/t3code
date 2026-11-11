@@ -1,4 +1,5 @@
 import { toHtml } from "hast-util-to-html";
+import { tr } from "@t3tools/shared/i18n";
 import { toJsxRuntime } from "hast-util-to-jsx-runtime";
 import { cloneElement, isValidElement, memo, type DOMAttributes } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
@@ -12,7 +13,7 @@ const runtime = { Fragment, jsx, jsxs };
 function elementShell(node: Extract<HighlightedNode, { type: "element" }>) {
   const element = toJsxRuntime({ ...node, children: [] }, runtime);
   if (!isValidElement<DOMAttributes<HTMLElement>>(element)) {
-    throw new Error("Expected a highlighted code element");
+    throw new Error(tr("Expected a highlighted code element"));
   }
   return element;
 }

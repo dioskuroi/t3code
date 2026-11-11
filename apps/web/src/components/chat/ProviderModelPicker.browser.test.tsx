@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { ProviderDriverKind, ProviderInstanceId, type ModelSelection } from "@t3tools/contracts";
 import { useState } from "react";
 import { expect, it, vi } from "vite-plus/test";
@@ -133,7 +134,7 @@ it("keeps a docked picker open after a pick and hands focus to that model's effo
         lockedProvider={null}
         instanceEntries={entries}
         modelOptionsByInstance={options}
-        triggerAriaLabel="Choose model"
+        triggerAriaLabel={tr("Choose model")}
         onInstanceModelChange={(_, selected) => setModel(selected)}
         effortColumn={(levels[model] ?? []).map((level, index, all) => (
           <button
@@ -152,8 +153,8 @@ it("keeps a docked picker open after a pick and hands focus to that model's effo
   }
 
   await using screen = await render(<Picker />);
-  await screen.getByRole("button", { name: "Choose model" }).click();
-  const search = page.getByPlaceholder("Search models...");
+  await screen.getByRole("button", { name: tr("Choose model") }).click();
+  const search = page.getByPlaceholder(tr("Search models..."));
   await expect.element(search).toHaveFocus();
   await userEvent.keyboard("{ArrowRight}");
   await expect.element(page.getByRole("radio", { name: "High" })).toHaveFocus();

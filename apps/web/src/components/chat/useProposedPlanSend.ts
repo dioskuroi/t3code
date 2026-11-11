@@ -5,6 +5,7 @@ import {
   type ProviderInteractionMode,
   type RuntimeMode,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import {
   isAtomCommandInterrupted,
@@ -224,7 +225,7 @@ export function usePlanFollowUpSend(input: PlanFollowUpSendInput) {
       const error = squashAtomCommandFailure(failure);
       setThreadError(
         threadIdForSend,
-        error instanceof Error ? error.message : "Failed to send plan follow-up.",
+        error instanceof Error ? error.message : tr("Failed to send plan follow-up."),
       );
     }
     sendInFlightRef.current = false;
@@ -373,7 +374,7 @@ export function useImplementPlanInNewThread(input: ImplementPlanInNewThreadInput
       });
       if (cleanupResult._tag === "Failure" && !isAtomCommandInterrupted(cleanupResult)) {
         console.warn(
-          "Failed to clean up implementation thread after start failure.",
+          tr("Failed to clean up implementation thread after start failure."),
           squashAtomCommandFailure(cleanupResult),
         );
       }
@@ -382,11 +383,11 @@ export function useImplementPlanInNewThread(input: ImplementPlanInNewThreadInput
         toastManager.add(
           stackedThreadToast({
             type: "error",
-            title: "Could not start implementation thread",
+            title: tr("Could not start implementation thread"),
             description:
               error instanceof Error
                 ? error.message
-                : "An error occurred while creating the new thread.",
+                : tr("An error occurred while creating the new thread."),
           }),
         );
       }

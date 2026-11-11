@@ -1,4 +1,5 @@
 import { memo, useRef } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { Check, Copy } from "lucide";
 import { Button } from "../ui/button";
 import { MorphIcon } from "~/components/MorphIcon";
@@ -13,7 +14,7 @@ import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 
 export const MessageCopyButton = memo(function MessageCopyButton({
   text,
-  label = "Copy message",
+  label = tr("Copy message"),
   icon = Copy,
   extraFlavors,
   size = "xs",
