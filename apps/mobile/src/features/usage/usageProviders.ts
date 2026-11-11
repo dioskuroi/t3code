@@ -1,4 +1,5 @@
 import type { UsageProviderKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { useAppearancePreferences } from "../settings/appearance/AppearancePreferencesProvider";
 
 export const PROVIDER_ORDER: readonly UsageProviderKind[] = [
@@ -18,14 +19,14 @@ export function usageProviderKind(driver: string): UsageProviderKind | null {
 }
 
 export const PROVIDER_LABEL: Record<UsageProviderKind, string> = {
-  claude: "Claude Code",
-  codex: "Codex",
-  grok: "Grok Build",
-  cursor: "Cursor",
+  claude: tr("Claude Code"),
+  codex: tr("Codex"),
+  grok: tr("Grok Build"),
+  cursor: tr("Cursor"),
   opencode: "OpenCode",
-  antigravity: "Antigravity",
+  antigravity: tr("Antigravity"),
   pi: "Pi",
-  muse: "Muse Code",
+  muse: tr("Muse Code"),
 };
 
 export function useProviderColors(): Record<UsageProviderKind, string> {

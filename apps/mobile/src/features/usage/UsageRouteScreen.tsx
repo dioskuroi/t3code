@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { ChatGptUsageSummary } from "./ChatGptUsageSummary";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
@@ -57,16 +58,16 @@ import { PROVIDER_LABEL, useProviderColors, useUsageMixColors } from "./usagePro
 
 type UsageView = UsageChartMetric | "limits";
 const VIEW_OPTIONS = [
-  { value: "cost", label: "Cost" },
-  { value: "tokens", label: "Tokens" },
-  { value: "limits", label: "Limits" },
+  { value: "cost", label: tr("Cost") },
+  { value: "tokens", label: tr("Tokens") },
+  { value: "limits", label: tr("Limits") },
 ] as const satisfies readonly { value: UsageView; label: string }[];
 
 const WINDOW_OPTIONS = [
-  { value: 1, label: "24h", accessibilityLabel: "Past 24 hours" },
-  { value: 7, label: "7d", accessibilityLabel: "Past 7 days" },
-  { value: 30, label: "30d", accessibilityLabel: "Past 30 days" },
-  { value: 90, label: "90d", accessibilityLabel: "Past 90 days" },
+  { value: 1, label: "24h", accessibilityLabel: tr("Past 24 hours") },
+  { value: 7, label: "7d", accessibilityLabel: tr("Past 7 days") },
+  { value: 30, label: "30d", accessibilityLabel: tr("Past 30 days") },
+  { value: 90, label: "90d", accessibilityLabel: tr("Past 90 days") },
 ] as const;
 
 const CHART_HEIGHT = 180;
@@ -75,7 +76,7 @@ const WIDE_CHART_HEIGHT = 260;
 const WIDE_WIDTH = 600;
 const MAX_CONTENT_WIDTH = 1080;
 const providerLabel = (provider: UsageProviderKind) => PROVIDER_LABEL[provider];
-const CURSOR_KEYCHAIN_COPY = "Requires access to your Cursor login in macOS Keychain.";
+const CURSOR_KEYCHAIN_COPY = tr("Requires access to your Cursor login in macOS Keychain.");
 
 export function UsageRouteScreen(props: { readonly workspace?: boolean }) {
   const route = useRoute<RouteProp<{ Usage: { tab?: string } | undefined }, "Usage">>();
@@ -203,7 +204,7 @@ function UsageScreen(props: {
   const environmentActions = [
     {
       id: "all",
-      title: "All environments",
+      title: tr("All environments"),
       subtitle: undefined,
       state: selectedEnvironmentIds === null ? ("on" as const) : ("off" as const),
     },
@@ -229,14 +230,14 @@ function UsageScreen(props: {
     <Menu
       accessible
       accessibilityRole="button"
-      accessibilityLabel="Filter usage environments"
-      title="Environments"
+      accessibilityLabel={tr("Filter usage environments")}
+      title={tr("Environments")}
       actions={environmentActions}
       onPressAction={({ nativeEvent }) => selectEnvironment(nativeEvent.event)}
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Filter usage environments"
+        accessibilityLabel={tr("Filter usage environments")}
         className={cn(
           "items-center justify-center rounded-full",
           Platform.OS === "ios" ? "size-[28px]" : "size-[44px]",
@@ -248,7 +249,11 @@ function UsageScreen(props: {
   ) : null;
 
   return (
-    <SettingsScreen title="Usage" trailing={environmentFilter} workspaceRoot={props.workspace}>
+    <SettingsScreen
+      title={tr("Usage")}
+      trailing={environmentFilter}
+      workspaceRoot={props.workspace}
+    >
       {Platform.OS === "ios" ? (
         <NativeStackScreenOptions
           optionsVersion={JSON.stringify({ showEnvironmentFilter, filterIcon, environmentActions })}
@@ -258,12 +263,12 @@ function UsageScreen(props: {
               showEnvironmentFilter
                 ? [
                     withNativeGlassHeaderItem({
-                      accessibilityLabel: "Filter usage environments",
+                      accessibilityLabel: tr("Filter usage environments"),
                       icon: { name: filterIcon, type: "sfSymbol" },
                       label: "",
                       type: "menu",
                       menu: {
-                        title: "Environments",
+                        title: tr("Environments"),
                         items: environmentActions.map((action) => ({
                           type: "action" as const,
                           label: action.title,
@@ -358,19 +363,19 @@ function UsageScreen(props: {
                 <ChatGptUsageSummary selectedEnvironmentIds={selectedEnvironmentIds} />
                 {merged.duplicateSources.length > 0 ? (
                   <Text className="text-sm text-foreground-muted">
-                    Counted once across environments sharing a transcript directory:{" "}
+                    {tr("Counted once across environments sharing a transcript directory:")}{" "}
                     {merged.duplicateSources.join(", ")}
                   </Text>
                 ) : null}
                 {isPending ? (
                   <Text className="py-16 text-center text-base text-foreground-muted">
-                    Scanning provider transcripts…
+                    {tr("Scanning provider transcripts\u2026")}
                   </Text>
                 ) : selectedEnvironments.length === 0 ? (
                   <Text className="py-16 text-center text-base text-foreground-muted">
                     {environments.length === 0
-                      ? "Connect an environment to see usage."
-                      : "Select an environment to see usage."}
+                      ? tr("Connect an environment to see usage.")
+                      : tr("Select an environment to see usage.")}
                   </Text>
                 ) : !canReadDiagnostics ? (
                   <View className="gap-2 py-16">
@@ -405,7 +410,15 @@ function UsageScreen(props: {
                               {...chart}
                               height={WIDE_CHART_HEIGHT}
                               fill
-                              title={`${isPast24Hours ? "Hourly" : "Daily"} ${metric === "cost" ? "cost" : "processed tokens"}`}
+                              title={
+                                metric === "cost"
+                                  ? isPast24Hours
+                                    ? tr("Hourly cost")
+                                    : tr("Daily cost")
+                                  : isPast24Hours
+                                    ? tr("Hourly processed tokens")
+                                    : tr("Daily processed tokens")
+                              }
                             />
                           </View>
                         </View>
@@ -478,7 +491,7 @@ function CursorEnableAction({
   environmentId,
   label,
   onEnabled,
-  buttonText = "Enable",
+  buttonText = tr("Enable"),
 }: {
   readonly environmentId: EnvironmentId;
   readonly label: string;
@@ -501,7 +514,7 @@ function CursorEnableAction({
     <Button
       label={buttonText}
       tone="primary"
-      accessibilityLabel={`Enable Cursor usage from ${label}`}
+      accessibilityLabel={tr("Enable Cursor usage from {label}", { label: label })}
       accessibilityHint={CURSOR_KEYCHAIN_COPY}
       disabled={pending}
       onPress={() => void enable()}
@@ -534,7 +547,8 @@ function CursorEnableRow({
       <View className="min-w-0 flex-1 flex-row items-center gap-2">
         <View className="size-2.5 rounded-full" style={{ backgroundColor: colors.cursor }} />
         <Text className="shrink text-lg text-foreground">
-          Cursor{showEnvironment ? ` · ${label}` : ""}
+          {tr("Cursor")}
+          {showEnvironment ? ` · ${label}` : ""}
         </Text>
       </View>
       <CursorEnableAction environmentId={environmentId} label={label} onEnabled={onEnabled} />
@@ -553,7 +567,7 @@ function CursorEnableLimits({
     <View className="gap-3">
       <View className="flex-row items-center gap-2 px-1">
         <ProviderIcon provider="cursor" size={18} />
-        <Text className="text-base font-t3-medium text-foreground">Cursor</Text>
+        <Text className="text-base font-t3-medium text-foreground">{tr("Cursor")}</Text>
       </View>
       <View className="items-start gap-3 rounded-[24px] border-continuous bg-grouped-card p-4">
         <Text className="text-xs text-foreground-muted">{CURSOR_KEYCHAIN_COPY}</Text>
@@ -563,7 +577,11 @@ function CursorEnableLimits({
               key={environment.environmentId}
               environmentId={environment.environmentId}
               label={environment.label}
-              buttonText={environments.length > 1 ? `Enable on ${environment.label}` : "Enable"}
+              buttonText={
+                environments.length > 1
+                  ? tr("Enable on {label}", { label: environment.label })
+                  : tr("Enable")
+              }
               onEnabled={onEnabled}
             />
           ))}
@@ -597,7 +615,7 @@ function ChartCard(props: {
     <UsageDailyChart days={props.days} daily={props.daily} metric={metric} height={height} />
   ) : (
     <View style={{ height }} className="items-center justify-center">
-      <Text className="text-base text-foreground-muted">No activity in this window.</Text>
+      <Text className="text-base text-foreground-muted">{tr("No activity in this window.")}</Text>
     </View>
   );
 
@@ -660,15 +678,15 @@ function UsageSummary(props: { readonly merged: MergedUsage; readonly metric: Us
   return (
     <View className="gap-0.5">
       <Text className="text-sm text-foreground-muted">
-        {metric === "cost" ? "Raw token cost" : "Processed tokens"}
+        {metric === "cost" ? tr("Raw token cost") : tr("Processed tokens")}
       </Text>
       <Text className="text-4xl font-t3-bold tabular-nums text-foreground">
         {metric === "cost" ? `${formatUsd(merged.costUsd)}*` : formatTokens(merged.totalTokens)}
       </Text>
       <Text className="text-sm text-foreground-muted">
         {metric === "cost"
-          ? "* if billed at full API rate"
-          : `Across ${formatCount(merged.sessions)} sessions`}
+          ? tr("* if billed at full API rate")
+          : tr("Across {count} sessions", { count: formatCount(merged.sessions) })}
       </Text>
     </View>
   );
@@ -710,7 +728,7 @@ function ProviderSection(props: {
   );
 
   return (
-    <SettingsSection title="Providers">
+    <SettingsSection title={tr("Providers")}>
       {rows.map((row, index) => {
         if (row.kind === "enable") {
           return (
@@ -795,17 +813,17 @@ function TotalsSection(props: {
   const cachedShare = observedInput === 0 ? 0 : merged.cachedInputTokens / observedInput;
 
   return (
-    <SettingsSection title="Totals">
+    <SettingsSection title={tr("Totals")}>
       <View className="flex-row flex-wrap">
         <MetricCell
           columns={props.columns}
-          label="Processed tokens"
+          label={tr("Processed tokens")}
           value={formatTokens(merged.totalTokens)}
           detail={`${formatTokens(periodAverage)} per active ${props.isPast24Hours ? "hour" : "day"}`}
         />
         <MetricCell
           columns={props.columns}
-          label="Cache savings"
+          label={tr("Cache savings")}
           value={formatUsd(merged.costQuality.cacheSavingsUsd)}
           detail={
             merged.costUsd > 0
@@ -815,25 +833,25 @@ function TotalsSection(props: {
         />
         <MetricCell
           columns={props.columns}
-          label="Cached input"
+          label={tr("Cached input")}
           value={formatTokens(merged.cachedInputTokens)}
           detail={`${formatPercent(cachedShare)} of observed input`}
         />
         <MetricCell
           columns={props.columns}
-          label="Uncached input"
+          label={tr("Uncached input")}
           value={formatTokens(merged.uncachedInputTokens)}
           detail={`${formatTokens(merged.cacheCreationTokens)} cache writes`}
         />
         <MetricCell
           columns={props.columns}
-          label="Output"
+          label={tr("Output")}
           value={formatTokens(merged.outputTokens)}
           detail={`incl. ${formatTokens(merged.reasoningTokens)} reasoning`}
         />
         <MetricCell
           columns={props.columns}
-          label="Unpriced"
+          label={tr("Unpriced")}
           value={formatPercent(merged.costQuality.unpricedShare)}
           detail="of records, excluded from cost"
         />
@@ -846,30 +864,30 @@ function CostSection(props: { readonly merged: MergedUsage; readonly wide: boole
   const { categoryCost, speedCost } = props.merged;
   const colors = useUsageMixColors();
   const byType = [
-    { label: "Input", value: categoryCost.input, color: colors.input },
-    { label: "Cache read", value: categoryCost.cacheRead, color: colors.cacheRead },
-    { label: "Cache write", value: categoryCost.cacheWrite, color: colors.cacheWrite },
-    { label: "Output", value: categoryCost.output, color: colors.output },
+    { label: tr("Input"), value: categoryCost.input, color: colors.input },
+    { label: tr("Cache read"), value: categoryCost.cacheRead, color: colors.cacheRead },
+    { label: tr("Cache write"), value: categoryCost.cacheWrite, color: colors.cacheWrite },
+    { label: tr("Output"), value: categoryCost.output, color: colors.output },
     // Reported cost with no rates to split it, or from older servers. Below a
     // cent it is rounding, not usage.
     {
-      label: "Other",
+      label: tr("Other"),
       value: categoryCost.unsplit >= 0.005 ? categoryCost.unsplit : 0,
       color: colors.other,
     },
   ];
   const bySpeed = [
-    { label: "Standard", value: speedCost.standard, color: colors.standard },
-    { label: "Fast", value: speedCost.fast, color: colors.fast },
-    { label: "Ultrafast", value: speedCost.ultrafast, color: colors.ultrafast },
+    { label: tr("Standard"), value: speedCost.standard, color: colors.standard },
+    { label: tr("Fast"), value: speedCost.fast, color: colors.fast },
+    { label: tr("Ultrafast"), value: speedCost.ultrafast, color: colors.ultrafast },
   ];
   if (props.merged.costUsd <= 0) return null;
 
   return (
-    <SettingsSection title="Cost">
+    <SettingsSection title={tr("Cost")}>
       <View className={props.wide ? "flex-row" : undefined}>
         <View className={props.wide ? "min-w-0 flex-1" : undefined}>
-          <ShareBar label="By type" segments={byType} />
+          <ShareBar label={tr("By type")} segments={byType} />
         </View>
         {speedCost.fast + speedCost.ultrafast > 0 ? (
           <View
@@ -880,7 +898,7 @@ function CostSection(props: { readonly merged: MergedUsage; readonly wide: boole
             }
           >
             <ShareBar
-              label="By speed"
+              label={tr("By speed")}
               segments={bySpeed}
               aside={`${formatUsd(speedCost.premium)} premium`}
             />
@@ -961,7 +979,7 @@ function ModelsSection(props: {
   );
 
   return (
-    <SettingsSection title="By model">
+    <SettingsSection title={tr("By model")}>
       <View className="flex-row flex-wrap">
         {ordered.map((model, index) => (
           <View
@@ -995,7 +1013,7 @@ function ModelsSection(props: {
               {metric === "tokens"
                 ? formatTokens(model.totalTokens)
                 : isModelCostUnknown(model)
-                  ? "Unpriced"
+                  ? tr("Unpriced")
                   : formatUsd(model.costUsd)}
             </Text>
           </View>
@@ -1018,13 +1036,17 @@ function usageEnvironmentStatus(environment: EnvironmentUsageStatus, refreshing:
     });
   }
   if (environment.error)
-    return environment.summary ? `${environment.error} Showing saved totals.` : environment.error;
+    return environment.summary
+      ? tr("{error} Showing saved totals.", { error: environment.error })
+      : environment.error;
   if (!environment.isConnected)
-    return environment.summary ? "Disconnected · showing saved usage" : "Waiting for connection…";
+    return environment.summary
+      ? tr("Disconnected \u00B7 showing saved usage")
+      : tr("Waiting for connection\u2026");
   const progress = usageEnvironmentProgress(environment, refreshing);
-  if (progress.phase === "loading") return "Loading usage…";
-  if (progress.phase === "stale") return "Updating usage…";
+  if (progress.phase === "loading") return tr("Loading usage\u2026");
+  if (progress.phase === "stale") return tr("Updating usage\u2026");
   if (progress.phase === "partway")
     return updatingProvidersLabel(progress.providers, providerLabel);
-  return "Usage up to date";
+  return tr("Usage up to date");
 }

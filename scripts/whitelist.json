@@ -23,7 +23,8 @@
     "批 D2 review 修复（#86）：BrowserImport/WslServerTree/NetworkInterfaces 的 Schema TaggedError message getter 为诊断面（IPC 失败详情由 reason token 在渲染层另行成文），日志语境不翻，exact 豁免。",
     "批 W2（#59，web 对话域 ChatView/composer）新增：exact 为 composerInlineChip 的 SKILL_CHIP_ICON_SVG 常量，SVG 标记串非 UI 文案，不翻；exact 补 \"Icon\"（ThreadPullRequestBadgePresentation 的类型成员名，§3 代码标识符精神）；words 新增 Mermaid（图表渲染库名，随 §3 品牌/技术词精神）。",
     "批 W3（#60，web 命令面板域）新增：exact \":disabled\" 为 getCommandPaletteReturnFocus 的 CSS 选择器（matches() 参数，§3 代码标识符精神，不翻）；contains \"~/projects/my-app\" 为输入示例路径（路径不译精神）；review 修复：words \"projects\"/\"my-app\" 会静默豁免 Projects 分区标签等真 UI 串（WelcomeWizard/settingsSearch 实证）故删除，改用 contains 收窄；Linux/Win32 平台标识由既有 words 豁免覆盖。",
-    "批 W4（#61，web 设置域 SettingsPanels）新增：contains \"/default\" 为斜杠命令字面量（Legacy 面板描述 \"Restore Build/Plan, /plan, /default, and Shift+Tab.\"，§3.2 命令字面量精神），命令名不译。"
+    "批 W4（#61，web 设置域 SettingsPanels）新增：contains \"/default\" 为斜杠命令字面量（Legacy 面板描述 \"Restore Build/Plan, /plan, /default, and Shift+Tab.\"，§3.2 命令字面量精神），命令名不译。",
+    "批 M7a（#83，mobile 杂项 1/2：usage/development/browser/cloud/terminal）新增：dpop.ts 19 条与 managedRelayTokenStore.ts 2 条为 DPoP/令牌存储 Effect 错误消息与 Effect.logWarning 诊断面（异常/日志面留英文，M6 #82 先例；错误被 ManagedRelay 层吞并不上 UI）；cloud-drafts.ts 为 TaggedError message getter 诊断前缀（同 M6 先例）；preview-stream.browser.ts 为注入 WebView 的 agent 光标 SVG markup（非文案）；exact \"24h\"/\"7d\"/\"30d\"/\"90d\" 为用量时间窗短标签（§3.6 单位精神，时长单位原样）；exact \"Usage\" 为 react-navigation 路由名哨兵（展示层 tr(\"Usage\") 另行走字典）。"
   ],
   "contains": [
     "/side",
@@ -605,7 +606,33 @@
     "SF Pro",
     "SF Mono",
     "OTel OTLP telemetry export endpoints logs traces metrics Grafana",
-    "1password vault credentials api key"
+    "1password vault credentials api key",
+    "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"#fff\" stroke=\"#3b82f6\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z\"/></svg>",
+    "Could not preserve local drafts for  cloud environments before sign-out.",
+    "Could not hash the DPoP public key thumbprint.",
+    "Could not hash the DPoP access token.",
+    "Generated DPoP public key is not an uncompressed P-256 point.",
+    "Could not generate DPoP key pair randomness.",
+    "Generated DPoP public key is invalid.",
+    "Could not read the DPoP proof key.",
+    "Stored DPoP proof key is invalid.",
+    "Stored DPoP key does not match its public key.",
+    "Could not encode the DPoP proof key.",
+    "Could not store the DPoP proof key.",
+    "DPoP URL is invalid.",
+    "Could not import DPoP private key.",
+    "Could not generate DPoP proof identifier.",
+    "Could not encode DPoP proof header.",
+    "Could not encode DPoP proof payload.",
+    "Could not hash DPoP signing input.",
+    "Could not sign DPoP proof.",
+    "Managed relay token store operation \"\" failed for key \"\".",
+    "Managed relay token store operation failed.",
+    "24h",
+    "30d",
+    "90d",
+    "7d",
+    "Usage"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -979,6 +1006,7 @@
     "node_modules",
     ".env",
     "alpha",
-    "keybindings.json"
+    "keybindings.json",
+    "claude code"
   ]
 }
