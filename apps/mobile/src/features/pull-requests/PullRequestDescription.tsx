@@ -1,4 +1,5 @@
 import { splitPullRequestBody } from "@t3tools/client-runtime/pull-request-markdown";
+import { tr } from "@t3tools/shared/i18n";
 import {
   PullRequestImageAttachment,
   PullRequestMedia,
@@ -45,7 +46,7 @@ export function PullRequestDescription(props: {
     .map((attachment) => {
       return {
         ...pullRequestImageSource(attachment.uri, mediaContext),
-        name: new URL(attachment.uri).pathname.split("/").pop() || "Image",
+        name: new URL(attachment.uri).pathname.split("/").pop() || tr("Image"),
       };
     });
   const canCollapse = bodyHeight > COLLAPSED_HEIGHT;
@@ -53,7 +54,7 @@ export function PullRequestDescription(props: {
   return (
     <View className="gap-5">
       <View className="gap-3">
-        <PullRequestSectionHeading>Description</PullRequestSectionHeading>
+        <PullRequestSectionHeading>{tr("Description")}</PullRequestSectionHeading>
         {props.markdown.trim() ? (
           <View className="overflow-hidden">
             <View
@@ -108,7 +109,9 @@ export function PullRequestDescription(props: {
               <Pressable
                 accessibilityRole="button"
                 accessibilityState={{ expanded }}
-                accessibilityLabel={expanded ? "Collapse description" : "Expand description"}
+                accessibilityLabel={
+                  expanded ? tr("Collapse description") : tr("Expand description")
+                }
                 onPress={() => {
                   if (expanded) props.onCollapse();
                   onExpandedChange(!expanded);
@@ -121,7 +124,7 @@ export function PullRequestDescription(props: {
                 className="min-h-11 flex-row items-center justify-center gap-1 py-2 active:opacity-70"
               >
                 <Text className="text-xs font-t3-medium text-foreground">
-                  {expanded ? "Show less" : "Show more"}
+                  {expanded ? tr("Show less") : tr("Show more")}
                 </Text>
                 <SymbolView
                   name={expanded ? "chevron.up" : "chevron.down"}
@@ -132,13 +135,13 @@ export function PullRequestDescription(props: {
             ) : null}
           </View>
         ) : (
-          <Text className="text-sm text-foreground-muted">No description provided.</Text>
+          <Text className="text-sm text-foreground-muted">{tr("No description provided.")}</Text>
         )}
         {props.footer}
       </View>
       {content.attachments.length ? (
         <View className="gap-3">
-          <PullRequestSectionHeading>Attachments</PullRequestSectionHeading>
+          <PullRequestSectionHeading>{tr("Attachments")}</PullRequestSectionHeading>
           <ScrollView
             horizontal
             keyboardShouldPersistTaps="always"

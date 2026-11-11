@@ -1,6 +1,7 @@
 import type { ChangeRequestTerminology } from "@t3tools/client-runtime/source-control-clients";
 import type { PullRequestDiffResult } from "@t3tools/contracts";
 import { buildReviewParsedDiff, type ReviewParsedDiff } from "../review/reviewModel";
+import { tr } from "@t3tools/shared/i18n";
 
 export interface PullRequestDiffPage {
   readonly cursor: string | null;
@@ -107,7 +108,12 @@ export function combinePullRequestDiffPages(
     notice:
       pages.some((page) => page.result.truncated) ||
       parsed.some((page) => page.kind === "raw" || (page.kind === "files" && page.notice !== null))
-        ? `Some file contents are unavailable. Open the ${terminology.singular} on its provider to see the full changes.`
+        ? tr(
+            "Some file contents are unavailable. Open the {singular} on its provider to see the full changes.",
+            {
+              singular: terminology.singular,
+            },
+          )
         : null,
   };
 }

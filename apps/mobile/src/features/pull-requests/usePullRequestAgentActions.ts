@@ -1,4 +1,5 @@
 import type { PullRequestDetail } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   pullRequestAgentActions,
   pullRequestAgentThread,
@@ -32,17 +33,19 @@ export function usePullRequestAgentActions(
     ...links.threads.map((thread) => ({
       id: `${task}:${thread.id}`,
       title: thread.title,
-      subtitle: thread.archivedAt ? "Archived thread" : "Continue thread",
+      subtitle: thread.archivedAt ? tr("Archived thread") : tr("Continue thread"),
       image: "bubble.left.and.bubble.right",
       attributes: { disabled: task !== "ask" && Boolean(thread.archivedAt) },
     })),
-    ...(links.canAsk ? [{ id: `${task}:new`, title: "Start a new thread", image: "plus" }] : []),
+    ...(links.canAsk
+      ? [{ id: `${task}:new`, title: tr("Start a new thread"), image: "plus" }]
+      : []),
   ];
   const menuAction = (task: PullRequestAgentTask) => {
     const action = actions.find((action) => action.task === task);
     return {
       id: task,
-      title: action?.title ?? "Open thread",
+      title: action?.title ?? tr("Open thread"),
       image: action?.icon,
       attributes: { disabled: disabled || !links.canAsk || action?.disabled },
       ...(links.threads.length > 1 ? { subactions: threadActions(task) } : {}),

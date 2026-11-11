@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import type { OrchestrationMessageContext } from "@t3tools/contracts";
 import {
   collectComposerContextReferences,
@@ -323,7 +324,7 @@ function parseReviewInlineComment(
   return {
     id: `review-comment:${index}:${sectionId}:${filePath}:${startIndex}:${endIndex}`,
     sectionId,
-    sectionTitle: attributes.sectionTitle?.trim() || "Review",
+    sectionTitle: attributes.sectionTitle?.trim() || tr("Review"),
     filePath,
     startIndex: Math.min(startIndex, endIndex),
     endIndex: Math.max(startIndex, endIndex),

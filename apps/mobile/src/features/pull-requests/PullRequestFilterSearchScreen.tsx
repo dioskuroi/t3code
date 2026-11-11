@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import {
   EnvironmentId,
@@ -110,13 +111,17 @@ export function PullRequestFilterSearchScreen({
       },
     });
   };
-  const placeholder = kind === "labels" ? "Search labels" : "Search authors";
+  const placeholder = kind === "labels" ? tr("Search labels") : tr("Search authors");
   return (
     <PullRequestSearchSheet
-      title={kind === "labels" ? "Filter by label" : "Filter by author"}
+      title={kind === "labels" ? tr("Filter by label") : tr("Filter by author")}
       placeholder={placeholder}
-      closeAccessibilityLabel={kind === "labels" ? "Close label filter" : "Close author filter"}
-      clearAccessibilityLabel={kind === "labels" ? "Clear label search" : "Clear author search"}
+      closeAccessibilityLabel={
+        kind === "labels" ? tr("Close label filter") : tr("Close author filter")
+      }
+      clearAccessibilityLabel={
+        kind === "labels" ? tr("Clear label search") : tr("Clear author search")
+      }
       searchTextChangeId="pr-filter-option-search"
       query={query}
       onQueryChange={setQuery}
@@ -154,17 +159,17 @@ export function PullRequestFilterSearchScreen({
               <EmptyState
                 title={
                   hosted.failed
-                    ? "Couldn't search the host"
+                    ? tr("Couldn't search the host")
                     : kind === "labels"
-                      ? "No matching labels"
-                      : "No matching authors"
+                      ? tr("No matching labels")
+                      : tr("No matching authors")
                 }
                 detail={
                   hosted.failed
-                    ? "The host didn't answer. Try again in a moment."
+                    ? tr("The host didn't answer. Try again in a moment.")
                     : kind === "labels"
-                      ? "Search the labels of the repositories this list covers."
-                      : "Search people by name or handle on the repositories' hosts."
+                      ? tr("Search the labels of the repositories this list covers.")
+                      : tr("Search people by name or handle on the repositories' hosts.")
                 }
                 variant="plain"
               />

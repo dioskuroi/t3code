@@ -1,4 +1,5 @@
 import { settlePromise, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import { AsyncResult } from "effect/reactivity";
 import type { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import { formatDiffCount } from "@t3tools/client-runtime/diff-count";
@@ -92,14 +93,14 @@ function ReviewHeader(
       onBack={props.onReturnToThread}
       hideBottomBorder
       options={{ headerTintColor: props.iconColor, headerTitle: props.title }}
-      backInSplitView={{ accessibilityLabel: "Back to chat", icon: "chevron.left" }}
+      backInSplitView={{ accessibilityLabel: tr("Back to chat"), icon: "chevron.left" }}
       actions={
         props.showChangedFilesToggle
           ? [
               {
                 accessibilityLabel: panes.auxiliaryPaneVisible
-                  ? "Hide changed files"
-                  : "Show changed files",
+                  ? tr("Hide changed files")
+                  : tr("Show changed files"),
                 icon: "sidebar.right",
                 selected: panes.auxiliaryPaneVisible,
                 onPress: toggleAuxiliaryPane,
@@ -112,23 +113,23 @@ function ReviewHeader(
         ...(props.showSectionToolbar
           ? [
               {
-                title: "Select diff",
+                title: tr("Select diff"),
                 icon: presentation.menuIcon,
                 items: [
                   {
                     id: "sections",
                     inline: true,
                     items: [
-                      sectionAction(props.sectionMenu.branchChanges, "Changes"),
-                      sectionAction(props.sectionMenu.workingTree, "Uncommitted"),
-                      sectionAction(props.sectionMenu.latestTurn, "Latest turn"),
+                      sectionAction(props.sectionMenu.branchChanges, tr("Changes")),
+                      sectionAction(props.sectionMenu.workingTree, tr("Uncommitted")),
+                      sectionAction(props.sectionMenu.latestTurn, tr("Latest turn")),
                     ],
                   },
                   ...(props.sectionMenu.turns.length > 0
                     ? [
                         {
                           id: "turns",
-                          title: "Turn",
+                          title: tr("Turn"),
                           items: props.sectionMenu.turns.map((section) => ({
                             id: `section:${section.id}`,
                             title: section.title,
@@ -159,7 +160,9 @@ const ReviewNotice = function ReviewNotice(props: { readonly notice: string }) {
         Platform.OS === "android" ? "m-2 rounded-[20px]" : "border-b border-warning-border",
       )}
     >
-      <Text className="text-xs font-t3-bold uppercase text-warning-foreground">Partial diff</Text>
+      <Text className="text-xs font-t3-bold uppercase text-warning-foreground">
+        {tr("Partial diff")}
+      </Text>
       <Text className="text-xs leading-normal text-warning-foreground">{props.notice}</Text>
     </View>
   );
@@ -379,7 +382,7 @@ function ReviewFileNavigator({
               hideShadow={false}
               navigationItemStyle="editor"
               subtitle={`${files.length} ${files.length === 1 ? "file" : "files"}`}
-              title="Changed files"
+              title={tr("Changed files")}
               titleColor={foregroundColor}
               titleFontSize={17}
               titleFontWeight="700"
@@ -399,14 +402,14 @@ function ReviewFileNavigator({
     >
       {Platform.OS === "android" ? (
         <AndroidScreenHeader
-          title="Changed files"
+          title={tr("Changed files")}
           subtitle={`${files.length} ${files.length === 1 ? "file" : "files"}`}
           hideBottomBorder
         />
       ) : (
         <View className="border-b border-border" style={{ paddingTop: headerInset }}>
           <View className="px-4 py-3">
-            <Text className="text-sm font-t3-bold text-foreground">Changed files</Text>
+            <Text className="text-sm font-t3-bold text-foreground">{tr("Changed files")}</Text>
             <Text className="text-xs text-foreground-muted">
               {files.length} {files.length === 1 ? "file" : "files"}
             </Text>
@@ -648,7 +651,7 @@ export function ReviewSheet(props: ReviewSheetProps) {
             Platform.OS === "android" ? "m-2 rounded-[20px]" : "border-b border-border",
           )}
         >
-          <Text className="text-sm font-t3-bold text-foreground">Review unavailable</Text>
+          <Text className="text-sm font-t3-bold text-foreground">{tr("Review unavailable")}</Text>
           <Text className="text-xs leading-normal text-foreground-muted">{error}</Text>
         </View>,
       );
@@ -673,7 +676,7 @@ export function ReviewSheet(props: ReviewSheetProps) {
   ]
     .filter(Boolean)
     .join(" · ");
-  const headerTitleText = selectedSection?.title ?? "Review changes";
+  const headerTitleText = selectedSection?.title ?? tr("Review changes");
 
   return (
     <>
@@ -699,7 +702,7 @@ export function ReviewSheet(props: ReviewSheetProps) {
           {showConnectionNotice ? (
             <View className="flex-1" style={{ paddingTop: topContentInset }}>
               <EnvironmentConnectionNotice
-                environmentLabel={environment.presentation?.entry.target.label ?? "Environment"}
+                environmentLabel={environment.presentation?.entry.target.label ?? tr("Environment")}
                 connection={
                   environment.presentation?.connection ?? {
                     phase: "available",
@@ -792,14 +795,16 @@ export function ReviewSheet(props: ReviewSheetProps) {
                         : "border-b border-border bg-card px-4 py-5"
                     }
                   >
-                    <Text className="text-sm font-t3-bold text-foreground">No review diffs</Text>
+                    <Text className="text-sm font-t3-bold text-foreground">
+                      {tr("No review diffs")}
+                    </Text>
                     <Text
                       className={cn(
                         "text-xs leading-normal text-foreground-muted",
                         Platform.OS === "android" && "mt-2 text-center",
                       )}
                     >
-                      This thread has no ready turn diffs and the worktree diff is empty.
+                      {tr("This thread has no ready turn diffs and the worktree diff is empty.")}
                     </Text>
                   </View>
                 )
@@ -811,7 +816,7 @@ export function ReviewSheet(props: ReviewSheetProps) {
                   )}
                 >
                   <AppActivityIndicator size="small" />
-                  <Text className="text-xs text-foreground-muted">Loading diff…</Text>
+                  <Text className="text-xs text-foreground-muted">{tr("Loading diff\u2026")}</Text>
                 </View>
               ) : parsedDiff.kind === "empty" ? (
                 <View
@@ -821,14 +826,14 @@ export function ReviewSheet(props: ReviewSheetProps) {
                       : "border-b border-border bg-card px-4 py-5"
                   }
                 >
-                  <Text className="text-sm font-t3-bold text-foreground">No changes</Text>
+                  <Text className="text-sm font-t3-bold text-foreground">{tr("No changes")}</Text>
                   <Text
                     className={cn(
                       "text-xs leading-normal text-foreground-muted",
                       Platform.OS === "android" && "mt-2 text-center",
                     )}
                   >
-                    {selectedSection.subtitle ?? "This diff is empty."}
+                    {selectedSection.subtitle ?? tr("This diff is empty.")}
                   </Text>
                 </View>
               ) : parsedDiff.kind === "raw" ? (
@@ -855,7 +860,7 @@ export function ReviewSheet(props: ReviewSheetProps) {
                   )}
                 >
                   <Text className="text-xs leading-normal text-foreground-muted">
-                    Native diff view unavailable. Showing the raw patch.
+                    {tr("Native diff view unavailable. Showing the raw patch.")}
                   </Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} bounces={false}>
                     <Text selectable className="font-mono text-xs leading-relaxed text-foreground">

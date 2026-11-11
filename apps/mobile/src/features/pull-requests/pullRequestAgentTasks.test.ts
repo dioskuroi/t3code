@@ -53,12 +53,12 @@ describe("PR agent tasks", () => {
   });
   it("names the change request with its host's term", () => {
     expect(pullRequestAgentPrompt("conflicts", GITHUB)).toContain(
-      "Resolve this pull request's conflicts with its base branch. First confirm this thread is on the PR's branch; if it isn't, prepare the PR in its own worktree.",
+      "解决此 pull request 与其基线分支的冲突。先确认此 Thread 位于 PR 的分支上；如果不是，先在它自己的工作树中准备好 PR。",
     );
     expect(
       pullRequestAgentPrompt("conflicts", sourceControlClients.get("gitlab").changeRequest),
     ).toContain(
-      "Resolve this merge request's conflicts with its base branch. First confirm this thread is on the MR's branch; if it isn't, prepare the MR in its own worktree.",
+      "解决此 merge request 与其基线分支的冲突。先确认此 Thread 位于 MR 的分支上；如果不是，先在它自己的工作树中准备好 MR。",
     );
   });
 });
