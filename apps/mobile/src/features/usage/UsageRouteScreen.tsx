@@ -819,7 +819,11 @@ function TotalsSection(props: {
           columns={props.columns}
           label={tr("Processed tokens")}
           value={formatTokens(merged.totalTokens)}
-          detail={`${formatTokens(periodAverage)} per active ${props.isPast24Hours ? "hour" : "day"}`}
+          detail={
+            props.isPast24Hours
+              ? tr("{count} per active hour", { count: formatTokens(periodAverage) })
+              : tr("{count} per active day", { count: formatTokens(periodAverage) })
+          }
         />
         <MetricCell
           columns={props.columns}
@@ -827,33 +831,35 @@ function TotalsSection(props: {
           value={formatUsd(merged.costQuality.cacheSavingsUsd)}
           detail={
             merged.costUsd > 0
-              ? `${(merged.costQuality.cacheSavingsUsd / merged.costUsd).toFixed(1)}x the raw cost`
-              : "vs full input rates"
+              ? tr("{multiple}x the raw cost", {
+                  multiple: (merged.costQuality.cacheSavingsUsd / merged.costUsd).toFixed(1),
+                })
+              : tr("vs full input rates")
           }
         />
         <MetricCell
           columns={props.columns}
           label={tr("Cached input")}
           value={formatTokens(merged.cachedInputTokens)}
-          detail={`${formatPercent(cachedShare)} of observed input`}
+          detail={tr("{percent} of observed input", { percent: formatPercent(cachedShare) })}
         />
         <MetricCell
           columns={props.columns}
           label={tr("Uncached input")}
           value={formatTokens(merged.uncachedInputTokens)}
-          detail={`${formatTokens(merged.cacheCreationTokens)} cache writes`}
+          detail={tr("{count} cache writes", { count: formatTokens(merged.cacheCreationTokens) })}
         />
         <MetricCell
           columns={props.columns}
           label={tr("Output")}
           value={formatTokens(merged.outputTokens)}
-          detail={`incl. ${formatTokens(merged.reasoningTokens)} reasoning`}
+          detail={tr("incl. {count} reasoning", { count: formatTokens(merged.reasoningTokens) })}
         />
         <MetricCell
           columns={props.columns}
           label={tr("Unpriced")}
           value={formatPercent(merged.costQuality.unpricedShare)}
-          detail="of records, excluded from cost"
+          detail={tr("of records, excluded from cost")}
         />
       </View>
     </SettingsSection>

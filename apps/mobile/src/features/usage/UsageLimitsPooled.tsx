@@ -358,7 +358,7 @@ function PoolWindowCard({
                 account: accountName(account),
                 percent: remainingPercent(window),
               }) +
-              (resetsIn ? `, ${resetsIn}` : "") +
+              (resetsIn ? `，${resetsIn}` : "") +
               (credits ? tr(", {credits} reset credits banked", { credits: credits }) : "")
             }
             accessibilityHint={tr("Show account details")}
