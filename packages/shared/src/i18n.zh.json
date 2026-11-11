@@ -1228,7 +1228,7 @@
   "created thread": "已创建的 Thread",
   "Created thread": "已创建 Thread",
   "Created without a first commit": "已创建，但尚未产生首次提交",
-  "Creates {path}": "将创建 {path}",
+  "Creates {path}": "将创建于 {path}",
   "Creates {pathPreview}": "将创建于 {pathPreview}",
   "Creating": "正在创建",
   "Creating branch": "正在创建分支",
