@@ -2,6 +2,7 @@ import type { RuntimeMode } from "@t3tools/contracts";
 import { type ReactNode, useRef, useState } from "react";
 import { expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
+import { tr } from "@t3tools/shared/i18n";
 
 import { render } from "../../../test/render";
 import { ComposerHandleContext, type ComposerHandleRef } from "../../composerHandleContext";
@@ -145,7 +146,9 @@ function PermissionsChip() {
 it("returns focus to the editor when picking the default hides the chip", async () => {
   const { handle, ui } = withComposer(<PermissionsChip />);
   await using screen = await render(ui, { router: false }); // no routes involved
-  await userEvent.click(screen.getByRole("button", { name: "Permissions: Supervised" }));
+  await userEvent.click(
+    screen.getByRole("button", { name: tr("Permissions: {label}", { label: "Supervised" }) }),
+  );
   await userEvent.click(page.getByRole("menuitemradio", { name: "Full access" }));
   await vi.waitFor(() => expect(handle.focusAtEnd).toHaveBeenCalled());
   await expect.element(screen.getByRole("button", { name: "Model" })).not.toHaveFocus();

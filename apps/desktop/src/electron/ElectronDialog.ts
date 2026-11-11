@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -17,7 +18,10 @@ export class ElectronDialogPickFolderError extends Schema.TaggedError<ElectronDi
   override get message(): string {
     const owner = this.ownerWindowId === null ? "the application" : `window ${this.ownerWindowId}`;
     const defaultPath = this.defaultPath === null ? "no default path" : this.defaultPath;
-    return `Failed to open the Electron folder picker for ${owner} with ${defaultPath}.`;
+    return tr("Failed to open the Electron folder picker for {owner} with {defaultPath}.", {
+      owner: owner,
+      defaultPath: defaultPath,
+    });
   }
 }
 
@@ -32,7 +36,10 @@ export class ElectronDialogPickFilesError extends Schema.TaggedError<ElectronDia
   override get message(): string {
     const owner = this.ownerWindowId === null ? "the application" : `window ${this.ownerWindowId}`;
     const defaultPath = this.defaultPath === null ? "no default path" : this.defaultPath;
-    return `Failed to open the Electron file picker for ${owner} with ${defaultPath}.`;
+    return tr("Failed to open the Electron file picker for {owner} with {defaultPath}.", {
+      owner: owner,
+      defaultPath: defaultPath,
+    });
   }
 }
 

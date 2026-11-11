@@ -4,6 +4,7 @@ import {
   type RunId,
   type RuntimeMode,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
 import {
   isAtomCommandInterrupted,
@@ -129,7 +130,7 @@ export function useComposerResume(input: ComposerResumeInput) {
           message: {
             messageId: newMessageId(),
             role: "user",
-            text: "Continue where you left off.",
+            text: tr("Continue where you left off."),
             attachments: [],
           },
           runtimeMode,
@@ -147,7 +148,7 @@ export function useComposerResume(input: ComposerResumeInput) {
         const error = squashAtomCommandFailure(result);
         setThreadError(
           threadId,
-          error instanceof Error ? error.message : "Could not resume thread.",
+          error instanceof Error ? error.message : tr("Could not resume thread."),
         );
       }
     } else {

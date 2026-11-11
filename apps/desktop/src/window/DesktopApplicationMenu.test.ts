@@ -1,5 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -138,11 +139,11 @@ describe("DesktopApplicationMenu", () => {
       yield* configureMenu(selectedAction, applicationMenuTemplate);
 
       const template = yield* Deferred.await(applicationMenuTemplate);
-      const editMenu = template.find((item) => item.label === "Edit");
+      const editMenu = template.find((item) => item.label === tr("Edit"));
       if (!Array.isArray(editMenu?.submenu)) {
         throw new Error("Expected Edit menu submenu to be an array.");
       }
-      const pasteAsTextItem = editMenu.submenu.find((item) => item.label === "Paste as Text");
+      const pasteAsTextItem = editMenu.submenu.find((item) => item.label === tr("Paste as Text"));
       if (typeof pasteAsTextItem?.click !== "function") {
         throw new Error("Expected Paste as Text menu item to have a click handler.");
       }
@@ -167,7 +168,7 @@ describe("DesktopApplicationMenu", () => {
       yield* configureMenu(selectedAction, applicationMenuTemplate, { platform: "darwin" });
 
       const template = yield* Deferred.await(applicationMenuTemplate);
-      const viewMenu = template.find((item) => item.label === "View");
+      const viewMenu = template.find((item) => item.label === tr("View"));
       assert.isDefined(viewMenu);
       if (!Array.isArray(viewMenu.submenu)) {
         throw new Error("Expected View menu submenu to be an array.");
@@ -243,11 +244,11 @@ describe("DesktopApplicationMenu", () => {
       yield* configureMenu(selectedAction, applicationMenuTemplate);
 
       const template = yield* Deferred.await(applicationMenuTemplate);
-      const viewMenu = template.find((item) => item.label === "View");
+      const viewMenu = template.find((item) => item.label === tr("View"));
       if (!Array.isArray(viewMenu?.submenu)) {
         throw new Error("Expected View menu submenu to be an array.");
       }
-      const reload = viewMenu.submenu.find((item) => item.label === "Reload");
+      const reload = viewMenu.submenu.find((item) => item.label === tr("Reload"));
       assert.equal(reload?.accelerator, "CmdOrCtrl+R");
       if (typeof reload?.click !== "function") {
         throw new Error("Expected Reload menu item to have a click handler.");

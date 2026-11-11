@@ -1,5 +1,6 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, beforeEach, expect, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import * as HostProcess from "@t3tools/shared/HostProcess";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -132,7 +133,11 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       yield* fs.symlink(path.join(home, "gone"), path.join(home, "bin", "t3"));
 
       const error = yield* Effect.flip(command.install);
-      expect(error.message).toContain("Another t3 command is already installed");
+      expect(error.message).toContain(
+        tr(
+          "Another t3 command is already installed, or no folder on your PATH is writable. Run the launcher directly at {launcher}.",
+        ).split("{launcher}")[0] ?? "",
+      );
       yield* command.uninstall;
       expect(yield* fs.readFileString(theirs)).toBe("npm's t3\n");
       expect(yield* fs.readLink(path.join(home, "bin", "t3"))).toBe(path.join(home, "gone"));
@@ -141,7 +146,9 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
       yield* fs.writeFileString(launcher, "npm's t3\n");
       process.env.PATH = path.dirname(launcher);
       expect(yield* command.state).toMatchObject({ onPath: false, shadowedBy: launcher });
-      expect((yield* Effect.flip(command.install)).message).toContain("Could not set up");
+      expect((yield* Effect.flip(command.install)).message).toContain(
+        tr("Could not set up the t3 launcher at {launcher}.").split("{launcher}")[0] ?? "",
+      );
       yield* command.uninstall;
       expect(yield* fs.readFileString(launcher)).toBe("npm's t3\n");
     }).pipe(Effect.scoped),
@@ -263,7 +270,7 @@ it.layer(NodeServices.layer)("DesktopCliCommand", (it) => {
 
       registry.failReads = true;
       const error = yield* Effect.flip(command.install);
-      expect(error.message).toContain("left unchanged");
+      expect(error.message).toContain(tr("Could not read your PATH, so it was left unchanged."));
       expect(registry).toMatchObject({ path: userPath, writes: 0 });
 
       registry.failReads = false;

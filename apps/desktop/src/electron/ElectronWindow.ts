@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off -- This desktop-only service resolves its bundled helper beside the Electron entrypoint.
 
 import * as NodePath from "node:path";
+import { tr } from "@t3tools/shared/i18n";
 
 import * as HostProcess from "@t3tools/shared/HostProcess";
 import type * as Cause from "effect/Cause";
@@ -85,7 +86,10 @@ export class ElectronWindowCreateError extends Schema.TaggedError<ElectronWindow
       this.options.width === null || this.options.height === null
         ? ""
         : ` (${this.options.width}x${this.options.height})`;
-    return `Failed to create Electron BrowserWindow${title}${dimensions}.`;
+    return tr("Failed to create Electron BrowserWindow{title}{dimensions}.", {
+      title: title,
+      dimensions: dimensions,
+    });
   }
 }
 

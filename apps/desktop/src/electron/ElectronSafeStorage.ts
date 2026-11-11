@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
@@ -18,7 +19,7 @@ export class ElectronSafeStorageAvailabilityError extends Schema.TaggedError<Ele
   },
 ) {
   override get message(): string {
-    return "Electron safe storage failed to check encryption availability.";
+    return tr("Electron safe storage failed to check encryption availability.");
   }
 }
 
@@ -29,7 +30,7 @@ export class ElectronSafeStorageEncryptError extends Schema.TaggedError<Electron
   },
 ) {
   override get message(): string {
-    return "Electron safe storage failed to encrypt a string.";
+    return tr("Electron safe storage failed to encrypt a string.");
   }
 }
 
@@ -40,7 +41,7 @@ export class ElectronSafeStorageDecryptError extends Schema.TaggedError<Electron
   },
 ) {
   override get message(): string {
-    return "Electron safe storage failed to decrypt a string.";
+    return tr("Electron safe storage failed to decrypt a string.");
   }
 }
 
