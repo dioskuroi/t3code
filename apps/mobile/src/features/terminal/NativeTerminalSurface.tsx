@@ -1,4 +1,5 @@
 import type { TerminalGrid, TerminalOutputState } from "@t3tools/client-runtime/state/terminal";
+import { tr } from "@t3tools/shared/i18n";
 import { memo, useEffect, useImperativeHandle, useMemo, useRef, useState, type Ref } from "react";
 import {
   Pressable,
@@ -85,10 +86,10 @@ const FallbackTerminalSurface = memo(function FallbackTerminalSurface({
   const { themeAppearance, themeId } = useAppearancePreferences();
   const theme = props.theme ?? getMobileTerminalTheme(themeId, themeAppearance);
   const statusLabel = props.readOnly
-    ? "Viewing terminal output."
+    ? tr("Viewing terminal output.")
     : props.isRunning
-      ? "Native terminal unavailable. Using text fallback."
-      : "Open terminal to start a shell.";
+      ? tr("Native terminal unavailable. Using text fallback.")
+      : tr("Open terminal to start a shell.");
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -135,7 +136,7 @@ const FallbackTerminalSurface = memo(function FallbackTerminalSurface({
             selectable
             style={{
               color: theme.foreground,
-              fontFamily: "Menlo",
+              fontFamily: tr("Menlo"),
               fontSize,
               lineHeight: Math.round(fontSize * 1.35),
             }}
@@ -156,14 +157,14 @@ const FallbackTerminalSurface = memo(function FallbackTerminalSurface({
           autoCorrect={false}
           blurOnSubmit={false}
           editable={props.isRunning && !props.readOnly}
-          placeholder="type and press return"
+          placeholder={tr("type and press return")}
           placeholderTextColor={theme.mutedForeground}
           returnKeyType="send"
           className="text-sm"
           style={{
             color: theme.foreground,
             flex: 1,
-            fontFamily: "Menlo",
+            fontFamily: tr("Menlo"),
             padding: 0,
           }}
           onSubmitEditing={(event) => {
@@ -186,7 +187,7 @@ const FallbackTerminalSurface = memo(function FallbackTerminalSurface({
           onPress={() => props.onInput("\u0003")}
         >
           <Text className="text-2xs font-t3-bold" style={{ color: theme.foreground }}>
-            Ctrl-C
+            {tr("Ctrl-C")}
           </Text>
         </Pressable>
       </View>
@@ -232,7 +233,7 @@ const ReadyTerminalSurface = memo(function ReadyTerminalSurface(props: ReadyTerm
   useEffect(() => {
     if (!streaming || !nativeReady || props.output === null) return;
     void writerRef.current?.write(props.output).catch((error: unknown) => {
-      console.error("Terminal output delivery failed", error);
+      console.error(tr("Terminal output delivery failed"), error);
     });
   }, [nativeReady, props.output, streaming]);
 

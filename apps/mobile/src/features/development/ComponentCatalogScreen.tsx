@@ -1,4 +1,5 @@
 import { NativeAppBarExample } from "./NativeAppBarExample";
+import { tr } from "@t3tools/shared/i18n";
 import { Toast } from "../../components/ui/Toast";
 import { Progress } from "../../components/ui/Progress";
 import { useNavigation } from "@react-navigation/native";
@@ -30,8 +31,8 @@ import { useAppearancePreferences } from "../settings/appearance/AppearancePrefe
 import { MOBILE_THEME_IDS } from "../../lib/mobileTheme";
 
 const CHOICES = [
-  { value: "overview", label: "Overview" },
-  { value: "activity", label: "Activity" },
+  { value: "overview", label: tr("Overview") },
+  { value: "activity", label: tr("Activity") },
 ];
 
 export function ComponentCatalogScreen() {
@@ -50,23 +51,23 @@ export function ComponentCatalogScreen() {
   const announceAction = () => setNotice(true);
   const confirm = () => {
     Dialog.confirm({
-      title: "Discard changes?",
-      message: "This example only changes local catalog state.",
-      confirmText: "Discard",
+      title: tr("Discard changes?"),
+      message: tr("This example only changes local catalog state."),
+      confirmText: tr("Discard"),
       destructive: true,
       onConfirm: () => setText(""),
     });
   };
   return (
     <View className="flex-1 bg-screen">
-      <AppBar title="UI components" onBack={() => navigation.goBack()} sidebar={false} />
+      <AppBar title={tr("UI components")} onBack={() => navigation.goBack()} sidebar={false} />
       <ScreenScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={{ padding: 16, gap: 20, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
         <View className="gap-3">
-          <AppText className="text-sm text-foreground-muted">Theme preview</AppText>
+          <AppText className="text-sm text-foreground-muted">{tr("Theme preview")}</AppText>
           <View className="flex-row flex-wrap gap-2">
             {MOBILE_THEME_IDS.filter(
               (id) => id !== "material-you" || appearance.systemColorsAvailable,
@@ -81,8 +82,8 @@ export function ComponentCatalogScreen() {
           </View>
           <SegmentedControl
             options={[
-              { value: "light", label: "Light" },
-              { value: "dark", label: "Dark" },
+              { value: "light", label: tr("Light") },
+              { value: "dark", label: tr("Dark") },
             ]}
             selected={appearance.themeAppearance}
             onSelect={appearance.setThemeMode}
@@ -91,9 +92,9 @@ export function ComponentCatalogScreen() {
         </View>
         <SegmentedControl
           options={[
-            { value: "controls", label: "Controls" },
-            { value: "forms", label: "Forms" },
-            { value: "feedback", label: "Feedback" },
+            { value: "controls", label: tr("Controls") },
+            { value: "forms", label: tr("Forms") },
+            { value: "feedback", label: tr("Feedback") },
           ]}
           selected={page}
           onSelect={setPage}
@@ -102,7 +103,7 @@ export function ComponentCatalogScreen() {
         {page === "controls" ? (
           <>
             <View className="gap-3">
-              <AppText className="text-lg font-t3-semibold">Lists and selection</AppText>
+              <AppText className="text-lg font-t3-semibold">{tr("Lists and selection")}</AppText>
               <ListSection>
                 <View className="p-4">
                   <SegmentedControl
@@ -114,18 +115,23 @@ export function ComponentCatalogScreen() {
                     role="tab"
                   />
                 </View>
-                <ListRow icon="folder" label="Projects" detail="4" onPress={() => setSheet(true)} />
+                <ListRow
+                  icon="folder"
+                  label={tr("Projects")}
+                  detail="4"
+                  onPress={() => setSheet(true)}
+                />
                 <ListToggleRow
                   icon="bell.badge"
-                  label="Notifications"
-                  description="Updates from your active threads"
+                  label={tr("Notifications")}
+                  description={tr("Updates from your active threads")}
                   value={enabled}
                   onValueChange={setEnabled}
                 />
-                <ListChoiceRow label="Selected option" selected onPress={announceAction} />
+                <ListChoiceRow label={tr("Selected option")} selected onPress={announceAction} />
                 <ListActionRow
                   icon="trash"
-                  label="Discard changes"
+                  label={tr("Discard changes")}
                   tone="danger"
                   onPress={confirm}
                 />
@@ -139,27 +145,27 @@ export function ComponentCatalogScreen() {
               />
               <View className="flex-row flex-wrap gap-2">
                 <Chip
-                  label="Selected filter"
+                  label={tr("Selected filter")}
                   selected={enabled}
                   onPress={() => setEnabled(!enabled)}
                 />
-                <Chip label="Label" size="small" />
-                <Chip label="Disabled" disabled onPress={announceAction} />
+                <Chip label={tr("Label")} size="small" />
+                <Chip label={tr("Disabled")} disabled onPress={announceAction} />
               </View>
             </View>
             <View className="gap-3">
               <NativeAppBarExample />
-              <AppText className="text-lg font-t3-semibold">Buttons</AppText>
+              <AppText className="text-lg font-t3-semibold">{tr("Buttons")}</AppText>
               <View className="flex-row flex-wrap gap-2">
-                <Button label="Primary" tone="primary" onPress={announceAction} />
-                <Button label="Secondary" onPress={announceAction} />
-                <Button label="Contrast" tone="contrast" onPress={announceAction} />
+                <Button label={tr("Primary")} tone="primary" onPress={announceAction} />
+                <Button label={tr("Secondary")} onPress={announceAction} />
+                <Button label={tr("Contrast")} tone="contrast" onPress={announceAction} />
               </View>
               <View className="flex-row flex-wrap gap-2">
-                <Button label="Disabled" disabled onPress={announceAction} />
-                <Button label="Loading" loading onPress={announceAction} />
+                <Button label={tr("Disabled")} disabled onPress={announceAction} />
+                <Button label={tr("Loading")} loading onPress={announceAction} />
                 <IconButton
-                  accessibilityLabel="Open example sheet"
+                  accessibilityLabel={tr("Open example sheet")}
                   icon="plus"
                   variant="tonal"
                   onPress={() => setSheet(true)}
@@ -170,28 +176,28 @@ export function ComponentCatalogScreen() {
         ) : null}
         {page === "forms" ? (
           <View className="gap-3">
-            <AppText className="text-lg font-t3-semibold">Forms</AppText>
+            <AppText className="text-lg font-t3-semibold">{tr("Forms")}</AppText>
             <AppTextInput
-              accessibilityLabel="Example name"
-              placeholder="Name"
+              accessibilityLabel={tr("Example name")}
+              placeholder={tr("Name")}
               value={text}
               onChangeText={setText}
             />
             <View className="flex-row">
               <SearchField
                 inputRef={searchRef}
-                accessibilityLabel="Search examples"
-                clearAccessibilityLabel="Clear examples search"
-                placeholder="Search examples"
+                accessibilityLabel={tr("Search examples")}
+                clearAccessibilityLabel={tr("Clear examples search")}
+                placeholder={tr("Search examples")}
                 value={search}
                 onChangeText={setSearch}
                 autoFocus={false}
               />
             </View>
             <View className="flex-row items-center justify-between">
-              <AppText>Count</AppText>
+              <AppText>{tr("Count")}</AppText>
               <NumberField
-                label="Example count"
+                label={tr("Example count")}
                 min={1}
                 max={10}
                 value={value}
@@ -201,7 +207,7 @@ export function ComponentCatalogScreen() {
             <ListSection>
               <SliderRow
                 icon="textformat.size"
-                label="Example slider"
+                label={tr("Example slider")}
                 valueLabel={String(value)}
                 min={1}
                 max={10}
@@ -214,55 +220,57 @@ export function ComponentCatalogScreen() {
         ) : null}
         {page === "feedback" ? (
           <View className="gap-3">
-            <AppText className="text-lg font-t3-semibold">Feedback and presentation</AppText>
-            <Notice message="This action could not finish. Try again." tone="danger" />
-            <Button label="Show notice" onPress={announceAction} />
+            <AppText className="text-lg font-t3-semibold">
+              {tr("Feedback and presentation")}
+            </AppText>
+            <Notice message={tr("This action could not finish. Try again.")} tone="danger" />
+            <Button label={tr("Show notice")} onPress={announceAction} />
             <View className="flex-row flex-wrap gap-2">
-              <Button label="Sheet" onPress={() => setSheet(true)} />
-              <Button label="Dialog" onPress={confirm} />
+              <Button label={tr("Sheet")} onPress={() => setSheet(true)} />
+              <Button label={tr("Dialog")} onPress={confirm} />
               <Button
-                label="Alert"
+                label={tr("Alert")}
                 onPress={() =>
-                  Dialog.alert("Example alert", "Choose an action.", [
+                  Dialog.alert(tr("Example alert"), tr("Choose an action."), [
                     {
-                      text: "More info",
+                      text: tr("More info"),
                       onPress: () =>
-                        Dialog.alert("More information", "This second alert stays open."),
+                        Dialog.alert(tr("More information"), tr("This second alert stays open.")),
                     },
-                    { text: "Cancel", style: "cancel" },
-                    { text: "Continue", onPress: announceAction },
+                    { text: tr("Cancel"), style: "cancel" },
+                    { text: tr("Continue"), onPress: announceAction },
                   ])
                 }
               />
               <Button
-                label="Prompt"
+                label={tr("Prompt")}
                 onPress={() =>
                   Dialog.prompt({
-                    title: "Rename example",
+                    title: tr("Rename example"),
                     initialValue: text,
-                    confirmText: "Rename",
+                    confirmText: tr("Rename"),
                     onConfirm: setText,
                   })
                 }
               />
               <Menu
-                title="Example menu"
+                title={tr("Example menu")}
                 actions={[
-                  { id: "copy", title: "Copy", image: "doc.on.doc" },
-                  { id: "discard", title: "Discard", attributes: { destructive: true } },
+                  { id: "copy", title: tr("Copy"), image: "doc.on.doc" },
+                  { id: "discard", title: tr("Discard"), attributes: { destructive: true } },
                 ]}
                 onPressAction={({ nativeEvent }) =>
                   nativeEvent.event === "discard" ? confirm() : announceAction()
                 }
               >
-                <Chip label="Menu" trailingIcon="chevron.down" />
+                <Chip label={tr("Menu")} trailingIcon="chevron.down" />
               </Menu>
             </View>
-            <Progress value={0.6} label="Example upload" />
-            <Progress label="Connecting" />
+            <Progress value={0.6} label={tr("Example upload")} />
+            <Progress label={tr("Connecting")} />
             <View className="items-start">
               <FloatingActionButton
-                label="New thread"
+                label={tr("New thread")}
                 icon="plus"
                 variant="extended"
                 tone="primary"
@@ -280,14 +288,14 @@ export function ComponentCatalogScreen() {
           pointerEvents="box-none"
         >
           <Toast
-            message="Changes are ready to review."
+            message={tr("Changes are ready to review.")}
             tone="success"
             dismissMode="swipe"
             action={{
-              label: "Undo",
+              label: tr("Undo"),
               onPress: () => {
                 setNotice(false);
-                setText("Restored example");
+                setText(tr("Restored example"));
               },
             }}
             onDismiss={() => setNotice(false)}
@@ -295,19 +303,19 @@ export function ComponentCatalogScreen() {
         </View>
       ) : null}
       {sheet ? (
-        <Sheet title="Example sheet" onClose={() => setSheet(false)}>
+        <Sheet title={tr("Example sheet")} onClose={() => setSheet(false)}>
           <ScreenScrollView
             contentInsetAdjustmentBehavior="automatic"
             contentContainerClassName="p-4"
           >
             <ListSection>
               <ListChoiceRow
-                label="Overview"
+                label={tr("Overview")}
                 selected={tab === "overview"}
                 onPress={() => setTab("overview")}
               />
               <ListChoiceRow
-                label="Activity"
+                label={tr("Activity")}
                 selected={tab === "activity"}
                 onPress={() => setTab("activity")}
               />

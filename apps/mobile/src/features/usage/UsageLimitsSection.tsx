@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { RegistryContext, useAtomMount, useAtomValue } from "@effect/atom-react";
 import { normalizeProviderAccentColor } from "@t3tools/client-runtime/state/provider-instance-display";
 import {
@@ -40,6 +41,14 @@ import { usageProviderKind, useProviderColors } from "./usageProviders";
 const PACE_LABEL = { ahead: "ahead of pace", on: "on pace", under: "under pace" } as const;
 
 type Driver = ServerProvider["driver"];
+
+function resetsInLabel(value: string | null): string {
+  if (value === null) return "";
+  if (value === "resets now") return tr("Resets now");
+  return value.startsWith("resets in ")
+    ? tr("Resets in {duration}", { duration: value.slice("resets in ".length) })
+    : value;
+}
 
 function useBarColor(driver: Driver): string | null {
   const colors = useProviderColors();
@@ -88,7 +97,7 @@ function WindowRow(props: {
       <View className="flex-row items-baseline justify-between gap-3">
         <Text className="text-sm text-foreground">{window.label}</Text>
         <Text className="text-sm font-t3-medium tabular-nums text-foreground">
-          {remaining}% left
+          {tr("{percent}% left", { percent: remaining })}
         </Text>
       </View>
       <View
@@ -126,7 +135,9 @@ function WindowRow(props: {
       {pace || resetsIn ? (
         <View className="flex-row justify-between gap-3">
           <Text className="text-xs text-foreground-tertiary">{pace ? PACE_LABEL[pace] : ""}</Text>
-          <Text className="text-xs tabular-nums text-foreground-tertiary">{resetsIn ?? ""}</Text>
+          <Text className="text-xs tabular-nums text-foreground-tertiary">
+            {resetsInLabel(resetsIn)}
+          </Text>
         </View>
       ) : null}
     </View>
@@ -146,7 +157,7 @@ function AccountInstanceLabel({ value }: { readonly value: string }) {
     <Pressable
       className="shrink active:opacity-60"
       accessibilityRole="button"
-      accessibilityLabel={revealed ? "Hide account label" : "Reveal account label"}
+      accessibilityLabel={revealed ? tr("Hide account label") : tr("Reveal account label")}
       onPress={() => setRevealed((current) => !current)}
     >
       <Text className="text-xs text-foreground-tertiary" numberOfLines={1}>
@@ -212,7 +223,7 @@ export function AccountLimits(props: {
           className="min-h-11 justify-center"
           onPress={() => void Linking.openURL(externalUsage.url).catch(() => undefined)}
         >
-          <Text className="text-sm font-t3-medium text-primary">Manage usage</Text>
+          <Text className="text-sm font-t3-medium text-primary">{tr("Manage usage")}</Text>
         </Pressable>
       ) : null}
       {props.footer}
@@ -221,10 +232,10 @@ export function AccountLimits(props: {
 }
 
 const OUTCOME_TEXT: Record<ProviderConsumeResetCreditOutcome, string> = {
-  reset: "Reset applied. Your windows have cleared.",
-  nothingToReset: "Nothing to reset right now.",
-  noCredit: "No reset credit left.",
-  alreadyRedeemed: "That credit was already redeemed.",
+  reset: tr("Reset applied. Your windows have cleared."),
+  nothingToReset: tr("Nothing to reset right now."),
+  noCredit: tr("No reset credit left."),
+  alreadyRedeemed: tr("That credit was already redeemed."),
 };
 
 export function ResetCredits(props: {
@@ -248,10 +259,11 @@ export function ResetCredits(props: {
     : null;
   const summary =
     credits.availableCount === 0
-      ? "No reset credits banked"
-      : `${credits.availableCount} ${credits.availableCount === 1 ? "reset credit" : "reset credits"} banked${
-          expiresIn ? ` · next expires in ${expiresIn}` : ""
-        }`;
+      ? tr("No reset credits banked")
+      : credits.availableCount === 1
+        ? tr("{count} reset credit banked", { count: credits.availableCount })
+        : tr("{count} reset credits banked", { count: credits.availableCount }) +
+          (expiresIn ? tr(" \u00B7 next expires in {expiresIn}", { expiresIn: expiresIn }) : "");
 
   const redeem = async () => {
     if (!readEnvironmentScope(environmentId, AuthProvidersManageScope)) return;
@@ -266,18 +278,20 @@ export function ResetCredits(props: {
     setStatus(
       "error" in result.cause && result.cause.error instanceof Error
         ? result.cause.error.message
-        : "Could not use the reset credit.",
+        : tr("Could not use the reset credit."),
     );
   };
 
   const confirm = () => {
     if (!readEnvironmentScope(environmentId, AuthProvidersManageScope)) return;
     Dialog.alert(
-      "Use a reset credit?",
-      "This redeems one credit on your account and clears the current rate-limit windows. It cannot be undone.",
+      tr("Use a reset credit?"),
+      tr(
+        "This redeems one credit on your account and clears the current rate-limit windows. It cannot be undone.",
+      ),
       [
-        { text: "Cancel", style: "cancel" },
-        { text: "Use credit", onPress: () => void redeem() },
+        { text: tr("Cancel"), style: "cancel" },
+        { text: tr("Use credit"), onPress: () => void redeem() },
       ],
     );
   };
@@ -304,13 +318,13 @@ export function ResetCredits(props: {
                 : "text-sm font-t3-medium text-foreground"
             }
           >
-            {busy ? "Using…" : "Use reset"}
+            {busy ? tr("Using\u2026") : tr("Use reset")}
           </Text>
         </Pressable>
       ) : null}
       {!canManageProviders ? (
         <Text className="text-xs text-foreground-tertiary">
-          This connection cannot manage provider accounts.
+          {tr("This connection cannot manage provider accounts.")}
         </Text>
       ) : null}
       {status ? <Text className="text-sm text-foreground">{status}</Text> : null}
