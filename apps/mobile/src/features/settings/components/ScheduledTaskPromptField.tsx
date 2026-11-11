@@ -1,4 +1,5 @@
 import { TextInput, View } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { AppText as Text } from "../../../components/ui/AppText";
 import type { ComposerEditorSelection } from "../../../components/ComposerEditor";
@@ -28,10 +29,10 @@ export function ScheduledTaskPromptField(props: {
 
   return (
     <View className="gap-2 border-t border-border-subtle px-4 py-3">
-      <Text className="text-sm text-foreground-muted">Prompt</Text>
+      <Text className="text-sm text-foreground-muted">{tr("Prompt")}</Text>
       <View className="relative">
         <TextInput
-          accessibilityLabel="Prompt"
+          accessibilityLabel={tr("Prompt")}
           value={props.value}
           onChangeText={props.onChange}
           selection={props.selection}
@@ -40,7 +41,7 @@ export function ScheduledTaskPromptField(props: {
           multiline
           scrollEnabled
           textAlignVertical="top"
-          placeholder="What should the agent do each time?"
+          placeholder={tr("What should the agent do each time?")}
           placeholderTextColorClassName="accent-foreground-muted"
           className="max-h-40 min-h-24 font-sans text-base text-foreground"
         />

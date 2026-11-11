@@ -1,4 +1,5 @@
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/reactivity";
 import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
@@ -66,38 +67,42 @@ const KINDS: Record<
   }
 > = {
   wired: {
-    label: "Wired",
-    row: "Other wired",
-    rowDescription: "Headsets and USB microphones not listed",
+    label: tr("Wired"),
+    row: tr("Other wired"),
+    rowDescription: tr("Headsets and USB microphones not listed"),
     icon: "cable.connector",
   },
   bluetooth: {
-    label: "Bluetooth",
-    row: "Other Bluetooth",
+    label: tr("Bluetooth"),
+    row: tr("Other Bluetooth"),
     rowDescription:
       Platform.OS === "android"
-        ? "Earbuds, headsets, and cars, including Android Auto, not listed"
-        : "AirPods, headsets, and cars not listed",
+        ? tr("Earbuds, headsets, and cars, including Android Auto, not listed")
+        : tr("AirPods, headsets, and cars not listed"),
     icon: "headphones",
   },
   builtIn: {
     label: "Built-in",
-    row: "Built-in microphone",
-    rowDescription: "The microphone on this device",
+    row: tr("Built-in microphone"),
+    rowDescription: tr("The microphone on this device"),
     icon: "iphone",
   },
   carPlay: {
     label: "CarPlay",
     row: "CarPlay",
-    rowDescription: "The car’s microphone",
+    rowDescription: tr("The car\u2019s microphone"),
     icon: "car",
   },
 };
 
 const UNAVAILABLE_EXPLANATION =
   Platform.OS === "android"
-    ? "T3 Code's voice input uses Google's on-device speech recognition, which needs Android 12 or later with compatible Google speech services for the device language. Without it, the composer has no microphone button, and allowing microphone access won't add one. Keyboard voice typing is separate and isn't affected."
-    : "T3 Code's voice input uses Apple's on-device speech transcription, which needs iOS 26 or later on a device that supports it. Without it, the composer has no microphone button, and allowing microphone access won't add one. Apple keyboard dictation is separate and isn't affected.";
+    ? tr(
+        "T3 Code's voice input uses Google's on-device speech recognition, which needs Android 12 or later with compatible Google speech services for the device language. Without it, the composer has no microphone button, and allowing microphone access won't add one. Keyboard voice typing is separate and isn't affected.",
+      )
+    : tr(
+        "T3 Code's voice input uses Apple's on-device speech transcription, which needs iOS 26 or later on a device that supports it. Without it, the composer has no microphone button, and allowing microphone access won't add one. Apple keyboard dictation is separate and isn't affected.",
+      );
 
 export function SettingsMicrophoneRouteScreen() {
   const transcriber = useAtomValue(localVoiceTranscriberAtom);
@@ -117,8 +122,8 @@ function VoiceInputUnavailable() {
         contentContainerClassName="gap-3 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) + 18 }}
       >
-        <SettingsSection title="Voice input">
-          <ListRowLayout icon="mic" label="Not available on this device" />
+        <SettingsSection title={tr("Voice input")}>
+          <ListRowLayout icon="mic" label={tr("Not available on this device")} />
         </SettingsSection>
         <Text className="px-2 text-sm text-foreground-muted">{UNAVAILABLE_EXPLANATION}</Text>
       </ScrollView>
@@ -184,10 +189,10 @@ function MicrophoneSettings() {
       >
         {permission === "ask" || permission === "denied" ? (
           <>
-            <SettingsSection title="Microphone access">
+            <SettingsSection title={tr("Microphone access")}>
               <SettingsActionRow
                 icon="mic"
-                label={permission === "ask" ? "Allow microphone access" : "Open Settings"}
+                label={permission === "ask" ? tr("Allow microphone access") : tr("Open Settings")}
                 onPress={
                   permission === "ask" ? requestPermission : () => void Linking.openSettings()
                 }
@@ -195,12 +200,16 @@ function MicrophoneSettings() {
             </SettingsSection>
             <Text className="px-2 text-sm text-foreground-muted">
               {permission === "ask"
-                ? "Voice input needs microphone access before it can record or list your microphones."
-                : "Microphone access is off for T3 Code. Turn it on in Settings to use voice input."}
+                ? tr(
+                    "Voice input needs microphone access before it can record or list your microphones.",
+                  )
+                : tr(
+                    "Microphone access is off for T3 Code. Turn it on in Settings to use voice input.",
+                  )}
             </Text>
           </>
         ) : null}
-        <SettingsSection title="Preferred order">
+        <SettingsSection title={tr("Preferred order")}>
           {entries.map((entry, index) => {
             const key = microphoneEntryKey(entry);
             const shift =
@@ -235,11 +244,11 @@ function MicrophoneSettings() {
           })}
         </SettingsSection>
         <Text className="px-2 text-sm text-foreground-muted">
-          Voice input prefers the first connected microphone in this list. Wired and Bluetooth
-          devices are added by name after you use voice input with them connected; until then, the
-          Other row ranks them. Swipe a device left to forget it.
+          {tr(
+            "Voice input prefers the first connected microphone in this list. Wired and Bluetooth\n          devices are added by name after you use voice input with them connected; until then, the\n          Other row ranks them. Swipe a device left to forget it.",
+          )}
           {Platform.OS === "android"
-            ? " Android may use another input when the preferred microphone cannot be routed."
+            ? tr(" Android may use another input when the preferred microphone cannot be routed.")
             : null}
         </Text>
       </ScrollView>
@@ -280,8 +289,13 @@ function MicrophoneRow(props: {
     <View className="flex-row items-center bg-grouped-card">
       <View
         accessible
-        accessibilityLabel={`${title}, ${kind.label}, ${props.position} of ${props.count}`}
-        accessibilityActions={onForget ? [{ name: "forget", label: "Forget" }] : undefined}
+        accessibilityLabel={tr("{title}, {kind}, {position} of {count}", {
+          title: title,
+          kind: kind.label,
+          position: props.position,
+          count: props.count,
+        })}
+        accessibilityActions={onForget ? [{ name: "forget", label: tr("Forget") }] : undefined}
         onAccessibilityAction={({ nativeEvent }) => {
           if (nativeEvent.actionName === "forget") onForget?.();
         }}
@@ -322,10 +336,10 @@ function MicrophoneRow(props: {
           fullSwipeWidth={windowWidth - 40}
           onDelete={onForget}
           primaryAction={{
-            accessibilityLabel: `Forget ${title}`,
+            accessibilityLabel: tr("Forget {title}", { title: title }),
             destructive: true,
             icon: "trash",
-            label: "Forget",
+            label: tr("Forget"),
             onPress: onForget,
           }}
           secondaryAction={null}

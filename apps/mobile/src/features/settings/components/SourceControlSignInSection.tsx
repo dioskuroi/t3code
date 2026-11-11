@@ -1,4 +1,5 @@
 import type { EnvironmentId, SourceControlSignInPrompt } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   readHostCredentialSettings,
   sourceControlClients,
@@ -121,10 +122,13 @@ function AppSignInRow(props: {
     void Clipboard.setStringAsync(prompt.userCode).catch(() => undefined);
     Alert.alert(
       prompt.userCode,
-      `Enter this code on GitHub, then approve ${appSignIn.appName}. It is copied. The server finishes signing in even if you leave the app.`,
+      tr(
+        "Enter this code on GitHub, then approve {app}. It is copied. The server finishes signing in even if you leave the app.",
+        { app: appSignIn.appName },
+      ),
       [
         {
-          text: "Cancel",
+          text: tr("Cancel"),
           style: "cancel",
           onPress: () => {
             attempt.current = null;
@@ -132,7 +136,7 @@ function AppSignInRow(props: {
             void cancel({ environmentId, input });
           },
         },
-        { text: "Open GitHub", onPress: () => openUrl(prompt.verificationUri) },
+        { text: tr("Open GitHub"), onPress: () => openUrl(prompt.verificationUri) },
       ],
     );
   };
@@ -142,7 +146,7 @@ function AppSignInRow(props: {
     const started = await start({ environmentId, input });
     if (started._tag !== "Success") {
       setPending(null);
-      Alert.alert("Could not start the sign-in", failureMessage(started.cause));
+      Alert.alert(tr("Could not start the sign-in"), failureMessage(started.cause));
       return;
     }
     const prompt = started.value;
@@ -154,7 +158,7 @@ function AppSignInRow(props: {
     attempt.current = null;
     setPending(null);
     if (finished._tag !== "Success") {
-      Alert.alert("Sign-in did not finish", failureMessage(finished.cause));
+      Alert.alert(tr("Sign-in did not finish"), failureMessage(finished.cause));
     }
   };
 
@@ -173,11 +177,13 @@ function AppSignInRow(props: {
     if (signedIn) {
       Alert.alert(
         appSignIn.appName,
-        "Signed in. GitHub requests use the app's higher rate limit, in repositories where the app is installed.",
+        tr(
+          "Signed in. GitHub requests use the app's higher rate limit, in repositories where the app is installed.",
+        ),
         [
-          { text: "Install on an organization", onPress: () => openUrl(appSignIn.installUrl) },
-          { text: "Sign out", style: "destructive", onPress: signOut },
-          { text: "Cancel", style: "cancel" },
+          { text: tr("Install on an organization"), onPress: () => openUrl(appSignIn.installUrl) },
+          { text: tr("Sign out"), style: "destructive", onPress: signOut },
+          { text: tr("Cancel"), style: "cancel" },
         ],
       );
     } else if (pending !== null && pending !== "starting") {
@@ -193,12 +199,12 @@ function AppSignInRow(props: {
       label={props.label}
       value={
         signedIn
-          ? "Signed in"
+          ? tr("Signed in")
           : pending === "starting"
-            ? "Starting…"
+            ? tr("Starting\u2026")
             : pending !== null
-              ? `Enter ${pending.userCode}`
-              : "Sign in"
+              ? tr("Enter {code}", { code: pending.userCode })
+              : tr("Sign in")
       }
       disabled={props.disabled}
       onPress={onPress}

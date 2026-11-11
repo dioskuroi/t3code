@@ -1,4 +1,5 @@
 import { NavigationRouteContext } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { Activity, useState, type ReactNode } from "react";
 import { View } from "react-native";
 
@@ -43,9 +44,9 @@ export function SettingsWorkspaceLayout(props: { readonly children: ReactNode })
         {emptyDetail ? (
           <View className="absolute inset-0">
             <NavigationRouteContext value={route}>
-              <SettingsScreen title="Settings" workspaceRoot>
+              <SettingsScreen title={tr("Settings")} workspaceRoot>
                 <View className="flex-1 items-center justify-center p-6">
-                  <AppText className="text-foreground-muted">Select a setting</AppText>
+                  <AppText className="text-foreground-muted">{tr("Select a setting")}</AppText>
                 </View>
               </SettingsScreen>
             </NavigationRouteContext>

@@ -179,10 +179,10 @@ describe("managed settings across environments", () => {
     );
 
     expect(managedSettingReason(targets, "storageCleanup.logsAfterDays")).toBe(
-      "Managed by Example Corp.",
+      "由 Example Corp 管理。",
     );
     expect(managedSettingReason(targets, "defaultAutoPull", "storageCleanup")).toBe(
-      "Managed by Example Corp.",
+      "由 Example Corp 管理。",
     );
     expect(managedSettingReason(targets, "defaultAutoPull")).toBeUndefined();
     expect(managedSettingReason(targets.slice(0, 1), "storageCleanup")).toBeUndefined();
