@@ -114,7 +114,7 @@ describe("theme import text", () => {
       parseThemeImport(
         '{ "version": 1, "name": "Bad native", "appearance": "dark", "colors": { "unknown": "#fff" } }',
       ),
-    ).toThrow('"unknown" is not a supported theme color role.');
+    ).toThrow("“unknown”不是受支持的主题颜色角色。");
   });
 });
 

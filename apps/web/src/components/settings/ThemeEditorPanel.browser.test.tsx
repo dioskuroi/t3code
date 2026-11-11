@@ -66,7 +66,7 @@ async function renderPanel() {
       />,
     ),
   );
-  const panel = screen.getByRole("dialog", { name: "Create theme" });
+  const panel = screen.getByRole("dialog", { name: "创建主题" });
   await expect.element(panel).toBeVisible();
   return {
     panel: panel.element() as HTMLElement,
@@ -109,7 +109,7 @@ describe("ThemeEditorPanel", () => {
         restoreTheme={() => {}}
       />,
     );
-    const panel = screen.getByRole("dialog", { name: "Create theme" });
+    const panel = screen.getByRole("dialog", { name: "创建主题" });
     await expect.element(panel).toBeVisible();
 
     dragHeader(panel.element() as HTMLElement, 700, 40);
@@ -126,10 +126,10 @@ describe("ThemeEditorPanel", () => {
 
   it("restores the colors from before the picker opened when Escape closes it", async () => {
     await using _view = await renderPanel();
-    const hex = page.getByRole("textbox", { name: "Accent hex value" });
+    const hex = page.getByRole("textbox", { name: "强调色 hex value" });
     const original = (hex.element() as HTMLInputElement).value;
-    await userEvent.click(page.getByRole("button", { name: "Choose Accent color" }));
-    const hue = page.getByRole("slider", { name: "Accent hue" });
+    await userEvent.click(page.getByRole("button", { name: "选择 强调色 颜色" }));
+    const hue = page.getByRole("slider", { name: "强调色 hue" });
     await expect.element(hue).toBeInTheDocument();
     const hueSlider = hue.element() as HTMLElement;
 
