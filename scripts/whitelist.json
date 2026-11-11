@@ -7,7 +7,11 @@
     "words：词/短语级豁免，按词边界子串命中并从英文信号中扣除（大小写不敏感）；",
     "扣除后整串再无英文词则豁免。多词品牌按完整短语列出，避免单词条误伤普通词。",
     "words 派生自术语表 §3 硬规则（含第 6 条单位）与 §2 保留词条，另含少量常见技术缩写（API/URL/HTTP 等单向放宽豁免）。",
-    "身份词复数（agents/providers/threads/tokens）与品牌 ChatGPT 由 i18n-check 译文内容面回填（§3.1/§2 保留词的形态变体）。"
+    "身份词复数（agents/providers/threads/tokens）与品牌 ChatGPT 由 i18n-check 译文内容面回填（§3.1/§2 保留词的形态变体）。",
+    "exact 豁免注记（#55 T01）：codexAuthCallback 的登录回调整页 HTML（含标记/CSS 与页面文案）整页保留英文，整页翻译留终批人工处理。",
+    "exact 豁免注记（#55 T01）：claudeCompaction 的 Don't ask again / Compact and continue / 压缩问句为 adapter/client 全等匹配协议串，翻译会破坏 claude CLI 应答匹配，英文残留记走查。",
+    "exact 豁免注记（#55 T01）：previewViewport 的 Phone/Tablet/Desktop 为移动端 category === 字面量匹配的标识符（BrowserTabMenu.tsx），非显示文案，保留英文。",
+    "exact 豁免注记（#55 T01）：observability 的 Span/Started/Ended 为 trace 记录判别 _tag（Extract 类型收窄），非显示文案。"
   ],
   "exact": [
     "--background, --foreground, --muted, --card, --popover, --secondary, --border, --ring, --primary, --accent, --destructive, --warning, --success, --info, --code-background",

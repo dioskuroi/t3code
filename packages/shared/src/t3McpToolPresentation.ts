@@ -155,15 +155,15 @@ const T3_MCP_TOOLS: Readonly<Record<string, T3McpToolDefinition>> = {
     "task-status",
   ),
   task_cancel: tool(
-    [tr("Cancel"), tr("Canceling"), tr("Requested cancellation of"), "a delegated task"],
+    [tr("Cancel"), tr("Canceling"), tr("Requested cancellation of"), tr("a delegated task")],
     "task-cancel",
   ),
   schedule_task: tool(
-    [tr("Schedule"), tr("Scheduling"), tr("Scheduled"), "a task"],
+    [tr("Schedule"), tr("Scheduling"), tr("Scheduled"), tr("a task")],
     "schedule-create",
   ),
   list_scheduled_tasks: tool(
-    [tr("List"), tr("Listing"), tr("Listed"), "scheduled tasks"],
+    [tr("List"), tr("Listing"), tr("Listed"), tr("scheduled tasks")],
     "schedule-list",
   ),
   update_scheduled_task: tool(
@@ -175,7 +175,7 @@ const T3_MCP_TOOLS: Readonly<Record<string, T3McpToolDefinition>> = {
     "schedule-delete",
   ),
   request_secret: tool(
-    [tr("Ask for"), tr("Asking for"), tr("Asked for"), "a secret"],
+    [tr("Ask for"), tr("Asking for"), tr("Asked for"), tr("a secret")],
     "secret-request",
   ),
   create_threads: tool(
@@ -303,7 +303,7 @@ const T3_MCP_TOOLS: Readonly<Record<string, T3McpToolDefinition>> = {
     "browser",
   ),
   preview_wait_for: tool(
-    [tr("Wait"), tr("Waiting"), tr("Waited"), "for the preview page"],
+    [tr("Wait"), tr("Waiting"), tr("Waited"), tr("for the preview page")],
     "browser",
     "browser",
   ),
@@ -458,7 +458,7 @@ const T3_MCP_TOOLS: Readonly<Record<string, T3McpToolDefinition>> = {
     "environment-link",
   ),
   t3_environment_unlink: tool(
-    [tr("Forget"), tr("Forgetting"), tr("Forgot"), "a linked environment"],
+    [tr("Forget"), tr("Forgetting"), tr("Forgot"), tr("a linked environment")],
     "environment-unlink",
   ),
   t3_environment_preferences_update: tool(
