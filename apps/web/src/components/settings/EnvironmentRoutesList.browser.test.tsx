@@ -70,12 +70,12 @@ function routesList(routes: ReadonlyArray<ConnectionRoute>) {
 
 it("shows a route added after a reorder was saved, once another route is removed", async () => {
   await using screen = await render(routesList([LAN, TAILNET]));
-  await userEvent.click(screen.getByRole("button", { name: "Reorder LAN, position 1" }));
+  await userEvent.click(screen.getByRole("button", { name: "调整 LAN 的顺序，位置 1" }));
   await userEvent.keyboard(" ");
   await userEvent.keyboard("{ArrowDown}");
   await userEvent.keyboard(" ");
   await expect
-    .element(screen.getByRole("button", { name: "Reorder Tailscale, position 1" }))
+    .element(screen.getByRole("button", { name: "调整 Tailscale 的顺序，位置 1" }))
     .toBeVisible();
 
   await screen.rerender(routesList([TAILNET, LAN]));
@@ -83,10 +83,10 @@ it("shows a route added after a reorder was saved, once another route is removed
   await screen.rerender(routesList([TAILNET, PUBLIC]));
 
   await expect
-    .element(screen.getByRole("button", { name: "Reorder desk.example.com, position 2" }))
+    .element(screen.getByRole("button", { name: "调整 desk.example.com 的顺序，位置 2" }))
     .toBeVisible();
   expect(screen.getByRole("listitem").elements()).toHaveLength(2);
   await expect
-    .element(screen.getByRole("button", { name: "Remove desk.example.com route" }))
+    .element(screen.getByRole("button", { name: "移除 desk.example.com 路由" }))
     .toBeVisible();
 });

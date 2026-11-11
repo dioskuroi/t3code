@@ -97,19 +97,11 @@ describe("KeybindingsSettings.logic", () => {
   ])("captures %s at %s by physical key", (key, code, expected) => {
     expect(
       keybindingFromKeyboardEvent(
-        {
-          key,
-          code,
-          metaKey: true,
-          ctrlKey: false,
-          altKey: false,
-          shiftKey: true,
-        },
+        { key, code, metaKey: true, ctrlKey: false, altKey: false, shiftKey: true },
         "MacIntel",
       ),
     ).toBe(expected);
   });
-
   it("records layout punctuation while preserving physical Alt shortcuts; saved bindings still trigger", () => {
     for (const { key, code, altKey = false, shiftKey, expected, defaultInput } of [
       { key: "#", code: "Backslash", shiftKey: false, expected: "#", defaultInput: "\\" },
@@ -129,14 +121,7 @@ describe("KeybindingsSettings.logic", () => {
         defaultInput: "alt+1",
       },
     ]) {
-      const pressed = {
-        key,
-        code,
-        metaKey: false,
-        ctrlKey: false,
-        altKey,
-        shiftKey,
-      };
+      const pressed = { key, code, metaKey: false, ctrlKey: false, altKey, shiftKey };
       expect(keybindingFromKeyboardEvent(pressed, "MacIntel")).toBe(defaultInput);
       const input = keybindingFromKeyboardEvent(pressed, "MacIntel", { layoutCharacter: true });
       expect(input).toBe(expected);
@@ -150,7 +135,6 @@ describe("KeybindingsSettings.logic", () => {
       ).toBe("chat.new");
     }
   });
-
   it("captures Latin layout keys instead of their punctuation position", () => {
     expect(
       keybindingFromKeyboardEvent(
@@ -166,7 +150,6 @@ describe("KeybindingsSettings.logic", () => {
       ),
     ).toBe("mod+m");
   });
-
   it("serializes shortcuts and when expressions for upserts", () => {
     expect(
       shortcutToKeybindingInput({
@@ -178,18 +161,13 @@ describe("KeybindingsSettings.logic", () => {
         shiftKey: false,
       }),
     ).toBe("mod+alt+space");
-
     expect(
       whenAstToExpression({
         type: "and",
         left: { type: "identifier", name: "editorFocus" },
-        right: {
-          type: "not",
-          node: { type: "identifier", name: "terminalFocus" },
-        },
+        right: { type: "not", node: { type: "identifier", name: "terminalFocus" } },
       }),
     ).toBe("editorFocus && !terminalFocus");
-
     expect(parseWhenExpressionDraft("editorFocus && (!terminalFocus || modelPickerOpen)")).toEqual({
       ok: true,
       value: {
@@ -197,10 +175,7 @@ describe("KeybindingsSettings.logic", () => {
         left: { type: "identifier", name: "editorFocus" },
         right: {
           type: "or",
-          left: {
-            type: "not",
-            node: { type: "identifier", name: "terminalFocus" },
-          },
+          left: { type: "not", node: { type: "identifier", name: "terminalFocus" } },
           right: { type: "identifier", name: "modelPickerOpen" },
         },
       },
@@ -209,7 +184,6 @@ describe("KeybindingsSettings.logic", () => {
       ok: false,
       message: "使用变量及 !、&&、|| 和括号。",
     });
-
     expect(parseWhenExpressionDraft("!(terminalFocus || modelPickerOpen)")).toEqual({
       ok: true,
       value: {
@@ -222,7 +196,6 @@ describe("KeybindingsSettings.logic", () => {
       },
     });
   });
-
   it("reports conflicting shortcuts that share an active when context", () => {
     const rows = buildKeybindingRows([
       {
@@ -235,10 +208,7 @@ describe("KeybindingsSettings.logic", () => {
           altKey: false,
           shiftKey: false,
         },
-        whenAst: {
-          type: "not",
-          node: { type: "identifier", name: "terminalFocus" },
-        },
+        whenAst: { type: "not", node: { type: "identifier", name: "terminalFocus" } },
       },
       {
         command: "chat.newLocal",
@@ -250,23 +220,14 @@ describe("KeybindingsSettings.logic", () => {
           altKey: false,
           shiftKey: false,
         },
-        whenAst: {
-          type: "not",
-          node: { type: "identifier", name: "terminalFocus" },
-        },
+        whenAst: { type: "not", node: { type: "identifier", name: "terminalFocus" } },
       },
     ] satisfies ResolvedKeybindingsConfig);
-
     expect(rows[0]?.conflicts).toEqual(["Chat: New Local"]);
     expect(
-      keybindingConflictLabels(rows, {
-        rowId: rows[0]?.id ?? "",
-        key: "mod+n",
-        when: "",
-      }),
+      keybindingConflictLabels(rows, { rowId: rows[0]?.id ?? "", key: "mod+n", when: "" }),
     ).toEqual(["Chat: New Local"]);
   });
-
   it.each([
     { platform: "Linux x86_64", ctrl: ["Chat: New"], meta: [] },
     { platform: "Win32", ctrl: ["Chat: New"], meta: [] },
@@ -281,14 +242,12 @@ describe("KeybindingsSettings.logic", () => {
       expected.platform,
     );
     const conflictsFor = (key: string) => rows.find((row) => row.key === key)?.conflicts;
-
     expect(conflictsFor("ctrl+k")).toEqual(expected.ctrl);
     expect(conflictsFor("meta+k")).toEqual(expected.meta);
     expect(
       keybindingConflictLabels(rows, { rowId: "new", key: "ctrl+k", when: "" }, expected.platform),
     ).toEqual(["Chat: New Local", ...expected.ctrl].toSorted());
   });
-
   it("keeps mod and ctrl shortcuts apart when their when contexts differ", () => {
     const rows = buildKeybindingRows(
       compileResolvedKeybindingsConfig([

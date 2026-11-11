@@ -6,6 +6,7 @@ import {
   type EnvironmentId,
   type ServerConfig,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import { useUpdateEnvironmentSettings } from "../../hooks/useSettings";
 import { useEnvironmentScope } from "../../state/session";
@@ -25,10 +26,10 @@ export function resolveEnvironmentIconPickerLock(input: {
   readonly operateAccess: "granted" | "denied" | "pending";
 }): string | null {
   if (input.serverConfig === null) {
-    return "Connect to this environment to change its icon.";
+    return tr("Connect to this environment to change its icon.");
   }
   if (input.operateAccess !== "granted") {
-    return "Your session on this environment cannot change its settings.";
+    return tr("Your session on this environment cannot change its settings.");
   }
   return null;
 }
@@ -52,7 +53,7 @@ export function EnvironmentIconMenu({
     <MenuSub>
       <MenuSubTrigger>
         <EnvironmentMachineIcon kind={resolved} />
-        Icon
+        {tr("Icon")}
       </MenuSubTrigger>
       <MenuSubPopup>
         {lock !== null ? (

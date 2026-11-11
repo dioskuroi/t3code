@@ -1,4 +1,5 @@
 import { ChevronDownIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 
 import { updateClientSettings, useClientSettings } from "../../hooks/useSettings";
 import { ThreadDetailsItemsMenuItems } from "../chat/ThreadDetailsItemsMenu";
@@ -19,7 +20,9 @@ export function ThreadDetailsItemsRow() {
   return (
     <SettingsRow
       {...searchableSetting("thread-details-items")}
-      description="Choose what the thread details card shows. You can also right-click the card."
+      description={tr(
+        "Choose what the thread details card shows. You can also right-click the card.",
+      )}
       resetAction={
         isDefaultThreadDetailsVisibility(visibility) ? null : (
           <SettingResetButton
@@ -36,11 +39,14 @@ export function ThreadDetailsItemsRow() {
                 variant="outline"
                 size="sm"
                 className="w-full justify-between sm:w-40"
-                aria-label={`Thread details: ${enabled} of ${THREAD_DETAILS_ITEMS.length} on`}
+                aria-label={tr("Thread details: {on} of {total} on", {
+                  on: enabled,
+                  total: THREAD_DETAILS_ITEMS.length,
+                })}
               />
             }
           >
-            {enabled} of {THREAD_DETAILS_ITEMS.length} on
+            {tr("{on} of {total} on", { on: enabled, total: THREAD_DETAILS_ITEMS.length })}
             <ChevronDownIcon aria-hidden />
           </MenuTrigger>
           <MenuPopup align="end">

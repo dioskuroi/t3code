@@ -1,4 +1,5 @@
 import { type EnvironmentId, T3_PROJECT_FILE_NAME, type T3ProjectFile } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { parseT3ProjectFile } from "@t3tools/shared/t3ProjectFile";
 import { useAtomValue } from "@effect/atom-react";
 import { AsyncResult, Atom } from "effect/reactivity";
@@ -113,6 +114,7 @@ export function useOptionalSettingsScope() {
 
 export function useSettingsScope() {
   const scope = useOptionalSettingsScope();
-  if (scope === null) throw new Error("Settings scope must be read inside SettingsScopeProvider.");
+  if (scope === null)
+    throw new Error(tr("Settings scope must be read inside SettingsScopeProvider."));
   return scope;
 }

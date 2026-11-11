@@ -1,4 +1,5 @@
 import { AuthSettingsWriteScope } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { readEnvironmentScope } from "../../state/session";
 import { useRef, useState } from "react";
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
@@ -27,7 +28,7 @@ export function useHostConnectionChecks(targets: ReadonlyArray<DeviceHostCheckTa
       host,
       async (environmentId, input) => {
         if (!readEnvironmentScope(environmentId, AuthSettingsWriteScope)) {
-          throw new Error("This connection cannot test device hosts.");
+          throw new Error(tr("This connection cannot test device hosts."));
         }
         const result = await test({ environmentId, input });
         if (result._tag === "Failure") throw squashAtomCommandFailure(result);

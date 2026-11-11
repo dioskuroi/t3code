@@ -55,7 +55,7 @@ describe("prepareLocalTrackSwitch", () => {
     const stale = fakeBridge("0.1.2");
     expect(await prepare(stale.bridge)).toEqual({
       ok: false,
-      message: "This app found 0.1.2, which is older than 0.1.3. Try again in a few minutes.",
+      message: "此应用找到的是 0.1.2，早于 0.1.3。请几分钟后再试。",
     });
     // The saved track is intent; "Switch them" retries without re-picking it.
     expect(stale.saved).toEqual(["latest"]);
