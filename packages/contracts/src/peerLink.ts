@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { AuthMcpClientAccess } from "./auth.ts";
 import { EnvironmentId, ThreadId, TrimmedNonEmptyString, TurnItemId } from "./baseSchemas.ts";
@@ -101,10 +102,10 @@ export const PeerLinkRequestAnswerInput = Schema.Struct({
 export type PeerLinkRequestAnswerInput = typeof PeerLinkRequestAnswerInput.Type;
 
 const PEER_LINK_REQUEST_FAILURE_MESSAGES = {
-  load_failed: "Could not load the link request.",
-  not_found: "This link request no longer exists.",
-  already_answered: "This link request was already answered.",
-  record_failed: "Could not update the link request.",
+  load_failed: tr("Could not load the link request."),
+  not_found: tr("This link request no longer exists."),
+  already_answered: tr("This link request was already answered."),
+  record_failed: tr("Could not update the link request."),
 } as const;
 
 export const PeerLinkRequestFailureReason = Schema.Literals(

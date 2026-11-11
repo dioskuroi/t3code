@@ -1,4 +1,5 @@
 import type { VoiceInputPhase, VoiceInputState } from "@t3tools/client-runtime/voice-input";
+import { tr } from "@t3tools/shared/i18n";
 import { memo, useState, type ReactNode } from "react";
 import { Linking, Pressable, Text as SystemText, View, type LayoutChangeEvent } from "react-native";
 import Animated, {
@@ -330,7 +331,7 @@ export function ComposerDictationError(props: {
         {props.error}
       </Text>
       <Pressable
-        accessibilityLabel="Dismiss voice input error"
+        accessibilityLabel={tr("Dismiss voice input error")}
         accessibilityRole="button"
         className="size-7 items-center justify-center active:opacity-70"
         hitSlop={8}
@@ -396,7 +397,7 @@ export function ComposerDictationCancelAction(props: {
   return (
     <VoiceActionButton
       size={props.size}
-      accessibilityLabel="Cancel dictation"
+      accessibilityLabel={tr("Cancel dictation")}
       icon="xmark"
       onPress={props.onCancel}
     />
@@ -419,8 +420,8 @@ export function ComposerDictationPrimaryAction(props: {
         size={props.size}
         accessibilityLabel={
           props.presentation.confirmationEnabled
-            ? "Finish dictation"
-            : (props.presentation.statusLabel ?? "Preparing voice input")
+            ? tr("Finish dictation")
+            : (props.presentation.statusLabel ?? tr("Preparing voice input"))
         }
         disabled={!props.presentation.confirmationEnabled}
         icon="checkmark"
@@ -447,7 +448,7 @@ export function ComposerDictationStartAction(props: {
   return (
     <VoiceActionButton
       size={props.size}
-      accessibilityLabel={openSettings ? "Open microphone settings" : "Start dictation"}
+      accessibilityLabel={openSettings ? tr("Open microphone settings") : tr("Start dictation")}
       disabled={props.disabled}
       icon="mic"
       onPress={

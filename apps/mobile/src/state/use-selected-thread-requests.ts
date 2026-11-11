@@ -1,4 +1,5 @@
 import * as Dialog from "../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { useServerConfigs } from "./entities";
 import {
   questionAttachmentDraftKey,
@@ -360,8 +361,8 @@ export function useSelectedThreadRequests() {
         )
       ) {
         Dialog.alert(
-          "Attachments are not ready",
-          "Wait for uploads to finish, or retry failed uploads.",
+          tr("Attachments are not ready"),
+          tr("Wait for uploads to finish, or retry failed uploads."),
         );
         return;
       }

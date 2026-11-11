@@ -17,6 +17,7 @@ import {
   type OrchestrationV2ProjectedTurnItem,
   type OrchestrationV2TurnItem,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { deriveThreadCheckpointSummaries } from "@t3tools/client-runtime/state/thread-checkpoints";
 import { summarizeToolGroup } from "@t3tools/client-runtime/work-log/presentation";
 import { getReviewSectionIdForCheckpoint } from "../features/review/reviewModel";
@@ -295,8 +296,8 @@ it("binds a persisted resume answer only to the next compaction in its run", () 
     );
     expect(compactRows).toHaveLength(2);
     expect(labels.get(compactRows[0]!.id)).toEqual({
-      title: "Context compacted after 2h 10m idle",
-      compacting: "Compacting…",
+      title: tr("Context compacted after {age} idle", { age: "2h 10m" }),
+      compacting: tr("Compacting…"),
     });
     expect(labels.get(compactRows[1]!.id)).toBeUndefined();
   }
@@ -611,7 +612,9 @@ describe("buildThreadFeed", () => {
     const activity = buildThreadFeed([projected(item, 0)]).flatMap((entry) =>
       entry.type === "activity-group" ? entry.activities : [],
     )[0]!;
-    expect(workEntryRowLabel(activity.workEntry)).toBe("src/a.ts +2 more");
+    expect(workEntryRowLabel(activity.workEntry)).toBe(
+      tr("{file} +{count} more", { file: "src/a.ts", count: 2 }),
+    );
     expect(summarizeToolGroup([activity.workEntry]).summary).toBe("Changed 3 files");
   });
 
@@ -796,8 +799,8 @@ describe("buildThreadFeed", () => {
         ),
       ]).flatMap((entry) => (entry.type === "activity-group" ? entry.activities : []))[0]!;
 
-      expect(workEntryRowLabel(activity.workEntry)).toBe(title ?? "Thread forked");
-      expect(workEntryRowLabel(activity.workEntry, true)).toBe(title ?? "Thread forked");
+      expect(workEntryRowLabel(activity.workEntry)).toBe(title ?? tr("Thread forked"));
+      expect(workEntryRowLabel(activity.workEntry, true)).toBe(title ?? tr("Thread forked"));
       expect(activity.canExpand).toBe(true);
       expect(activity.getFullDetail()).toContain(threadId);
     },
@@ -865,7 +868,7 @@ describe("buildThreadFeed", () => {
     expect(collapsed[1]).toMatchObject({
       type: "run-fold",
       createdAt: "2026-06-20T00:00:01.500Z",
-      label: "Worked for 2s",
+      label: tr("Worked for {duration}", { duration: "2s" }),
     });
 
     const expanded = deriveThreadFeedPresentation(feed, latestRun, new Set([runId]));
@@ -1119,10 +1122,10 @@ describe("buildThreadFeed", () => {
     const settled = deriveThreadFeedPresentation(feed(false), null, new Set());
     expect(shape(settled)).toEqual([
       "user:launch",
-      "fold:Worked for 8s",
+      "fold:" + tr("Worked for {duration}", { duration: "8s" }),
       "assistant:launch-answer",
       "user:resume",
-      "fold:Worked for 8s",
+      "fold:" + tr("Worked for {duration}", { duration: "8s" }),
       "assistant:resume-answer",
     ]);
     const launchFold = settled.find((entry) => entry.type === "run-fold");
@@ -1131,11 +1134,11 @@ describe("buildThreadFeed", () => {
       shape(deriveThreadFeedPresentation(feed(false), null, new Set([launchFold.runId]))),
     ).toEqual([
       "user:launch",
-      "fold:Worked for 8s",
+      "fold:" + tr("Worked for {duration}", { duration: "8s" }),
       "activity-group",
       "assistant:launch-answer",
       "user:resume",
-      "fold:Worked for 8s",
+      "fold:" + tr("Worked for {duration}", { duration: "8s" }),
       "assistant:resume-answer",
     ]);
 
@@ -1152,7 +1155,7 @@ describe("buildThreadFeed", () => {
       ),
     ).toEqual([
       "user:launch",
-      "fold:Worked for 8s",
+      "fold:" + tr("Worked for {duration}", { duration: "8s" }),
       "assistant:launch-answer",
       "user:resume",
       "activity-group",
@@ -1239,7 +1242,7 @@ describe("buildThreadFeed", () => {
     );
     expect(presented.find((entry) => entry.type === "activity-group")).toMatchObject({
       id: "live-activity-row",
-      activities: [{ live: true, groupStandIn: { label: "Running vp" } }],
+      activities: [{ live: true, groupStandIn: { label: `${tr("Running")} vp` } }],
     });
     expect(presented.some((entry) => entry.type === "thinking")).toBe(false);
   });
@@ -1534,7 +1537,7 @@ it("stops stranded thinking after a steer and follows the next thought or tool",
       at,
     );
   expect(rows([first]).find((row) => row.type === "work-toggle")).toMatchObject({
-    summary: "Thinking",
+    summary: tr("Thinking"),
     thought: "first-thought",
     live: true,
     shimmer: true,
@@ -1548,7 +1551,9 @@ it("stops stranded thinking after a steer and follows the next thought or tool",
   const header = afterSteer.find((row) => row.type === "work-toggle");
   if (header?.type !== "work-toggle") throw new Error("Expected thought toggle");
   const expanded = rows([first, steer], new Set([header.groupId]));
-  expect(expanded.find((row) => row.type === "work-toggle")).toMatchObject({ summary: "Thought" });
+  expect(expanded.find((row) => row.type === "work-toggle")).toMatchObject({
+    summary: tr("Thought"),
+  });
   expect(expanded.find((row) => row.type === "activity-group")).toMatchObject({
     activities: [{ lifecycleStatus: "completed", workEntry: { toolLifecycleStatus: "completed" } }],
   });
@@ -1561,8 +1566,8 @@ it("stops stranded thinking after a steer and follows the next thought or tool",
     expect(live).toHaveLength(1);
     expect(live[0]).toMatchObject(
       items.at(-1)!.type === "reasoning"
-        ? { summary: "Thinking", thought: "next-thought" }
-        : { summary: "Running vp" },
+        ? { summary: tr("Thinking"), thought: "next-thought" }
+        : { summary: `${tr("Running")} vp` },
     );
   }
   expect(first.status).toBe("running");
@@ -1930,7 +1935,7 @@ it("caps live thought previews while preserving reasoning detail", () => {
     at,
   );
   const header = rows.find((row) => row.type === "work-toggle");
-  expect(header).toMatchObject({ summary: "Thinking", live: true });
+  expect(header).toMatchObject({ summary: tr("Thinking"), live: true });
   expect(header?.thought).toMatch(/^Considering the pending approval/);
   expect(header?.thought).not.toContain("\n");
   expect(header!.thought!.length).toBeLessThanOrEqual(203);

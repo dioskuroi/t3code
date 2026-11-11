@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
@@ -159,7 +160,7 @@ export const ForwardCompatibleUnion = <
   const unknownMember = Schema.Struct({
     [tag]: Schema.String.check(
       Schema.makeFilter(
-        (value: string) => !known.has(value) || `A known ${tag} must decode in full.`,
+        (value: string) => !known.has(value) || tr("A known {tag} must decode in full.", { tag }),
       ),
     ),
   } as Record<Tag, Schema.String>).pipe(
@@ -167,7 +168,7 @@ export const ForwardCompatibleUnion = <
       decode: SchemaGetter.transform(
         (raw: Record<string, string>) => new UnknownUnionMember(tag, raw[tag]!),
       ),
-      encode: SchemaGetter.forbidden(() => `Unknown ${tag} values are never sent.`),
+      encode: SchemaGetter.forbidden(() => tr("Unknown {tag} values are never sent.", { tag })),
     }),
   );
   return Schema.Union([...members, unknownMember]) as unknown as ForwardCompatibleUnion<

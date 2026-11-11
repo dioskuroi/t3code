@@ -4,6 +4,7 @@ import {
   type ProjectEntry,
   type ProjectListEntriesResult,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
 import { AsyncResult } from "effect/reactivity";
@@ -536,7 +537,9 @@ describe("file tree workspace state", () => {
           failure: "workspace_root_not_found",
         });
         screen.rootQuery.error = screen.rootQuery.failure.message;
-        expect(screen.rootQuery.error).toBe("Failed to list workspace entries in '/first'.");
+        expect(screen.rootQuery.error).toBe(
+          tr("Failed to list workspace entries in '{cwd}'.", { cwd: "/first" }),
+        );
         screen.render();
         expect(screen.current.selectedPath).toBeNull();
         expect([...screen.current.expandedPaths]).toEqual([]);

@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { ThreadId, TrimmedNonEmptyString, TurnItemId } from "./baseSchemas.ts";
 
@@ -78,17 +79,19 @@ export class McpAppRequestError extends Schema.TaggedError<McpAppRequestError>()
   override get message(): string {
     switch (this.reason) {
       case "not-an-app":
-        return "This tool call has no MCP app.";
+        return tr("This tool call has no MCP app.");
       case "provider-unsupported":
-        return "This thread's provider cannot run MCP app requests.";
+        return tr("This thread's provider cannot run MCP app requests.");
       case "session-stopped":
-        return "The app's thread is not running. Send a message in the thread that created it to use the app again.";
+        return tr(
+          "The app's thread is not running. Send a message in the thread that created it to use the app again.",
+        );
       case "tool-not-callable":
-        return "This app cannot call that tool.";
+        return tr("This app cannot call that tool.");
       case "unsupported-content":
-        return "Only text and structured content are supported.";
+        return tr("Only text and structured content are supported.");
       case "request-failed":
-        return "The app's MCP server request failed.";
+        return tr("The app's MCP server request failed.");
     }
   }
 }

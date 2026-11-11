@@ -1,4 +1,5 @@
 import * as Dialog from "./ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { ComposerContextId } from "@t3tools/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/reactivity";
@@ -112,8 +113,8 @@ export function ComposerEditor({
       }
       if (!insertComposerDraftContext(draftKey, result, insertion)) {
         Dialog.alert(
-          "Could not paste context",
-          "Remove some attachments or context items from the draft, then paste again.",
+          tr("Could not paste context"),
+          tr("Remove some attachments or context items from the draft, then paste again."),
         );
         return;
       }
@@ -128,8 +129,8 @@ export function ComposerEditor({
         );
       if (warnings.length > 0)
         Dialog.alert(
-          "Some context is unavailable",
-          [...warnings, "Those references are marked unavailable."].join("\n\n"),
+          tr("Some context is unavailable"),
+          [...warnings, tr("Those references are marked unavailable.")].join("\n\n"),
         );
     });
     operation.finish();
@@ -137,8 +138,8 @@ export function ComposerEditor({
     if (AsyncResult.isFailure(settled) && !signal.aborted) {
       const error = squashAtomCommandFailure(settled);
       Dialog.alert(
-        "Could not paste context",
-        error instanceof Error ? error.message : "Try copying again.",
+        tr("Could not paste context"),
+        error instanceof Error ? error.message : tr("Try copying again."),
       );
     }
   };
@@ -212,12 +213,15 @@ export function ComposerEditor({
         }}
       />
       {importing ? (
-        <Text className="py-2 text-xs text-foreground-muted">Copying context…</Text>
+        <Text className="py-2 text-xs text-foreground-muted">{tr("Copying context\u2026")}</Text>
       ) : null}
       {selected && (selectedReference || selectedSkill) ? (
         <ComposerContextSheet
           label={
-            selectedReference?.label ?? selectedSkill?.displayName ?? selectedSkill?.name ?? "Skill"
+            selectedReference?.label ??
+            selectedSkill?.displayName ??
+            selectedSkill?.name ??
+            tr("Skill")
           }
           record={
             record ??

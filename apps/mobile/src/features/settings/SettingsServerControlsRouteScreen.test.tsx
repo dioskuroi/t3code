@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 const { Children, mocks } = vi.hoisted(() => ({
   Children: ({ children }: { children?: ReactNode }) => children,
@@ -211,8 +212,8 @@ describe("SettingsServerControlsRouteScreen", () => {
         (button) => button.textContent === label,
       )!;
 
-    act(() => toggle("Agent browser access").click());
-    act(() => toggle("Auto-settle merged threads").click());
+    act(() => toggle(tr("Agent browser access")).click());
+    act(() => toggle(tr("Auto-settle merged threads")).click());
 
     // Both rewrite the whole project override, so a second write planned now would drop the first.
     expect(mocks.updateSettings).toHaveBeenCalledOnce();
@@ -228,7 +229,7 @@ describe("SettingsServerControlsRouteScreen", () => {
     act(() => root.render(<SettingsThreadsRouteScreen />));
 
     const autoSettle = [...container.querySelectorAll<HTMLButtonElement>('[role="switch"]')].find(
-      (button) => button.textContent === "Auto-settle merged threads",
+      (button) => button.textContent === tr("Auto-settle merged threads"),
     )!;
     expect(autoSettle.disabled).toBe(true);
   });

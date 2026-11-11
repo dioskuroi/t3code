@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { ForwardCompatibleArray, TrimmedString } from "./baseSchemas.ts";
 
 const MAX_KEYBINDING_VALUE_LENGTH = 64;
@@ -218,6 +219,9 @@ export class KeybindingsConfigError extends Schema.TaggedError<KeybindingsConfig
   },
 ) {
   override get message(): string {
-    return `Unable to parse keybindings config at ${this.configPath}: ${this.detail}`;
+    return tr("Unable to parse keybindings config at {configPath}: {detail}", {
+      configPath: this.configPath,
+      detail: this.detail,
+    });
   }
 }

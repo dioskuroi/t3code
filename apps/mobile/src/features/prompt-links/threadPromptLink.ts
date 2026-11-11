@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import type { NavigationState, PartialState } from "@react-navigation/native";
 import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@t3tools/contracts";
 import { parseThreadLinkPrompt, type LinkedPrompt } from "@t3tools/shared/promptLinks";
@@ -57,7 +58,7 @@ export function takeThreadPromptLink(
   if (environmentId === null || threadId === null) return nextState;
   const parsed = parseThreadLinkPrompt(search);
   if (!parsed.ok) {
-    Dialog.alert("Could not open link", parsed.error);
+    Dialog.alert(tr("Could not open link"), parsed.error);
     return nextState;
   }
   if (parsed.value !== null) {
@@ -84,7 +85,7 @@ export function resolvePendingThreadPromptLink(state: NavigationState | undefine
     screenOnStack:
       findStackRoute(
         state,
-        "Thread",
+        tr("Thread"),
         (params) =>
           firstString(params?.environmentId) === ref.environmentId &&
           firstString(params?.threadId) === ref.threadId,

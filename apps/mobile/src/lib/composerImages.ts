@@ -2,6 +2,7 @@ import {
   clampFileAttachmentUploadBytes,
   fileAttachmentTooLargeMessage,
 } from "@t3tools/client-runtime/state/attachments";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isProviderSendTurnSupportedImageMimeType,
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
@@ -53,7 +54,7 @@ export async function createPastedTextComposerAttachment(input: {
 }): Promise<DraftComposerFileAttachment> {
   const bytes = new TextEncoder().encode(input.text).byteLength;
   if (bytes <= 0) {
-    throw new Error("Clipboard is empty.");
+    throw new Error(tr("Clipboard is empty."));
   }
   if (bytes > input.maxBytes) {
     throw new Error(fileAttachmentTooLargeMessage(input.name, input.maxBytes));
@@ -233,7 +234,7 @@ export async function createComposerFileAttachment(input: {
   try {
     const sizeBytes = new File(fileUri).size ?? input.sizeBytes ?? 0;
     if (sizeBytes <= 0) {
-      throw new Error(`'${input.name}' is empty or could not be read.`);
+      throw new Error(tr("'{name}' is empty or could not be read.", { name: input.name }));
     }
     if (sizeBytes > input.maxBytes) {
       throw new Error(fileAttachmentTooLargeMessage(input.name, input.maxBytes));
@@ -263,7 +264,9 @@ export async function pickComposerFiles(input: {
   if (remainingSlots <= 0) {
     return {
       files: [],
-      error: `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} files per message.`,
+      error: tr("You can attach up to {PROVIDER_SEND_TURN_MAX_ATTACHMENTS} files per message.", {
+        PROVIDER_SEND_TURN_MAX_ATTACHMENTS: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+      }),
     };
   }
 
@@ -276,7 +279,7 @@ export async function pickComposerFiles(input: {
   } catch (cause) {
     return {
       files: [],
-      error: cause instanceof Error ? cause.message : "Could not open the file picker.",
+      error: cause instanceof Error ? cause.message : tr("Could not open the file picker."),
     };
   } finally {
     endHandoff();
@@ -328,7 +331,7 @@ export async function pickComposerFiles(input: {
         const base64 = fitted?.base64 ?? original;
         const sizeBytes = estimateBase64ByteSize(base64);
         if (sizeBytes <= 0 || sizeBytes > PROVIDER_SEND_TURN_MAX_IMAGE_BYTES) {
-          throw new Error(`'${name}' exceeds the 10 MB attachment limit.`);
+          throw new Error(tr("'{name}' exceeds the 10 MB attachment limit.", { name: name }));
         }
         const dataUrl = `data:${mimeType};base64,${base64}`;
         attachments.push({
@@ -344,11 +347,14 @@ export async function pickComposerFiles(input: {
         await removePersistedComposerAttachmentFile(attachment.fileUri);
       }
     } catch (cause) {
-      error = cause instanceof Error ? cause.message : `Could not read '${name}'.`;
+      error =
+        cause instanceof Error ? cause.message : tr("Could not read '{name}'.", { name: name });
     }
   }
   if (exceededAttachmentLimit) {
-    error = `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} files per message.`;
+    error = tr("You can attach up to {PROVIDER_SEND_TURN_MAX_ATTACHMENTS} files per message.", {
+      PROVIDER_SEND_TURN_MAX_ATTACHMENTS: PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
+    });
   }
   return { files: attachments, error };
 }
@@ -357,7 +363,7 @@ async function loadImagePicker() {
   try {
     return await import("expo-image-picker");
   } catch (error) {
-    throw new Error("The photo library is unavailable right now.", { cause: error });
+    throw new Error(tr("The photo library is unavailable right now."), { cause: error });
   }
 }
 
@@ -383,7 +389,10 @@ export async function pickComposerMedia(input: {
   if (remainingSlots <= 0) {
     return {
       attachments: [],
-      error: `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} attachments per message.`,
+      error: tr(
+        "You can attach up to {PROVIDER_SEND_TURN_MAX_ATTACHMENTS} attachments per message.",
+        { PROVIDER_SEND_TURN_MAX_ATTACHMENTS: PROVIDER_SEND_TURN_MAX_ATTACHMENTS },
+      ),
     };
   }
 
@@ -393,7 +402,8 @@ export async function pickComposerMedia(input: {
   } catch (error) {
     return {
       attachments: [],
-      error: error instanceof Error ? error.message : "The photo library is unavailable right now.",
+      error:
+        error instanceof Error ? error.message : tr("The photo library is unavailable right now."),
     };
   }
 
@@ -413,7 +423,7 @@ export async function pickComposerMedia(input: {
   } catch (error) {
     return {
       attachments: [],
-      error: error instanceof Error ? error.message : "Could not open the photo library.",
+      error: error instanceof Error ? error.message : tr("Could not open the photo library."),
     };
   } finally {
     endHandoff();
@@ -431,13 +441,16 @@ export async function pickComposerMedia(input: {
 
   for (const asset of result.assets) {
     if (attachments.length >= remainingSlots) {
-      error = `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} attachments per message.`;
+      error = tr(
+        "You can attach up to {PROVIDER_SEND_TURN_MAX_ATTACHMENTS} attachments per message.",
+        { PROVIDER_SEND_TURN_MAX_ATTACHMENTS: PROVIDER_SEND_TURN_MAX_ATTACHMENTS },
+      );
       break;
     }
     const mimeType = asset.mimeType?.toLowerCase();
     if (asset.type === "video" || mimeType?.startsWith("video/")) {
       if (input.maxVideoBytes === undefined) {
-        error = "Video attachments are unavailable here.";
+        error = tr("Video attachments are unavailable here.");
         continue;
       }
       try {
@@ -454,12 +467,14 @@ export async function pickComposerMedia(input: {
         );
       } catch (cause) {
         error =
-          cause instanceof Error ? cause.message : `Could not read '${asset.fileName ?? "video"}'.`;
+          cause instanceof Error
+            ? cause.message
+            : tr("Could not read '{name}'.", { name: asset.fileName ?? tr("video") });
       }
       continue;
     }
     if (asset.type !== "image" && !mimeType?.startsWith("image/")) {
-      error = `Unsupported file type for '${asset.fileName ?? "image"}'.`;
+      error = tr("Unsupported file type for '{name}'.", { name: asset.fileName ?? tr("image") });
       continue;
     }
 
@@ -508,13 +523,13 @@ export async function pickComposerMedia(input: {
         };
       }
     } catch {
-      error = `Failed to read '${name}'.`;
+      error = tr("Failed to read '{name}'.", { name: name });
       continue;
     }
 
     const sizeBytes = estimateBase64ByteSize(image.base64);
     if (sizeBytes <= 0 || sizeBytes > PROVIDER_SEND_TURN_MAX_IMAGE_BYTES) {
-      error = `'${name}' exceeds the 10 MB attachment limit.`;
+      error = tr("'{name}' exceeds the 10 MB attachment limit.", { name: name });
       continue;
     }
 
@@ -612,7 +627,7 @@ export async function convertPastedImagesToAttachments(input: {
         previewUri: `data:${mimeType};base64,${base64}`,
       });
     } catch (error) {
-      console.warn("Failed to read pasted image", uri, error);
+      console.warn(tr("Failed to read pasted image"), uri, error);
     } finally {
       for (const temporaryUri of temporaryUris) {
         try {
@@ -621,7 +636,7 @@ export async function convertPastedImagesToAttachments(input: {
             file.delete();
           }
         } catch (error) {
-          console.warn("Failed to remove temporary pasted image", temporaryUri, error);
+          console.warn(tr("Failed to remove temporary pasted image"), temporaryUri, error);
         }
       }
     }

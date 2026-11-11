@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { ThreadId, TrimmedNonEmptyString, TurnItemId } from "./baseSchemas.ts";
 
@@ -14,20 +15,22 @@ export const SecretRequestAnswerInput = Schema.Struct({
 export type SecretRequestAnswerInput = typeof SecretRequestAnswerInput.Type;
 
 const SECRET_REQUEST_FAILURE_MESSAGES = {
-  load_failed: "Could not load the secret request.",
-  not_found: "This secret request no longer exists.",
-  already_answered: "This secret request was already answered.",
-  agent_stopped: "The agent that asked has stopped, so this secret can't be used.",
-  store_failed: "Could not store the secret.",
-  record_failed: "Saved the secret, but could not update the request.",
-  invalid_ref: "That secretRef is not valid.",
-  read_failed: "Could not read the secret.",
-  ref_unavailable:
+  load_failed: tr("Could not load the secret request."),
+  not_found: tr("This secret request no longer exists."),
+  already_answered: tr("This secret request was already answered."),
+  agent_stopped: tr("The agent that asked has stopped, so this secret can't be used."),
+  store_failed: tr("Could not store the secret."),
+  record_failed: tr("Saved the secret, but could not update the request."),
+  invalid_ref: tr("That secretRef is not valid."),
+  read_failed: tr("Could not read the secret."),
+  ref_unavailable: tr(
     "That secretRef was already used or does not exist. Ask the user again with request_secret.",
-  ref_expired: "That secretRef expired. Ask the user again with request_secret.",
-  consume_failed: "Could not use that secretRef. Try again.",
-  not_a_file_request:
+  ),
+  ref_expired: tr("That secretRef expired. Ask the user again with request_secret."),
+  consume_failed: tr("Could not use that secretRef. Try again."),
+  not_a_file_request: tr(
     'The user did not save this secret for shell use. Ask again with request_secret and delivery: "file".',
+  ),
 } as const;
 
 export const SecretRequestFailureReason = Schema.Literals(

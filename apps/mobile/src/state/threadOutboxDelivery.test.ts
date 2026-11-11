@@ -680,7 +680,7 @@ describe("thread outbox recovery rollback", () => {
       [sourceKey]: { text: "Follow-up", attachments: [] },
     });
     harness.draftFile.setWriteError(new Error("disk full"));
-    await expect(recoverFailedThreadDraft(message)).rejects.toThrow("Composer draft persistence");
+    await expect(recoverFailedThreadDraft(message)).rejects.toThrow("草稿持久化");
     expect(composerDrafts.getComposerDraftSnapshot(sourceKey).text).toBe("Follow-up");
     harness.draftFile.setWriteError(null);
     await recoverFailedThreadDraft(message);
