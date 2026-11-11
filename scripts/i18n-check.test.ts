@@ -2,6 +2,7 @@ import { expect } from "vite-plus/test";
 import { assert, describe, it } from "@effect/vitest";
 
 import {
+  __collectTrKeysForTest,
   globToRegExp,
   placeholderMismatches,
   routePath,
@@ -29,6 +30,27 @@ describe("globToRegExp", () => {
     expect(re.test("apps/web/vite.config.ts")).toBe(true);
     expect(re.test("apps/web/ui/vite.config.ts")).toBe(false);
     expect(re.test("apps/web/vite.configxts")).toBe(false);
+  });
+});
+
+describe(".ts 泛型箭头不再因 TSX 解析丢 AST", () => {
+  it("collects tr() keys after <E>(…) in .ts files", () => {
+    const src = [
+      'import { tr } from "@t3tools/shared/i18n";',
+      "export const identity = <E>(x: E) => x;",
+      'const a = tr("Actual Size");',
+      "export const runMenuEffect = <E extends unknown>(fn: () => E) => fn();",
+      'const b = tr("Zoom In");',
+    ].join("\n");
+    expect(__collectTrKeysForTest("apps/desktop/src/app/menu.ts", src)).toEqual([
+      "Actual Size",
+      "Zoom In",
+    ]);
+  });
+
+  it("still parses .tsx as TSX", () => {
+    const src = 'export const el = () => <div label={tr("Open")}>Body</div>;';
+    expect(__collectTrKeysForTest("apps/web/src/x.tsx", src)).toEqual(["Open"]);
   });
 });
 

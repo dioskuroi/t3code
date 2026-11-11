@@ -10,6 +10,7 @@ import {
   decodeJsxEntities,
   isLikelyEnglishCopy,
   isLogicPosition,
+  scriptKindFor,
 } from "./i18n-codemod.ts";
 
 // The workspace "typescript" resolves to the @tsc-rs drop-in; resolve the real one (see i18n-codemod.ts).
@@ -259,7 +260,7 @@ function checkFile(repoRelativeFile: string, source: string): void {
     source,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TSX,
+    scriptKindFor(repoRelativeFile),
   );
   const lineOf = (pos: number) => sf.getLineAndCharacterOfPosition(pos).line + 1;
 
@@ -335,6 +336,13 @@ function checkFile(repoRelativeFile: string, source: string): void {
     ts.forEachChild(node, visit);
   };
   visit(sf);
+}
+
+/** 回归测试入口（.ts 解析修复等红绿测试）：内存源码直接驱动扫描，不依赖磁盘 fixture。 */
+export function __collectTrKeysForTest(file: string, source: string): string[] {
+  const before = new Set(trKeys);
+  checkFile(file, source);
+  return [...trKeys].filter((k) => !before.has(k));
 }
 
 function listSourceFiles(root: string): string[] {
