@@ -58,35 +58,35 @@ export function TerminalAppearancePreview(props: { readonly fontSize: number }) 
     <View className="p-4">
       <Text style={span(theme.foreground)}>
         <Text style={span(theme.palette[2])}>→ </Text>
-        <Text style={span(theme.palette[6])}>{tr("t3code")} </Text>
-        <Text style={span(theme.palette[4])}>{tr("git:(")}</Text>
-        <Text style={span(theme.palette[1])}>{tr("main")}</Text>
+        <Text style={span(theme.palette[6])}>t3code </Text>
+        <Text style={span(theme.palette[4])}>git:(</Text>
+        <Text style={span(theme.palette[1])}>main</Text>
         <Text style={span(theme.palette[4])}>)</Text>
         <Text style={span(theme.palette[3])}> ✗</Text>
-        <Text style={span(theme.foreground)}> {tr("vpr dev")}</Text>
+        <Text style={span(theme.foreground)}> vpr dev</Text>
       </Text>
       <Text style={span(theme.foreground)}>
-        <Text style={span(theme.palette[2])}>{tr("VITE v7.1.1")}</Text>
-        <Text style={span(theme.mutedForeground)}> {tr("ready in")}</Text>
-        <Text style={span(theme.foreground)}> {tr("1.24s")}</Text>
+        <Text style={span(theme.palette[2])}>VITE v7.1.1</Text>
+        <Text style={span(theme.mutedForeground)}> ready in</Text>
+        <Text style={span(theme.foreground)}> 1.24s</Text>
       </Text>
       <Text style={span(theme.foreground)}>
         <Text style={span(theme.palette[2])}>→ </Text>
-        <Text style={span(theme.mutedForeground)}>{tr("Local:")} </Text>
+        <Text style={span(theme.mutedForeground)}>Local: </Text>
         <Text style={span(theme.palette[6], { textDecorationLine: "underline" })}>
-          {tr("http://127.0.0.1:5173/")}
+          http://127.0.0.1:5173/
         </Text>
       </Text>
       <Text style={span(theme.foreground)}>
-        <Text style={span(theme.palette[2])}>{tr("\u2713 85 passed")}</Text>
-        <Text style={span(theme.palette[3])}> {tr("\u25B3 2 warnings")}</Text>
-        <Text style={span(theme.palette[1])}> {tr("\u2717 0 failed")}</Text>
+        <Text style={span(theme.palette[2])}>{"\u2713 85 passed"}</Text>
+        <Text style={span(theme.palette[3])}> {"\u25B3 2 warnings"}</Text>
+        <Text style={span(theme.palette[1])}> {"\u2717 0 failed"}</Text>
       </Text>
       <Text style={span(theme.foreground)}>
         <Text style={span(theme.background, { backgroundColor: theme.palette[2] })}>
-          {tr(" READY ")}
+          {" READY "}
         </Text>
-        <Text style={span(theme.mutedForeground)}> {tr("watching for changes")}</Text>{" "}
+        <Text style={span(theme.mutedForeground)}> watching for changes</Text>{" "}
         <Text style={span(theme.cursorForeground)}>▏</Text>
       </Text>
     </View>
@@ -113,7 +113,7 @@ const CODE_PREVIEW_LINES: ReadonlyArray<CodePreviewLine> = [
     tokens: [
       { text: "  " },
       { text: "return", keyword: true },
-      { text: tr(" `${user.name} <${user.email}>` // demonstrates how long lines behave") },
+      { text: " `${user.name} <${user.email}>` // demonstrates how long lines behave" },
     ],
   },
   { id: "close", tokens: [{ text: "}" }] },

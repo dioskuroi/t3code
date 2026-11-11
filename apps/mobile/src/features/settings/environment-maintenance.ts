@@ -95,6 +95,15 @@ export async function findEnvironmentUpdate(currentVersion: string, signal: Abor
   }
 
   if (version === undefined)
-    throw new Error(tr("No {channel} release was found.", { channel: channel }));
+    throw new Error(
+      tr("No {channel} release was found.", {
+        channel:
+          channel === "stable"
+            ? tr("Stable")
+            : channel === "preview"
+              ? tr("Preview channel")
+              : ` ${tr("Nightly")} `,
+      }),
+    );
   return compareSemverVersions(version, currentVersion) > 0 ? version : null;
 }

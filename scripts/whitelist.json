@@ -20,10 +20,12 @@
     "M2 (#78) review 补充：outbox 系诊断串（console.error / TaggedError.message / AggregateError，不进 UI）与剪贴板写失败 console.error——确不翻，白名单豁免。",
     "M3 (#79)：exact 增 Stack 路由名哨兵 Settings（含 SettingsWorkspaceLayout.android 常量，非展示层；展示层走 tr(\"Settings\")）与 Effect 超时参数 \"20 seconds\"（机制参数，非文案）。",
     "M3 (#79)：words 增补：AirPods/Apple/iOS/Material/One UI（品牌与平台名）、Command/Return（键位名）、monorepo/squash/origin/main/feat/fix/refactor/julius/t3/vpr（标识符与示例字面量）、GiB（§3.6 单位同类的存储单位）。",
-    "M3 (#79) 补充：dev/issue（示例命令与 GitHub issue 惯用保留词）、monorepo（开发术语）、add-search（示例分支名 t3/add-search 片段）。"
+    "M3 (#79) 补充：dev/issue（示例命令与 GitHub issue 惯用保留词）、monorepo（开发术语）、add-search（示例分支名 t3/add-search 片段）。",
+    "M3 (#79) review 修正：模拟终端预览输出与代码示例整体还原英文（§10 禁译区），还原后的裸字面量按 exact 豁免。"
   ],
   "contains": ["/side", "@container", "update-desktop-database exit code", "xdg-mime exit code"],
   "exact": [
+    " READY ",
     "!modelPickerOpen && isDesktop",
     "!terminalFocus",
     "!terminalFocus && !editableFocus",
@@ -262,6 +264,7 @@
     "Loading",
     "Local State",
     "Local Storage",
+    "Local:",
     "Makefile",
     "Mask value out of range",
     "Meta",
@@ -287,6 +290,7 @@
     "Procfile",
     "Programs",
     "PyCharm CE",
+    "READY",
     "Rakefile",
     "Read",
     "Ready",
@@ -367,10 +371,16 @@
     "\\Programs\\nodejs",
     "\\Volta\\bin",
     "\\scoop\\shims",
+    "`${user.name} <${user.email}>` // demonstrates how long lines behave",
+    "ready in",
+    "watching for changes",
     "{scheme}://ssh/{zedDestination}{encodedZedPath}",
     "} else {  }",
     "} else { $env.PATH? | default '' }",
-    "…[truncated]"
+    "…[truncated]",
+    "△ 2 warnings",
+    "✓ 85 passed",
+    "✗ 0 failed"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",

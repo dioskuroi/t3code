@@ -125,7 +125,9 @@ function ThemeCard(props: {
 }) {
   const choice = (appearance: MobileThemeAppearance, selected: boolean) => (
     <Pressable
-      accessibilityHint={tr("Sets the {appearance} appearance only", { appearance: appearance })}
+      accessibilityHint={tr("Sets the {appearance} appearance only", {
+        appearance: appearance === "light" ? tr("Light") : tr("Dark"),
+      })}
       accessibilityLabel={`${props.label} ${appearance} theme`}
       accessibilityRole="button"
       accessibilityState={{ disabled: props.disabled, selected }}
