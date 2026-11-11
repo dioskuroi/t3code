@@ -6,6 +6,7 @@ vi.mock(import("../ChatMarkdown"), () => ({
 }));
 
 import { render } from "../../../test/render";
+import { tr } from "@t3tools/shared/i18n";
 import { ComposerPendingUserInputPanel } from "./ComposerPendingUserInputPanel";
 
 type Question = {
@@ -67,7 +68,7 @@ it("reads a mostly Hebrew question set right to left", async () => {
     .toHaveStyle({ direction: "rtl" });
   await expect.element(text("Keep it on React 18")).toHaveStyle({ direction: "ltr" });
 
-  await screen.getByTitle("Hide the question and its options").click();
+  await screen.getByTitle(tr("Hide the question and its options")).click();
   await expect.element(text("איך לבצע את המיגרציה?")).toHaveStyle({ direction: "rtl" });
 });
 

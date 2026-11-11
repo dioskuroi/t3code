@@ -160,8 +160,16 @@ export interface FileResult {
   hasImport: boolean;
 }
 
+/**
+ * `.ts` 按 TS、`.tsx` 按 TSX 解析。TSX 模式会把 `<E>(…)` 泛型箭头当 JSX 开标签，
+ * 解析失败后该文件其余 AST 全丢（tr key 漏收、裸串漏检、误 wrap）——D1 review 实证。
+ */
+export function scriptKindFor(file: string): TsTypes.ScriptKind {
+  return file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+}
+
 export function collect(file: string, source: string): FileResult {
-  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const sf = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, scriptKindFor(file));
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const result: FileResult = {
     file,
@@ -380,7 +388,7 @@ function apply(file: string, r: FileResult, source: string): string {
     out = out.slice(0, rep.start) + rep.text + out.slice(rep.end);
   }
   if (r.needsImport && !r.hasImport) {
-    const sf = ts.createSourceFile(file, out, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const sf = ts.createSourceFile(file, out, ts.ScriptTarget.Latest, true, scriptKindFor(file));
     let insertAt = 0;
     for (const st of sf.statements) {
       if (ts.isImportDeclaration(st)) {

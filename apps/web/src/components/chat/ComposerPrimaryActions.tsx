@@ -1,4 +1,5 @@
 import { memo, type MouseEventHandler, type PointerEventHandler } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { CheckIcon, ChevronDownIcon, ChevronLeftIcon, Minimize2Icon, PlayIcon } from "lucide-react";
 import { CornerUpRight, ListPlus } from "lucide";
 import { MorphIcon } from "~/components/MorphIcon";
@@ -61,15 +62,15 @@ const formatPendingPrimaryActionLabel = (input: {
   questionIndex: number;
 }) => {
   if (input.isResponding) {
-    return "Submitting...";
+    return tr("Submitting…");
   }
   if (input.compact) {
-    return input.isLastQuestion ? "Submit" : "Next";
+    return input.isLastQuestion ? tr("Submit") : tr("Next");
   }
   if (!input.isLastQuestion) {
-    return "Next question";
+    return tr("Next question");
   }
-  return input.questionIndex > 0 ? "Submit answers" : "Submit answer";
+  return input.questionIndex > 0 ? tr("Submit answers") : tr("Submit answer");
 };
 
 const messageActionPillClassName =
@@ -139,7 +140,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
             onClick={() => {
               if (canOperateThread) onInterrupt();
             }}
-            aria-label="Stop generation"
+            aria-label={tr("Stop generation")}
           />
         }
       >
@@ -147,7 +148,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
           <rect x="2" y="2" width="8" height="8" rx="1.5" />
         </svg>
       </TooltipTrigger>
-      <TooltipPopup>Interrupt</TooltipPopup>
+      <TooltipPopup>{tr("Interrupt")}</TooltipPopup>
     </Tooltip>
   );
 
@@ -163,7 +164,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
               {...pointerFocusProps}
               onClick={onPreviousPendingQuestion}
               disabled={pendingAction.isResponding}
-              aria-label="Previous question"
+              aria-label={tr("Previous question")}
             >
               <ChevronLeftIcon className="size-3.5" />
             </Button>
@@ -175,7 +176,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
               onClick={onPreviousPendingQuestion}
               disabled={pendingAction.isResponding}
             >
-              Previous
+              {tr("Previous")}
             </Button>
           )
         ) : null}
@@ -210,7 +211,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
           {...pointerFocusProps}
           disabled={isSendBusy || isSendDisabled || isEnvironmentUnavailable}
         >
-          {isSendBusy ? "Sending..." : "Refine"}
+          {isSendBusy ? tr("Sending…") : tr("Refine")}
         </button>
       );
     }
@@ -223,7 +224,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
           {...pointerFocusProps}
           disabled={isSendBusy || isSendDisabled || isEnvironmentUnavailable}
         >
-          {isSendBusy ? "Sending..." : "Implement"}
+          {isSendBusy ? tr("Sending…") : tr("Implement")}
         </button>
         <Menu>
           <MenuTrigger
@@ -234,7 +235,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
                   messageActionPillClassName,
                   "h-9 rounded-l-none border-l border-message-action-foreground/20 px-2 sm:h-8",
                 )}
-                aria-label="Implementation actions"
+                aria-label={tr("Implementation actions")}
                 onMouseDown={
                   preserveComposerFocusOnPointerDown ? (event) => event.preventDefault() : undefined
                 }
@@ -251,7 +252,7 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
                 if (canOperateThread) onImplementPlanInNewThread();
               }}
             >
-              Implement in a new thread
+              {tr("Implement in a new thread")}
             </MenuItem>
           </MenuPopup>
         </Menu>
@@ -272,32 +273,57 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
   const compactsBeforeSend = compactTokens !== null && !keepFullHistory;
 
   const submitLabel = showResume
-    ? "Resume thread"
+    ? tr("Resume thread")
     : isEditingQueuedMessage
-      ? "Update queued message"
+      ? tr("Update queued message")
       : compactsBeforeSend
-        ? "Compact and send"
+        ? tr("Compact and send")
         : isQueuing
-          ? "Queue message"
+          ? tr("Queue message")
           : isRunning
-            ? "Steer message"
-            : "Submit message";
+            ? tr("Steer message")
+            : tr("Submit message");
   const submitStatus = isEnvironmentUnavailable
-    ? "Environment disconnected"
+    ? tr("Environment disconnected")
     : (sendDisabledReason ??
       (isPreparingWorktree
-        ? "Preparing worktree"
+        ? tr("Preparing worktree")
         : isSendBusy
           ? isEditingQueuedMessage
-            ? "Updating queued message"
-            : "Submitting message"
+            ? tr("Updating queued message")
+            : tr("Submitting message")
           : null));
   const submitTooltip =
     submitStatus ??
     (compactsBeforeSend
-      ? `Summarize ${compactTokens} tokens of history, then send`
+      ? tr("Summarize {compactTokens} tokens of history, then send", {
+          compactTokens: compactTokens,
+        })
       : isRunning && !isEditingQueuedMessage && canSteer
-        ? `Click to ${followUpBehavior}, ${isMacPlatform(navigator.platform) ? "⌘" : "Ctrl"}-click${alternateShortcutLabel ? ` or ${alternateShortcutLabel}` : ""} to ${alternateAction}`
+        ? (() => {
+            const behaviorLabel =
+              followUpBehavior === "queue"
+                ? tr("Queue")
+                : followUpBehavior === "steer"
+                  ? tr("Steer")
+                  : tr("Restart");
+            const alternateActionLabel =
+              alternateAction === "queue"
+                ? tr("Queue")
+                : alternateAction === "steer"
+                  ? tr("Steer")
+                  : tr("Restart");
+            const modifierKey = isMacPlatform(navigator.platform) ? "⌘" : tr("Ctrl");
+            const altHint = alternateShortcutLabel
+              ? tr(" or {label}", { label: alternateShortcutLabel })
+              : "";
+            return tr("Click to {behavior}, {key}-click{alt} to {alternateAction}", {
+              behavior: behaviorLabel,
+              key: modifierKey,
+              alt: altHint,
+              alternateAction: alternateActionLabel,
+            });
+          })()
         : submitLabel);
 
   const sendButton = (
@@ -364,7 +390,9 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
               className="flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-(--control-radius) px-2 font-medium text-base text-foreground/80 tabular-nums outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-64 sm:text-sm aria-pressed:bg-accent/60 aria-pressed:text-foreground [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:text-muted-foreground"
               {...pointerFocusProps}
               aria-pressed={!keepFullHistory}
-              aria-label={`Compact ${compactTokens} tokens of history before sending`}
+              aria-label={tr("Compact {compactTokens} tokens of history before sending", {
+                compactTokens: compactTokens,
+              })}
               disabled={!canOperateThread}
               onClick={onToggleKeepFullHistory}
             />
@@ -372,17 +400,21 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
         >
           <Minimize2Icon aria-hidden="true" />
           <span className="@max-[480px]/composer-surface:hidden">
-            {keepFullHistory ? "Keep" : "Compact"}
+            {keepFullHistory ? tr("Keep") : tr("Compact")}
           </span>
           <span className="text-muted-foreground">{compactTokens}</span>
         </TooltipTrigger>
         <TooltipPopup>
           <div>
             {keepFullHistory
-              ? `Next send keeps all ${compactTokens} tokens.`
-              : `Next send compacts ${compactTokens} tokens first.`}
+              ? tr("Next send keeps all {compactTokens} tokens.", { compactTokens: compactTokens })
+              : tr("Next send compacts {compactTokens} tokens first.", {
+                  compactTokens: compactTokens,
+                })}
           </div>
-          <div>{keepFullHistory ? "Click to compact first" : "Click to keep full history"}</div>
+          <div>
+            {keepFullHistory ? tr("Click to compact first") : tr("Click to keep full history")}
+          </div>
         </TooltipPopup>
       </Tooltip>
       {submit}

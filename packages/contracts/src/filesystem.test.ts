@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import { FilesystemBrowseError } from "./filesystem.ts";
@@ -14,7 +15,12 @@ describe("FilesystemBrowseError", () => {
       cause,
     });
 
-    expect(error.message).toBe("Failed to browse filesystem path './src/mai' from '/workspace'.");
+    expect(error.message).toBe(
+      tr("Failed to browse filesystem path '{partialPath}'{cwdSuffix}.", {
+        partialPath: "./src/mai",
+        cwdSuffix: " from '/workspace'",
+      }),
+    );
     expect(error.message).not.toContain(cause.message);
     expect(error.cause).toBe(cause);
   });

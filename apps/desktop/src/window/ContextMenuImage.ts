@@ -1,4 +1,5 @@
 import * as Electron from "electron";
+import { tr } from "@t3tools/shared/i18n";
 import { sourceDimensions } from "../preview/FaviconCapture.ts";
 
 const MAX_IMAGE_BYTES = 32 * 1024 * 1024;
@@ -21,7 +22,7 @@ export async function copyContextMenuImage(
     url.password ||
     (url.protocol === "data:" && params.srcURL.length > MAX_IMAGE_BYTES * 3)
   ) {
-    throw new Error("Unsupported image URL");
+    throw new Error(tr("Unsupported image URL"));
   }
   const fetchImage = url.protocol === "data:" ? globalThis.fetch : Electron.net.fetch;
   const response = await fetchImage(url.href, {
@@ -31,9 +32,9 @@ export async function copyContextMenuImage(
   });
   if (!response.ok || Number(response.headers.get("content-length")) > MAX_IMAGE_BYTES) {
     await response.body?.cancel();
-    throw new Error("Image request failed or exceeded the size limit");
+    throw new Error(tr("Image request failed or exceeded the size limit"));
   }
-  if (!response.body) throw new Error("Image response has no body");
+  if (!response.body) throw new Error(tr("Image response has no body"));
 
   const reader = response.body.getReader();
   const chunks: Uint8Array[] = [];
@@ -45,7 +46,7 @@ export async function copyContextMenuImage(
       byteLength += chunk.value.byteLength;
       if (byteLength > MAX_IMAGE_BYTES) {
         await reader.cancel();
-        throw new Error("Image exceeded the size limit");
+        throw new Error(tr("Image exceeded the size limit"));
       }
       chunks.push(chunk.value);
     }
@@ -61,7 +62,7 @@ export async function copyContextMenuImage(
     dimensions.height <= 0 ||
     dimensions.width * dimensions.height > MAX_IMAGE_BYTES / 4
   ) {
-    throw new Error("Image dimensions exceed the size limit");
+    throw new Error(tr("Image dimensions exceed the size limit"));
   }
   if (contents.isDestroyed() || frame.isDestroyed()) return;
   const image = Electron.nativeImage.createFromBuffer(bytes);
@@ -89,12 +90,12 @@ export async function copyContextMenuImage(
         })()`,
       },
     ]);
-    if (!(decoded instanceof ArrayBuffer)) throw new Error("Image could not be decoded");
+    if (!(decoded instanceof ArrayBuffer)) throw new Error(tr("Image could not be decoded"));
     png = Buffer.from(decoded);
   } else {
     png = image.toPNG();
   }
-  if (png.byteLength > MAX_IMAGE_BYTES) throw new Error("PNG exceeded the size limit");
+  if (png.byteLength > MAX_IMAGE_BYTES) throw new Error(tr("PNG exceeded the size limit"));
   if (contents.isDestroyed() || frame.isDestroyed()) return;
   await Electron.clipboard.write([
     new Electron.ClipboardItem({

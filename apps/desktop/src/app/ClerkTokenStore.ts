@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off -- The Clerk bridge must lock the token file down before startup can yield to Electron's ready event.
 import * as NodeFS from "node:fs";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodePath from "node:path";
 
 // electron-store chmods every write to 0666; the private directory protects tokens during writes.
@@ -31,7 +32,7 @@ function lstatIfExists(path: string): NodeFS.Stats | undefined {
 
 function assertRegularFile(path: string, stat: NodeFS.Stats): void {
   if (stat.isSymbolicLink() || !stat.isFile()) {
-    throw new Error(`Clerk token file "${path}" must be a regular file.`);
+    throw new Error(tr('Clerk token file "{path}" must be a regular file.', { path: path }));
   }
 }
 
@@ -99,7 +100,9 @@ export function openClerkTokenStorage(
   NodeFS.mkdirSync(directory, { recursive: true, mode: CLERK_TOKEN_DIRECTORY_MODE });
   const stat = NodeFS.lstatSync(directory);
   if (stat.isSymbolicLink() || !stat.isDirectory()) {
-    throw new Error(`Clerk token directory "${directory}" must be a real directory.`);
+    throw new Error(
+      tr('Clerk token directory "{directory}" must be a real directory.', { directory: directory }),
+    );
   }
   NodeFS.chmodSync(directory, CLERK_TOKEN_DIRECTORY_MODE);
   // electron-store rebases relative paths under Electron userData, not the working directory.
