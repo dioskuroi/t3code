@@ -1,4 +1,5 @@
 import { PROVIDER_SEND_TURN_MAX_IMAGE_BYTES } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   downscalableImageMimeType,
   fitImageAttachmentSize,
@@ -46,7 +47,7 @@ export async function renderPhoto(
         base64: true,
       });
       if (!saved.base64) {
-        throw new Error("The rendered photo has no bytes.");
+        throw new Error(tr("The rendered photo has no bytes."));
       }
       // PNG ignores compress, so a resampled PNG can encode larger than its original.
       size =

@@ -1,4 +1,5 @@
 import type { ThreadMoveDestination } from "../threads/threadOrder";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
 import * as ThreadUndo from "@t3tools/client-runtime/state/thread-undo";
 import { showThreadUndoNotice } from "./thread-undo-notice";
@@ -49,20 +50,18 @@ function environmentSupportsAutoSettleOptOut(
 
 type ThreadListAction = "archive" | "unarchive" | "delete" | "settle" | "unsettle";
 
-const ACTION_VERBS: Record<ThreadListAction, string> = {
-  archive: "archived",
-  unarchive: "unarchived",
-  delete: "deleted",
-  settle: "settled",
-  unsettle: "un-settled",
-};
-
 function actionFailureMessage(action: ThreadListAction, cause: Cause.Cause<unknown>): string {
   const error = Cause.squash(cause);
   if (error instanceof Error && error.message.trim().length > 0) {
     return error.message;
   }
-  return `The thread could not be ${ACTION_VERBS[action]}.`;
+  return {
+    archive: tr("The thread could not be archived."),
+    unarchive: tr("The thread could not be unarchived."),
+    delete: tr("The thread could not be deleted."),
+    settle: tr("The thread could not be settled."),
+    unsettle: tr("The thread could not be un-settled."),
+  }[action];
 }
 
 function selectionHaptic(): void {
@@ -70,16 +69,16 @@ function selectionHaptic(): void {
 }
 
 function actionFailureTitle(action: ThreadListAction): string {
-  if (action === "archive") return "Could not archive thread";
-  if (action === "unarchive") return "Could not unarchive thread";
-  if (action === "settle") return "Could not settle thread";
-  if (action === "unsettle") return "Could not un-settle thread";
-  return "Could not delete thread";
+  if (action === "archive") return tr("Could not archive thread");
+  if (action === "unarchive") return tr("Could not unarchive thread");
+  if (action === "settle") return tr("Could not settle thread");
+  if (action === "unsettle") return tr("Could not un-settle thread");
+  return tr("Could not delete thread");
 }
 
 function checkThreadOperationPermission(thread: EnvironmentThreadShell, title: string): boolean {
   if (readEnvironmentScope(thread.environmentId, AuthOrchestrationOperateScope)) return true;
-  Dialog.alert(title, "This connection cannot change threads.");
+  Dialog.alert(title, tr("This connection cannot change threads."));
   return false;
 }
 
@@ -113,14 +112,16 @@ function useThreadActionExecutor(
       ) {
         Dialog.alert(
           actionFailureTitle(action),
-          "This environment's server does not support settling yet. Update the server to use Settle.",
+          tr(
+            "This environment's server does not support settling yet. Update the server to use Settle.",
+          ),
         );
         return false;
       }
       if (action === "archive" && !threadCanArchive(thread.runtime)) {
         Dialog.alert(
           actionFailureTitle(action),
-          "This thread is working. Interrupt it first, then try again.",
+          tr("This thread is working. Interrupt it first, then try again."),
         );
         return false;
       }
@@ -176,12 +177,14 @@ function confirmThreadDeletion(
   thread: EnvironmentThreadShell,
 ) {
   if (!checkThreadOperationPermission(thread, actionFailureTitle("delete"))) return;
-  const title = "Delete thread?";
-  const message = `“${thread.title}” will be permanently deleted, including its terminal history.`;
+  const title = tr("Delete thread?");
+  const message = tr("“{title}” will be permanently deleted, including its terminal history.", {
+    title: thread.title,
+  });
   Dialog.confirm({
     title,
     message,
-    confirmText: "Delete",
+    confirmText: tr("Delete"),
     destructive: true,
     onConfirm: () => {
       void executeAction("delete", thread);
@@ -247,7 +250,9 @@ export function useThreadListActions(): {
                   return pinThread(thread, step.orderKey);
                 case "snooze": {
                   const failureTitle =
-                    action === "Unpinned" ? "Could not undo unpin" : "Could not undo settle";
+                    action === "Unpinned"
+                      ? tr("Could not undo unpin")
+                      : tr("Could not undo settle");
                   if (!checkThreadOperationPermission(thread, failureTitle)) return false;
                   const result = await snoozeMutation({
                     environmentId: thread.environmentId,
@@ -256,8 +261,10 @@ export function useThreadListActions(): {
                   if (result._tag === "Failure") {
                     const error = Cause.squash(result.cause);
                     Dialog.alert(
-                      "Could not restore snooze",
-                      error instanceof Error ? error.message : "The thread could not be snoozed.",
+                      tr("Could not restore snooze"),
+                      error instanceof Error
+                        ? error.message
+                        : tr("The thread could not be snoozed."),
                     );
                     return false;
                   }
@@ -269,8 +276,8 @@ export function useThreadListActions(): {
           );
         } catch (error) {
           Dialog.alert(
-            "Could not undo thread action",
-            error instanceof Error ? error.message : "Try again.",
+            tr("Could not undo thread action"),
+            error instanceof Error ? error.message : tr("Try again."),
           );
         }
       },
@@ -291,7 +298,7 @@ export function useThreadListActions(): {
     return succeeded;
   };
   const snoozeThread = async (thread: EnvironmentThreadShell, snoozedUntil: string) => {
-    if (!checkThreadOperationPermission(thread, "Could not snooze thread")) return false;
+    if (!checkThreadOperationPermission(thread, tr("Could not snooze thread"))) return false;
     const key = scopedThreadKey(thread.environmentId, thread.id);
     if (snoozeInFlightThreadKeys.current.has(key)) {
       return false;
@@ -300,19 +307,23 @@ export function useThreadListActions(): {
     const succeeded = await (async () => {
       if (!environmentConfigLoaded(thread.environmentId)) {
         Dialog.alert(
-          "Could not snooze thread",
-          "This environment's server does not support snoozing yet. Update the server to use Snooze.",
+          tr("Could not snooze thread"),
+          tr(
+            "This environment's server does not support snoozing yet. Update the server to use Snooze.",
+          ),
         );
         return false;
       }
       if (!canSnooze(thread, { now: new Date().toISOString() })) {
         Dialog.alert(
-          "Could not snooze thread",
+          tr("Could not snooze thread"),
           thread.hasPendingApprovals ||
             thread.hasPendingUserInput ||
             thread.pendingSubagentRequest != null
-            ? "This thread is waiting on you. Respond to the pending request before snoozing it."
-            : "This thread is still starting a turn. Try again once it's running.",
+            ? tr(
+                "This thread is waiting on you. Respond to the pending request before snoozing it.",
+              )
+            : tr("This thread is still starting a turn. Try again once it's running."),
         );
         return false;
       }
@@ -335,10 +346,10 @@ export function useThreadListActions(): {
         claim.finish();
         const error = Cause.squash(result.cause);
         Dialog.alert(
-          "Could not snooze thread",
+          tr("Could not snooze thread"),
           error instanceof Error && error.message.trim().length > 0
             ? error.message
-            : "The thread could not be snoozed.",
+            : tr("The thread could not be snoozed."),
         );
         return false;
       }
@@ -349,7 +360,7 @@ export function useThreadListActions(): {
     return succeeded;
   };
   const unsnoozeThread = async (thread: EnvironmentThreadShell) => {
-    if (!checkThreadOperationPermission(thread, "Could not wake thread")) return false;
+    if (!checkThreadOperationPermission(thread, tr("Could not wake thread"))) return false;
     const key = scopedThreadKey(thread.environmentId, thread.id);
     if (snoozeInFlightThreadKeys.current.has(key)) {
       return false;
@@ -358,8 +369,10 @@ export function useThreadListActions(): {
     const succeeded = await (async () => {
       if (!environmentConfigLoaded(thread.environmentId)) {
         Dialog.alert(
-          "Could not wake thread",
-          "This environment's server does not support snoozing yet. Update the server to wake this thread.",
+          tr("Could not wake thread"),
+          tr(
+            "This environment's server does not support snoozing yet. Update the server to wake this thread.",
+          ),
         );
         return false;
       }
@@ -378,10 +391,10 @@ export function useThreadListActions(): {
       if (result._tag === "Failure") {
         const error = Cause.squash(result.cause);
         Dialog.alert(
-          "Could not wake thread",
+          tr("Could not wake thread"),
           error instanceof Error && error.message.trim().length > 0
             ? error.message
-            : "The thread could not be woken.",
+            : tr("The thread could not be woken."),
         );
         return false;
       }
@@ -393,11 +406,11 @@ export function useThreadListActions(): {
   const unsettleThread = async (thread: EnvironmentThreadShell) =>
     (await executeAction("unsettle", thread)) === true;
   const pinThread = async (thread: EnvironmentThreadShell, restoreOrderKey?: string) => {
-    if (!checkThreadOperationPermission(thread, "Could not pin thread")) return false;
+    if (!checkThreadOperationPermission(thread, tr("Could not pin thread"))) return false;
     if (!environmentConfigLoaded(thread.environmentId)) {
       Dialog.alert(
-        "Could not pin thread",
-        "This environment's server does not support pinning yet. Update the server to use Pin.",
+        tr("Could not pin thread"),
+        tr("This environment's server does not support pinning yet. Update the server to use Pin."),
       );
       return false;
     }
@@ -425,21 +438,21 @@ export function useThreadListActions(): {
     if (result._tag === "Failure") {
       const error = Cause.squash(result.cause);
       Dialog.alert(
-        "Could not pin thread",
+        tr("Could not pin thread"),
         error instanceof Error && error.message.trim().length > 0
           ? error.message
-          : "The thread could not be pinned.",
+          : tr("The thread could not be pinned."),
       );
       return false;
     }
     return true;
   };
   const unpinThread = async (thread: EnvironmentThreadShell) => {
-    if (!checkThreadOperationPermission(thread, "Could not unpin thread")) return false;
+    if (!checkThreadOperationPermission(thread, tr("Could not unpin thread"))) return false;
     if (!environmentConfigLoaded(thread.environmentId)) {
       Dialog.alert(
-        "Could not unpin thread",
-        "This environment's server does not support pinning yet. Update the server to use Pin.",
+        tr("Could not unpin thread"),
+        tr("This environment's server does not support pinning yet. Update the server to use Pin."),
       );
       return false;
     }
@@ -459,10 +472,10 @@ export function useThreadListActions(): {
       claim.finish();
       const error = Cause.squash(result.cause);
       Dialog.alert(
-        "Could not unpin thread",
+        tr("Could not unpin thread"),
         error instanceof Error && error.message.trim().length > 0
           ? error.message
-          : "The thread could not be unpinned.",
+          : tr("The thread could not be unpinned."),
       );
       return false;
     }
@@ -472,8 +485,10 @@ export function useThreadListActions(): {
   const setThreadAutoSettle = async (thread: EnvironmentThreadShell, enabled: boolean) => {
     if (!environmentSupportsAutoSettleOptOut(thread.environmentId)) {
       Dialog.alert(
-        "Could not update auto-settle",
-        "This environment's server does not support turning auto-settle off per thread yet. Update the server to use it.",
+        tr("Could not update auto-settle"),
+        tr(
+          "This environment's server does not support turning auto-settle off per thread yet. Update the server to use it.",
+        ),
       );
       return false;
     }
@@ -485,25 +500,27 @@ export function useThreadListActions(): {
     if (result._tag === "Failure") {
       const error = Cause.squash(result.cause);
       Dialog.alert(
-        "Could not update auto-settle",
+        tr("Could not update auto-settle"),
         error instanceof Error && error.message.trim().length > 0
           ? error.message
-          : "The auto-settle setting could not be changed.",
+          : tr("The auto-settle setting could not be changed."),
       );
       return false;
     }
     return true;
   };
   const regenerateThreadTitle = async (thread: EnvironmentThreadShell) => {
-    if (!checkThreadOperationPermission(thread, "Could not regenerate title")) return false;
+    if (!checkThreadOperationPermission(thread, tr("Could not regenerate title"))) return false;
     const key = scopedThreadKey(thread.environmentId, thread.id);
     if (thread.titleRegeneration != null || titleRegenerationInFlightThreadKeys.current.has(key)) {
       return false;
     }
     if (!environmentConfigLoaded(thread.environmentId)) {
       Dialog.alert(
-        "Could not regenerate title",
-        "This environment's server does not support title regeneration yet. Update the server to regenerate thread titles.",
+        tr("Could not regenerate title"),
+        tr(
+          "This environment's server does not support title regeneration yet. Update the server to regenerate thread titles.",
+        ),
       );
       return false;
     }
@@ -518,10 +535,10 @@ export function useThreadListActions(): {
       if (result._tag === "Failure") {
         const error = Cause.squash(result.cause);
         Dialog.alert(
-          "Could not regenerate title",
+          tr("Could not regenerate title"),
           error instanceof Error && error.message.trim().length > 0
             ? error.message
-            : "The thread title could not be regenerated.",
+            : tr("The thread title could not be regenerated."),
         );
         return false;
       }
@@ -534,7 +551,7 @@ export function useThreadListActions(): {
     const commit = (title: string) => {
       const resolution = resolveThreadTitleRename({ title, originalTitle: thread.title });
       if (resolution.action === "reject-empty") {
-        Dialog.alert("Could not rename thread", "Thread title cannot be empty.");
+        Dialog.alert(tr("Could not rename thread"), tr("Thread title cannot be empty."));
         return;
       }
       if (resolution.action === "noop") return;
@@ -546,18 +563,18 @@ export function useThreadListActions(): {
         if (result._tag === "Success") return;
         const error = Cause.squash(result.cause);
         Dialog.alert(
-          "Could not rename thread",
+          tr("Could not rename thread"),
           error instanceof Error && error.message.trim().length > 0
             ? error.message
-            : "The thread could not be renamed.",
+            : tr("The thread could not be renamed."),
         );
       });
     };
 
     Dialog.prompt({
-      title: "Rename thread",
+      title: tr("Rename thread"),
       initialValue: thread.title,
-      confirmText: "Rename",
+      confirmText: tr("Rename"),
       onConfirm: commit,
     });
   };
@@ -570,7 +587,7 @@ export function useThreadListActions(): {
     reportFailure: false,
   });
   const moveThread = async (thread: EnvironmentThreadShell, direction: ThreadMoveDestination) => {
-    if (!checkThreadOperationPermission(thread, "Could not move thread")) return false;
+    if (!checkThreadOperationPermission(thread, tr("Could not move thread"))) return false;
     if (getPendingThreadOrder() !== null || appAtomRegistry.get(threadDropBusyAtom)) return false;
     const shells = appAtomRegistry.get(environmentThreadShells.navigationThreadShellsAtom);
     const current = shells.find(
@@ -598,8 +615,10 @@ export function useThreadListActions(): {
 
     if (!configs.has(thread.environmentId)) {
       Dialog.alert(
-        "Could not move thread",
-        "This environment's server does not support reordering these threads. Update the server to arrange them.",
+        tr("Could not move thread"),
+        tr(
+          "This environment's server does not support reordering these threads. Update the server to arrange them.",
+        ),
       );
       return false;
     }
@@ -629,7 +648,8 @@ export function useThreadListActions(): {
     );
     for (const assignment of assignments) {
       const target = shellByKey.get(assignment.id);
-      if (target && !checkThreadOperationPermission(target, "Could not move thread")) return false;
+      if (target && !checkThreadOperationPermission(target, tr("Could not move thread")))
+        return false;
     }
     selectionHaptic();
     appAtomRegistry.set(threadDropBusyAtom, true);
@@ -660,7 +680,7 @@ export function useThreadListActions(): {
             input: { threadId: thread.id, ...(orderKey === undefined ? {} : { orderKey }) },
           });
           if (result._tag === "Failure") {
-            Dialog.alert("Could not pin thread", String(Cause.squash(result.cause)));
+            Dialog.alert(tr("Could not pin thread"), String(Cause.squash(result.cause)));
             return false;
           }
         } else {
@@ -680,7 +700,7 @@ export function useThreadListActions(): {
         if (pending !== null && !pending.isPending()) return false;
         const target = shellByKey.get(assignment.id);
         if (target === undefined) continue;
-        if (!checkThreadOperationPermission(target, "Could not move thread")) return false;
+        if (!checkThreadOperationPermission(target, tr("Could not move thread"))) return false;
         ThreadUndo.invalidate("pin", scopedThreadKey(target.environmentId, target.id));
         const result = await reorder({
           environmentId: target.environmentId,
@@ -689,10 +709,10 @@ export function useThreadListActions(): {
         if (result._tag === "Failure") {
           const error = Cause.squash(result.cause);
           Dialog.alert(
-            "Could not move thread",
+            tr("Could not move thread"),
             error instanceof Error && error.message.trim().length > 0
               ? error.message
-              : "The thread could not be moved.",
+              : tr("The thread could not be moved."),
           );
           return false;
         }

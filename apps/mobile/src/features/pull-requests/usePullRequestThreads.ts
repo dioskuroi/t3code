@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { visibleLinkedThreads } from "@t3tools/client-runtime/state/threads";
 import { AsyncResult } from "effect/reactivity";
 import { settlePromise, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
@@ -109,7 +110,9 @@ export function usePullRequestThreads(
     const result = await settlePromise(async () => {
       if (connected && !thread && !canCheckout)
         throw new Error(
-          `Starting work from this ${terminology.shortLabel} requires source control write access.`,
+          tr("Starting work from this {kind} requires source control write access.", {
+            kind: terminology.shortLabel,
+          }),
         );
       await waitForComposerDraftsLoaded();
       const draftKey = thread
@@ -160,7 +163,7 @@ export function usePullRequestThreads(
           { text: draft.text, start: draft.text.length, end: draft.text.length },
         )
       )
-        throw new Error("Remove some context from this thread's draft, then try again.");
+        throw new Error(tr("Remove some context from this thread's draft, then try again."));
       const withContext = getComposerDraftSnapshot(draftKey);
       setComposerDraftText(
         draftKey,
@@ -173,13 +176,19 @@ export function usePullRequestThreads(
       );
       previousPrompts.current.set(draftKey, pullRequestAgentPrompt(task, terminology));
       if (thread) openThread(thread);
-      else openThreadRoute({ draft: { draftId: draftKey, title: `Ask about #${pr.number}` } });
+      else
+        openThreadRoute({
+          draft: { draftId: draftKey, title: tr("Ask about #{number}", { number: pr.number }) },
+        });
     });
     pending.current = false;
     setBusy(false);
     if (AsyncResult.isFailure(result)) {
       const cause = squashAtomCommandFailure(result);
-      Dialog.alert("Couldn't open a thread", cause instanceof Error ? cause.message : "Try again.");
+      Dialog.alert(
+        tr("Couldn't open a thread"),
+        cause instanceof Error ? cause.message : tr("Try again."),
+      );
     }
   };
   return {

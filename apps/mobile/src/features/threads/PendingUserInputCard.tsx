@@ -158,7 +158,7 @@ export function PendingUserInputCard(props: PendingUserInputCardProps) {
           {tr("User input needed")}
         </Text>
         <Text className="font-sans text-xs text-foreground-muted">
-          {questionCount} {tr("question")}
+          {questionCount} 个{tr("question")}
           {questionCount === 1 ? "" : "s"}
         </Text>
         <View className="flex-1" />

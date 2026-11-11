@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ComponentProps } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { useNavigation, useNavigationState } from "@react-navigation/native";
 import { useWorkspaceTabs } from "../workspace/WorkspaceTabsContext";
 import {
@@ -81,9 +82,9 @@ export function ThreadListToolbar(props: {
   const searchField = (
     <SearchField
       inputRef={searchRef}
-      accessibilityLabel="Search threads"
-      clearAccessibilityLabel="Clear search"
-      placeholder="Search"
+      accessibilityLabel={tr("Search threads")}
+      clearAccessibilityLabel={tr("Clear search")}
+      placeholder={tr("Search")}
       value={props.searchQuery}
       onChangeText={onSearchQueryChange}
     />
@@ -92,7 +93,7 @@ export function ThreadListToolbar(props: {
     <AndroidAnchoredMenu actions={props.filterActions} onPressAction={props.onFilterAction}>
       {(open) => (
         <AndroidHeaderIconButton
-          accessibilityLabel="Filter threads"
+          accessibilityLabel={tr("Filter threads")}
           icon={filterIcon}
           onPress={open}
         />
@@ -111,8 +112,8 @@ export function ThreadListToolbar(props: {
         searchField={searchField}
         onCloseSearch={closeSearch}
         onOpenSearch={openSearch}
-        searchAccessibilityLabel="Search threads"
-        titleAccessibilityLabel="T3 Code, Threads"
+        searchAccessibilityLabel={tr("Search threads")}
+        titleAccessibilityLabel={tr("T3 Code, Threads")}
         onOpenEnvironments={props.onOpenEnvironments}
         filter={filterButton}
       />

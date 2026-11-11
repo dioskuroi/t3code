@@ -4,6 +4,7 @@ import {
   questionAttachmentDraftKey,
   questionAttachmentDraftPrefix,
 } from "../state/question-attachments";
+import { tr } from "@t3tools/shared/i18n";
 vi.mock("../state/atom-registry", () => ({ appAtomRegistry: {} }));
 
 import {
@@ -339,7 +340,7 @@ describe("draft upload scope and offline submission", () => {
         ...input,
         states: { [key]: { status: "failed", reason: "Offline" } },
       }),
-    ).toBe("Retry or remove the failed attachment");
+    ).toBe(tr("Retry or remove the failed attachment"));
     expect(
       composerAttachmentsStillUploading({
         ...input,

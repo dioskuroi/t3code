@@ -1,4 +1,5 @@
 import * as Notifications from "expo-notifications";
+import { tr } from "@t3tools/shared/i18n";
 import { Platform } from "react-native";
 
 import type { AgentActivityProps } from "../../widgets/AgentActivity";
@@ -29,5 +30,5 @@ export async function stageShowcaseAgentActivity(
 
   await Promise.all(getAgentLiveActivities().map((existing) => existing.end("immediate")));
   // ActivityKit needs foreground startup; the runner locks only after this scene is ready.
-  return startAgentLiveActivity(activity) !== null || "Live Activity did not start";
+  return startAgentLiveActivity(activity) !== null || tr("Live Activity did not start");
 }
