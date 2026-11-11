@@ -123,7 +123,7 @@ export function describeComposerEffort(
     : !reasoning
       ? null
       : reasoning.type === "boolean"
-        ? `${reasoning.label} ${reasoning.currentValue === true ? "On" : tr("Off")}`
+        ? `${reasoning.label} ${reasoning.currentValue === true ? tr("On") : tr("Off")}`
         : ultrathink
           ? tr("Ultrathink")
           : getProviderOptionCurrentLabel(reasoning, modelSelection, traits.reportedModelSelection);
@@ -306,7 +306,7 @@ function EffortRows(props: { control: ColumnControl; traits: TraitsSelection; lo
         {([true, false] as const).map((value) => (
           <ColumnRow
             key={String(value)}
-            label={value ? "On" : tr("Off")}
+            label={value ? tr("On") : tr("Off")}
             selected={(control.descriptor.currentValue === true) === value}
             tabStop={(control.descriptor.currentValue === true) === value}
             onPick={() => traits.changeBoolean(descriptor.id, value)}
@@ -468,7 +468,7 @@ function OptionSwitchRow(props: {
   const checked = descriptor.currentValue === true;
   return (
     <label className={cn(OPTION_ROW, "has-focus-visible:bg-foreground/[0.09]")}>
-      <OptionRowText label={descriptor.label} value={checked ? "On" : tr("Off")} />
+      <OptionRowText label={descriptor.label} value={checked ? tr("On") : tr("Off")} />
       <Switch
         size="sm"
         checked={checked}

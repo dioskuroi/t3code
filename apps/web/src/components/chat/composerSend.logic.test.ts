@@ -54,7 +54,7 @@ describe("loadBalancingSendWarning", () => {
         threadContexts: [localThread],
         candidateEnvironmentIds: [remote, local],
       }).description,
-    ).toMatch(/没有符合条件的机器有可用资源/);
+    ).toMatch(/符合条件的机器均无可用资源/);
   });
 });
 

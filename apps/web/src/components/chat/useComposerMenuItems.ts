@@ -308,7 +308,7 @@ export function useComposerMenuItems({
         description:
           skill.shortDescription ??
           skill.description ??
-          (skill.scope ? `${skill.scope} skill` : tr("Run provider skill")),
+          (skill.scope ? tr("{scope} skill", { scope: skill.scope }) : tr("Run provider skill")),
       }));
     }
     if (
