@@ -454,7 +454,11 @@ function ResourceHistoryProcessNameCell({
     <div
       className="grid min-w-0 grid-cols-[1.25rem_0.375rem_minmax(0,1fr)] items-center gap-2"
       style={{ paddingLeft: `${Math.min(visualDepth, 6) * 10}px` }}
-      aria-label={`${process.isServerRoot ? tr("Root") : tr("Child")} process ${name}`}
+      aria-label={
+        process.isServerRoot
+          ? tr("Root process {name}", { name: name })
+          : tr("Child process {name}", { name: name })
+      }
     >
       <span className="size-5 shrink-0" aria-hidden="true" />
       <span

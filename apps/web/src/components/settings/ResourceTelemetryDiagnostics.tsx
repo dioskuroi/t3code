@@ -69,6 +69,15 @@ const HISTORY_WINDOWS = [
   { label: "1h", windowMs: 60 * 60_000, bucketMs: 2 * 60_000 },
 ] as const;
 
+// 展示层映射；判等与上报仍用原始 thermalState 枚举值。
+const THERMAL_STATE_LABELS: Record<string, string> = {
+  nominal: "正常",
+  fair: "良好",
+  serious: "受限",
+  critical: "严重",
+  unknown: "未知",
+};
+
 function formatRate(value: number): string {
   return `${formatBytes(value)}/s`;
 }
@@ -1038,7 +1047,11 @@ function ResourceTelemetryDiagnosticsBody({
               icon={<CpuIcon className="size-3.5" />}
               label={tr("Current CPU")}
               value={allT3 ? `${allT3.currentCpuPercent.toFixed(1)}%` : "..."}
-              detail={allT3 ? `${formatCpuTime(allT3.cpuTimeMs)} observed CPU time` : undefined}
+              detail={
+                allT3
+                  ? tr("Observed CPU time {duration}", { duration: formatCpuTime(allT3.cpuTimeMs) })
+                  : undefined
+              }
             />
             <IconStat
               icon={<MemoryStickIcon className="size-3.5" />}
@@ -1067,13 +1080,21 @@ function ResourceTelemetryDiagnosticsBody({
               icon={<HardDriveIcon className="size-3.5" />}
               label={tr("Read throughput")}
               value={allT3 ? formatRate(allT3.ioReadBytesPerSecond) : "..."}
-              detail={allT3 ? `${formatBytes(allT3.ioReadBytes)} observed` : undefined}
+              detail={
+                allT3
+                  ? tr("Observed {bytes}", { bytes: formatBytes(allT3.ioReadBytes) })
+                  : undefined
+              }
             />
             <IconStat
               icon={<DatabaseIcon className="size-3.5" />}
               label={tr("Write throughput")}
               value={allT3 ? formatRate(allT3.ioWriteBytesPerSecond) : "..."}
-              detail={allT3 ? `${formatBytes(allT3.ioWriteBytes)} observed` : undefined}
+              detail={
+                allT3
+                  ? tr("Observed {bytes}", { bytes: formatBytes(allT3.ioWriteBytes) })
+                  : undefined
+              }
               tone={
                 allT3 && allT3.ioWriteBytesPerSecond >= 10 * 1_024 * 1_024
                   ? "danger"
@@ -1092,7 +1113,15 @@ function ResourceTelemetryDiagnosticsBody({
                     : `${speedLimit.toFixed(0)}%`
                   : "..."
               }
-              detail={snapshot ? `${snapshot.power.thermalState} thermal state` : undefined}
+              detail={
+                snapshot
+                  ? tr("Thermal state: {state}", {
+                      state:
+                        THERMAL_STATE_LABELS[snapshot.power.thermalState] ??
+                        snapshot.power.thermalState,
+                    })
+                  : undefined
+              }
               tone={speedLimit !== null && speedLimit < 80 ? "warning" : "default"}
             />
           </div>
@@ -1184,7 +1213,9 @@ function ResourceTelemetryDiagnosticsBody({
                 />
                 <DetailRow
                   label={tr("Thermal")}
-                  value={snapshot.power.thermalState}
+                  value={
+                    THERMAL_STATE_LABELS[snapshot.power.thermalState] ?? snapshot.power.thermalState
+                  }
                   valueClassName={
                     snapshot.power.thermalState === "serious" ||
                     snapshot.power.thermalState === "critical"
@@ -1229,7 +1260,10 @@ function ResourceTelemetryDiagnosticsBody({
                 />
                 <DetailRow
                   label={tr("Process scan")}
-                  value={`${snapshot.health.retainedProcessCount}/${snapshot.health.scannedProcessCount} retained`}
+                  value={tr("{retained}/{scanned} retained", {
+                    retained: snapshot.health.retainedProcessCount,
+                    scanned: snapshot.health.scannedProcessCount,
+                  })}
                 />
                 <DetailRow
                   label={tr("Inaccessible")}

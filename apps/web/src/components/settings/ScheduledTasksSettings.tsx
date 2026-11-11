@@ -329,7 +329,7 @@ export function scheduleLabel(schedule: ScheduledTaskSchedule): string {
       : weekdays.length === 5 && weekdays.every((day) => day >= 1 && day <= 5)
         ? tr("Weekdays")
         : weekdays.map((day) => WEEKDAY_LABELS[day]).join(", ");
-  return `${days} at ${schedule.timeOfDay}`;
+  return tr("{days} at {time}", { days: days, time: schedule.timeOfDay });
 }
 
 /** formatRelativeTime handles only the past; upcoming runs need future labels. */
