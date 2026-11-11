@@ -54,6 +54,19 @@ describe(".ts 泛型箭头不再因 TSX 解析丢 AST", () => {
   });
 });
 
+describe("模板表达式内的 tr() 递归收集", () => {
+  it("collects tr() keys nested in template spans", () => {
+    const src = [
+      'import { tr } from "@t3tools/shared/i18n";',
+      "const version = 1 as const;",
+      'export const s = `Install T3 Code ${version}. ${tr("The desktop app will close and relaunch.")}`;',
+    ].join("\n");
+    expect(__collectTrKeysForTest("apps/mobile/src/x.ts", src)).toEqual([
+      "The desktop app will close and relaunch.",
+    ]);
+  });
+});
+
 describe("placeholderMismatches", () => {
   it("matching placeholders pass regardless of word order", () => {
     expect(placeholderMismatches("{count} items loaded", "已加载 {count} 项")).toEqual([]);
@@ -109,8 +122,9 @@ describe("survivesWordWhitelist", () => {
   });
 
   it("mixed copy survives after deduction", () => {
-    expect(survivesWordWhitelist("Open VS Code")).toBe(true);
-    expect(survivesWordWhitelist("Sign in with GitHub")).toBe(true);
+    // "open" 已入 words（T02 契约标识符），换普通词验证混排仍存活。
+    expect(survivesWordWhitelist("Close VS Code")).toBe(true);
+    expect(survivesWordWhitelist("Sign in with your workspace admin")).toBe(true);
     // "code" alone is an ordinary word, not the brand phrase "vs code".
     expect(survivesWordWhitelist("Copy code")).toBe(true);
   });

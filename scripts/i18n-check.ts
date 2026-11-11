@@ -328,9 +328,10 @@ function checkFile(repoRelativeFile: string, source: string): void {
 
     if (ts.isTemplateExpression(node)) {
       // Judge by the text parts only: `${x}` alone is not copy, `New ${x} copy` is.
+      // 不提前 return：span 内的 tr() 与字面量仍需递归（M3 review 实证漏收致
+      // untranslated 假阴性 + stale 误报）。
       const textParts = node.head.text + node.templateSpans.map((s) => s.literal.text).join("");
       reportIfBare(node, textParts);
-      return;
     }
 
     ts.forEachChild(node, visit);
