@@ -121,12 +121,12 @@ export const DEFAULT_PREVIEW_APPEARANCE: PreviewAppearancePreference = "system";
 const PreviewFileDownload = Schema.Struct({ id: Schema.String, fileName: Schema.String });
 
 export const PreviewNavStatus = Schema.Union([
-  Schema.TaggedStruct(tr("Idle"), {}),
-  Schema.TaggedStruct(tr("Loading"), {
+  Schema.TaggedStruct("Idle", {}),
+  Schema.TaggedStruct("Loading", {
     url: Url,
     title: Title,
   }),
-  Schema.TaggedStruct(tr("Success"), {
+  Schema.TaggedStruct("Success", {
     url: Url,
     title: Title,
   }),

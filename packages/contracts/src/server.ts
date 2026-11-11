@@ -310,9 +310,9 @@ export const OtlpEndpointCheckInput = Schema.Struct({
 export type OtlpEndpointCheckInput = typeof OtlpEndpointCheckInput.Type;
 
 export const OtlpEndpointCheckResult = Schema.Union([
-  Schema.TaggedStruct(tr("Accepted"), { latencyMs: Schema.Number }),
-  Schema.TaggedStruct(tr("Rejected"), { status: Schema.Number }),
-  Schema.TaggedStruct(tr("Unreachable"), { timedOut: Schema.Boolean }),
+  Schema.TaggedStruct("Accepted", { latencyMs: Schema.Number }),
+  Schema.TaggedStruct("Rejected", { status: Schema.Number }),
+  Schema.TaggedStruct("Unreachable", { timedOut: Schema.Boolean }),
 ]);
 export type OtlpEndpointCheckResult = typeof OtlpEndpointCheckResult.Type;
 

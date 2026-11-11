@@ -403,9 +403,7 @@ export type PreviewAutomationTypeInput = typeof PreviewAutomationTypeInput.Type;
 export const PreviewAutomationPressInput = Schema.Struct({
   ...PreviewAutomationTabTargetFields,
   key: Schema.String.check(Schema.isTrimmed()).check(Schema.isNonEmpty()),
-  modifiers: Schema.optional(
-    Schema.Array(Schema.Literals([tr("Alt"), tr("Control"), tr("Meta"), tr("Shift")])),
-  ),
+  modifiers: Schema.optional(Schema.Array(Schema.Literals(["Alt", "Control", "Meta", "Shift"]))),
 });
 export type PreviewAutomationPressInput = typeof PreviewAutomationPressInput.Type;
 
