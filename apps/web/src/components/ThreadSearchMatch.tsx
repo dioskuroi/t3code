@@ -4,6 +4,7 @@ import {
   type SearchMatchHint,
   type SearchRange,
 } from "@t3tools/shared/paletteSearch";
+import { tr } from "@t3tools/shared/i18n";
 
 /** `text` with each range in semibold foreground. */
 function HighlightedSearchText(props: { text: string; ranges: ReadonlyArray<SearchRange> }) {
@@ -40,7 +41,7 @@ export function ThreadSearchMatchExcerpt(props: {
   return (
     <span className="truncate text-xs text-muted-foreground/85">
       <span className={isUser ? "text-info-foreground" : "text-success-foreground"}>
-        {isUser ? "You:" : "Agent:"}
+        {isUser ? tr("You:") : tr("Agent:")}
       </span>{" "}
       <HighlightedSearchText
         text={props.match.snippet}

@@ -1,4 +1,5 @@
 import { type OrchestrationV2ProviderTurn, type RunAttemptId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   deriveLatestThreadRun,
   deriveThreadRuntime,
@@ -126,13 +127,13 @@ export function agentControlledBrowserCloseConfirmation(
   if (activeBrowserCount === 0) return null;
   if (activeBrowserCount === 1) {
     return [
-      "Close browser while the agent is using it?",
-      "The agent is actively controlling this browser. Closing it may interrupt the current browser action.",
+      tr("Close browser while the agent is using it?"),
+      tr("The agent is actively controlling this browser. Closing it may interrupt the current browser action."),
     ].join("\n");
   }
   return [
-    `Close ${activeBrowserCount} browsers while the agent is using them?`,
-    "The agent is actively controlling these browsers. Closing them may interrupt the current browser actions.",
+    tr("Close {activeBrowserCount} browsers while the agent is using them?", { activeBrowserCount: activeBrowserCount }),
+    tr("The agent is actively controlling these browsers. Closing them may interrupt the current browser actions."),
   ].join("\n");
 }
 
@@ -452,7 +453,7 @@ export function buildLocalDraftThread(
   return presentThreadShell(draftThread.environmentId, {
     id: threadId,
     projectId: draftThread.projectId,
-    title: "New thread",
+    title: tr("New thread"),
     providerInstanceId: fallbackModelSelection.instanceId,
     modelSelection: fallbackModelSelection,
     runtimeMode: draftThread.runtimeMode,
@@ -562,23 +563,23 @@ export function getAntigravitySendBlockReason(
 ): string | null {
   if (provider?.driver !== "antigravity") return null;
   if (!provider.installed) {
-    return "Install Antigravity in provider settings before sending.";
+    return tr("Install Antigravity in provider settings before sending.");
   }
   if (provider.auth.status === "unauthenticated") {
-    return "Sign in to Antigravity in provider settings before sending.";
+    return tr("Sign in to Antigravity in provider settings before sending.");
   }
   const slug = model.trim();
-  if (slug.length === 0) return "Choose an Antigravity model before sending.";
+  if (slug.length === 0) return tr("Choose an Antigravity model before sending.");
   if (provider.auth.status === "unknown") return null;
   if (provider.models.length === 0) {
-    return "Refresh Antigravity models in provider settings before sending.";
+    return tr("Refresh Antigravity models in provider settings before sending.");
   }
   if (
     provider.status === "ready" &&
     slug !== ANTIGRAVITY_DEFAULT_MODEL &&
     !provider.models.some((entry) => entry.slug === slug || entry.aliases?.includes(slug))
   ) {
-    return "That Antigravity model is no longer available. Choose another model.";
+    return tr("That Antigravity model is no longer available. Choose another model.");
   }
   return null;
 }
@@ -648,7 +649,7 @@ export async function resolveFileAttachmentUrl(input: {
   });
   if (result._tag === "Failure") throw squashAtomCommandFailure(result);
   const url = resolveAssetUrl(input.httpBaseUrl, result.value.relativeUrl);
-  if (url === null) throw new Error("The environment returned an invalid attachment URL.");
+  if (url === null) throw new Error(tr("The environment returned an invalid attachment URL."));
   return url;
 }
 
@@ -661,7 +662,7 @@ export async function prepareRevertedMessageAttachments(input: {
   return Promise.all(
     (input.message.attachments ?? []).map(async (attachment) => {
       if (attachment.type !== "image" && attachment.type !== "file") {
-        throw new Error("This message has an attachment that cannot be restored.");
+        throw new Error(tr("This message has an attachment that cannot be restored."));
       }
       const result = await input.createAssetUrl({
         environmentId: input.environmentId,
@@ -676,9 +677,10 @@ export async function prepareRevertedMessageAttachments(input: {
       });
       if (result._tag === "Failure") throw squashAtomCommandFailure(result);
       const url = resolveAssetUrl(input.httpBaseUrl, result.value.relativeUrl);
-      if (url === null) throw new Error("The environment returned an invalid attachment URL.");
+      if (url === null) throw new Error(tr("The environment returned an invalid attachment URL."));
       const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
-      if (!response.ok) throw new Error(`Could not restore attachment: ${attachment.name}`);
+      if (!response.ok)
+        throw new Error(tr("Could not restore attachment: {name}", { name: attachment.name }));
       return new File([await response.blob()], attachment.name, { type: attachment.mimeType });
     }),
   );
@@ -781,17 +783,16 @@ export function buildExpiredTerminalContextToastCopy(
   variant: "omitted" | "empty",
 ): { title: string; description: string } {
   const count = Math.max(1, Math.floor(expiredTerminalContextCount));
-  const noun = count === 1 ? "Expired terminal context" : "Expired terminal contexts";
-  const pronoun = count === 1 ? "it" : "them";
+  const noun = count === 1 ? tr("Expired terminal context") : tr("Expired terminal contexts");
   if (variant === "empty") {
     return {
-      title: `${noun} won't be sent`,
-      description: `Remove ${pronoun} or re-add ${pronoun} to include terminal output.`,
+      title: tr("{noun} won't be sent", { noun }),
+      description: tr("Remove {noun} or re-add {noun} to include terminal output.", { noun }),
     };
   }
   return {
-    title: `${noun} omitted from message`,
-    description: `Re-add ${pronoun} if you want that terminal output included.`,
+    title: tr("{noun} omitted from message", { noun }),
+    description: tr("Re-add {noun} if you want that terminal output included.", { noun }),
   };
 }
 
@@ -937,8 +938,8 @@ export function getStartedThreadModelChangeBlockReason(input: {
     return null;
   }
   return {
-    title: "Start a new chat to switch providers",
-    description: "This thread does not support switching providers after it has started.",
+    title: tr("Start a new chat to switch providers"),
+    description: tr("This thread does not support switching providers after it has started."),
   };
 }
 
@@ -983,7 +984,7 @@ export async function waitForRevertedMessage(
     return latest === undefined || run.ordinal > latest.ordinal ? run : latest;
   }, undefined);
   if (witness === undefined) {
-    throw new Error("The thread has changed. Select a message to rewind again.");
+    throw new Error(tr("The thread has changed. Select a message to rewind again."));
   }
   return new Promise<void>((resolve, reject) => {
     let settled = false;
@@ -1025,7 +1026,7 @@ export async function waitForRevertedMessage(
     };
     unsubscribe = appAtomRegistry.subscribe(threadAtom, inspect);
     timeout = globalThis.setTimeout(() => {
-      finish(new Error("Timed out waiting for the thread to rewind."));
+      finish(new Error(tr("Timed out waiting for the thread to rewind.")));
     }, timeoutMs);
     Promise.resolve()
       .then(revert)
@@ -1284,7 +1285,7 @@ export type LocalThreadErrorEntry = {
 };
 
 export function chatActionErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "An error occurred.";
+  return error instanceof Error ? error.message : tr("An error occurred.");
 }
 
 export function releaseChatTimelineAnchor<T extends { readonly messageId: MessageId | null }>(
@@ -1353,7 +1354,9 @@ export function makeModelDisabledReason(
       ...context,
       nextModelSelection: { instanceId, model },
     });
-    return reason ? `${reason.description} Start a new thread to use this model.` : null;
+    return reason
+      ? tr("{reason} Start a new thread to use this model.", { reason: reason.description })
+      : null;
   };
 }
 
@@ -1497,7 +1500,7 @@ export function sendTitleFallbackLabels(snapshot: ComposerSendSnapshot) {
   const previewAnnotation = snapshot.previewAnnotations[0];
   return [
     terminalContext ? formatTerminalContextLabel(terminalContext) : undefined,
-    reviewComment ? `Review: ${reviewCommentContextLabel(reviewComment)}` : undefined,
+    reviewComment ? tr("Review: {label}", { label: reviewCommentContextLabel(reviewComment) }) : undefined,
     previewAnnotation ? previewAnnotationContextLabel(previewAnnotation) : undefined,
   ];
 }
