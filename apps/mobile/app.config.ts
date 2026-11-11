@@ -140,32 +140,31 @@ const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
     widgets: [
       {
         name: "SubscriptionUsage",
-        displayName: "Subscription usage",
-        description: "Subscription quotas from your connected T3 Code environments.",
+        displayName: "订阅用量",
+        description: "显示已连接 T3 Code 环境的订阅配额。",
         ios: {
           configuration: {
-            title: "Subscription usage",
-            description:
-              "Both shows Session and Weekly when available. The Lock Screen shows the tightest selected limit.",
+            title: "订阅用量",
+            description: "“两者”会同时显示可用的会话与每周限额。锁定屏幕显示所选范围中最紧的限额。",
             parameters: {
               codexPeriod: {
-                title: "Codex limits",
+                title: "Codex 限额",
                 type: "enum",
                 default: "auto",
                 values: [
-                  { name: "Both", value: "auto" },
-                  { name: "Session", value: "session" },
-                  { name: "Weekly", value: "weekly" },
+                  { name: "两者", value: "auto" },
+                  { name: "会话", value: "session" },
+                  { name: "每周", value: "weekly" },
                 ],
               },
               claudePeriod: {
-                title: "Claude limits",
+                title: "Claude 限额",
                 type: "enum",
                 default: "auto",
                 values: [
-                  { name: "Both", value: "auto" },
-                  { name: "Session", value: "session" },
-                  { name: "Weekly", value: "weekly" },
+                  { name: "两者", value: "auto" },
+                  { name: "会话", value: "session" },
+                  { name: "每周", value: "weekly" },
                 ],
               },
             },
@@ -190,8 +189,8 @@ const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
       },
       {
         name: "AgentActivity",
-        displayName: "Agent Activity",
-        description: "Shows the current state of active T3 Code agents.",
+        displayName: "Agent 活动",
+        description: "显示活跃 T3 Code Agent 的当前状态。",
         android: null,
         ios: { supportedFamilies: ["systemSmall", "systemMedium", "accessoryRectangular"] },
       },
@@ -268,9 +267,8 @@ const config: ExpoConfig = {
       NSAppTransportSecurity: {
         NSAllowsArbitraryLoads: true,
       },
-      NSLocalNetworkUsageDescription:
-        "Allow T3 Code to connect to T3 Code servers on your local network or tailnet.",
-      NSPhotoLibraryAddUsageDescription: "Allow T3 Code to save images to your photo library.",
+      NSLocalNetworkUsageDescription: "允许 T3 Code 连接你本地网络或 tailnet 上的 T3 Code 服务器。",
+      NSPhotoLibraryAddUsageDescription: "允许 T3 Code 将图片保存到你的照片图库。",
       // System picture in picture needs background audio to start and survive outside the app.
       UIBackgroundModes: ["audio"],
       ITSAppUsesNonExemptEncryption: false,
@@ -377,7 +375,7 @@ const config: ExpoConfig = {
     [
       "expo-audio",
       {
-        microphonePermission: "Allow T3 Code to use your microphone for voice input.",
+        microphonePermission: "允许 T3 Code 使用麦克风进行语音输入。",
         recordAudioAndroid: true,
         enableBackgroundPlayback: false,
         enableBackgroundRecording: false,
@@ -386,7 +384,7 @@ const config: ExpoConfig = {
     [
       "expo-camera",
       {
-        cameraPermission: "Allow T3 Code to access your camera so you can scan pairing QR codes.",
+        cameraPermission: "允许 T3 Code 访问相机，以便扫描配对二维码。",
         microphonePermission: false,
         barcodeScannerEnabled: true,
         recordAudioAndroid: false,
@@ -397,7 +395,7 @@ const config: ExpoConfig = {
       {
         photosPermission: false,
         // `false` makes this plugin add RECORD_AUDIO to blockedPermissions, breaking Android dictation.
-        microphonePermission: "Allow T3 Code to use your microphone for voice input.",
+        microphonePermission: "允许 T3 Code 使用麦克风进行语音输入。",
       },
     ],
     [

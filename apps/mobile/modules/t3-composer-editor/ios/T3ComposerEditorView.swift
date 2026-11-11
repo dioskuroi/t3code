@@ -86,8 +86,8 @@ private final class ComposerTextView: UITextView {
   var maxInputChars = Int.max
   var enterBehavior: ComposerEnterBehavior = .send
   /// JS supplies the actual send outcomes so the iPad Command-hold HUD names the configured actions.
-  var submitTitle = "Send Message"
-  var alternateSubmitTitle = "Send Message"
+  var submitTitle = "发送消息"
+  var alternateSubmitTitle = "发送消息"
   private var bypassTextPasteInterception = false
 
   override var keyCommands: [UIKeyCommand]? {
@@ -117,7 +117,7 @@ private final class ComposerTextView: UITextView {
         modifierFlags: .shift,
         action: #selector(insertNewline(_:))
       )
-      newline.discoverabilityTitle = "New Line"
+      newline.discoverabilityTitle = "换行"
       newline.wantsPriorityOverSystemBehavior = true
       commands.append(newline)
     } else {
@@ -145,7 +145,7 @@ private final class ComposerTextView: UITextView {
         modifierFlags: [.command, .shift],
         action: #selector(pasteInline(_:))
       )
-      pasteAsText.discoverabilityTitle = "Paste as Text"
+      pasteAsText.discoverabilityTitle = "粘贴为文本"
       pasteAsText.wantsPriorityOverSystemBehavior = true
       commands.append(pasteAsText)
     }
