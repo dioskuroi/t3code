@@ -52,8 +52,13 @@ function escapeJsonHtml(value: string): string {
   return value.replace(
     /[&<>"']/g,
     (character) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character] ??
-      character,
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character] ?? character,
   );
 }
 
@@ -62,10 +67,12 @@ function highlightJson(value: string): string {
     /"(?:\\.|[^"\\])*"|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null/g;
   let highlighted = "";
   let cursor = 0;
+
   for (const match of value.matchAll(tokenPattern)) {
     const token = match[0];
     const index = match.index ?? 0;
     highlighted += escapeJsonHtml(value.slice(cursor, index));
+
     let tokenClass = "text-[var(--app-theme-secondary-foreground,var(--color-amber-600))]";
     if (token.startsWith('"')) {
       tokenClass = /^\s*:/.test(value.slice(index + token.length))

@@ -29,7 +29,8 @@
     "W9 (#66)：words 增补品牌与技术名词（1Password、CLIProxyAPI、Lucide、OTLP、SIGINT、PATH、emoji、SettingsScopeProvider、agent-device、op CLI 名）；contains 增补示例分支前缀（feat/、fix/、refactor/）示例字面量。",
     "W9 (#66)：exact 增补应用商店品牌（App Store、Google Play）；contains 增补固定短语与示例分支字面量（boring sidebar、op account list、feat/add-search、fix/login-timeout、refactor/auth）。",
     "W9 (#66)：contains 补充 boring（boring sidebar 产品名，译文中以「在 boring 侧边栏」形式出现）。",
-    "W9 (#66)：exact 增补 Effect.timeout 时长字面量（30 seconds，非 UI 文案）。"
+    "W9 (#66)：exact 增补 Effect.timeout 时长字面量（30 seconds，非 UI 文案）。",
+    "W9 review (#66)：删 exact 尾空格变体与 words/ exact 冗余 1Password、words PATH（改译「环境变量」随存量）。"
   ],
   "contains": [
     "/side",
@@ -710,7 +711,6 @@
     "+++ b/src/formatUser.ts",
     "-  return user.name.toUpperCase();",
     "--- a/src/formatUser.ts",
-    "1Password",
     "30 seconds",
     ":scope > [data-settings-scroll-target]",
     "App Store",
@@ -718,7 +718,6 @@
     "INT",
     "KILL",
     "Use $frontend-design to fix the flaky test in",
-    "Use $frontend-design to fix the flaky test in ",
     "px"
   ],
   "globs": [
@@ -1121,15 +1120,14 @@
     "TeX",
     "gh",
     "devbox",
-    "1Password",
     "CLIProxyAPI",
     "Lucide",
     "OTLP",
-    "PATH",
     "SIGINT",
     "SettingsScopeProvider",
     "agent-device",
     "emoji",
-    "op"
+    "op",
+    "1Password"
   ]
 }
