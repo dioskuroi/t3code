@@ -53,7 +53,7 @@ describe("linked pull request thread navigation", () => {
       threadSearchItems: items,
     });
     expect(groups.flatMap((group) => group.items)).toEqual(items);
-    expect(items[0]?.description).toBe("Archived thread");
+    expect(items[0]?.description).toBe("已归档 Thread");
     await items[0]?.run();
     expect(runThread).toHaveBeenCalledWith({ environmentId, id });
   });
@@ -260,11 +260,8 @@ describe("buildThreadActionItems", () => {
         ],
       }).map((group) => [group.label, group.items.map((item) => item.title)]);
 
-    expect(search("new thread in t3code", false)[0]).toEqual([
-      "Suggestions",
-      ["New thread in t3code"],
-    ]);
-    expect(search("new thread", false).map(([label]) => label)).not.toContain("Suggestions");
+    expect(search("new thread in t3code", false)[0]).toEqual(["建议", ["New thread in t3code"]]);
+    expect(search("new thread", false).map(([label]) => label)).not.toContain("建议");
     expect(search("t3", true)).toEqual([["Projects", ["t3code"]]]);
     expect(search("add project", true)).toEqual([["Actions", ["Add project"]]]);
   });
@@ -296,7 +293,7 @@ describe("buildThreadActionItems", () => {
     expect(before).toEqual([["Threads", ["thread:environment-local:title"]]]);
     expect(after).toEqual([
       ["Threads", ["thread:environment-local:title"]],
-      ["In messages", ["thread:environment-local:message"]],
+      ["在消息中", ["thread:environment-local:message"]],
     ]);
   });
 
@@ -466,8 +463,8 @@ describe("buildThreadActionItems", () => {
         projectSearchItems,
         threadSearchItems,
       }).map((group) => group.label);
-    expect(labels("lakebed")).toEqual(["Projects", "Threads"]);
-    expect(labels("lake")).toEqual(["Threads", "Projects"]);
+    expect(labels("lakebed")).toEqual(["项目", "Threads"]);
+    expect(labels("lake")).toEqual(["Threads", "项目"]);
   });
 
   it("keeps a command first over a thread in daily use that matches as well", () => {

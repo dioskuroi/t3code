@@ -1,4 +1,5 @@
 import { type ResolvedKeybindingsConfig } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { LegendList, type LegendListRef } from "@legendapp/list/react";
 import { ChevronRightIcon } from "lucide-react";
 import { type ReactNode, type RefObject, useState } from "react";
@@ -39,8 +40,8 @@ function CommandPaletteEmptyState(props: { emptyStateMessage?: string; isActions
     <div className="py-10 text-center text-sm text-muted-foreground">
       {props.emptyStateMessage ??
         (props.isActionsOnly
-          ? "No matching actions."
-          : "No matching commands, projects, or threads.")}
+          ? tr("No matching actions.")
+          : tr("No matching commands, projects, or threads."))}
     </div>
   );
 }
