@@ -2,6 +2,7 @@ import {
   ConnectionBlockedError,
   ConnectionTransientError,
 } from "@t3tools/client-runtime/connection";
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentRpcUnavailableError } from "@t3tools/client-runtime/rpc";
 import * as Cause from "effect/Cause";
 import * as Schema from "effect/Schema";
@@ -161,15 +162,15 @@ export function useComposerContextImport(input: {
     const fail = (reason: string) => {
       toastManager.add({
         type: "error",
-        title: `Couldn't bring ${record.name} into this message`,
-        description: `${reason} Remove the chip or attach the file again.`,
+        title: tr("Couldn't bring {name} into this message", { name: record.name }),
+        description: tr("{reason} Remove the chip or attach the file again.", { reason: reason }),
       });
     };
     let file = copiedComposerAttachmentFile(sourceEnvironmentId, record.attachmentId);
     if (!file) {
       const sourceConnection = readPreparedConnection(sourceEnvironmentId);
       if (!sourceConnection) {
-        fail("The environment it came from is not connected.");
+        fail(tr("The environment it came from is not connected."));
         return;
       }
       const result = await createAssetUrl({
@@ -184,14 +185,14 @@ export function useComposerContextImport(input: {
         const cause = result._tag === "Failure" ? Cause.squash(result.cause) : null;
         fail(
           isUnreachable(cause)
-            ? "The environment it came from is not reachable right now."
-            : "The original attachment is no longer available.",
+            ? tr("The environment it came from is not reachable right now.")
+            : tr("The original attachment is no longer available."),
         );
         return;
       }
       const blob = await downloadAttachmentBlob(url);
       if (!blob) {
-        fail("Downloading it from the source failed.");
+        fail(tr("Downloading it from the source failed."));
         return;
       }
       // Question attachments have no inline reference; annotations can own their screenshots.
@@ -229,7 +230,7 @@ export function useComposerContextImport(input: {
       (pendingThreadImportsRef.current.get(importTargetKey) ?? 0) > 0 &&
       countReservedAttachments() >= PROVIDER_SEND_TURN_MAX_ATTACHMENTS
     ) {
-      fail("The attachment limit has been reached.");
+      fail(tr("The attachment limit has been reached."));
       return;
     }
     if (record.kind === "image") {
@@ -254,7 +255,7 @@ export function useComposerContextImport(input: {
         },
       );
       if (!accepted.includes(localId))
-        fail("The draft rejected this attachment (duplicate or attachment limit reached).");
+        fail(tr("The draft rejected this attachment (duplicate or attachment limit reached)."));
     } else {
       const accepted = addComposerFilesToDraft([
         {
@@ -267,7 +268,7 @@ export function useComposerContextImport(input: {
         },
       ]);
       if (!accepted.includes(localId))
-        fail("The draft rejected this attachment (duplicate or attachment limit reached).");
+        fail(tr("The draft rejected this attachment (duplicate or attachment limit reached)."));
     }
   };
   const importAttachmentRecord = async (

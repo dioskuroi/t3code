@@ -1,4 +1,5 @@
 import type { EnvironmentId, ThreadContextRecord } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { collectInlineContextIds } from "../../lib/composerContextReferences";
 
 /** Attached threads the prompt still links to; replacing linked text leaves stale records. */
@@ -19,8 +20,10 @@ export function loadBalancingSendWarning(input: {
 }) {
   if (input.pending) {
     return {
-      title: "Checking machine resources",
-      description: "Resource checks are still running. You can choose a machine in the composer.",
+      title: tr("Checking machine resources"),
+      description: tr(
+        "Resource checks are still running. You can choose a machine in the composer.",
+      ),
     };
   }
   const noMachineReadsEveryThread =
@@ -29,10 +32,14 @@ export function loadBalancingSendWarning(input: {
       input.threadContexts.every((record) => record.environmentId === environmentId),
     );
   return {
-    title: "Choose a machine to continue",
+    title: tr("Choose a machine to continue"),
     description: noMachineReadsEveryThread
-      ? "No machine can read every attached thread. Choose a machine in the composer or remove the threads."
-      : "No eligible machine has available resources. Choose a machine in the composer to override.",
+      ? tr(
+          "No machine can read every attached thread. Choose a machine in the composer or remove the threads.",
+        )
+      : tr(
+          "No eligible machine has available resources. Choose a machine in the composer to override.",
+        ),
   };
 }
 
@@ -68,14 +75,14 @@ export function approvalRedirectNotice(input: {
 }): string | null {
   if (input.draftChanged) {
     return input.declined
-      ? "Approval declined. Your message changed, so it wasn't sent."
-      : "Your message changed, so it wasn't sent.";
+      ? tr("Approval declined. Your message changed, so it wasn't sent.")
+      : tr("Your message changed, so it wasn't sent.");
   }
   if (input.approvalResponding) {
-    return "An approval is already being answered, so your message wasn't sent.";
+    return tr("An approval is already being answered, so your message wasn't sent.");
   }
   if (input.declined && input.approvalArrived) {
-    return "Another approval arrived, so your message wasn't sent.";
+    return tr("Another approval arrived, so your message wasn't sent.");
   }
   return null;
 }

@@ -9,6 +9,7 @@ import {
 } from "@t3tools/contracts";
 import { useImperativeHandle, type RefObject } from "react";
 import { describe, expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 import { ATTACHMENT_ONLY_BOOTSTRAP_PROMPT } from "@t3tools/shared/composerContextReferences";
 import { toastManager } from "../ui/toast";
 
@@ -217,7 +218,7 @@ describe("useQueuedRunEdit", () => {
       expect(requireHook(hook).isEditing).toBe(false);
       await act(() => setRuns(THREAD_A, "queued"));
       await act(() => requireHook(hook).beginEdit(request));
-      const update = screen.getByRole("button", { name: "Update queued message" });
+      const update = screen.getByRole("button", { name: tr("Update queued message") });
       await expect.element(update).toBeEnabled();
       await update.click();
       await vi.waitFor(() => expect(mocks.editQueuedRun).toHaveBeenCalledOnce());
@@ -253,7 +254,7 @@ describe("useQueuedRunEdit", () => {
       }),
     );
     await act(() => requireHook(hook).removeEditingAttachment("removed"));
-    await screen.getByRole("button", { name: "Update queued message" }).click();
+    await screen.getByRole("button", { name: tr("Update queued message") }).click();
     await vi.waitFor(() => expect(mocks.editQueuedRun).toHaveBeenCalledOnce());
     expect(mocks.editQueuedRun).toHaveBeenCalledWith(
       expect.objectContaining({

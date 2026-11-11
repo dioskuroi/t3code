@@ -10,6 +10,7 @@ import {
   serializeAssistantCitation,
 } from "@t3tools/shared/assistantCitations";
 import { describe, expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 import { submitComposerDraft } from "./composerSubmission";
 
@@ -49,7 +50,10 @@ describe("submitComposerDraft", () => {
     expect(dispatchedDrafts).toEqual([]);
     expect(draft).toHaveLength(PROVIDER_SEND_TURN_MAX_INPUT_CHARS + 1);
     expect(validationMessage).toBe(
-      "Prompt is 1 character over the 120,000-character limit. Shorten or split it before sending.",
+      tr(
+        "Prompt is 1 character over the {limit}-character limit. Shorten or split it before sending.",
+        { limit: "120,000" },
+      ),
     );
     expect(preventDefault).toHaveBeenCalledOnce();
 
@@ -73,8 +77,10 @@ describe("submitComposerDraft", () => {
     });
 
     expect(result).toEqual({
-      validationMessage:
-        "Prompt is 18 characters over the 120,000-character limit. Shorten or split it before sending.",
+      validationMessage: tr(
+        "Prompt is {count} characters over the {limit}-character limit. Shorten or split it before sending.",
+        { count: "18", limit: "120,000" },
+      ),
       didDispatch: false,
     });
     expect(draft).toHaveLength(PROVIDER_SEND_TURN_MAX_INPUT_CHARS);
@@ -129,8 +135,10 @@ describe("submitComposerDraft", () => {
       });
 
       expect(result).toEqual({
-        validationMessage:
-          "Prompt is 1 character over the 120,000-character limit. Shorten or split it before sending.",
+        validationMessage: tr(
+          "Prompt is 1 character over the {limit}-character limit. Shorten or split it before sending.",
+          { limit: "120,000" },
+        ),
         didDispatch: false,
       });
       expect(onSend).not.toHaveBeenCalled();
@@ -160,8 +168,10 @@ describe("submitComposerDraft", () => {
     });
 
     expect(result).toEqual({
-      validationMessage:
-        "Prompt is 1 character over the 120,000-character limit. Shorten or split it before sending.",
+      validationMessage: tr(
+        "Prompt is 1 character over the {limit}-character limit. Shorten or split it before sending.",
+        { limit: "120,000" },
+      ),
       didDispatch: false,
     });
     expect(onSend).not.toHaveBeenCalled();

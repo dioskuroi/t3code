@@ -1,6 +1,7 @@
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import { describe, expect, it } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 import { formatInlineContextReference } from "../../lib/composerContextReferences";
 import { threadContextReference } from "../../lib/composerContextRecords";
 import { threadContextRecord } from "@t3tools/shared/composerContextReferences";
@@ -33,7 +34,7 @@ describe("loadBalancingSendWarning", () => {
         threadContexts: [localThread, remoteThread],
         candidateEnvironmentIds: [],
       }).title,
-    ).toBe("Checking machine resources");
+    ).toBe(tr("Checking machine resources"));
   });
 
   it("blames the attached threads when no machine can read all of them", () => {
@@ -43,7 +44,7 @@ describe("loadBalancingSendWarning", () => {
         threadContexts: [localThread, remoteThread],
         candidateEnvironmentIds: [local, remote],
       }).description,
-    ).toMatch(/No machine can read every attached thread/);
+    ).toMatch(/没有机器能读取所有已附 Thread/);
   });
 
   it("blames resources when one machine can read every attached thread", () => {
@@ -53,7 +54,7 @@ describe("loadBalancingSendWarning", () => {
         threadContexts: [localThread],
         candidateEnvironmentIds: [remote, local],
       }).description,
-    ).toMatch(/No eligible machine has available resources/);
+    ).toMatch(/没有符合条件的机器有可用资源/);
   });
 });
 
@@ -100,22 +101,22 @@ describe("approvalRedirectNotice", () => {
 
   it("says the decline went through when the draft changed after it", () => {
     expect(approvalRedirectNotice({ ...settled, draftChanged: true })).toBe(
-      "Approval declined. Your message changed, so it wasn't sent.",
+      tr("Approval declined. Your message changed, so it wasn't sent."),
     );
     expect(approvalRedirectNotice({ ...settled, draftChanged: true, declined: false })).toBe(
-      "Your message changed, so it wasn't sent.",
+      tr("Your message changed, so it wasn't sent."),
     );
   });
 
   it("explains an approval already being answered", () => {
     expect(
       approvalRedirectNotice({ ...settled, declined: false, approvalResponding: true }),
-    ).toMatch(/already being answered/);
+    ).toMatch(/已有权限请求正在处理/);
   });
 
   it("explains an approval that arrived during the decline", () => {
     expect(approvalRedirectNotice({ ...settled, approvalArrived: true })).toMatch(
-      /Another approval arrived/,
+      /收到新的权限请求/,
     );
   });
 
