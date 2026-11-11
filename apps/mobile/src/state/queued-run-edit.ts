@@ -5,6 +5,7 @@ import type {
   RunId,
   UploadChatAttachment,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomValue } from "@effect/atom-react";
 import { stripAttachmentOnlyBootstrapPrompt } from "@t3tools/shared/composerContextReferences";
 import {
@@ -101,8 +102,8 @@ function exitQueuedRunEdit(threadKey: string, edit: QueuedRunEdit): void {
   setThreadComposerError(
     threadKey,
     recovery === "kept"
-      ? "That message already started. Your edit is back in the composer."
-      : "That message already started, so the edit was discarded.",
+      ? tr("That message already started. Your edit is back in the composer.")
+      : tr("That message already started, so the edit was discarded."),
   );
 }
 

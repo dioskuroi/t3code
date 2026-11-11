@@ -1,4 +1,5 @@
 import * as Updates from "expo-updates";
+import { tr } from "@t3tools/shared/i18n";
 // Metro namespace imports evaluate unrelated React Native getters, including unavailable native modules.
 import { AppState } from "react-native";
 
@@ -223,7 +224,7 @@ async function performAppUpdateCheck(
   setState("checking");
   const check = await settlePromise(() => client.checkForUpdateAsync());
   if (check._tag === "Failure") {
-    reportUpdateFailure(check, "Could not check for updates.", options.onFailure);
+    reportUpdateFailure(check, tr("Could not check for updates."), options.onFailure);
     setState("idle");
     return;
   }
@@ -236,7 +237,7 @@ async function performAppUpdateCheck(
   setState("downloading");
   const fetched = await settlePromise(() => client.fetchUpdateAsync());
   if (fetched._tag === "Failure") {
-    reportUpdateFailure(fetched, "Could not download the update.", options.onFailure);
+    reportUpdateFailure(fetched, tr("Could not download the update."), options.onFailure);
     setState("idle");
     return;
   }
@@ -281,7 +282,7 @@ async function installAppUpdate(
   setState("restarting");
   const flushed = await settlePromise(() => environment.flushPendingWrites());
   if (flushed._tag === "Failure") {
-    reportUpdateFailure(flushed, "Could not save pending state.", undefined);
+    reportUpdateFailure(flushed, tr("Could not save pending state."), undefined);
     if (!userRequested) {
       deferral.installInProgress = false;
       return "flush-failed";
@@ -289,7 +290,11 @@ async function installAppUpdate(
   }
   const reloaded = await settlePromise(() => client.reloadAsync());
   if (reloaded._tag === "Failure") {
-    reportUpdateFailure(reloaded, "Downloaded, but could not restart the app.", options.onFailure);
+    reportUpdateFailure(
+      reloaded,
+      tr("Downloaded, but could not restart the app."),
+      options.onFailure,
+    );
     setState("idle");
     deferral.installInProgress = false;
     return "restart-failed";
@@ -357,7 +362,7 @@ async function applyDeferredAppUpdateInstall(
   const safe = await settlePromise(() => environment.isSafeToRestartInBackground());
   if (flushed._tag === "Failure" || safe._tag !== "Success" || !safe.value) {
     if (flushed._tag === "Failure") {
-      reportUpdateFailure(flushed, "Could not save pending state.", undefined);
+      reportUpdateFailure(flushed, tr("Could not save pending state."), undefined);
     }
     deferral.installInProgress = false;
     // Wait for a fresh background transition after failure to avoid same-session retry loops.
@@ -366,7 +371,7 @@ async function applyDeferredAppUpdateInstall(
   }
   const reloaded = await settlePromise(() => client.reloadAsync());
   if (reloaded._tag === "Failure") {
-    reportUpdateFailure(reloaded, "Downloaded, but could not restart the app.", undefined);
+    reportUpdateFailure(reloaded, tr("Downloaded, but could not restart the app."), undefined);
     deferral.installInProgress = false;
     deferral.pendingInstall = false;
   }
@@ -376,11 +381,13 @@ async function defaultConfirmInstallNow(): Promise<boolean> {
   const Dialog = await import("../../components/ui/Dialog");
   return new Promise<boolean>((resolve) => {
     Dialog.alert(
-      "Update ready",
-      "A new version has been downloaded and installs automatically the next time you leave the app. Install it now instead?",
+      tr("Update ready"),
+      tr(
+        "A new version has been downloaded and installs automatically the next time you leave the app. Install it now instead?",
+      ),
       [
-        { onPress: () => resolve(false), style: "cancel", text: "Later" },
-        { onPress: () => resolve(true), text: "Install Now" },
+        { onPress: () => resolve(false), style: "cancel", text: tr("Later") },
+        { onPress: () => resolve(true), text: tr("Install Now") },
       ],
       { cancelable: true, onDismiss: () => resolve(false) },
     );

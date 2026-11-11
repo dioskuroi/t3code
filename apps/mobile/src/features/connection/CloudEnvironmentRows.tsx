@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { ConnectionTraceId } from "./ConnectionTraceId";
 import { useAuth } from "@clerk/expo";
@@ -98,7 +99,9 @@ function CloudEnvironmentRowsContent(
     <View collapsable={false} className={cn("gap-3", showHeader && "mt-5")}>
       {showHeader ? (
         <View className="px-1">
-          <Text className="text-sm font-t3-bold uppercase text-foreground-muted">T3 Connect</Text>
+          <Text className="text-sm font-t3-bold uppercase text-foreground-muted">
+            {tr("T3 Connect")}
+          </Text>
         </View>
       ) : null}
 
@@ -137,13 +140,13 @@ function CloudEnvironmentRowsContent(
         <View collapsable={false} className="items-center gap-3 rounded-[24px] bg-grouped-card p-6">
           <AppActivityIndicator colorClassName={"accent-icon"} />
           <Text className="text-center text-sm leading-normal text-foreground-muted">
-            Loading linked cloud environments.
+            {tr("Loading linked cloud environments.")}
           </Text>
         </View>
       ) : controller.relayDiscovery.error ? null : (
         <View collapsable={false} className="rounded-[24px] bg-grouped-card p-5">
           <Text className="text-sm leading-normal text-foreground-muted">
-            No additional linked cloud environments.
+            {tr("No additional linked cloud environments.")}
           </Text>
         </View>
       )}
@@ -153,14 +156,14 @@ function CloudEnvironmentRowsContent(
       !controller.relayDiscovery.isRefreshing ? (
         <View collapsable={false} className="gap-3 rounded-[24px] bg-grouped-card p-5">
           <Text className="text-base font-t3-bold text-foreground">
-            Could not load T3 Connect environments
+            {tr("Could not load T3 Connect environments")}
           </Text>
           <Text className="text-sm text-foreground-muted">{controller.relayDiscovery.error}</Text>
           {controller.relayDiscovery.errorTraceId ? (
             <CopyTraceIdButton traceId={controller.relayDiscovery.errorTraceId} />
           ) : null}
           <Button
-            label="Try again"
+            label={tr("Try again")}
             tone="secondary"
             onPress={() => {
               void controller.refreshRelayEnvironments();
@@ -215,7 +218,7 @@ function ConnectedCloudEnvironmentRow(props: {
         ? diagnosis
           ? { statusText: diagnosis.headline }
           : {}
-        : { statusText: "Off" })}
+        : { statusText: tr("Off") })}
       value={enabled}
     />
   );
@@ -297,7 +300,12 @@ function CloudEnvironmentRowShell(props: {
     readonly lineCount: number;
   } | null>(null);
   const errorTraceId = props.connectionErrorTraceId;
-  const measuredErrorText = errorTraceId ? `${statusText} Trace ID: ${errorTraceId}` : statusText;
+  const measuredErrorText = errorTraceId
+    ? tr("{statusText} Trace ID: {errorTraceId}", {
+        statusText: statusText,
+        errorTraceId: errorTraceId,
+      })
+    : statusText;
   const errorLineCount =
     errorMeasurement?.text === measuredErrorText ? errorMeasurement.lineCount : 0;
   const errorCanExpand = props.connectionError !== null && errorLineCount > 1;
@@ -321,13 +329,13 @@ function CloudEnvironmentRowShell(props: {
     <View collapsable={false} className="flex-row items-center gap-3 bg-grouped-card px-4 py-3.5">
       <ContentContainer
         className="min-w-0 flex-1 gap-0.5"
-        accessibilityHint={props.onRemove ? "Long press to remove from this device" : undefined}
+        accessibilityHint={props.onRemove ? tr("Long press to remove from this device") : undefined}
         accessibilityRole={props.onOpen ? "button" : undefined}
         accessibilityLabel={
           props.onOpen
-            ? `Manage ${props.label}`
+            ? tr("Manage {label}", { label: props.label })
             : props.onRemove
-              ? `Remove ${props.label} from this device`
+              ? tr("Remove {label} from this device", { label: props.label })
               : undefined
         }
         onPress={props.onOpen}
@@ -394,7 +402,7 @@ function CloudEnvironmentRowShell(props: {
         </StatusContainer>
       </ContentContainer>
       <ThemedSwitch
-        accessibilityLabel={`Enable ${props.label}`}
+        accessibilityLabel={tr("Enable {label}", { label: props.label })}
         style={{ alignSelf: "center" }}
         disabled={props.disabled}
         onValueChange={props.onValueChange}
@@ -405,12 +413,14 @@ function CloudEnvironmentRowShell(props: {
           accessibilityRole={props.onOpen ? "button" : undefined}
           accessibilityLabel={
             props.onOpen
-              ? `Manage ${props.label}`
+              ? tr("Manage {label}", { label: props.label })
               : props.onRemove
-                ? `Remove ${props.label} from this device`
+                ? tr("Remove {label} from this device", { label: props.label })
                 : undefined
           }
-          accessibilityHint={props.onRemove ? "Long press to remove from this device" : undefined}
+          accessibilityHint={
+            props.onRemove ? tr("Long press to remove from this device") : undefined
+          }
           onPress={props.onOpen}
           onLongPress={props.onRemove}
           style={{
@@ -431,7 +441,7 @@ function CloudEnvironmentRowShell(props: {
 function CopyTraceIdButton(props: { readonly traceId: string }) {
   return (
     <Button
-      label="Copy trace ID"
+      label={tr("Copy trace ID")}
       tone="secondary"
       onPress={() => {
         copyTextWithHaptic(props.traceId, { target: "connection-trace-id" });

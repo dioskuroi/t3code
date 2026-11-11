@@ -1,4 +1,5 @@
 import { NativeThemeHost } from "./ui/NativeThemeHost.android";
+import { tr } from "@t3tools/shared/i18n";
 import { Box, ExtendedFloatingActionButton, Icon, Text } from "@expo/ui/jetpack-compose";
 import {
   defaultMinSize,
@@ -79,7 +80,7 @@ export function ScrollComposeButton(props: {
                     fontWeight: "500",
                   }}
                 >
-                  New thread
+                  {tr("New thread")}
                 </Text>
               </ExtendedFloatingActionButton.Text>
             </ExtendedFloatingActionButton>
@@ -90,7 +91,7 @@ export function ScrollComposeButton(props: {
       <Pressable
         onPress={props.onPress}
         accessibilityRole="button"
-        accessibilityLabel="New thread"
+        accessibilityLabel={tr("New thread")}
         android_ripple={{ foreground: true }}
         style={{
           position: "absolute",

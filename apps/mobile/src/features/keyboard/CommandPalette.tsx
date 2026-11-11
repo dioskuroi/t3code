@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { uuidv4 } from "../../lib/uuid";
 import { useNavigation } from "@react-navigation/native";
 import {
@@ -293,56 +294,56 @@ export function CommandPalette(props: {
       {
         key: "newTask",
         kind: "action",
-        title: "New thread in…",
+        title: tr("New thread in\u2026"),
         searchTerms: ["new task", "chat", "create", "project"],
         run: () => runCommand("newTask"),
       },
       {
         key: "addProject",
         kind: "action",
-        title: "Add project",
+        title: tr("Add project"),
         searchTerms: ["folder", "clone", "repository", "git"],
         run: () => navigation.navigate("AddProject"),
       },
       {
         key: "settings",
         kind: "action",
-        title: "Open settings",
+        title: tr("Open settings"),
         searchTerms: ["preferences", "configuration"],
         run: () => selectTab("settings"),
       },
       {
         key: "appearance",
         kind: "action",
-        title: "Appearance",
+        title: tr("Appearance"),
         searchTerms: ["theme", "colors", "dark", "light"],
         run: () => openSettings(navigation, "SettingsAppearance"),
       },
       {
         key: "environments",
         kind: "action",
-        title: "Manage environments",
+        title: tr("Manage environments"),
         searchTerms: ["connections", "server", "remote"],
         run: () => openSettings(navigation, "SettingsEnvironments"),
       },
       {
         key: "scheduledTasks",
         kind: "action",
-        title: "Scheduled tasks",
+        title: tr("Scheduled tasks"),
         searchTerms: ["schedule", "automations", "recurring"],
         run: () => openSettings(navigation, "SettingsScheduledTasks"),
       },
       {
         key: "usage",
         kind: "action",
-        title: "Usage",
+        title: tr("Usage"),
         searchTerms: ["limits", "accounts", "quota"],
         run: () => openSettings(navigation, "SettingsUsage"),
       },
       {
         key: "archive",
         kind: "action",
-        title: "Archived threads",
+        title: tr("Archived threads"),
         searchTerms: ["restore", "history"],
         run: () => openSettings(navigation, "SettingsArchive"),
       },
@@ -351,7 +352,7 @@ export function CommandPalette(props: {
       actions.push({
         key: "triage",
         kind: "action",
-        title: "Triage an issue",
+        title: tr("Triage an issue"),
         // Mobile has no triage hero, so name the machine before it starts.
         detail: `On ${savedConnectionsById[triageEnvironmentId]?.environmentLabel ?? "this machine"}`,
         searchTerms: ["triage", "bug", "issue", "report", "broken", "debug", "help", "support"],
@@ -368,7 +369,7 @@ export function CommandPalette(props: {
       actions.unshift({
         key: "newThread",
         kind: "action",
-        title: `New thread in ${activeProject.title}`,
+        title: tr("New thread in {project}", { project: activeProject.title }),
         searchTerms: ["new task", "chat", "create"],
         run: () =>
           selectDetail({
@@ -386,10 +387,10 @@ export function CommandPalette(props: {
     }
     if (activeThreadRef) {
       const threadActions = [
-        ["files", "Go to file", ["open", "files", "browse", "search"]],
-        ["terminal", "Open terminal", ["shell", "console"]],
-        ["review", "Review changes", ["diff", "git", "pull request"]],
-        ["copyThreadReference", "Copy PR link or thread", ["reference", "clipboard"]],
+        ["files", tr("Go to file"), ["open", "files", "browse", "search"]],
+        ["terminal", tr("Open terminal"), ["shell", "console"]],
+        ["review", tr("Review changes"), ["diff", "git", "pull request"]],
+        ["copyThreadReference", tr("Copy PR link or thread"), ["reference", "clipboard"]],
       ] as const;
       actions.push(
         ...threadActions.map(([command, title, searchTerms]) => ({
@@ -410,7 +411,10 @@ export function CommandPalette(props: {
       kind: "project",
       project,
       title: project.title,
-      detail: `New thread · ${savedConnectionsById[project.environmentId]?.environmentLabel ?? project.environmentId}`,
+      detail: tr("New thread · {environment}", {
+        environment:
+          savedConnectionsById[project.environmentId]?.environmentLabel ?? project.environmentId,
+      }),
       searchTerms: [project.workspaceRoot, "new thread", "project"],
       run: () =>
         selectDetail({
@@ -434,7 +438,7 @@ export function CommandPalette(props: {
         return {
           key: scopedThreadKey(thread.environmentId, thread.id),
           kind: "thread",
-          title: thread.title || "Untitled thread",
+          title: thread.title || tr("Untitled thread"),
           detail: [project?.title, environment].filter(Boolean).join(" · "),
           searchTerms: [],
           threadSearch: threadSearchSubject(
@@ -615,7 +619,7 @@ export function CommandPalette(props: {
           >
             <Pressable
               className="absolute inset-0 bg-backdrop"
-              accessibilityLabel="Close command palette"
+              accessibilityLabel={tr("Close command palette")}
               onPress={() => close()}
             />
             <GlassSurface
@@ -639,8 +643,8 @@ export function CommandPalette(props: {
                   />
                   <TextInput
                     ref={inputRef}
-                    accessibilityLabel="Search commands, projects, and threads"
-                    placeholder="Search commands, projects, and threads…"
+                    accessibilityLabel={tr("Search commands, projects, and threads")}
+                    placeholder={tr("Search commands, projects, and threads\u2026")}
                     placeholderTextColorClassName="accent-placeholder"
                     autoCorrect={false}
                     autoCapitalize="none"
@@ -681,14 +685,14 @@ export function CommandPalette(props: {
                 contentContainerClassName="pb-2"
                 ListEmptyComponent={
                   <Text className="p-5 text-center text-foreground-muted">
-                    {search.isPending ? "Searching…" : "No results"}
+                    {search.isPending ? tr("Searching\u2026") : tr("No results")}
                   </Text>
                 }
                 // Message results from slower environments may still arrive below.
                 ListFooterComponent={
                   results.length > 0 && search.isPending && !query.startsWith(">") ? (
                     <Text className="px-5 pt-2 text-xs text-foreground-muted">
-                      Searching messages…
+                      {tr("Searching messages\u2026")}
                     </Text>
                   ) : undefined
                 }
@@ -699,7 +703,7 @@ export function CommandPalette(props: {
                         className="px-5 pt-2 text-xs text-foreground-muted"
                         style={{ height: SECTION_LABEL_HEIGHT }}
                       >
-                        In messages
+                        {tr("In messages")}
                       </Text>
                     ) : null}
                     <PaletteRow

@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { sessionHasLegacyPermissions } from "@t3tools/contracts";
 import { Atom } from "effect/reactivity";
 import * as SecureStore from "expo-secure-store";
@@ -65,9 +66,11 @@ export function installPermissionUpdateNotice(): () => void {
       presentNext();
     };
     Dialog.alert(
-      `Permissions have changed for ${environment.label}`,
-      "This connection still uses the old permissions, so some actions may no longer be available. Pair again using a new link with the permissions you need.",
-      [{ text: "Got it", onPress: dismiss }],
+      tr("Permissions have changed for {label}", { label: environment.label }),
+      tr(
+        "This connection still uses the old permissions, so some actions may no longer be available. Pair again using a new link with the permissions you need.",
+      ),
+      [{ text: tr("Got it"), onPress: dismiss }],
       { cancelable: false },
     );
   };

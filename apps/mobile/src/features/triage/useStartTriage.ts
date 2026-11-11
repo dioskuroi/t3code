@@ -1,4 +1,5 @@
 import { pipe } from "effect/Function";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -34,14 +35,20 @@ export function useStartTriage() {
 
   const fail = (message: string) =>
     Dialog.alert(
-      "Could not start triage",
-      `${message} Run ${CLI_COMMAND} in a terminal on that machine instead.`,
+      tr("Could not start triage"),
+      tr("{message} Run {CLI_COMMAND} in a terminal on that machine instead.", {
+        message: message,
+        CLI_COMMAND: CLI_COMMAND,
+      }),
       [
         {
-          text: "Copy command",
+          text: tr("Copy command"),
           onPress: () =>
             void Clipboard.setStringAsync(CLI_COMMAND).catch(() =>
-              Dialog.alert("Could not copy", `Type ${CLI_COMMAND} instead.`),
+              Dialog.alert(
+                tr("Could not copy"),
+                tr("Type {CLI_COMMAND} instead.", { CLI_COMMAND: CLI_COMMAND }),
+              ),
             ),
         },
         { text: "OK", style: "cancel" },
@@ -71,7 +78,7 @@ export function useStartTriage() {
         pipe(
           squashAtomCommandFailure(scratch),
           (failure) =>
-            errorMessage(failure, "This machine cannot start threads without a project."),
+            errorMessage(failure, tr("This machine cannot start threads without a project.")),
           fail,
         );
       }
@@ -85,7 +92,7 @@ export function useStartTriage() {
       if (!isAtomCommandInterrupted(prepared)) {
         pipe(
           squashAtomCommandFailure(prepared),
-          (failure) => errorMessage(failure, "The server could not prepare it."),
+          (failure) => errorMessage(failure, tr("The server could not prepare it.")),
           fail,
         );
       }
@@ -94,7 +101,7 @@ export function useStartTriage() {
     try {
       await waitForComposerDraftsLoaded();
     } catch {
-      fail("Drafts could not be loaded.");
+      fail(tr("Drafts could not be loaded."));
       return;
     }
     if (routeChanged()) return;
@@ -105,7 +112,9 @@ export function useStartTriage() {
     setComposerDraftText(draftId, prepared.value.prompt);
     selectDetail({
       name: "Thread",
-      params: { draft: { environmentId, projectId: scratch.value.id, title: "Triage", draftId } },
+      params: {
+        draft: { environmentId, projectId: scratch.value.id, title: tr("Triage"), draftId },
+      },
     });
   };
 }

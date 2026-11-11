@@ -1,4 +1,5 @@
 import { useAtomMount, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { resolveFilesystemReadAccess } from "@t3tools/client-runtime/state/filesystem";
 import {
   assetUrlStateFromResult,
@@ -152,11 +153,11 @@ const freshAssetUrlFamily = Atom.family((key: FreshAssetUrlKey) =>
           key.environmentId === null
             ? null
             : await refreshAssetUrl(key.environmentId, key.resource, signal);
-        if (!url) throw new Error("Reconnect to this environment and try again.");
+        if (!url) throw new Error(tr("Reconnect to this environment and try again."));
         return { url, authorizedAt: Date.now() };
       },
       catch: (cause) =>
-        cause instanceof Error ? cause : new Error("The attachment is unavailable."),
+        cause instanceof Error ? cause : new Error(tr("The attachment is unavailable.")),
     }),
   ).pipe(Atom.withLabel("fresh-asset-url")),
 );

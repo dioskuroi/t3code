@@ -1,4 +1,5 @@
 import type { AuthClientPresentationMetadata } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 
@@ -7,14 +8,18 @@ export function authClientMetadata(appVersion?: string): AuthClientPresentationM
   const deviceModel = Device.modelName?.trim();
 
   return {
-    label: "T3 Code Mobile",
+    label: tr("T3 Code Mobile"),
     deviceType:
       Device.deviceType === Device.DeviceType.TABLET
         ? "tablet"
         : Device.deviceType === Device.DeviceType.PHONE
           ? "mobile"
           : "unknown",
-    ...(Platform.OS === "ios" ? { os: "iOS" } : Platform.OS === "android" ? { os: "Android" } : {}),
+    ...(Platform.OS === "ios"
+      ? { os: "iOS" }
+      : Platform.OS === "android"
+        ? { os: tr("Android") }
+        : {}),
     ...(Number.isFinite(osMajorVersion) && osMajorVersion > 0 ? { osMajorVersion } : {}),
     ...(deviceModel ? { deviceModel } : {}),
     surface: "mobile",

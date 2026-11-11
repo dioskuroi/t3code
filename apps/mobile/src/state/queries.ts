@@ -3,6 +3,7 @@ import {
   filterComposerPullRequestMatches,
   withLinkedComposerPullRequestsFirst,
 } from "@t3tools/shared/composerPullRequestMatches";
+import { tr } from "@t3tools/shared/i18n";
 import { resolveFilesystemReadAccess } from "@t3tools/client-runtime/state/filesystem";
 import { environmentSession } from "./session";
 import { useEnvironmentPresentation } from "./presentation";
@@ -358,7 +359,7 @@ export function usePaginatedBranches(target: VcsRefTarget) {
           const cause = Cause.squash(failed.cause);
           return cause instanceof Error && cause.message.trim().length > 0
             ? cause.message
-            : "Failed to load refs.";
+            : tr("Failed to load refs.");
         })()
       : null;
   const refresh = () => {
@@ -434,7 +435,7 @@ export function useComposerPathSearch(target: ComposerPathSearchTarget) {
         ? null
         : canReadFiles
           ? result.error
-          : (fileAccess.error ?? "This connection cannot search host files."),
+          : (fileAccess.error ?? tr("This connection cannot search host files.")),
     isPending:
       normalizedTarget.query !== debouncedTarget.query ||
       (hasTarget && (fileAccess.isPending || result.isPending)),

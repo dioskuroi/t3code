@@ -2,6 +2,7 @@ import {
   throwIfVoiceTranscriptionAborted,
   type VoiceRecorder,
 } from "@t3tools/client-runtime/voice-input";
+import { tr } from "@t3tools/shared/i18n";
 
 type Subscription = { remove(): void };
 
@@ -95,7 +96,7 @@ export function createLazyVoiceRecorder<TStatus, TRecorderState>(input: {
       );
     },
     record(options) {
-      if (!recorder) throw new Error("Voice recorder is not prepared.");
+      if (!recorder) throw new Error(tr("Voice recorder is not prepared."));
       recorder.record(options);
     },
     stop() {

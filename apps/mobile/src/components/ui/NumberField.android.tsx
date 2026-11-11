@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { View } from "react-native";
 
 import { AppText } from "./AppText";
@@ -20,7 +21,7 @@ export function NumberField(props: NumberFieldProps) {
       />
       <IconButton
         icon="minus"
-        accessibilityLabel={`Decrease ${props.label}`}
+        accessibilityLabel={tr("Decrease {label}", { label: props.label })}
         disabled={props.disabled || props.value <= props.min}
         onPress={() => adjust(-1)}
       />
@@ -28,14 +29,17 @@ export function NumberField(props: NumberFieldProps) {
         textRole="body"
         className="min-w-8 text-center"
         style={{ fontVariant: ["tabular-nums"] }}
-        accessibilityLabel={`${props.label}: ${props.formatValue?.(props.value) ?? props.value}`}
+        accessibilityLabel={tr("{label}: {value}", {
+          label: props.label,
+          value: String(props.formatValue?.(props.value) ?? props.value),
+        })}
         accessibilityLiveRegion="polite"
       >
         {props.value}
       </AppText>
       <IconButton
         icon="plus"
-        accessibilityLabel={`Increase ${props.label}`}
+        accessibilityLabel={tr("Increase {label}", { label: props.label })}
         disabled={props.disabled || props.value >= props.max}
         onPress={() => adjust(1)}
       />

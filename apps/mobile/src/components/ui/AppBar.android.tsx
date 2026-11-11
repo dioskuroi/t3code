@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { Keyboard, Pressable, TextInput, type TextInputInstance, View } from "react-native";
 import { useHardwareBack } from "../../lib/backHandler";
 import { useToolbarLayout } from "./useToolbarLayout";
@@ -90,7 +91,7 @@ export function AppBar(props: AppBarProps) {
           <View className="flex-row items-center gap-2" style={{ minHeight: buttonSize }}>
             {props.onBack ? (
               <Pressable
-                accessibilityLabel="Navigate up"
+                accessibilityLabel={tr("Navigate up")}
                 accessibilityRole="button"
                 hitSlop={8}
                 onPress={props.onBack}
@@ -160,7 +161,7 @@ export function AppBar(props: AppBarProps) {
               ...(search.refreshInToolbar && search.onRefresh
                 ? [
                     {
-                      accessibilityLabel: search.refreshAccessibilityLabel ?? "Refresh",
+                      accessibilityLabel: search.refreshAccessibilityLabel ?? tr("Refresh"),
                       icon: "arrow.clockwise" as const,
                       onPress: search.onRefresh,
                     },
@@ -201,14 +202,14 @@ export function AppBar(props: AppBarProps) {
             >
               <View className="flex-1 flex-row items-center gap-1">
                 <ScreenHeaderButton
-                  accessibilityLabel={search.closeAccessibilityLabel ?? "Close search"}
+                  accessibilityLabel={search.closeAccessibilityLabel ?? tr("Close search")}
                   icon="arrow.left"
                   onPress={closeSearch}
                 />
                 <SearchField
                   inputRef={inputRef}
                   accessibilityLabel={search.placeholder}
-                  clearAccessibilityLabel={search.clearAccessibilityLabel ?? "Clear search"}
+                  clearAccessibilityLabel={search.clearAccessibilityLabel ?? tr("Clear search")}
                   placeholder={search.placeholder}
                   value={search.value}
                   onChangeText={search.onChangeText}

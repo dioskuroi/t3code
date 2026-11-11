@@ -1,4 +1,5 @@
 import { offersLinkedEnvironments } from "@t3tools/client-runtime/link-request";
+import { tr } from "@t3tools/shared/i18n";
 import { peerLinkHealth } from "@t3tools/client-runtime/state/peerLinks";
 import { useFocusEffect } from "@react-navigation/native";
 import { AuthAccessReadScope, type EnvironmentId } from "@t3tools/contracts";
@@ -44,19 +45,21 @@ export function LinkedEnvironmentsSection(props: {
   const now = DateTime.makeUnsafe(nowMs);
   return (
     <View className="mt-5 gap-3">
-      <SettingsSection title={`Linked from ${props.environmentLabel}`}>
+      <SettingsSection title={tr("Linked from {label}", { label: props.environmentLabel })}>
         {links.data.links.map((link) => {
           const health = peerLinkHealth(link, now);
           const status =
             health.kind === "expired"
-              ? "Expired. Link it again with a new pairing code."
+              ? tr("Expired. Link it again with a new pairing code.")
               : health.kind === "unreachable"
-                ? (health.detail ?? "Not answering right now.")
+                ? (health.detail ?? tr("Not answering right now."))
                 : health.kind === "failing"
                   ? health.detail
                   : health.expiresInDays !== null
-                    ? `Expires in ${health.expiresInDays} ${health.expiresInDays === 1 ? "day" : "days"}`
-                    : "Reachable";
+                    ? health.expiresInDays === 1
+                      ? tr("Expires in 1 day")
+                      : tr("Expires in {days} days", { days: health.expiresInDays })
+                    : tr("Reachable");
           return (
             <View key={link.environmentId} className="gap-0.5 p-4">
               <Text className="text-base font-t3-bold text-foreground">{link.label}</Text>

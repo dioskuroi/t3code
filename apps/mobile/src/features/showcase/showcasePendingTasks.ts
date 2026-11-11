@@ -1,4 +1,5 @@
 import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 import {
   CommandId,
   DEFAULT_PROVIDER_INTERACTION_MODE,
@@ -14,14 +15,14 @@ export const SHOWCASE_PENDING_TASK_DEFINITIONS = [
   {
     projectId: "t3code",
     id: "offline-launch-checklist",
-    text: "Ship the offline launch checklist before touchdown ✈️",
+    text: tr("Ship the offline launch checklist before touchdown \u2708\uFE0F"),
     branch: "feat/offline-launchpad",
     minutesAgo: 8,
   },
   {
     projectId: "react",
     id: "train-tunnel-suspense",
-    text: "Polish the Suspense handoff for the train tunnel 🚇",
+    text: tr("Polish the Suspense handoff for the train tunnel \uD83D\uDE87"),
     branch: "perf/tunnel-handoff",
     minutesAgo: 27,
   },

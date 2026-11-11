@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -649,7 +650,7 @@ describe("mobile model options", () => {
       expect(isModelSelectionUnavailable(configWith(settings), selection, projectId)).toBe(true);
       expect(
         describeUnavailableModelSelection(configWith(settings), selection, projectId).title,
-      ).toBe("Model turned off for this project");
+      ).toBe(tr("Model turned off for this project"));
       expect(isModelSelectionUnavailable(configWith(settings), selection, null)).toBe(true);
     });
 
@@ -850,8 +851,10 @@ describe("synchronized mobile model visibility", () => {
       ).toBe(true);
       expect(isModelSelectionUnavailable(config, disallowed, null)).toBe(true);
       expect(describeUnavailableModelSelection(config, disallowed, null)).toEqual({
-        title: "Provider not allowed",
-        detail: "Example Corp's policy does not allow the Claude provider. Choose another model.",
+        title: tr("Provider not allowed"),
+        detail: tr("{message} Choose another model.", {
+          message: "Example Corp's policy does not allow the Claude provider.",
+        }),
       });
     });
   });

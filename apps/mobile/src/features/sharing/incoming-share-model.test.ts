@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it, vi } from "@effect/vitest";
 import {
   PROVIDER_SEND_TURN_MAX_ATTACHMENTS,
@@ -212,7 +213,9 @@ describe("incoming native shares", () => {
     });
 
     expect(result.attachments).toEqual([]);
-    expect(result.warnings).toEqual(["'empty.txt' is empty or could not be read."]);
+    expect(result.warnings).toEqual([
+      tr("'{name}' is empty or could not be read.", { name: "empty.txt" }),
+    ]);
   });
 
   it("reads an Android content URI's size after copying it into app-owned storage", async () => {
@@ -276,7 +279,9 @@ describe("incoming native shares", () => {
     });
 
     expect(result.attachments).toEqual([]);
-    expect(result.warnings).toEqual(["'report' is empty or could not be read."]);
+    expect(result.warnings).toEqual([
+      tr("'{name}' is empty or could not be read.", { name: "report" }),
+    ]);
     expect(removeOwnedFile.mock.calls.map(([uri]) => uri)).toContain(persistedUri);
   });
 

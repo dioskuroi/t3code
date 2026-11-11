@@ -1,4 +1,5 @@
 import { useNativeWorkspaceColumnsSupported } from "../../native/NativeWorkspaceColumns";
+import { tr } from "@t3tools/shared/i18n";
 import { useAdaptiveWorkspaceLayout } from "./AdaptiveWorkspaceLayout";
 import { withNativeGlassHeaderItem } from "./native-glass-header-items";
 
@@ -7,9 +8,9 @@ export function useWorkspaceSidebarHeaderItem() {
   const { layout, panes, togglePrimarySidebar } = useAdaptiveWorkspaceLayout();
   const label = panes.primarySidebarVisible
     ? layout.primarySidebarOverlaysContent
-      ? "Hide thread sidebar"
-      : "Maximize content"
-    : "Show thread sidebar";
+      ? tr("Hide thread sidebar")
+      : tr("Maximize content")
+    : tr("Show thread sidebar");
   return withNativeGlassHeaderItem({
     axisBehavior: usesNativeWorkspaceColumns ? "horizontalOnly" : undefined,
     accessibilityLabel: label,

@@ -1,4 +1,5 @@
 import { requireOptionalNativeModule } from "expo";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   VoiceTranscriptionError,
@@ -18,17 +19,19 @@ type GoogleTranscriptionModule = {
 const native = requireOptionalNativeModule<GoogleTranscriptionModule>("T3VoiceTranscription");
 
 const nativeErrorMessages: Readonly<Record<string, string>> = {
-  unavailable: "On-device voice transcription is not available for this device language.",
-  storage: "Not enough storage for on-device dictation. Free device storage and retry.",
-  quota: "On-device speech quota reached. Let the device rest or charge it, then retry.",
-  "no-speech": "No speech was detected. Speak again and retry dictation.",
-  busy: "On-device speech is busy. Wait for it to finish, then retry dictation.",
-  "needs-update": "Update Android and its on-device speech services, then retry dictation.",
-  "download-failed": "Speech model download failed. Check your network connection and retry.",
-  "audio-overflow":
+  unavailable: tr("On-device voice transcription is not available for this device language."),
+  storage: tr("Not enough storage for on-device dictation. Free device storage and retry."),
+  quota: tr("On-device speech quota reached. Let the device rest or charge it, then retry."),
+  "no-speech": tr("No speech was detected. Speak again and retry dictation."),
+  busy: tr("On-device speech is busy. Wait for it to finish, then retry dictation."),
+  "needs-update": tr("Update Android and its on-device speech services, then retry dictation."),
+  "download-failed": tr("Speech model download failed. Check your network connection and retry."),
+  "audio-overflow": tr(
     "The speech engine could not process the complete recording. No text was added. Retry dictation.",
-  "incomplete-audio":
+  ),
+  "incomplete-audio": tr(
     "Speech recognition could not process the complete recording. No text was added. Retry dictation.",
+  ),
 };
 
 let nextOperationId = 0;
@@ -77,8 +80,10 @@ async function runOperation<T>(
       code === "unavailable" || code === "unsupported-locale" ? code : fallbackCode,
       (typeof code === "string" ? nativeErrorMessages[code] : undefined) ??
         (fallbackCode === "preparation-failed"
-          ? "Voice transcription could not prepare this language. Check Google speech services and try again."
-          : "Voice transcription failed."),
+          ? tr(
+              "Voice transcription could not prepare this language. Check Google speech services and try again.",
+            )
+          : tr("Voice transcription failed.")),
       { cause: error },
     );
   } finally {

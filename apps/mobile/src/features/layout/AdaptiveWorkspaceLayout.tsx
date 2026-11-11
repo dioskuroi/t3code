@@ -2,6 +2,7 @@ import {
   WorkspaceColumnsRendererContext,
   WorkspacePresentationHostContext,
 } from "./workspace-presentation-context";
+import { tr } from "@t3tools/shared/i18n";
 import { useAndroidFloatingTabs } from "../settings/appearance/AppearancePreferencesProvider";
 import { SafeAreaInsetsContext, useSafeAreaInsets } from "react-native-safe-area-context";
 import { AdaptiveWorkspaceContext, useAdaptiveWorkspaceLayout } from "./adaptive-workspace-context";
@@ -935,8 +936,8 @@ function AdaptiveWorkspaceLayoutContent(
               renderFallback={(fallback) => (
                 <RenderFailureView
                   {...fallback}
-                  title="The sidebar couldn't be displayed"
-                  exit={{ label: "Open settings", onPress: handleOpenSettings }}
+                  title={tr("The sidebar couldn't be displayed")}
+                  exit={{ label: tr("Open settings"), onPress: handleOpenSettings }}
                 />
               )}
             >

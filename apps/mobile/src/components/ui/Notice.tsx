@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { AccessibilityInfo, Platform, Pressable, View } from "react-native";
 
 import { cn } from "../../lib/cn";
@@ -52,7 +53,7 @@ export function Notice(props: {
       {props.onDismiss ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={props.dismissLabel ?? "Dismiss message"}
+          accessibilityLabel={props.dismissLabel ?? tr("Dismiss message")}
           onPress={props.onDismiss}
           hitSlop={10}
           className="min-h-6 min-w-6 items-center justify-center active:opacity-60"

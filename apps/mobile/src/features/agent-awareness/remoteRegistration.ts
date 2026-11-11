@@ -1,4 +1,5 @@
 import { type LiveActivity } from "expo-widgets";
+import { tr } from "@t3tools/shared/i18n";
 import {
   configureAndroidAgentNotifications,
   clearAndroidAgentNotifications,
@@ -456,8 +457,8 @@ function armAgentAwarenessLiveActivityForLocalWorkNow(input: {
     const nowIso = new Date(Date.now()).toISOString();
     const activity = startAgentLiveActivity(
       {
-        title: "T3 Code",
-        subtitle: "Agent work in progress",
+        title: tr("T3 Code"),
+        subtitle: tr("Agent work in progress"),
         activeCount: 1,
         updatedAt: nowIso,
         activities: [
@@ -468,7 +469,7 @@ function armAgentAwarenessLiveActivityForLocalWorkNow(input: {
             threadTitle: input.threadTitle,
             modelTitle: "",
             phase: "starting",
-            status: "Connecting",
+            status: tr("Connecting"),
             updatedAt: nowIso,
             deepLink: "/",
           },
@@ -668,7 +669,7 @@ const registerDevice = Effect.fn("remoteRegistration.registerDevice")(function* 
       deviceId,
       label:
         Constants.deviceName?.trim() ||
-        (Platform.OS === "android" ? "Android device" : "iOS device"),
+        (Platform.OS === "android" ? tr("Android device") : "iOS device"),
       ...(Platform.OS === "android"
         ? { platform: "android" as const, androidApiLevel: Number(Platform.Version) }
         : { platform: "ios" as const, iosMajorVersion: iosMajorVersion() }),

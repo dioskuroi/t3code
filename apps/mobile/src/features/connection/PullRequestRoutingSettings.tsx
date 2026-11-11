@@ -1,4 +1,5 @@
 import { ListChoiceRow } from "../../components/ui/ListChoiceRow";
+import { tr } from "@t3tools/shared/i18n";
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
 import {
@@ -21,17 +22,22 @@ const options: ReadonlyArray<{
   label: string;
   description: string;
 }> = [
-  { value: "off", label: "Off", description: "Keep source control requests on this environment." },
+  {
+    value: "off",
+    label: tr("Off"),
+    description: tr("Keep source control requests on this environment."),
+  },
   {
     value: "read",
-    label: "Read PRs",
-    description: "Share PR data with other enabled environments.",
+    label: tr("Read PRs"),
+    description: tr("Share PR data with other enabled environments."),
   },
   {
     value: "read-write",
-    label: "Read and act",
-    description:
+    label: tr("Read and act"),
+    description: tr(
       "Actions may use broader source control permissions than the original environment.",
+    ),
   },
 ];
 
@@ -45,7 +51,7 @@ export function PullRequestRoutingSettings() {
 
   return (
     <View className="mt-5 gap-3">
-      <SettingsSection title="Pull request routing">
+      <SettingsSection title={tr("Pull request routing")}>
         {[...catalog.entries.values()].map((entry) => {
           const environmentId = entry.target.environmentId;
           const selected = pullRequestRoutingPermissionFor(entry, permissions);
@@ -65,7 +71,7 @@ export function PullRequestRoutingSettings() {
                     {entry.target.label}
                   </Text>
                   <Text className="text-xs text-foreground-muted" numberOfLines={1}>
-                    {connectionCatalogDisplayUrl(entry) ?? "T3 Connect"}
+                    {connectionCatalogDisplayUrl(entry) ?? tr("T3 Connect")}
                   </Text>
                 </View>
                 <Text className="text-sm text-foreground-muted">
@@ -91,8 +97,8 @@ export function PullRequestRoutingSettings() {
                           setSaving(false);
                           if (result._tag === "Failure")
                             Dialog.alert(
-                              "Could not save pull request routing permission",
-                              "Try again before leaving this screen.",
+                              tr("Could not save pull request routing permission"),
+                              tr("Try again before leaving this screen."),
                             );
                         });
                       }}
@@ -104,8 +110,9 @@ export function PullRequestRoutingSettings() {
         })}
       </SettingsSection>
       <Text className="px-2 text-sm text-foreground-muted">
-        Choose environments you trust to share PR data and use each other's source control access.
-        Enable both environments. This applies only to this client.
+        {tr(
+          "Choose environments you trust to share PR data and use each other's source control access.\n        Enable both environments. This applies only to this client.",
+        )}
       </Text>
     </View>
   );

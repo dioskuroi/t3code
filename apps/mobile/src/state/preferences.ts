@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import { AsyncResult, Atom } from "effect/reactivity";
 
 import * as MobilePreferences from "../persistence/mobile-preferences";
@@ -27,7 +28,7 @@ export function createMobilePreferencesState(
       MobilePreferences.MobilePreferencesStore.pipe(
         Effect.flatMap((store) => store.load),
         Effect.catch((error) =>
-          Effect.logWarning("Could not load mobile preferences.", error).pipe(
+          Effect.logWarning(tr("Could not load mobile preferences."), error).pipe(
             Effect.as<MobilePreferences.Preferences>({}),
           ),
         ),

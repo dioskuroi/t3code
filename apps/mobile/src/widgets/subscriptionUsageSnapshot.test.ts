@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import {
   EnvironmentId,
   ProviderDriverKind,
@@ -93,7 +94,7 @@ describe("subscription widget snapshots", () => {
       ],
     ]);
     expect(buildSubscriptionUsageSnapshot(input, deepLink).providers[0]?.detail).toBe(
-      "Subscription remaining",
+      tr("Subscription remaining"),
     );
     input.get(EnvironmentId.make("env"))!.serverConfig.providers = [];
     const snapshot = buildSubscriptionUsageSnapshot(input, deepLink);
@@ -130,7 +131,7 @@ describe("subscription widget snapshots", () => {
       },
     });
     const snapshot = buildSubscriptionUsageSnapshot(input, deepLink);
-    expect(snapshot.providers[0]?.detail).toBe("Subscription remaining");
+    expect(snapshot.providers[0]?.detail).toBe(tr("Subscription remaining"));
     expect(snapshot.providers[0]?.windows[0]?.remaining).toBe(20);
   });
 });
