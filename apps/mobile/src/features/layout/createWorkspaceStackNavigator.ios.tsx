@@ -12,6 +12,7 @@ import {
   type StaticConfig,
   type TypedNavigator,
 } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import {
   NativeStackView,
   type NativeStackNavigationEventMap,
@@ -453,7 +454,7 @@ function WorkspaceColumns(
                       pointerEvents="box-none"
                     >
                       <WorkspacePaneDivider
-                        accessibilityLabel="Resize inspector"
+                        accessibilityLabel={tr("Resize inspector")}
                         currentWidth={inspectorWidth}
                         resizeDirection={-1}
                         onResizeStart={() => {

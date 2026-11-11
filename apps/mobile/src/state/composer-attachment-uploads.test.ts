@@ -195,6 +195,7 @@ import {
 import type { QueuedThreadMessage } from "./thread-outbox-model";
 import * as drafts from "./use-composer-drafts";
 import { prepareQueuedMessageAttachments } from "./threadOutboxDelivery";
+import { tr } from "@t3tools/shared/i18n";
 
 const environmentId = EnvironmentId.make("environment-1");
 const draftKey = "environment-1:thread-1";
@@ -326,7 +327,7 @@ it.each(["http", "permission"] as const)(
     const queue = worker();
     await queue.settled();
     expect(composerAttachmentUploadBlockReason(sendInput())).toBe(
-      "Retry or remove the failed attachment",
+      tr("Retry or remove the failed attachment"),
     );
     expect([...native.server.values()]).toEqual([]);
   },
@@ -339,7 +340,7 @@ it("keeps an unexpected draft flush error blocking Send", async () => {
   const queue = worker();
   await queue.settled();
   expect(composerAttachmentUploadBlockReason(sendInput())).toBe(
-    "Retry or remove the failed attachment",
+    tr("Retry or remove the failed attachment"),
   );
   expect(native.deleted).toEqual(["pending-1"]);
 });

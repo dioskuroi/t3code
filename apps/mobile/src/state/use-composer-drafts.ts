@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   EnvironmentId as EnvironmentIdSchema,
   ModelSelection as ModelSelectionSchema,
@@ -354,7 +355,10 @@ export class ComposerDraftPersistenceError extends Schema.TaggedError<ComposerDr
   },
 ) {
   override get message(): string {
-    return `Composer draft persistence operation ${this.operation} failed for ${this.directory}/${this.fileName}.`;
+    return tr(
+      "Composer draft persistence operation {operation} failed for {directory}/{fileName}.",
+      { operation: this.operation, directory: this.directory, fileName: this.fileName },
+    );
   }
 }
 
@@ -1091,7 +1095,8 @@ export async function archiveCloudComposerDrafts(
   knownEnvironmentIds: Iterable<EnvironmentId>,
 ): Promise<void> {
   await waitForComposerDraftsLoaded();
-  if (!(await threadOutboxManager.load())) throw new Error("Could not preserve queued messages.");
+  if (!(await threadOutboxManager.load()))
+    throw new Error(tr("Could not preserve queued messages."));
   await flushThreadOutbox();
   const cloud = appAtomRegistry.get(composerCloudDraftsAtom);
   const owner = accountId ?? cloud.accountId;
@@ -1221,7 +1226,8 @@ export async function restoreCloudComposerDrafts(accountId: string): Promise<voi
   const cloud = appAtomRegistry.get(composerCloudDraftsAtom);
   const saved = cloud.signedOut[accountId];
   if (saved) {
-    if (!(await threadOutboxManager.load())) throw new Error("Could not restore queued messages.");
+    if (!(await threadOutboxManager.load()))
+      throw new Error(tr("Could not restore queued messages."));
     for (const message of saved.queuedMessages) {
       const alreadyQueued = Object.values(
         appAtomRegistry.get(threadOutboxManager.queuedMessagesByThreadKeyAtom),

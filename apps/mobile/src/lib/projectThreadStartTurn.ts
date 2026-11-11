@@ -9,6 +9,7 @@ import {
   type ProviderInteractionMode,
   type RuntimeMode,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   deriveThreadTitleSeed,
   threadTitleTextFromPrompt,
@@ -86,6 +87,6 @@ export function buildProjectThreadStartTurnInput(spec: ProjectThreadStartTurnSpe
 }
 
 export function deriveThreadTitleFromPrompt(value: string): string {
-  const title = threadTitleTextFromPrompt(value) || "New thread";
+  const title = threadTitleTextFromPrompt(value) || tr("New thread");
   return title.length <= 72 ? title : `${title.slice(0, 69).trimEnd()}...`;
 }

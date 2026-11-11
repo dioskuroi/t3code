@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import {
   AuthSettingsWriteScope,
   isManagedSettingPath,
@@ -34,7 +35,7 @@ export function SettingsLabsRouteScreen() {
   const insets = useSafeAreaInsets();
 
   return (
-    <SettingsScreen title="Labs">
+    <SettingsScreen title={tr("Labs")}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -113,19 +114,23 @@ export function AutoSettleSettingsRows(props: {
   return (
     <View className="gap-6">
       {!projectSelected ? (
-        <SettingsSection title="Usage limits">
+        <SettingsSection title={tr("Usage limits")}>
           <SettingsSwitchRow
             icon="clock"
-            label="Resume after usage limits"
-            subtitle="Automatically resume threads when their usage limits reset. You can cancel auto-resume in each thread."
+            label={tr("Resume after usage limits")}
+            subtitle={tr(
+              "Automatically resume threads when their usage limits reset. You can cancel auto-resume in each thread.",
+            )}
             value={uniformMobileSetting(displayTargets, "autoResumeLimitedThreads")}
             disabled={disabledFor("autoResumeLimitedThreads")}
             onValueChange={(value) => writeToAll({ autoResumeLimitedThreads: value })}
           />
           <SettingsSwitchRow
             icon="clock"
-            label="Snooze until limits reset"
-            subtitle="Snooze threads until their usage limits reset. Enable auto-resume to continue the agent after the reset."
+            label={tr("Snooze until limits reset")}
+            subtitle={tr(
+              "Snooze threads until their usage limits reset. Enable auto-resume to continue the agent after the reset.",
+            )}
             value={uniformMobileSetting(displayTargets, "snoozeLimitedThreads")}
             disabled={disabledFor("snoozeLimitedThreads")}
             onValueChange={(value) => writeToAll({ snoozeLimitedThreads: value })}
@@ -135,14 +140,14 @@ export function AutoSettleSettingsRows(props: {
       <SettingsSection title="Auto-settle">
         <SettingsSwitchRow
           icon="arrow.triangle.branch"
-          label="Auto-settle merged threads"
+          label={tr("Auto-settle merged threads")}
           value={referenceSettings.sidebarAutoSettleOnMerge}
           disabled={disabledFor("sidebarAutoSettleOnMerge")}
           onValueChange={(value) => writeToAll({ sidebarAutoSettleOnMerge: value })}
         />
         <SettingsSwitchRow
           icon="clock"
-          label="Auto-settle inactive threads"
+          label={tr("Auto-settle inactive threads")}
           value={afterDays !== null}
           disabled={disabledFor("sidebarAutoSettleAfterDays")}
           onValueChange={(value) =>
@@ -152,7 +157,9 @@ export function AutoSettleSettingsRows(props: {
         {afterDays !== null ? (
           <View className="flex-row items-center gap-4 px-4 py-4 android:min-h-14 android:py-3">
             <View className="w-[22px] android:w-6" />
-            <Text className="flex-1 text-foreground text-lg android:text-base">Inactive days</Text>
+            <Text className="flex-1 text-foreground text-lg android:text-base">
+              {tr("Inactive days")}
+            </Text>
             <AutoSettleDaysField
               value={afterDays}
               disabled={disabledFor("sidebarAutoSettleAfterDays")}
@@ -162,14 +169,14 @@ export function AutoSettleSettingsRows(props: {
         ) : null}
       </SettingsSection>
       {!props.pending && mismatches.length > 0 ? (
-        <SettingsSection title="Across environments">
+        <SettingsSection title={tr("Across environments")}>
           <View className="gap-3 p-4">
-            <Text className="text-base text-foreground">Auto-settle defaults differ</Text>
+            <Text className="text-base text-foreground">{tr("Auto-settle defaults differ")}</Text>
             <Text className="text-sm text-foreground-muted">
               {mismatches.map((mismatch) => mismatch.label).join(", ")}
             </Text>
             <Button
-              label="Apply auto-settle defaults"
+              label={tr("Apply auto-settle defaults")}
               tone="secondary"
               disabled={disabledFor("sidebarAutoSettleOnMerge", "sidebarAutoSettleAfterDays")}
               onPress={() => writeToAll(autoSettlePatch)}
@@ -189,18 +196,18 @@ export function WorkingSectionSettings() {
 
   return (
     <View className="gap-3">
-      <SettingsSection title="Sidebar">
+      <SettingsSection title={tr("Sidebar")}>
         <SettingsSwitchRow
           icon="bolt.circle"
-          label="Working section"
+          label={tr("Working section")}
           value={workingShelfEnabled}
           onValueChange={(value) => savePreferences({ workingShelfEnabled: value })}
         />
       </SettingsSection>
       <Text className="px-2 text-sm text-foreground-muted">
-        Fold working and monitoring threads into a Working section. They return to the top of the
-        list when they need you. While this is on, active threads are ordered by time and cannot be
-        moved.
+        {tr(
+          "Fold working and monitoring threads into a Working section. They return to the top of the\n        list when they need you. While this is on, active threads are ordered by time and cannot be\n        moved.",
+        )}
       </Text>
     </View>
   );
@@ -213,11 +220,11 @@ export function NewThreadSettingsSection() {
     AsyncResult.isSuccess(preferences) && preferences.value.useLastProjectForNewThreads !== false;
 
   return (
-    <SettingsSection title="New threads">
+    <SettingsSection title={tr("New threads")}>
       <SettingsSwitchRow
         icon="square.and.pencil"
-        label="Use last project"
-        subtitle="Start new threads in the last project you used on this device."
+        label={tr("Use last project")}
+        subtitle={tr("Start new threads in the last project you used on this device.")}
         value={useLastProject}
         onValueChange={(value) => savePreferences({ useLastProjectForNewThreads: value })}
       />
@@ -241,7 +248,7 @@ function BetaSettingsSection() {
   if (supported.length === 0) return null;
   return (
     <View className="gap-3">
-      <SettingsSection title="Beta: Linked environments">
+      <SettingsSection title={tr("Beta: Linked environments")}>
         {supported.map((environment) => {
           const policy = environment.serverConfig?.managedPolicy;
           const managed = isManagedSettingPath(policy, "linkedEnvironmentsEnabled");
@@ -250,7 +257,13 @@ function BetaSettingsSection() {
               key={environment.environmentId}
               icon="link"
               label={environment.label}
-              {...(managed ? { subtitle: `Managed by ${policy?.organization}.` } : {})}
+              {...(managed
+                ? {
+                    subtitle: tr("Managed by {organization}.", {
+                      organization: policy?.organization ?? "",
+                    }),
+                  }
+                : {})}
               value={environment.serverConfig?.settings.linkedEnvironmentsEnabled === true}
               disabled={managed || !writable.has(environment.environmentId)}
               onValueChange={(value) =>
@@ -264,8 +277,9 @@ function BetaSettingsSection() {
         })}
       </SettingsSection>
       <Text className="px-2 text-sm text-foreground-muted">
-        Let agents on a machine work on your other machines, and theirs on it. Turn it on for each
-        machine. While it is off, nothing new starts over a link; tasks already running finish.
+        {tr(
+          "Let agents on a machine work on your other machines, and theirs on it. Turn it on for each\n        machine. While it is off, nothing new starts over a link; tasks already running finish.",
+        )}
       </Text>
     </View>
   );
@@ -279,17 +293,18 @@ function LegacySettingsSection() {
 
   return (
     <View className="gap-3">
-      <SettingsSection title="Legacy">
+      <SettingsSection title={tr("Legacy")}>
         <SettingsSwitchRow
           icon="hammer"
-          label="Plan Mode"
+          label={tr("Plan Mode")}
           value={planModeEnabled}
           onValueChange={(value) => savePreferences({ planModeEnabled: value })}
         />
       </SettingsSection>
       <Text className="px-2 text-sm text-foreground-muted">
-        Opt into retired interfaces kept for compatibility. Plan Mode restores the Build/Plan
-        control; otherwise every task runs in Build mode.
+        {tr(
+          "Opt into retired interfaces kept for compatibility. Plan Mode restores the Build/Plan\n        control; otherwise every task runs in Build mode.",
+        )}
       </Text>
     </View>
   );

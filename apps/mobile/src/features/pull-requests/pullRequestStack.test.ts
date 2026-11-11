@@ -1,4 +1,5 @@
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import { tr } from "@t3tools/shared/i18n";
 import { ProjectId, type PullRequestStack, type ThreadPullRequestLink } from "@t3tools/contracts";
 import { describe, expect, it } from "vite-plus/test";
 import {
@@ -70,7 +71,7 @@ describe("mobile stack merge scope", () => {
       { number: 2, headSha: "sha-2" },
     ]);
     expect(pullRequestStackMerge(updated, 2, GITHUB).reason).toBeNull();
-    expect(pullRequestStackMerge(updated, 1, GITHUB).reason).toContain("no open layers");
+    expect(pullRequestStackMerge(updated, 1, GITHUB).reason).toContain("开放层");
   });
   it("blocks closed and draft dependencies, but permits them above the target", () => {
     const closed = {
@@ -79,7 +80,7 @@ describe("mobile stack merge scope", () => {
         layer.number === 2 ? { ...layer, state: "closed" as const } : layer,
       ),
     };
-    expect(pullRequestStackMerge(closed, 3, GITHUB).reason).toContain("Reopen");
+    expect(pullRequestStackMerge(closed, 3, GITHUB).reason).toContain("重新打开");
     expect(pullRequestStackMerge(closed, 1, GITHUB).reason).toBeNull();
     const draft = {
       ...stack,
@@ -87,7 +88,7 @@ describe("mobile stack merge scope", () => {
         layer.number === 2 ? { ...layer, isDraft: true } : layer,
       ),
     };
-    expect(pullRequestStackMerge(draft, 3, GITHUB).reason).toContain("ready for review");
+    expect(pullRequestStackMerge(draft, 3, GITHUB).reason).toContain("可审查");
     expect(pullRequestStackMerge(draft, 1, GITHUB).reason).toBeNull();
   });
   it("blocks missing revisions and a PR removed from the stack", () => {
@@ -95,11 +96,11 @@ describe("mobile stack merge scope", () => {
       ...stack,
       layers: stack.layers.map((layer) => ({ ...layer, headSha: undefined })),
     };
-    expect(pullRequestStackMerge(unknown, 2, GITHUB).reason).toContain("latest revisions");
-    expect(pullRequestStackMerge(stack, 99, GITHUB).reason).toContain("no longer in the stack");
+    expect(pullRequestStackMerge(unknown, 2, GITHUB).reason).toContain("刷新栈");
+    expect(pullRequestStackMerge(stack, 99, GITHUB).reason).toContain("已不在栈中");
     expect(
       pullRequestStackMerge(stack, 99, sourceControlClients.get("gitlab").changeRequest).reason,
-    ).toBe("This merge request is no longer in the stack. Refresh it.");
+    ).toBe(tr("This {kind} is no longer in the stack. Refresh it.", { kind: "merge request" }));
   });
   it("waits for successful discovery before allowing a single PR merge on modern servers", () => {
     expect(
@@ -151,7 +152,7 @@ describe("mobile saved stack navigation", () => {
     expect(saved?.layers).toHaveLength(3);
     expect(saved?.layers[1]).toMatchObject({ number: 2, title: "Middle layer", isDraft: false });
     expect(saved?.layers.every((layer) => layer.headSha === undefined)).toBe(true);
-    expect(pullRequestStackMerge(saved!, 2, GITHUB).reason).toContain("latest revisions");
+    expect(pullRequestStackMerge(saved!, 2, GITHUB).reason).toContain("刷新栈");
     expect(savedPullRequestStack([link], { ...reference, number: 3 })?.number).toBe(10);
   });
   it("never borrows membership from another host or repository", () => {
