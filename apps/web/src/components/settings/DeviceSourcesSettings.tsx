@@ -17,6 +17,7 @@ import {
 import { ChevronDownIcon, MoreVertical, PlusIcon } from "lucide-react";
 
 import { cn, randomUUID } from "../../lib/utils";
+import { tr } from "@t3tools/shared/i18n";
 import { deviceEnvironment } from "../../state/device";
 import { environmentAtomList, environmentIdsKey } from "../../state/environmentAtomList";
 import { serverEnvironment } from "../../state/server";
@@ -112,7 +113,7 @@ function hostStatus(
   state: DeviceServiceState | undefined,
   hostId: string,
 ): SourceStatus | undefined {
-  if (!state) return { tone: "pending", label: "Loading" };
+  if (!state) return { tone: "pending", label: tr("Loading") };
   const status = state.hostStatuses[hostId];
   switch (status?.status) {
     case "ready":

@@ -24,7 +24,9 @@
     "批 W2（#59，web 对话域 ChatView/composer）新增：exact 为 composerInlineChip 的 SKILL_CHIP_ICON_SVG 常量，SVG 标记串非 UI 文案，不翻；exact 补 \"Icon\"（ThreadPullRequestBadgePresentation 的类型成员名，§3 代码标识符精神）；words 新增 Mermaid（图表渲染库名，随 §3 品牌/技术词精神）。",
     "批 W3（#60，web 命令面板域）新增：exact \":disabled\" 为 getCommandPaletteReturnFocus 的 CSS 选择器（matches() 参数，§3 代码标识符精神，不翻）；contains \"~/projects/my-app\" 为输入示例路径（路径不译精神）；review 修复：words \"projects\"/\"my-app\" 会静默豁免 Projects 分区标签等真 UI 串（WelcomeWizard/settingsSearch 实证）故删除，改用 contains 收窄；Linux/Win32 平台标识由既有 words 豁免覆盖。",
     "批 W4（#61，web 设置域 SettingsPanels）新增：contains \"/default\" 为斜杠命令字面量（Legacy 面板描述 \"Restore Build/Plan, /plan, /default, and Shift+Tab.\"，§3.2 命令字面量精神），命令名不译。",
-    "批 W6（#63，web 设置域定时任务与诊断遥测）words 新增：Span/Spans/Trace/Traces（追踪域技术词，UI 展示层保留英文）、Sidecar（T3 组件名）、SIGKILL（POSIX 信号名）、Sentry（品牌名），供译文内容面豁免（术语表 §3 品牌/技术词精神）。"
+    "批 W6（#63，web 设置域定时任务与诊断遥测）words 新增：Span/Spans/Trace/Traces（追踪域技术词，UI 展示层保留英文）、Sidecar（T3 组件名）、SIGKILL（POSIX 信号名）、Sentry（品牌名），供译文内容面豁免（术语表 §3 品牌/技术词精神）。",
+    "W7 (#64)：className 样式串（-ml-2 first:ml-0、@min-[48rem]/providers:h-…）为样式非文案；ProviderModelsSection 列表项 key 拼接片段（:group/:editor）为 React key 标识符，非展示文案。",
+    "W7 (#64)：搜索引擎品牌（Bing/Brave Search/Ecosia/Kagi/DuckDuckGo）、技术术语 slug、单位 fps 为保留英文；contains 收 %s（搜索占位符 token）与 agent-device:（设备控制命令前缀）。"
   ],
   "contains": [
     "/side",
@@ -47,7 +49,9 @@
     "D:\\worktrees",
     "View relay",
     "Manage relay",
-    "claude mcp add --transport http t3"
+    "claude mcp add --transport http t3",
+    "%s",
+    "agent-device:"
   ],
   "exact": [
     " READY ",
@@ -606,7 +610,11 @@
     "SF Pro",
     "SF Mono",
     "OTel OTLP telemetry export endpoints logs traces metrics Grafana",
-    "1password vault credentials api key"
+    "1password vault credentials api key",
+    "-ml-2 first:ml-0",
+    "::group",
+    "::editor",
+    "@min-[48rem]/providers:h-[min(44rem,calc(100dvh-11rem))] @min-[48rem]/providers:min-h-[32rem]"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -987,6 +995,13 @@
     "node_modules",
     ".env",
     "alpha",
-    "keybindings.json"
+    "keybindings.json",
+    "Bing",
+    "Brave Search",
+    "Ecosia",
+    "Kagi",
+    "DuckDuckGo",
+    "slug",
+    "fps"
   ]
 }
