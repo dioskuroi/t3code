@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentIdentificationMode } from "@t3tools/contracts";
 import { useId } from "react";
 
@@ -7,7 +8,7 @@ import { resolveServerBackedAppStageLabel } from "../branding.logic";
 import { primaryServerConfigAtom } from "../state/server";
 
 export type SidebarStageBackdropVariant = "nightly" | "dev";
-export type EnvironmentIdentificationPillLabel = "Dev" | "Nightly";
+export type EnvironmentIdentificationPillLabel = string;
 
 const STAGE_BACKDROP_VIEW_BOX = "0 0 8192 96";
 
@@ -28,8 +29,8 @@ export function resolveEnvironmentIdentificationPillLabel(
   stageLabel: string,
 ): EnvironmentIdentificationPillLabel | null {
   const normalized = stageLabel.trim().toLowerCase();
-  if (normalized === "dev") return "Dev";
-  if (normalized === "nightly") return "Nightly";
+  if (normalized === "dev") return tr("Dev");
+  if (normalized === "nightly") return tr("Nightly");
   return null;
 }
 

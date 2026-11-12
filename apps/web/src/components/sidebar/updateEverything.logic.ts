@@ -1,4 +1,5 @@
 import type { ServerUpdateState } from "@t3tools/client-runtime/state/server";
+import { tr } from "@t3tools/shared/i18n";
 import {
   type DesktopUpdateChannel,
   type EnvironmentId,
@@ -148,7 +149,7 @@ export interface ChannelSwitchRelease {
 }
 
 export const channelSwitchLabel = (channel: DesktopUpdateChannel) =>
-  channel === "nightly" ? "Nightly" : "Stable";
+  channel === "nightly" ? tr("Nightly") : tr("Stable");
 
 /** Stable and Nightly each build their own commits, so either can hold migrations the other lacks.
  * Crossing tracks needs proof that the target release knows every migration the database holds. */
@@ -428,7 +429,7 @@ const UPDATE_SLOW_AFTER_MS = 3 * 60 * 1000;
 
 export function formatUpdateElapsed(ms: number): string {
   const minutes = Math.floor(ms / 60_000);
-  if (minutes < 1) return "<1m";
+  if (minutes < 1) return tr("<1m");
   if (minutes < 60) return `${minutes}m`;
   return `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
 }
@@ -460,10 +461,14 @@ export function describeUpdateCapsule(
 ): UpdateCapsuleView {
   if (run.phase === "countdown" && run.restartAt !== null) {
     const seconds = Math.max(0, Math.ceil((run.restartAt - now) / 1000));
-    return { tone: "default", label: `Restart in ${seconds}s`, action: "later" };
+    return {
+      tone: "default",
+      label: tr("Restart in {seconds}s", { seconds: seconds }),
+      action: "later",
+    };
   }
   if (run.phase === "installing") {
-    return { tone: "default", label: "Restarting…", action: null };
+    return { tone: "default", label: tr("Restarting\u2026"), action: null };
   }
   const active = machines.filter(({ status }) => isActive(status) && status !== "waiting");
   const slowest = active.toSorted((a, b) => a.machine.startedAt - b.machine.startedAt)[0];
@@ -538,7 +543,7 @@ export function collectUpdateEverythingResult(input: {
     updatedProviders: input.providers.filter((outcome) => outcome.status === "updated").length,
     restarting: [],
     failures: [
-      ...input.localFailures.map((failure) => `This app: ${failure}`),
+      ...input.localFailures.map((failure) => tr("This app: {failure}", { failure: failure })),
       ...input.servers.flatMap(({ label, outcome }) =>
         outcome.status === "failed" ? [`${label}: ${outcome.message}`] : [],
       ),
@@ -556,7 +561,7 @@ export function getUpdateEverythingToastView(
   readonly description?: string;
 } | null {
   const parts = [
-    result.localVersion !== null && result.localVersion === appVersion ? "this app" : null,
+    result.localVersion !== null && result.localVersion === appVersion ? tr("this app") : null,
     countLabel(result.updatedServers, "server"),
     countLabel(result.updatedProviders, "provider"),
   ].filter((part) => part !== null);
@@ -564,19 +569,22 @@ export function getUpdateEverythingToastView(
     result.restarting.length === 0
       ? []
       : [
-          `${joinList(result.restarting)} ${result.restarting.length === 1 ? "is" : "are"} still restarting.`,
+          tr("{names} still restarting.", {
+            names: joinList(result.restarting),
+          }),
         ];
   if (result.failures.length === 0) {
     if (parts.length === 0) return null;
     return {
       type: "success",
-      title: `Updated ${joinList(parts)}`,
+      title: tr("Updated {items}", { items: joinList(parts) }),
       ...(restarting.length === 0 ? {} : { description: restarting.join("\n") }),
     };
   }
   return {
     type: "error",
-    title: parts.length === 0 ? "Update failed" : `Updated ${joinList(parts)}`,
+    title:
+      parts.length === 0 ? tr("Update failed") : tr("Updated {items}", { items: joinList(parts) }),
     description: [...result.failures, ...restarting].join("\n"),
   };
 }
@@ -607,13 +615,16 @@ export interface UpdateEverythingRow {
   readonly providers: ReadonlyArray<string>;
 }
 
-function countLabel(count: number, noun: string): string | null {
-  return count === 0 ? null : `${count} ${noun}${count === 1 ? "" : "s"}`;
+function countLabel(count: number, noun: "server" | "provider"): string | null {
+  if (count === 0) return null;
+  return noun === "server"
+    ? tr("{count} server(s)", { count })
+    : tr("{count} provider(s)", { count });
 }
 
 function joinList(parts: ReadonlyArray<string>): string {
-  if (parts.length <= 2) return parts.join(" and ");
-  return `${parts.slice(0, -1).join(", ")}, and ${parts.at(-1)}`;
+  if (parts.length <= 2) return parts.join(" 和 ");
+  return `${parts.slice(0, -1).join("、")} 和 ${parts.at(-1)}`;
 }
 
 /** One row per machine: this app's machines first, then servers, provider-only, and skipped. */
@@ -627,13 +638,15 @@ export function describeUpdateEverything(plan: UpdateEverythingPlan): {
     (count, machine) => count + machine.providers.length,
     0,
   );
-  const summary = `Update ${joinList(
-    [
-      plan.localVersion ? "this app" : null,
-      countLabel(plan.servers.length, "server"),
-      countLabel(providerCount, "provider"),
-    ].filter((part) => part !== null),
-  )}`;
+  const summary = tr("Update {items}", {
+    items: joinList(
+      [
+        plan.localVersion ? tr("this app") : null,
+        countLabel(plan.servers.length, "server"),
+        countLabel(providerCount, "provider"),
+      ].filter((part) => part !== null),
+    ),
+  });
 
   const rows = new Map<EnvironmentId | null, UpdateEverythingRow>();
   const update = (
@@ -651,7 +664,7 @@ export function describeUpdateEverything(plan: UpdateEverythingPlan): {
     rows.set(environmentId, { ...row, ...change });
   };
   if (plan.localVersion) {
-    if (plan.localMachines.length === 0) update(null, "This app", { app: "this-app" });
+    if (plan.localMachines.length === 0) update(null, tr("This app"), { app: "this-app" });
     for (const machine of plan.localMachines) {
       update(machine.environmentId, machine.label, { app: "this-app" });
     }

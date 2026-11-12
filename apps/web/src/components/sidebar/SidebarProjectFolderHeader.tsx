@@ -1,4 +1,5 @@
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/models";
+import { tr } from "@t3tools/shared/i18n";
 import { scopedThreadKey, scopeThreadRef } from "@t3tools/client-runtime/environment";
 import { ChevronDownIcon, SquarePenIcon } from "lucide-react";
 import { memo } from "react";
@@ -19,10 +20,10 @@ const FOLDER_DOT_CLASS_NAME = {
 } as const;
 
 const FOLDER_DOT_LABEL = {
-  attention: ", needs you",
-  failed: ", failed",
-  unread: ", done",
-  working: ", working",
+  attention: tr("Needs your attention"),
+  failed: tr("Failed"),
+  unread: tr("Unread"),
+  working: tr("Working"),
 } as const;
 
 /** The folder's sidebar tree row; its thread rows name it as their parent. */
@@ -106,14 +107,14 @@ export const SidebarProjectFolderHeader = memo(function SidebarProjectFolderHead
                 data-sidebar-action-for={rowId}
                 size="icon-xs"
                 variant="ghost-muted"
-                aria-label={`New thread in ${group.displayName}`}
+                aria-label={tr("New thread in {name}", { name: group.displayName })}
                 onClick={() => props.onNewThread(group)}
               />
             }
           >
             <SquarePenIcon aria-hidden />
           </TooltipTrigger>
-          <TooltipPopup>New thread in {group.displayName}</TooltipPopup>
+          <TooltipPopup>{tr("New thread in {name}", { name: group.displayName })}</TooltipPopup>
         </Tooltip>
       </span>
     </li>

@@ -1,4 +1,5 @@
 import { EnvironmentId, type ServerSelfUpdateCapability } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -188,7 +189,7 @@ describe("collectChannelSwitchTargets", () => {
       ["newer-service", "run `t3 update --channel stable --allow-downgrade` there"],
       [
         "new-service",
-        "its database has changes 0.1.3 does not support yet; stay on Nightly until Stable has them",
+        `its database has changes 0.1.3 does not support yet; stay on Nightly until ${tr("Stable")} has them`,
       ],
       ["old-server", "its server predates database checks; update it on Nightly first"],
       ["mac-desktop", "switch the Mac app on that Mac"],
@@ -237,12 +238,14 @@ describe("collectChannelSwitchTargets", () => {
     expect(skipped.map((entry) => [entry.label, entry.reason])).toEqual([
       [
         "ahead",
-        `its database has changes ${NIGHTLY} does not support yet; stay on Stable until Nightly has them`,
+        `its database has changes ${NIGHTLY} does not support yet; stay on ${tr("Stable")} until Nightly has them`,
       ],
       ["old-desktop", "needs a newer desktop app"],
       [
         "no-nightly",
-        "Example Corp manages T3 Code updates. Only stable releases can be installed.",
+        tr("{message} Only stable releases can be installed.", {
+          message: "Example Corp manages T3 Code updates.",
+        }),
       ],
     ]);
   });
