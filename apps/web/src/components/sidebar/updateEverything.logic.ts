@@ -622,6 +622,7 @@ function countLabel(count: number, noun: "server" | "provider"): string | null {
     : tr("{count} provider(s)", { count });
 }
 
+// zh-only fork：连接词不走字典（上游回灌场景见 runbook）。
 function joinList(parts: ReadonlyArray<string>): string {
   if (parts.length <= 2) return parts.join(" 和 ");
   return `${parts.slice(0, -1).join("、")} 和 ${parts.at(-1)}`;
