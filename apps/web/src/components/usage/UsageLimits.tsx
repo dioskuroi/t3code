@@ -137,12 +137,7 @@ function WindowBar({
   const resetsAt = window.resetsAt
     ? formatUpcomingTimestamp(window.resetsAt, timestampFormat, now)
     : null;
-  const resetsPart =
-    resetsIn === null
-      ? ""
-      : resetsIn === "resets now"
-        ? tr(", resets now")
-        : tr(", resets in {duration}", { duration: resetsIn.replace(/^resets in /, "") });
+  const resetsPart = resetsIn === null ? "" : ` · ${resetsInLabel(resetsIn)}`;
   const summary = `${tr("{label}: {percent}% left", { label: window.label, percent: remaining })}${
     timeLeft === null ? "" : tr(", {timeLeft}% of the window left", { timeLeft: timeLeft })
   }${resetsPart}`;
@@ -194,7 +189,7 @@ function WindowBar({
           {resetsAt ? (
             <span className="text-muted-foreground">
               {tr("Resets")} {resetsAt}
-              {resetsIn ? ` · ${resetsIn}` : ""}
+              {resetsInLabel(resetsIn) ? ` · ${resetsInLabel(resetsIn)}` : ""}
             </span>
           ) : null}
         </div>
@@ -239,7 +234,7 @@ export function LimitWindows({
             <WindowBar color={color} window={window} now={now} />
             <span className="flex items-center gap-2 text-xs whitespace-nowrap text-muted-foreground tabular-nums">
               {pace ? <PaceIcon pace={pace} /> : null}
-              <span className="ms-auto shrink-0">{resetsIn ?? ""}</span>
+              <span className="ms-auto shrink-0">{resetsInLabel(resetsIn) ?? ""}</span>
             </span>
           </Fragment>
         );
@@ -319,6 +314,16 @@ export function ResetCreditDialog({
       </AlertDialogPopup>
     </AlertDialog>
   );
+}
+
+/**
+ * Renders `formatResetsIn`'s English diagnostic value ("resets now" / "resets in 5h 20m")
+ * as user-visible copy; both inputs and the shared `packages/shared` module stay untouched.
+ */
+export function resetsInLabel(resetsIn: string | null): string | null {
+  if (resetsIn === null) return null;
+  if (resetsIn === "resets now") return tr("Resets now");
+  return tr("{duration} until reset", { duration: resetsIn.replace(/^resets in /, "") });
 }
 
 export function resetCreditsSummary(

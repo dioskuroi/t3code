@@ -456,10 +456,10 @@ function ConnectionStep({
       ) : null}
       <div className="mt-6 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="min-w-0 text-xs leading-relaxed text-muted-foreground">
-          {telemetryOff ?? tr("T3 Code collects anonymous usage data to help us improve it.")}{" "}
+          {telemetryOff ?? tr("T3 Code collects anonymous usage data to help us improve it.")}
           {telemetryOff === undefined
             ? tr("To read more about how your data is used and how to opt out, see our")
-            : tr("To read more about how your data is used, see our")}{" "}
+            : tr("To read more about how your data is used, see our")}
           <a
             className="underline underline-offset-2 hover:text-foreground"
             href={PRIVACY_POLICY_URL}
@@ -468,7 +468,7 @@ function ConnectionStep({
           >
             {tr("privacy policy")}
           </a>
-          .
+          。
         </p>
         <Button
           className="shrink-0 self-end"

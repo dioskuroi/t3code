@@ -46,6 +46,7 @@ import {
   barColor,
   usePaceMark,
   resetCreditsSummary,
+  resetsInLabel,
   useResetCredit,
 } from "./UsageLimits";
 
@@ -189,7 +190,7 @@ function SegmentPopover({
         {window.resetsAt ? (
           <Row label={tr("Resets")}>
             {formatUpcomingTimestamp(window.resetsAt, timestampFormat, now)}
-            {resetsIn ? ` · ${resetsIn.replace("resets in ", "in ")}` : ""}
+            {resetsInLabel(resetsIn) ? ` · ${resetsInLabel(resetsIn)}` : ""}
           </Row>
         ) : null}
         {timeLeft !== null ? (
@@ -369,7 +370,7 @@ function SegmentTriggers({
                 account.displayName ??
                 (account.email ? accountInitials(account.email) : account.driver),
               percent: remaining,
-            })}${resetsIn === null ? "" : resetsIn === "resets now" ? tr(", resets now") : tr(", resets in {duration}", { duration: resetsIn.replace(/^resets in /, "") })}${timeLeft === null ? "" : tr(", {timeLeft}% of the window left", { timeLeft: timeLeft })}${credits === 0 ? "" : credits === 1 ? tr(", 1 reset credit banked") : tr(", {count} reset credits banked", { count: credits })}`}
+            })}${resetsInLabel(resetsIn) ? `，${resetsInLabel(resetsIn)}` : ""}${timeLeft === null ? "" : tr(", {timeLeft}% of the window left", { timeLeft: timeLeft })}${credits === 0 ? "" : credits === 1 ? tr(", 1 reset credit banked") : tr(", {count} reset credits banked", { count: credits })}`}
             className="relative h-5 min-w-0 cursor-pointer rounded-md bg-muted text-start outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[popup-open]:ring-1 data-[popup-open]:ring-inset data-[popup-open]:ring-border @2xl/pool:h-8"
           />
         }
@@ -422,7 +423,7 @@ function SegmentTriggers({
           ) : null}
           {resetsIn || credits ? (
             <span className="ms-auto flex min-w-0 items-center gap-1.5 overflow-hidden rounded-sm bg-background/85 px-1.5 py-0.5 text-2xs whitespace-nowrap text-foreground tabular-nums">
-              {resetsIn?.replace("resets in ", "↻ ") ?? ""}
+              {resetsInLabel(resetsIn) ?? ""}
               {credits ? (
                 <>
                   {resetsIn ? (
@@ -481,7 +482,7 @@ function LegendRow({
       <AccountName account={account} className="min-w-0 truncate font-medium text-foreground" />
       <span className="shrink-0 font-semibold text-foreground tabular-nums">{remaining}%</span>
       <span className="ms-auto flex shrink-0 items-center gap-1.5 text-2xs text-muted-foreground tabular-nums">
-        {resetsIn?.replace("resets in ", "↻ ") ?? ""}
+        {resetsInLabel(resetsIn) ?? ""}
         {credits ? (
           <>
             {resetsIn ? <span aria-hidden>·</span> : null}

@@ -468,7 +468,15 @@ export function UsageProviderChart({
           loadingProviders={loadingProviders}
           format={format}
           formatTooltipPeriod={formatTooltipPeriod}
-          ariaLabel={`${resolution === "hour" ? tr("Hourly") : tr("Daily")} ${metric === "tokens" ? "processed tokens" : "cost"} by provider`}
+          ariaLabel={
+            metric === "tokens"
+              ? tr("{period} processed tokens by provider", {
+                  period: resolution === "hour" ? tr("Hourly") : tr("Daily"),
+                })
+              : tr("{period} cost by provider", {
+                  period: resolution === "hour" ? tr("Hourly") : tr("Daily"),
+                })
+          }
         >
           {scale.ticks.map((tick) => {
             const y = toY(tick);

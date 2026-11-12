@@ -44,7 +44,7 @@
     "批 71 补充：contains \"\\\"Segoe UI\\\"\" 为 threadNotifications 通知角标 canvas 的 CSS font 简写里的字体族名（样式值非文案，随 #70 surface.ts 字体栈先例）",
     "W13 (#72) 新增：files/preview/media 域非文案串——iframe srcDoc HTML 模板与样式值（20px auto/32px/@media/160px/200px/0px/0ms）、canvas 字体简写（11px ui-sans-serif…）、rootMargin（100% 0px）、boxShadow（0 0 6px 1px var(--color-ring)）、Tailwind 类名字面量、:scope CSS 选择器（markdown-clipboard DOM 查询）、二进制预览 SQL 模板（PRAGMA/SELECT/CASE）、OOXML/ODF/RTF 标记构建片段（<br>/<img>/<row>/&lt;is&gt;&lt;t&gt;/&lt;span&gt;/&lt;p&gt;/&lt;strong&gt;/&lt;em&gt;/&lt;u&gt; 等）、字体样张 pangram、XML 属性名（Extension/ContentType/PartName/TargetMode/Target/Id/Type）、解析器内部键 #text、字体默认名 Calibri、Symbol 诊断描述（Word preview limit/Word style budget）、worker 内部状态断言（The worker already holds… 等）、RPC 诊断（Unknown method/Replaced by a newer call/Sheet could not open）、TaggedError message getter 诊断（Failed to open terminal link…/Invalid scoped preview thread key:）——均为代码/诊断面，非用户可见文案。",
     "W13 (#72) words 增补：Office/Word/Finder/DevTools（产品与工具品牌，随 §3.1）、TIFF/HEIC/EPUB/TAR/LZW/XML/XHTML/OpenDocument/Blob（格式与技术名词，随 §3 与 M2 PDF/Safari 先例）、DNS/CORS/Worker（技术缩写/平台术语，随 API/URL/HTTP 先例）。",
-    "批 73（web device/usage/cloud/onboarding）：words 增补产品与计划品牌（Magic Keyboard/Face ID/Xcode/iOS/iPhone/Duo/T3 Chat/Premier/Premium）、开发工具面（Android Studio/Device Manager）与标识符（App ID/Bundle ID），随术语表 §3 品牌/标识符精神；contains \"T3 Chat Pro\" 为订阅计划产品名（Pro 为普通词不进 words）。与货币代码 USD（随 §3.6 单位精神）。"
+    "批 73（web device/usage/cloud/onboarding）：words 增补产品与计划品牌（Magic Keyboard/Face ID/Xcode/iOS/iPhone/Duo/T3 Chat/Premier/Premium）、开发工具面（Android Studio/Device Manager）与标识符（App ID/Bundle ID），随术语表 §3 品牌/标识符精神；contains \"T3 Chat Pro\" 为订阅计划产品名（Pro 为普通词不进 words）。与货币代码 USD（随 §3.6 单位精神）。 批 73 review：删 words Premium（SpeedPremium 加速溢价桶随图例标准/快速/极快改译「加速溢价」，非保留品牌）。"
   ],
   "contains": [
     "/side",
@@ -1251,7 +1251,6 @@
     "Duo",
     "Premier",
     "T3 Chat",
-    "Premium",
     "Android Studio",
     "Device Manager",
     "App ID",

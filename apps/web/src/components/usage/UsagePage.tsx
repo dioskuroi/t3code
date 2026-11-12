@@ -830,8 +830,11 @@ function UsageOverview({
 
         <div className="flex min-w-0 flex-col gap-3">
           <h2 className="text-sm font-medium text-foreground">
-            {shownHourly ? tr("Hourly") : tr("Daily")}{" "}
-            {metric === "tokens" ? "processed tokens" : "cost"}
+            {metric === "tokens"
+              ? tr("{period} processed tokens", {
+                  period: shownHourly ? tr("Hourly") : tr("Daily"),
+                })
+              : tr("{period} cost", { period: shownHourly ? tr("Hourly") : tr("Daily") })}
           </h2>
           <UsageProviderChart
             providers={activeProviders}
