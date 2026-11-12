@@ -36,7 +36,12 @@
     "Batch67 (#67)：words 增 fork（一词两义：会话分叉=派生（存量 13 例）、GitHub fork=保留英文（本批 2 例），待 #89 术语表补录两义行）、actions（一词两义：操作/GitHub Actions 标签，随既有 action）；contains 增编辑器名 Code 的固定短语、PR Code 产品区名与 label:bug 查询语法字面量。",
     " #69（web 侧栏/项目域）：exact \":hover\" 为 routeReveal 的 CSS 选择器（matches() 参数，随 #60 \":disabled\" 先例，不翻）；words 增 \"Apple Silicon\"/\"Intel\"（硬件平台品牌名）与 \"Shift+click\"（键位组合，§3.5 键位不译）。",
     "review (#69)：exact \"Code\" 为 SidebarChrome 品牌字标第二段（T3 Code 品牌名不译，术语表 §3.1），JSX 文本面回退字面量。",
-    "#70（web 终端抽屉 + 右侧面板）：globs 增 keyCodes.ts（KeyboardEvent.code 协议标识符表，ghostty 枚举映射，整文件无 UI 文案）；exact 增 runtime.ts 的 libghostty-vt 加载/字段布局诊断 throw（挂载失败时由渲染层整句成文）与 surface.ts 的 CSS 字体栈、FontFace 家族名（字体标识符不译）；contains 增 “Canvas 2D”/“libghostty-vt”（API 与 WASM 库名，供译文内容面扣除）。"
+    "#70（web 终端抽屉 + 右侧面板）：globs 增 keyCodes.ts（KeyboardEvent.code 协议标识符表，ghostty 枚举映射，整文件无 UI 文案）；exact 增 runtime.ts 的 libghostty-vt 加载/字段布局诊断 throw（挂载失败时由渲染层整句成文）与 surface.ts 的 CSS 字体栈、FontFace 家族名（字体标识符不译）；contains 增 “Canvas 2D”/“libghostty-vt”（API 与 WASM 库名，供译文内容面扣除）。",
+    "批 71（web 更新流/toast/通知）：exact \"64x64\" 为 favicon link sizes 属性值（HTML 属性字面量，随 #68 \"600px\" 先例）；",
+    "exact 两条 version-mismatch console.error 为日志诊断面，退英文不翻；",
+    "contains \"Failed to read the initial desktop update state after\" 为 DesktopUpdateStateReadError TaggedError message getter 诊断前缀（IPC 失败详情由渲染层另行成文），随 D2 诊断面先例退英文；",
+    "words \"Mac\"/\"Rosetta\" 为 Apple 硬件品牌与兼容层名（随 #69 Apple Silicon/Intel 先例）。批 71 更新流文案整句化：英文词形槽（thread/threads、still appears/appear）改数字槽整句 key。",
+    "批 71 补充：contains \"\\\"Segoe UI\\\"\" 为 threadNotifications 通知角标 canvas 的 CSS font 简写里的字体族名（样式值非文案，随 #70 surface.ts 字体栈先例）"
   ],
   "contains": [
     "/side",
@@ -91,7 +96,9 @@
     "PR Code",
     "label:bug",
     "Canvas 2D",
-    "libghostty-vt"
+    "libghostty-vt",
+    "Failed to read the initial desktop update state after",
+    "\"Segoe UI\""
   ],
   "exact": [
     " READY ",
@@ -749,7 +756,10 @@
     "\"JetBrainsMono NF\", \"FiraCode Nerd Font\", \"Hack Nerd Font\", \"MesloLGS NF\",",
     "\"CaskaydiaCove Nerd Font\", \"PowerlineSymbols\", monospace",
     "\"SF Mono\", \"SFMono-Regular\", Menlo, Consolas, \"Liberation Mono\",",
-    "Symbols Nerd Font Mono"
+    "Symbols Nerd Font Mono",
+    "64x64",
+    "Could not read version-mismatch dismissals.",
+    "Could not persist version-mismatch dismissals."
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -1168,6 +1178,8 @@
     "actions",
     "Apple Silicon",
     "Shift+click",
-    "Intel"
+    "Intel",
+    "Mac",
+    "Rosetta"
   ]
 }

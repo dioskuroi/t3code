@@ -1,4 +1,5 @@
 import type { RefObject } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { anchoredToastManager } from "./toast";
 
 export const ANCHORED_COPY_TOAST_TIMEOUT_MS = 1000;
@@ -13,7 +14,7 @@ export function showAnchoredCopySuccessToast(ref: RefObject<HTMLButtonElement | 
       anchor: ref.current,
     },
     timeout: ANCHORED_COPY_TOAST_TIMEOUT_MS,
-    title: "Copied!",
+    title: tr("Copied!"),
   });
 }
 
@@ -24,7 +25,7 @@ export function showAnchoredCopyErrorToast(ref: RefObject<HTMLButtonElement | nu
     positionerProps: {
       anchor: ref.current,
     },
-    title: "Failed to copy",
+    title: tr("Failed to copy"),
     description: error.message,
   });
 }

@@ -57,6 +57,7 @@ vi.mock(import("./ui/toast"), async (original) => {
 });
 
 import { resetConfirmDialogForTests } from "~/confirmDialog";
+import { tr } from "@t3tools/shared/i18n";
 import { appAtomRegistry } from "~/rpc/atomRegistry";
 import {
   ServerUpdateAction,
@@ -164,8 +165,8 @@ describe("ServerUpdateAction", () => {
       testState.updateServer.mockResolvedValue(success());
 
       await using screen = await renderAction();
-      expect(button(screen, "Update")!.disabled).toBe(!allowed);
-      await click(screen, "Update");
+      expect(button(screen, tr("Update"))!.disabled).toBe(!allowed);
+      await click(screen, tr("Update"));
 
       expect(testState.updateServer).toHaveBeenCalledTimes(allowed ? 1 : 0);
     },
@@ -175,8 +176,8 @@ describe("ServerUpdateAction", () => {
     using _state = setup();
     await using screen = await renderAction();
     await act(() => setSession(AsyncResult.success({ ...currentSession, scopes: [] })));
-    expect(button(screen, "Update")!.disabled).toBe(true);
-    await click(screen, "Update");
+    expect(button(screen, tr("Update"))!.disabled).toBe(true);
+    await click(screen, tr("Update"));
     expect(testState.updateServer).not.toHaveBeenCalled();
   });
 });
@@ -211,18 +212,21 @@ describe("ServerUpdatesAction", () => {
       .mockResolvedValueOnce(AsyncResult.failure(Cause.fail(new Error("Download failed"))))
       .mockResolvedValueOnce(success());
     await using screen = await mount();
-    await click(screen, "Update all");
+    await click(screen, tr("Update all"));
 
     expect(testState.updateServer).toHaveBeenCalledTimes(2);
     expect(testState.toast).toHaveBeenCalledWith({
       type: "error",
-      title: "Laptop update failed",
+      title: tr("{serverLabel} update failed", { serverLabel: "Laptop" }),
       description: "Download failed",
     });
     expect(testState.toast).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "success", title: "Office updated" }),
+      expect.objectContaining({
+        type: "success",
+        title: tr("{serverLabel} updated", { serverLabel: "Office" }),
+      }),
     );
-    expect(button(screen, "Update all")!.disabled).toBe(false);
+    expect(button(screen, tr("Update all"))!.disabled).toBe(false);
   });
 
   it("skips a machine whose update would cross Stable and Nightly", async () => {
@@ -230,11 +234,14 @@ describe("ServerUpdatesAction", () => {
     testState.serverVersions.set("batch-a", "0.0.30-nightly.20261001.1");
     testState.updateServer.mockResolvedValue(success());
     await using screen = await mount();
-    await click(screen, "Update all");
+    await click(screen, tr("Update all"));
 
     expect(testState.updateServer).toHaveBeenCalledTimes(1);
     expect(testState.toast).toHaveBeenCalledWith(
-      expect.objectContaining({ type: "success", title: "Office updated" }),
+      expect.objectContaining({
+        type: "success",
+        title: tr("{serverLabel} updated", { serverLabel: "Office" }),
+      }),
     );
   });
 });
