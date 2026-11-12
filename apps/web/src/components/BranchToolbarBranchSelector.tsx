@@ -604,7 +604,9 @@ export function BranchToolbarBranchSelector({
             <SourceControlIcon className="size-3.5 shrink-0 text-muted-foreground" />
             <span className="flex min-w-0 flex-col items-start">
               <span className="truncate font-medium">
-                {tr("Checkout")} {sourceControlPresentation.terminology.singular}
+                {tr("Checkout {term}", {
+                  term: sourceControlPresentation.terminology.singular,
+                })}
               </span>
               <span className="truncate text-muted-foreground text-xs">{prReference}</span>
             </span>
@@ -754,7 +756,12 @@ export function BranchToolbarBranchSelector({
             status={displayedPrStatus}
             project={activeProject}
             label={panelPrLabel}
-            openAriaLabel={prUrl ?? `Open ${sourceControlPresentation.terminology.singular}`}
+            openAriaLabel={
+              prUrl ??
+              tr("Open {term}", {
+                term: sourceControlPresentation.terminology.singular,
+              })
+            }
             onOpen={(event) => openPrLink(event, prUrl)}
             onActed={() => branchStatusQuery.refresh()}
           />

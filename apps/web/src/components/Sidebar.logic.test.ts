@@ -1,5 +1,6 @@
 import { presentThreadShell } from "@t3tools/client-runtime/state/models";
 import { isThreadWorking as isSidebarThreadWorking } from "@t3tools/client-runtime/state/thread-inbox";
+import { tr } from "@t3tools/shared/i18n";
 import * as DateTime from "effect/DateTime";
 import { deriveActiveWorkStartedAt } from "../session-logic.ts";
 import { describe, expect, it } from "vite-plus/test";
@@ -415,14 +416,14 @@ describe("resolveThreadStatusPill", () => {
     const blocked = { ...baseThread, blockedOnThreadWait: true };
     expect(resolveSidebarThreadStatus(blocked)).toBe("waiting");
     expect(resolveThreadStatusPill({ thread: blocked })).toMatchObject({
-      label: "Waiting",
+      label: tr("Waiting"),
       pulse: false,
     });
 
     const resumed = { ...blocked, blockedOnThreadWait: false };
     expect(resolveSidebarThreadStatus(resumed)).toBe("working");
     expect(resolveThreadStatusPill({ thread: resumed })).toMatchObject({
-      label: "Working",
+      label: tr("Working"),
       pulse: true,
     });
   });
@@ -443,7 +444,7 @@ describe("resolveThreadStatusPill", () => {
         },
       }),
     ).toMatchObject({
-      label: "Waiting",
+      label: tr("Waiting"),
       colorClass: "text-sidebar-muted-foreground",
       dotClass: "bg-sidebar-muted-foreground",
       pulse: false,
@@ -464,7 +465,7 @@ describe("resolveThreadStatusPill", () => {
           },
         },
       }),
-    ).toMatchObject({ label: "Plan Ready", pulse: false });
+    ).toMatchObject({ label: tr("Plan Ready"), pulse: false });
   });
 
   it("does not manufacture completed state without a client visit marker", () => {
@@ -498,7 +499,7 @@ describe("resolveThreadStatusPill", () => {
           },
         },
       }),
-    ).toMatchObject({ label: "Completed", pulse: false });
+    ).toMatchObject({ label: tr("Completed"), pulse: false });
   });
 
   it("shows failed, not completed, when the unseen run failed", () => {
@@ -517,7 +518,7 @@ describe("resolveThreadStatusPill", () => {
           },
         },
       }),
-    ).toMatchObject({ label: "Failed", pulse: false });
+    ).toMatchObject({ label: tr("Failed"), pulse: false });
   });
 
   it("shows failed, not plan ready, when a plan run proposed a plan and then failed", () => {
@@ -531,7 +532,7 @@ describe("resolveThreadStatusPill", () => {
           runtime: { ...baseThread.runtime, status: "failed", activeRunId: null },
         },
       }),
-    ).toMatchObject({ label: "Failed" });
+    ).toMatchObject({ label: tr("Failed") });
   });
 
   it("drops the failed pill once the failure has been seen", () => {
@@ -907,21 +908,21 @@ describe("unseen completion with background work", () => {
       task: { kind: "command" },
       status: "ready",
       receded: false,
-      pill: "Completed",
+      pill: tr("Completed"),
     },
     {
       roster: "dev server watchdog",
       task: { kind: "monitor" },
       status: "ready",
       receded: false,
-      pill: "Completed",
+      pill: tr("Completed"),
     },
     {
       roster: "awaited command",
       task: { kind: "command", awaited: true },
       status: "waiting",
       receded: true,
-      pill: "Waiting",
+      pill: tr("Waiting"),
     },
   ] as const)("presents a completed thread with a $roster roster", (expected) => {
     const thread = presentThreadShell(localEnvironmentId, {

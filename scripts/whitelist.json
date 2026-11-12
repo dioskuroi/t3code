@@ -33,7 +33,9 @@
     "W9 (#66)：exact 增补 Effect.timeout 时长字面量（30 seconds，非 UI 文案）。",
     "W9 review (#66)：删 exact 尾空格变体与 words/ exact 冗余 1Password、words PATH（改译「环境变量」随存量）。",
     "Batch67 (#67)：PR 域禁译项，IntersectionObserver rootMargin 像素配置值（240px/480px）与 Tailwind className 字面量（过渡类、负边距类），非用户可见文案。",
-    "Batch67 (#67)：words 增 fork（一词两义：会话分叉=派生（存量 13 例）、GitHub fork=保留英文（本批 2 例），待 #89 术语表补录两义行）、actions（一词两义：操作/GitHub Actions 标签，随既有 action）；contains 增编辑器名 Code 的固定短语、PR Code 产品区名与 label:bug 查询语法字面量。"
+    "Batch67 (#67)：words 增 fork（一词两义：会话分叉=派生（存量 13 例）、GitHub fork=保留英文（本批 2 例），待 #89 术语表补录两义行）、actions（一词两义：操作/GitHub Actions 标签，随既有 action）；contains 增编辑器名 Code 的固定短语、PR Code 产品区名与 label:bug 查询语法字面量。",
+    " #69（web 侧栏/项目域）：exact \":hover\" 为 routeReveal 的 CSS 选择器（matches() 参数，随 #60 \":disabled\" 先例，不翻）；words 增 \"Apple Silicon\"/\"Intel\"（硬件平台品牌名）与 \"Shift+click\"（键位组合，§3.5 键位不译）。",
+    "review (#69)：exact \"Code\" 为 SidebarChrome 品牌字标第二段（T3 Code 品牌名不译，术语表 §3.1），JSX 文本面回退字面量。"
   ],
   "contains": [
     "/side",
@@ -734,7 +736,9 @@
     "Diff worker operation ${this.operation} failed for theme ${this.themeName}.",
     "Diff worker operation  failed for theme .",
     ":pending",
-    "::pending"
+    "::pending",
+    ":hover",
+    "Code"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -1149,6 +1153,9 @@
     "op",
     "1Password",
     "fork",
-    "actions"
+    "actions",
+    "Apple Silicon",
+    "Shift+click",
+    "Intel"
   ]
 }

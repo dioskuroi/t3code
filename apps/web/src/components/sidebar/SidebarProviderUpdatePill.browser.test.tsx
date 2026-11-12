@@ -1,4 +1,5 @@
 import { ProviderDriverKind, ProviderInstanceId, type ServerProvider } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it, vi } from "vite-plus/test";
 
 import { act, fakeTimers, render } from "../../../test/render";
@@ -70,7 +71,7 @@ describe("SidebarProviderUpdatePill exit", () => {
 
     await act(() =>
       screen.container
-        .querySelector<HTMLButtonElement>('[aria-label="Dismiss provider update notice"]')
+        .querySelector<HTMLButtonElement>(`[aria-label="${tr("Dismiss provider update notice")}"]`)
         ?.click(),
     );
     await advance(180);
