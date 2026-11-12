@@ -45,7 +45,7 @@
     "W13 (#72) 新增：files/preview/media 域非文案串——iframe srcDoc HTML 模板与样式值（20px auto/32px/@media/160px/200px/0px/0ms）、canvas 字体简写（11px ui-sans-serif…）、rootMargin（100% 0px）、boxShadow（0 0 6px 1px var(--color-ring)）、Tailwind 类名字面量、:scope CSS 选择器（markdown-clipboard DOM 查询）、二进制预览 SQL 模板（PRAGMA/SELECT/CASE）、OOXML/ODF/RTF 标记构建片段（<br>/<img>/<row>/&lt;is&gt;&lt;t&gt;/&lt;span&gt;/&lt;p&gt;/&lt;strong&gt;/&lt;em&gt;/&lt;u&gt; 等）、字体样张 pangram、XML 属性名（Extension/ContentType/PartName/TargetMode/Target/Id/Type）、解析器内部键 #text、字体默认名 Calibri、Symbol 诊断描述（Word preview limit/Word style budget）、worker 内部状态断言（The worker already holds… 等）、RPC 诊断（Unknown method/Replaced by a newer call/Sheet could not open）、TaggedError message getter 诊断（Failed to open terminal link…/Invalid scoped preview thread key:）——均为代码/诊断面，非用户可见文案。",
     "W13 (#72) words 增补：Office/Word/Finder/DevTools（产品与工具品牌，随 §3.1）、TIFF/HEIC/EPUB/TAR/LZW/XML/XHTML/OpenDocument/Blob（格式与技术名词，随 §3 与 M2 PDF/Safari 先例）、DNS/CORS/Worker（技术缩写/平台术语，随 API/URL/HTTP 先例）。",
     "批 73（web device/usage/cloud/onboarding）：words 增补产品与计划品牌（Magic Keyboard/Face ID/Xcode/iOS/iPhone/Duo/T3 Chat/Premier/Premium）、开发工具面（Android Studio/Device Manager）与标识符（App ID/Bundle ID），随术语表 §3 品牌/标识符精神；contains \"T3 Chat Pro\" 为订阅计划产品名（Pro 为普通词不进 words）。与货币代码 USD（随 §3.6 单位精神）。 批 73 review：删 words Premium（SpeedPremium 加速溢价桶随图例标准/快速/极快改译「加速溢价」，非保留品牌）。",
-    "批 74（web 组件杂项 2/2：clerk/auth/guest/search/ui/desktop/permissions + 平铺收尾）新增：exact 为批内日志/开发者断言 throw（模板插值归一化形态）、Tailwind 类名字面量与 CSS 值（16rem/-px 0，随 #68/#72 先例）、React key 哨兵后缀（::match/::code，随 #68 ::pending 先例）、guest 路由 URL 模板片段（?=&path=/?=&item=）、搜索开关字形示例（Aa/ab）与 t3.chat 域名（§3.5 标识符不译），均为非显示层文案。 批 74 补充：words \"lint\"（前端工程固定术语/工具名，随 §3.5 精神）；contains \"t3.chat\"（域名，§3.5 不译，供译文内容面扣除）、\"Replay (dev)\"（Provider 实例名即产品名）、\"Home 或 End\"（键位名混排片段，随 \"如 High\" 先例）。"
+    "批 74（web 组件杂项 2/2：clerk/auth/guest/search/ui/desktop/permissions + 平铺收尾）新增：exact 为批内日志/开发者断言 throw（模板插值归一化形态）、Tailwind 类名字面量与 CSS 值（16rem/-px 0，随 #68/#72 先例）、React key 哨兵后缀（::match/::code，随 #68 ::pending 先例）、guest 路由 URL 模板片段（?=&path=/?=&item=）、搜索开关字形示例（Aa/ab）与 t3.chat 域名（§3.5 标识符不译），均为非显示层文案。 批 74 补充：words \"lint\"（前端工程固定术语/工具名，随 §3.5 精神）；contains \"t3.chat\"（域名，§3.5 不译，供译文内容面扣除）、\"Replay (dev)\"（Provider 实例名即产品名）、\"Home 或 End\"（键位名混排片段，随 \"如 High\" 先例）。 ::match/::code 出处：apps/web/src/components/search/HighlightedSearchLine.tsx（行内 React key 模板 `${start}:${end}:match`/:code 经插值归一化后的形态，非死条目，随 #68 ::pending 同理）。"
   ],
   "contains": [
     "/side",
@@ -832,15 +832,15 @@
     "Guest item request failed with .",
     "16rem",
     "-px 0",
-    "::match",
-    "::code",
     "?=&path=",
     "?=&item=",
     "Aa",
     "ab",
     "t3.chat",
     "*:[[data-slot]~[data-slot]:not([data-slot=separator])]:before:-start-[0.5px] *:data-slot:not-data-[slot=separator]:has-[~[data-slot]]:before:-end-[0.5px] *:pointer-coarse:after:min-w-auto *:data-slot:has-[~[data-slot]]:rounded-e-none *:data-slot:has-[~[data-slot]]:border-e-0 *:data-slot:has-[~[data-slot]]:before:rounded-e-none *:[[data-slot]~[data-slot]]:rounded-s-none *:[[data-slot]~[data-slot]]:border-s-0 *:[[data-slot]~[data-slot]]:before:rounded-s-none",
-    "*:[[data-slot]~[data-slot]:not([data-slot=separator])]:before:-top-[0.5px] *:data-slot:not-data-[slot=separator]:has-[~[data-slot]]:before:-bottom-[0.5px] flex-col *:pointer-coarse:after:min-h-auto *:data-slot:has-[~[data-slot]]:rounded-b-none *:data-slot:has-[~[data-slot]]:border-b-0 *:data-slot:not-data-[slot=separator]:has-[~[data-slot]]:before:hidden *:data-slot:has-[~[data-slot]]:before:rounded-b-none dark:*:last:before:hidden dark:*:first:before:block *:[[data-slot]~[data-slot]]:rounded-t-none *:[[data-slot]~[data-slot]]:border-t-0 *:[[data-slot]~[data-slot]]:before:rounded-t-none"
+    "*:[[data-slot]~[data-slot]:not([data-slot=separator])]:before:-top-[0.5px] *:data-slot:not-data-[slot=separator]:has-[~[data-slot]]:before:-bottom-[0.5px] flex-col *:pointer-coarse:after:min-h-auto *:data-slot:has-[~[data-slot]]:rounded-b-none *:data-slot:has-[~[data-slot]]:border-b-0 *:data-slot:not-data-[slot=separator]:has-[~[data-slot]]:before:hidden *:data-slot:has-[~[data-slot]]:before:rounded-b-none dark:*:last:before:hidden dark:*:first:before:block *:[[data-slot]~[data-slot]]:rounded-t-none *:[[data-slot]~[data-slot]]:border-t-0 *:[[data-slot]~[data-slot]]:before:rounded-t-none",
+    "::match",
+    "::code"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
