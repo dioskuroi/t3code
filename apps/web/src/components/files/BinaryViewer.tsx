@@ -64,7 +64,9 @@ function ArchiveFile(props: { readonly path: string; readonly bytes: Uint8Array<
     return url ? <PreviewImage key={url} src={url} name={props.path} /> : <FileSurfaceLoading />;
   if (!text)
     return (
-      <FileSurfaceFailure message={tr("Only UTF-8 text and images can be opened inside an archive.")} />
+      <FileSurfaceFailure
+        message={tr("Only UTF-8 text and images can be opened inside an archive.")}
+      />
     );
   return (
     <>
@@ -226,7 +228,12 @@ export default function BinaryViewer(props: {
                   if (!busy && value !== null) selectPage(0, value);
                 }}
               >
-                <SelectTrigger aria-label={tr("Table")} aria-disabled={busy} aria-busy={busy} size="xs">
+                <SelectTrigger
+                  aria-label={tr("Table")}
+                  aria-disabled={busy}
+                  aria-busy={busy}
+                  size="xs"
+                >
                   <SelectValue>
                     {tr("{name} ({count} rows)", {
                       name: table.name,
@@ -257,7 +264,7 @@ export default function BinaryViewer(props: {
               {table.count === 0
                 ? tr("0 rows")
                 : tr("Rows {range} of {count}", {
-                    range: `${page * SQLITE_PAGE_SIZE + 1}–${Math.min(table.count, (page + 1) * SQLITE_PAGE_SIZE)}`,
+                    range: `${page * SQLITE_PAGE_SIZE + 1} 到 ${Math.min(table.count, (page + 1) * SQLITE_PAGE_SIZE)}`,
                     count: table.count.toLocaleString(),
                   })}
             </span>
@@ -280,7 +287,9 @@ export default function BinaryViewer(props: {
             {sizeBytes !== null ? ` · ${formatAttachmentSize(sizeBytes)}` : ""}
           </div>
           <FileSurfaceNotice>
-            {tr("Read-only. Up to 50 columns and 1,024 characters per cell. Blob contents are omitted.")}
+            {tr(
+              "Read-only. Up to 50 columns and 1,024 characters per cell. Blob contents are omitted.",
+            )}
           </FileSurfaceNotice>
         </>
       ) : null}
@@ -399,7 +408,9 @@ export default function BinaryViewer(props: {
           ) : null}
         </div>
       ) : (
-        <p className="p-6 text-xs text-muted-foreground">{tr("This database has no readable tables.")}</p>
+        <p className="p-6 text-xs text-muted-foreground">
+          {tr("This database has no readable tables.")}
+        </p>
       )}
     </div>
   );

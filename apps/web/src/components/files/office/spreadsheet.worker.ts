@@ -36,7 +36,7 @@ const state: State = { opened: undefined };
 
 serveWorker<SheetMethods>({
   open: async (input) => {
-    if (state.opened) throw new Error("The worker already holds a workbook");
+    if (state.opened) throw new Error(tr("The worker already holds a workbook"));
 
     await initWasm();
 
@@ -63,7 +63,7 @@ serveWorker<SheetMethods>({
     // One sheet that fails to open leaves the others readable: go back to the sheet on show.
     attempt(() => show(opened, current));
 
-    throw new Error(`Sheet ${input.sheet} could not open`);
+    throw new Error(tr("Sheet {sheet} could not open", { sheet: input.sheet }));
   },
   frame: (input) => {
     const opened = active(input.sheet);
@@ -144,7 +144,7 @@ serveWorker<SheetMethods>({
 });
 
 function required() {
-  if (!state.opened) throw new Error("The worker holds no workbook");
+  if (!state.opened) throw new Error(tr("The worker holds no workbook"));
 
   return state.opened;
 }
