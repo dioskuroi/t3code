@@ -1,4 +1,5 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { XIcon } from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
 
@@ -73,14 +74,14 @@ export function AppRouteModalClose() {
       <TooltipTrigger
         render={
           <DialogPrimitive.Close
-            aria-label="Close"
+            aria-label={tr("Close")}
             render={<Button size="icon-sm" variant="ghost" />}
           />
         }
       >
         <XIcon />
       </TooltipTrigger>
-      <TooltipPopup side="bottom">Close (Esc)</TooltipPopup>
+      <TooltipPopup side="bottom">{tr("Close (Esc)")}</TooltipPopup>
     </Tooltip>
   );
 }

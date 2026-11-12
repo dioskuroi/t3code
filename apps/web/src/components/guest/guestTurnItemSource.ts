@@ -2,6 +2,7 @@ import {
   applyCommandOutputFrame,
   EMPTY_COMMAND_OUTPUT,
 } from "@t3tools/client-runtime/state/command-output";
+import { tr } from "@t3tools/shared/i18n";
 import {
   GUEST_COMMAND_OUTPUT_ROUTE,
   GUEST_ITEM_ROUTE,
@@ -50,7 +51,7 @@ const guestItemDetailAtom = Atom.family((key: string) => {
   return Atom.make(
     Effect.tryPromise({
       try: () => fetchGuestItemDetail(shareId, itemId),
-      catch: () => new GuestItemReadError({ message: "Could not load this item." }),
+      catch: () => new GuestItemReadError({ message: tr("Could not load this item.") }),
     }),
   );
 });
@@ -76,7 +77,7 @@ const guestCommandOutputAtom = Atom.family((key: string) => {
           if (source.readyState === EventSource.CLOSED) {
             Queue.failCauseUnsafe(
               queue,
-              Cause.fail(new GuestItemReadError({ message: "Output is no longer available." })),
+              Cause.fail(new GuestItemReadError({ message: tr("Output is no longer available.") })),
             );
           }
         });

@@ -1,4 +1,5 @@
 import { CircleCheckIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 import type { ComponentProps, ReactNode } from "react";
 import { Button } from "../ui/button";
 
@@ -30,11 +31,11 @@ export function PermissionChecklist({
           {permission.granted ? (
             <span role="status" className="flex items-center gap-1 text-xs text-success">
               <CircleCheckIcon className="size-4" aria-hidden="true" />
-              Allowed
+              {tr("Allowed")}
             </span>
           ) : (
             <Button size="xs" variant="outline" disabled={busy} onClick={permission.onAllow}>
-              Allow
+              {tr("Allow")}
             </Button>
           )}
         </div>
@@ -46,7 +47,7 @@ export function PermissionChecklist({
 export function PermissionContinueButton({
   ready,
   busy = false,
-  children = "Continue",
+  children = tr("Continue"),
   ...props
 }: Omit<ComponentProps<typeof Button>, "disabled"> & { ready: boolean; busy?: boolean }) {
   return (

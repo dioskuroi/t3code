@@ -22,7 +22,7 @@ it("explains a denied clipboard write and lets the same path be copied again", a
   await copy.click();
 
   await expect.element(page.getByText("Failed to copy text to the clipboard.")).toBeVisible();
-  await page.getByRole("button", { name: "Dismiss notification" }).click();
+  await page.getByRole("button", { name: tr("Dismiss notification") }).click();
   await copy.click();
 
   await expect.element(page.getByText(tr("Copied!"), { exact: true })).toBeVisible();
