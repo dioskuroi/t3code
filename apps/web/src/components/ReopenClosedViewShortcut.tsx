@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   scopeProjectRef,
   scopedThreadKey,
@@ -146,7 +147,7 @@ export function ReopenClosedViewShortcut() {
       .catch((error: unknown) => {
         toastManager.add({
           type: "error",
-          title: "Could not reopen view",
+          title: tr("Could not reopen view"),
           description: error instanceof Error ? error.message : String(error),
         });
       });
