@@ -1,5 +1,6 @@
 import { act, render, type Screen } from "../../../test/render";
 import { AuthSourceControlWriteScope, EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
 
@@ -62,7 +63,7 @@ function button(screen: Screen, label: string) {
   return match!;
 }
 
-const clickSave = (screen: Screen) => act(async () => button(screen, "Save").click());
+const clickSave = (screen: Screen) => act(async () => button(screen, tr("Save")).click());
 
 async function grant(allowed: boolean) {
   await act(async () => {
@@ -81,7 +82,7 @@ it("keeps an edited draft through revocation and saves it after access returns w
   await userEvent.type(textarea, "Keep these unsaved edits");
 
   await grant(false);
-  expect(button(screen, "Save").disabled).toBe(true);
+  expect(button(screen, tr("Save")).disabled).toBe(true);
   expect(screen.container.querySelector("textarea")).toBe(textarea);
 
   await grant(true);

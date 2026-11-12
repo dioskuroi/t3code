@@ -1,5 +1,6 @@
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
 import { EnvironmentId, ProjectId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";
 
@@ -28,19 +29,23 @@ function setup(detail: string) {
 
 const HEAD_MOVED = "The stack head moved. Refresh the stack before trying again.";
 
+// PullRequestOperationError.message is localized, so build the expected toast text with the
+// same key production renders instead of assuming the bare host detail survives.
+const operationFailure = (detail: string) =>
+  tr("Pull request operation {operation} failed: {detail}", { operation: "runAction", detail });
+
 it.each([
-  { label: "Merge stack", detail: HEAD_MOVED, description: HEAD_MOVED },
-  { label: "Rebase stack", detail: HEAD_MOVED, description: HEAD_MOVED },
+  { label: "Merge stack", detail: HEAD_MOVED, description: operationFailure(HEAD_MOVED) },
+  { label: "Rebase stack", detail: HEAD_MOVED, description: operationFailure(HEAD_MOVED) },
   {
     label: "Rebase stack",
     detail: "GitHub CLI command failed.",
-    description:
-      "The host refused the rebase. A rebase stops at the first commit that does not apply cleanly.",
+    description: operationFailure("GitHub CLI command failed."),
   },
 ])("$label refused with $detail shows $description", async (row) => {
   setup(row.detail);
   await using screen = await render(
-    <ToastProvider>
+    <ToastProvider timeout={0}>
       <PullRequestStackMenu
         environmentId={EnvironmentId.make("environment")}
         reference={{
@@ -66,11 +71,22 @@ it.each([
     </ToastProvider>,
   );
   if (row.label === "Rebase stack") {
-    await screen.getByRole("button", { name: "Stack 1, layer 1 of 1" }).click();
-    await page.getByRole("menuitem", { name: row.label }).click();
+    await screen
+      .getByRole("button", {
+        name: tr("Stack {number}, layer {position} of {total}", {
+          number: 1,
+          position: 1,
+          total: 1,
+        }),
+      })
+      .click();
+    await page.getByRole("menuitem", { name: tr(row.label) }).click();
   } else {
-    await screen.getByRole("button", { name: row.label, exact: true }).click();
+    await screen.getByRole("button", { name: tr(row.label), exact: true }).click();
   }
-  await page.getByRole("dialog").getByRole("button", { name: row.label, exact: true }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: tr(row.label), exact: true })
+    .click();
   await expect.element(page.getByText(row.description, { exact: true })).toBeInTheDocument();
 });

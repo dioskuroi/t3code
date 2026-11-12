@@ -30,7 +30,9 @@
     "W9 (#66)：exact 增补应用商店品牌（App Store、Google Play）；contains 增补固定短语与示例分支字面量（boring sidebar、op account list、feat/add-search、fix/login-timeout、refactor/auth）。",
     "W9 (#66)：contains 补充 boring（boring sidebar 产品名，译文中以「在 boring 侧边栏」形式出现）。",
     "W9 (#66)：exact 增补 Effect.timeout 时长字面量（30 seconds，非 UI 文案）。",
-    "W9 review (#66)：删 exact 尾空格变体与 words/ exact 冗余 1Password、words PATH（改译「环境变量」随存量）。"
+    "W9 review (#66)：删 exact 尾空格变体与 words/ exact 冗余 1Password、words PATH（改译「环境变量」随存量）。",
+    "Batch67 (#67)：PR 域禁译项，IntersectionObserver rootMargin 像素配置值（240px/480px）与 Tailwind className 字面量（过渡类、负边距类），非用户可见文案。",
+    "Batch67 (#67)：words 增 fork（fork 惯例保留）、actions（GitHub Actions，随既有 action）；contains 增编辑器名 Code 的固定短语、PR Code 产品区名与 label:bug 查询语法字面量。"
   ],
   "contains": [
     "/side",
@@ -80,7 +82,10 @@
     "feat/add-search",
     "fix/login-timeout",
     "op account list",
-    "refactor/auth"
+    "refactor/auth",
+    "在 Code 中打开",
+    "PR Code",
+    "label:bug"
   ],
   "exact": [
     " READY ",
@@ -718,7 +723,11 @@
     "INT",
     "KILL",
     "Use $frontend-design to fix the flaky test in",
-    "px"
+    "px",
+    "240px",
+    "480px",
+    "-translate-y-1 opacity-0 duration-100",
+    "-ml-3 w-0"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -1128,6 +1137,8 @@
     "agent-device",
     "emoji",
     "op",
-    "1Password"
+    "1Password",
+    "fork",
+    "actions"
   ]
 }

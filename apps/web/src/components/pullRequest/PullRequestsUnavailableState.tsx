@@ -1,4 +1,5 @@
 import { RefreshIcon } from "~/components/ui/refresh-icon";
+import { tr } from "@t3tools/shared/i18n";
 import { ExternalLinkIcon } from "lucide-react";
 
 import { Button } from "../ui/button";
@@ -6,7 +7,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "..
 import { PullRequestGlyph } from "./pullRequestIcons";
 
 export function PullRequestsUnavailableState({
-  title = "Could not load pull requests",
+  title = tr("Could not load pull requests"),
   error,
   onRetry,
   refreshing = false,
@@ -38,7 +39,7 @@ export function PullRequestsUnavailableState({
               aria-busy={refreshing}
             >
               <RefreshIcon size="sm" refreshing={refreshing} />
-              Retry
+              {tr("Retry")}
             </Button>
           ) : null}
           {host ? (

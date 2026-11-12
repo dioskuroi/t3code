@@ -1,4 +1,4 @@
-/** Diff failures currently include transport wrappers, so recognize the reason inside them. */
+import { tr } from "@t3tools/shared/i18n"; /** Diff failures currently include transport wrappers, so recognize the reason inside them. */
 export function describePullRequestDiffError(error: string, providerName: string, term: string) {
   if (/\brate limit\b|\brate[-_]limited\b|\btoo many requests\b/i.test(error)) {
     return {
@@ -8,7 +8,10 @@ export function describePullRequestDiffError(error: string, providerName: string
   }
 
   return {
-    title: "Couldn't load the changes",
-    description: `The environment couldn't load this ${term}'s diff. Try again, or view the changes on ${providerName}.`,
+    title: tr("Couldn't load the changes"),
+    description: tr(
+      "The environment couldn't load this {term}'s diff. Try again, or view the changes on {providerName}.",
+      { term: term, providerName: providerName },
+    ),
   };
 }

@@ -1,4 +1,5 @@
 import type { AnyRouter } from "@tanstack/react-router";
+import { tr } from "@t3tools/shared/i18n";
 import type { PullRequestReviewGuideResult } from "@t3tools/contracts";
 import { CircleAlertIcon, CircleCheckIcon } from "lucide-react";
 import { AsyncResult, type AtomRegistry } from "effect/reactivity";
@@ -89,7 +90,7 @@ function watchGuideRun(
     const looking = document.visibilityState === "visible" && document.hasFocus();
     if (looking && isGuideShown(runKey)) return;
 
-    const title = failure === null ? "Review guide ready" : "Review guide failed";
+    const title = failure === null ? tr("Review guide ready") : tr("Review guide failed");
     const body =
       watch.title ??
       observedPullRequestTitle(registry, watch.environmentId, watch.reference) ??
@@ -129,7 +130,7 @@ function watchGuideRun(
             ),
         },
         actionProps: {
-          children: "Open guide",
+          children: tr("Open guide"),
           onClick: () => {
             toastManager.close(toastId);
             open();
