@@ -1,4 +1,5 @@
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
+import { tr } from "@t3tools/shared/i18n";
 import type { UsageProviderKind } from "@t3tools/contracts";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -271,7 +272,7 @@ function UsageChartTooltip({
         );
       })}
       <div className="mt-1 flex items-center justify-between gap-3 border-t border-border pt-1">
-        <span className="text-muted-foreground">Total</span>
+        <span className="text-muted-foreground">{tr("Total")}</span>
         <span className={cn("tabular-nums", partial ? "text-muted-foreground" : "text-foreground")}>
           {format(column?.total ?? 0)}
         </span>
@@ -467,7 +468,15 @@ export function UsageProviderChart({
           loadingProviders={loadingProviders}
           format={format}
           formatTooltipPeriod={formatTooltipPeriod}
-          ariaLabel={`${resolution === "hour" ? "Hourly" : "Daily"} ${metric === "tokens" ? "processed tokens" : "cost"} by provider`}
+          ariaLabel={
+            metric === "tokens"
+              ? tr("{period} processed tokens by provider", {
+                  period: resolution === "hour" ? tr("Hourly") : tr("Daily"),
+                })
+              : tr("{period} cost by provider", {
+                  period: resolution === "hour" ? tr("Hourly") : tr("Daily"),
+                })
+          }
         >
           {scale.ticks.map((tick) => {
             const y = toY(tick);

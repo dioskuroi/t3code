@@ -3,6 +3,7 @@ import type {
   ServerSettingsPatch,
   UsageModelPriceOverride,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 export interface UsagePriceTarget {
   readonly environmentId: EnvironmentId;
@@ -44,7 +45,7 @@ export async function writeUsagePrices(input: {
       if (target.unavailable !== null) {
         result = { status: "failed", error: target.unavailable };
       } else if (aliases.length > 0 && target.aliases === null) {
-        result = { status: "failed", error: "Update server to map models" };
+        result = { status: "failed", error: tr("Update server to map models") };
       } else {
         try {
           const saved =
@@ -66,9 +67,9 @@ export async function writeUsagePrices(input: {
           result =
             saved._tag === "Success"
               ? { status: "saved" }
-              : { status: "failed", error: "Could not save. Try again." };
+              : { status: "failed", error: tr("Could not save. Try again.") };
         } catch {
-          result = { status: "failed", error: "Could not save. Try again." };
+          result = { status: "failed", error: tr("Could not save. Try again.") };
         }
       }
       input.onResult(target.environmentId, result);

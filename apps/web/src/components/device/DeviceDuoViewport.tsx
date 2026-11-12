@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import type { DuoViewer } from "@t3tools/client-runtime/device/duo-viewer";
 import type { DeviceModelSource } from "@t3tools/client-runtime/device/model";
 import type { createPhoneInteraction } from "@t3tools/client-runtime/device/phone-interaction";
@@ -74,7 +75,7 @@ export function DeviceDuoViewport(props: {
                 value: panel === 1 ? "facedown" : "faceup",
               }),
             onOrientationRequested: (value) => client.controlDuo({ control: "orientation", value }),
-            onModelError: (cause) => console.warn("Device 3D asset could not load", cause),
+            onModelError: (cause) => console.warn(tr("Device 3D asset could not load"), cause),
             model: modelRef.current,
           });
           return { ...viewer, sources };
@@ -154,7 +155,9 @@ export function DeviceDuoViewport(props: {
         />
         <canvas
           ref={mountViewer}
-          aria-label="Interactive 3D iPhone Duo. Drag the screen to interact. Drag outside it or swipe with two fingers to turn. Pinch over the device to open or close its hinge."
+          aria-label={tr(
+            "Interactive 3D iPhone Duo. Drag the screen to interact. Drag outside it or swipe with two fingers to turn. Pinch over the device to open or close its hinge.",
+          )}
           className="size-full touch-none"
           onPointerDown={(event) => {
             if (event.button !== 0) return;

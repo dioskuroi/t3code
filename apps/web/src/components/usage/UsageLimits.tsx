@@ -8,6 +8,7 @@ import {
   ServerProviderUsageWindow,
   UsageProviderKind,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomValue } from "@effect/atom-react";
 import { normalizeProviderAccentColor } from "@t3tools/client-runtime/state/provider-instance-display";
 import {
@@ -43,9 +44,15 @@ import { UsageLimitsPooled } from "./UsageLimitsPooled";
 import { PROVIDER_PRESENTATION } from "./usageProviders";
 
 const PACE: Record<LimitPace, { readonly label: string; readonly icon: typeof GaugeIcon }> = {
-  ahead: { label: "Ahead of pace: spending faster than the window elapses", icon: TrendingUpIcon },
-  on: { label: "On pace with the window", icon: GaugeIcon },
-  under: { label: "Under pace: headroom left for the rest of the window", icon: TrendingDownIcon },
+  ahead: {
+    label: tr("Ahead of pace: spending faster than the window elapses"),
+    icon: TrendingUpIcon,
+  },
+  on: { label: tr("On pace with the window"), icon: GaugeIcon },
+  under: {
+    label: tr("Under pace: headroom left for the rest of the window"),
+    icon: TrendingDownIcon,
+  },
 };
 
 export function barColor(driver: ServerProvider["driver"]): string {
@@ -130,9 +137,10 @@ function WindowBar({
   const resetsAt = window.resetsAt
     ? formatUpcomingTimestamp(window.resetsAt, timestampFormat, now)
     : null;
-  const summary = `${window.label}: ${remaining}% left${
-    timeLeft === null ? "" : `, ${timeLeft}% of the window left`
-  }${resetsIn ? `, ${resetsIn}` : ""}`;
+  const resetsPart = resetsIn === null ? "" : ` · ${resetsInLabel(resetsIn)}`;
+  const summary = `${tr("{label}: {percent}% left", { label: window.label, percent: remaining })}${
+    timeLeft === null ? "" : tr(", {timeLeft}% of the window left", { timeLeft: timeLeft })
+  }${resetsPart}`;
 
   return (
     <Tooltip>
@@ -168,15 +176,20 @@ function WindowBar({
       <TooltipPopup side="top">
         <div className="flex flex-col gap-0.5">
           <span className="text-foreground">
-            {remaining}% left{timeLeft !== null ? ` · ${timeLeft}% of the window left` : ""}
+            {tr("{percent}% left", { percent: remaining })}
+            {timeLeft !== null
+              ? tr(" \u00B7 {timeLeft}% of the window left", { timeLeft: timeLeft })
+              : ""}
           </span>
           {timeLeft !== null ? (
-            <span className="text-muted-foreground">The line is where even spending would be.</span>
+            <span className="text-muted-foreground">
+              {tr("The line is where even spending would be.")}
+            </span>
           ) : null}
           {resetsAt ? (
             <span className="text-muted-foreground">
-              Resets {resetsAt}
-              {resetsIn ? ` · ${resetsIn}` : ""}
+              {tr("Resets")} {resetsAt}
+              {resetsInLabel(resetsIn) ? ` · ${resetsInLabel(resetsIn)}` : ""}
             </span>
           ) : null}
         </div>
@@ -215,13 +228,13 @@ export function LimitWindows({
             <span className="flex min-w-0 items-center gap-2 text-xs">
               <span className="truncate text-muted-foreground">{window.label}</span>
               <span className="ms-auto shrink-0 font-medium text-foreground tabular-nums">
-                {remainingPercent(window)}% left
+                {tr("{percent}% left", { percent: remainingPercent(window) })}
               </span>
             </span>
             <WindowBar color={color} window={window} now={now} />
             <span className="flex items-center gap-2 text-xs whitespace-nowrap text-muted-foreground tabular-nums">
               {pace ? <PaceIcon pace={pace} /> : null}
-              <span className="ms-auto shrink-0">{resetsIn ?? ""}</span>
+              <span className="ms-auto shrink-0">{resetsInLabel(resetsIn) ?? ""}</span>
             </span>
           </Fragment>
         );
@@ -231,10 +244,10 @@ export function LimitWindows({
 }
 
 const OUTCOME_TEXT: Record<ProviderConsumeResetCreditOutcome, string> = {
-  reset: "Reset applied. Your windows have cleared.",
-  nothingToReset: "Nothing to reset right now.",
-  noCredit: "No reset credit left.",
-  alreadyRedeemed: "That credit was already redeemed.",
+  reset: tr("Reset applied. Your windows have cleared."),
+  nothingToReset: tr("Nothing to reset right now."),
+  noCredit: tr("No reset credit left."),
+  alreadyRedeemed: tr("That credit was already redeemed."),
 };
 
 export function useResetCredit(
@@ -261,7 +274,7 @@ export function useResetCredit(
     setStatus(
       "error" in result.cause && result.cause.error instanceof Error
         ? result.cause.error.message
-        : "Could not use the reset credit.",
+        : tr("Could not use the reset credit."),
     );
   };
 
@@ -285,21 +298,32 @@ export function ResetCreditDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogPopup>
         <AlertDialogHeader>
-          <AlertDialogTitle>Use a reset credit?</AlertDialogTitle>
+          <AlertDialogTitle>{tr("Use a reset credit?")}</AlertDialogTitle>
           <AlertDialogDescription>
-            This redeems one credit on your account and clears the current rate-limit windows. It
-            cannot be undone.
+            {tr(
+              "This redeems one credit on your account and clears the current rate-limit windows. It cannot be undone.",
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogClose render={<Button variant="outline" />}>Cancel</AlertDialogClose>
+          <AlertDialogClose render={<Button variant="outline" />}>{tr("Cancel")}</AlertDialogClose>
           <Button disabled={disabled} onClick={onConfirm}>
-            Use credit
+            {tr("Use credit")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogPopup>
     </AlertDialog>
   );
+}
+
+/**
+ * Renders `formatResetsIn`'s English diagnostic value ("resets now" / "resets in 5h 20m")
+ * as user-visible copy; both inputs and the shared `packages/shared` module stay untouched.
+ */
+export function resetsInLabel(resetsIn: string | null): string | null {
+  if (resetsIn === null) return null;
+  if (resetsIn === "resets now") return tr("Resets now");
+  return tr("{duration} until reset", { duration: resetsIn.replace(/^resets in /, "") });
 }
 
 export function resetCreditsSummary(
@@ -310,12 +334,14 @@ export function resetCreditsSummary(
   const expiresIn = credits.nextExpiresAt
     ? formatDuration(Date.parse(credits.nextExpiresAt) - now)
     : null;
-  if (credits.availableCount === 0) return "No reset credits banked";
+  if (credits.availableCount === 0) return tr("No reset credits banked");
   if (compact)
-    return `${credits.availableCount} banked${expiresIn ? ` · expires in ${expiresIn}` : ""}`;
-  return `${credits.availableCount} ${credits.availableCount === 1 ? "reset credit" : "reset credits"} banked${
-    expiresIn ? ` · next expires in ${expiresIn}` : ""
-  }`;
+    return `${credits.availableCount === 1 ? tr("1 banked") : tr("{count} banked", { count: credits.availableCount })}${expiresIn ? tr(" \u00B7 expires in {expiresIn}", { expiresIn: expiresIn }) : ""}`;
+  return `${
+    credits.availableCount === 1
+      ? tr("1 reset credit banked")
+      : tr("{count} reset credits banked", { count: credits.availableCount })
+  }${expiresIn ? tr(" \u00B7 next expires in {expiresIn}", { expiresIn: expiresIn }) : ""}`;
 }
 
 export function ResetCredits({
@@ -346,7 +372,7 @@ export function ResetCredits({
             if (readEnvironmentScope(environmentId, AuthProvidersManageScope)) setConfirming(true);
           }}
         >
-          {busy ? "Using…" : "Use reset"}
+          {busy ? tr("Using\u2026") : tr("Use reset")}
         </Button>
       ) : null}
       {status ? <span className="text-foreground">{status}</span> : null}

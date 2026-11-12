@@ -14,6 +14,7 @@ import {
   paceRemainingPercent,
   remainingPercent,
 } from "@t3tools/shared/usageLimits";
+import { tr } from "@t3tools/shared/i18n";
 import type { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { normalizeProviderAccentColor } from "@t3tools/client-runtime/state/provider-instance-display";
 import { AlertTriangleIcon, ExternalLinkIcon, TicketIcon } from "lucide-react";
@@ -45,6 +46,7 @@ import {
   barColor,
   usePaceMark,
   resetCreditsSummary,
+  resetsInLabel,
   useResetCredit,
 } from "./UsageLimits";
 
@@ -66,7 +68,7 @@ function AccountChip({ email }: { readonly email: string }) {
   return (
     <span
       role="img"
-      aria-label={`Account ${accountInitials(email)}`}
+      aria-label={tr("Account {initials}", { initials: accountInitials(email) })}
       className="inline-flex size-4 shrink-0 items-center justify-center rounded-full text-3xs leading-none font-semibold"
       style={{ backgroundColor: `oklch(0.85 0.08 ${hue})`, color: `oklch(0.35 0.1 ${hue})` }}
     >
@@ -170,30 +172,34 @@ function SegmentPopover({
         {account.email ? (
           <RedactedSensitiveText
             value={account.email}
-            ariaLabel="Toggle account email visibility"
-            revealTooltip="Click to reveal email"
-            hideTooltip="Click to hide email"
+            ariaLabel={tr("Toggle account email visibility")}
+            revealTooltip={tr("Click to reveal email")}
+            hideTooltip={tr("Click to hide email")}
             className="w-fit"
           />
         ) : null}
       </div>
       <div className="flex flex-col gap-1 border-t border-border/60 pt-2.5">
-        {account.plan ? <Row label="Plan">{account.plan}</Row> : null}
+        {account.plan ? <Row label={tr("Plan")}>{account.plan}</Row> : null}
         {where ? (
-          <Row label={account.environments.length > 0 ? "Signed in" : "Via"}>{where}</Row>
+          <Row label={account.environments.length > 0 ? tr("Signed in") : tr("Via")}>{where}</Row>
         ) : null}
       </div>
       <div className="flex flex-col gap-1 border-t border-border/60 pt-2.5">
-        <Row label="Left">{remaining}%</Row>
+        <Row label={tr("Left")}>{remaining}%</Row>
         {window.resetsAt ? (
-          <Row label="Resets">
+          <Row label={tr("Resets")}>
             {formatUpcomingTimestamp(window.resetsAt, timestampFormat, now)}
-            {resetsIn ? ` · ${resetsIn.replace("resets in ", "in ")}` : ""}
+            {resetsInLabel(resetsIn) ? ` · ${resetsInLabel(resetsIn)}` : ""}
           </Row>
         ) : null}
-        {timeLeft !== null ? <Row label="Even pace">{timeLeft}% left by now</Row> : null}
+        {timeLeft !== null ? (
+          <Row label={tr("Even pace")}>{tr("{percent}% left by now", { percent: timeLeft })}</Row>
+        ) : null}
         {reset && reset.restoresPercent > 0 ? (
-          <Row label="Restores">+{reset.restoresPercent}% of pool</Row>
+          <Row label={tr("Restores")}>
+            {tr("+{percent}% of pool", { percent: reset.restoresPercent })}
+          </Row>
         ) : null}
       </div>
       {credits && redeem ? (
@@ -207,7 +213,7 @@ function SegmentPopover({
               className="ms-auto"
               onClick={onRedeem}
             >
-              {redeem.busy ? "Using…" : "Use reset"}
+              {redeem.busy ? tr("Using\u2026") : tr("Use reset")}
             </Button>
           </span>
         </div>
@@ -317,7 +323,7 @@ function RedeemableSegment({
       {redeem.busy || redeem.status ? (
         <span role="status" className="col-span-full text-xs text-muted-foreground">
           <AccountName account={props.account} className="font-medium text-foreground" />{" "}
-          {redeem.busy ? "Using reset credit…" : redeem.status}
+          {redeem.busy ? tr("Using reset credit\u2026") : redeem.status}
         </span>
       ) : null}
     </>
@@ -359,7 +365,12 @@ function SegmentTriggers({
             ref={segmentRef}
             type="button"
             style={{ gridColumn: index, gridRow: 1, ...paceMark?.gappedTrack }}
-            aria-label={`${account.displayName ?? (account.email ? accountInitials(account.email) : account.driver)}: ${remaining}% left${resetsIn ? `, ${resetsIn}` : ""}${timeLeft === null ? "" : `, ${timeLeft}% of the window left`}${credits ? `, ${credits} reset ${credits === 1 ? "credit" : "credits"} banked` : ""}`}
+            aria-label={`${tr("{label}: {percent}% left", {
+              label:
+                account.displayName ??
+                (account.email ? accountInitials(account.email) : account.driver),
+              percent: remaining,
+            })}${resetsInLabel(resetsIn) ? `，${resetsInLabel(resetsIn)}` : ""}${timeLeft === null ? "" : tr(", {timeLeft}% of the window left", { timeLeft: timeLeft })}${credits === 0 ? "" : credits === 1 ? tr(", 1 reset credit banked") : tr(", {count} reset credits banked", { count: credits })}`}
             className="relative h-5 min-w-0 cursor-pointer rounded-md bg-muted text-start outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background data-[popup-open]:ring-1 data-[popup-open]:ring-inset data-[popup-open]:ring-border @2xl/pool:h-8"
           />
         }
@@ -412,7 +423,7 @@ function SegmentTriggers({
           ) : null}
           {resetsIn || credits ? (
             <span className="ms-auto flex min-w-0 items-center gap-1.5 overflow-hidden rounded-sm bg-background/85 px-1.5 py-0.5 text-2xs whitespace-nowrap text-foreground tabular-nums">
-              {resetsIn?.replace("resets in ", "↻ ") ?? ""}
+              {resetsInLabel(resetsIn) ?? ""}
               {credits ? (
                 <>
                   {resetsIn ? (
@@ -465,13 +476,13 @@ function LegendRow({
           className="absolute inset-0 rounded-sm opacity-35"
           style={{ backgroundColor: color }}
         />
-        <span className="sr-only">Segment </span>
+        <span className="sr-only">{tr("Segment")} </span>
         <span className="relative">{index}</span>
       </span>
       <AccountName account={account} className="min-w-0 truncate font-medium text-foreground" />
       <span className="shrink-0 font-semibold text-foreground tabular-nums">{remaining}%</span>
       <span className="ms-auto flex shrink-0 items-center gap-1.5 text-2xs text-muted-foreground tabular-nums">
-        {resetsIn?.replace("resets in ", "↻ ") ?? ""}
+        {resetsInLabel(resetsIn) ?? ""}
         {credits ? (
           <>
             {resetsIn ? <span aria-hidden>·</span> : null}
@@ -483,7 +494,9 @@ function LegendRow({
               {credits}
             </span>
             <span className="sr-only">
-              {credits} reset {credits === 1 ? "credit" : "credits"} banked
+              {credits === 1
+                ? tr("1 reset credit banked")
+                : tr("{count} reset credits banked", { count: credits })}
             </span>
           </>
         ) : null}
@@ -551,7 +564,7 @@ function PoolWindowCard({
             {pool.remainingPercent}%
           </span>
           <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-            <span>left</span>
+            <span>{tr("left")}</span>
             {pool.pace ? <PaceIcon pace={pool.pace} /> : null}
           </span>
         </span>
@@ -625,7 +638,7 @@ export function UsageLimitsPooled({
     <div className="flex flex-col gap-8">
       {pools.length === 0 && notices.length === 0 && !cursorPrompt && externalLinks.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          No provider on the selected environments reports subscription limits.
+          {tr("No provider on the selected environments reports subscription limits.")}
         </p>
       ) : null}
       <SegmentPopoverContext value={segmentPopover}>
@@ -666,7 +679,7 @@ export function UsageLimitsPooled({
               </p>
               {link.url === CHATGPT_USAGE_URL ? (
                 <p className="text-xs text-muted-foreground">
-                  View usage in ChatGPT with your connected account.
+                  {tr("View usage in ChatGPT with your connected account.")}
                 </p>
               ) : link.message ? (
                 <p className="max-w-xl text-xs text-muted-foreground">{link.message}</p>
@@ -678,7 +691,7 @@ export function UsageLimitsPooled({
             size="xs"
             onClick={() => void ensureLocalApi().shell.openExternal(link.url)}
           >
-            Manage usage
+            {tr("Manage usage")}
             <ExternalLinkIcon className="size-3.5" aria-hidden="true" />
           </Button>
         </section>
