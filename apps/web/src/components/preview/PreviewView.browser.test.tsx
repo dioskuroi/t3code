@@ -7,6 +7,7 @@ import {
   FILL_PREVIEW_VIEWPORT,
   ThreadId,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { type ComponentProps } from "react";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
@@ -220,15 +221,15 @@ describe("PreviewView", () => {
     async (address) => {
       setup();
       await using _screen = await render(<ToastProvider timeout={0}>{view()}</ToastProvider>);
-      const input = page.getByPlaceholder("Search or enter URL");
+      const input = page.getByPlaceholder(tr("Search or enter URL"));
       await input.fill(address);
       await userEvent.keyboard("{Enter}");
 
-      await expect.element(page.getByText("Could not open this address")).toBeVisible();
-      await expect.element(page.getByText("Enter an http or https URL.")).toBeVisible();
+      await expect.element(page.getByText(tr("Could not open this address"))).toBeVisible();
+      await expect.element(page.getByText(tr("Enter an http or https URL."))).toBeVisible();
       expect(mocks.navigate).not.toHaveBeenCalled();
       expect(mocks.recordVisitForThread).not.toHaveBeenCalled();
-      await userEvent.click(page.getByRole("button", { name: "Dismiss notification" }));
+      await userEvent.click(page.getByRole("button", { name: tr("Dismiss notification") }));
     },
   );
 
@@ -244,7 +245,7 @@ describe("PreviewView", () => {
         }),
     );
     await using screen = await render(view(onSendAnnotation));
-    await userEvent.click(page.getByRole("button", { name: "Annotate preview" }));
+    await userEvent.click(page.getByRole("button", { name: tr("Annotate preview") }));
     await vi.waitFor(() => expect(submitPick).toBeDefined());
     expect(mocks.setAnnotationSendEnabled).toHaveBeenLastCalledWith(TEST_RUNTIME_TAB_ID, true);
 
@@ -262,7 +263,7 @@ describe("PreviewView", () => {
     mocks.readEnvironmentScope.mockReturnValue(true);
     mocks.pickElement.mockResolvedValue({ annotation: picked, submission: "send" });
     await screen.rerender(view(onSendAnnotation));
-    await userEvent.click(page.getByRole("button", { name: "Annotate preview" }));
+    await userEvent.click(page.getByRole("button", { name: tr("Annotate preview") }));
     await vi.waitFor(() => expect(onSendAnnotation).toHaveBeenCalledWith(picked, null));
     expect(mocks.setAnnotationSendEnabled).toHaveBeenLastCalledWith(TEST_RUNTIME_TAB_ID, true);
   });
@@ -278,7 +279,7 @@ describe("PreviewView", () => {
     const onSendAnnotation = vi.fn();
     mocks.pickElement.mockResolvedValue({ annotation: picked, submission: "send" });
     await using _screen = await render(view(onSendAnnotation));
-    await userEvent.click(page.getByRole("button", { name: "Annotate preview" }));
+    await userEvent.click(page.getByRole("button", { name: tr("Annotate preview") }));
 
     const sent = { ...picked, screenshot: null };
     await vi.waitFor(() => expect(onSendAnnotation).toHaveBeenCalledWith(sent, null));

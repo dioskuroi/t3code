@@ -1,5 +1,7 @@
 import { expect, it, vi } from "vite-plus/test";
 
+import { tr } from "@t3tools/shared/i18n";
+
 import { readMediaPng } from "./mediaContent";
 
 const PNG_BYTES = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -44,7 +46,7 @@ it("ignores the URL fragment when decoding a data URL", async () => {
 it.each(["data:image/png;base64,%%%", "data:image/png"])(
   "reports malformed inline media: %s",
   async (src) => {
-    await expect(readMediaPng(src)).rejects.toThrow("This inline media could not be decoded.");
+    await expect(readMediaPng(src)).rejects.toThrow(tr("This inline media could not be decoded."));
   },
 );
 

@@ -9,6 +9,7 @@ import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
+import { tr } from "@t3tools/shared/i18n";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const authorizationMocks = vi.hoisted(() => ({
@@ -148,12 +149,12 @@ describe("project query refresh", () => {
       const query = useProjectFileQuery(environmentId, "/repo", "src/preview.ts");
       expect(projectMocks.readFile).not.toHaveBeenCalled();
       expect(query.data).toBeNull();
-      expect(query.error).toBe("This connection cannot read host files.");
+      expect(query.error).toBe(tr("This connection cannot read host files."));
       expect(query.isPending).toBe(false);
       const entries = useProjectEntriesQuery(environmentId, "/repo");
       expect(projectMocks.listEntries).not.toHaveBeenCalled();
       expect(entries.data).toBeNull();
-      expect(entries.error).toBe("This connection cannot read host files.");
+      expect(entries.error).toBe(tr("This connection cannot read host files."));
       expect(entries.isPending).toBe(false);
     } finally {
       registry.dispose();

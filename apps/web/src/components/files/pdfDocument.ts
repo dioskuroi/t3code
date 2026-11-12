@@ -1,4 +1,5 @@
 import { getDocument, GlobalWorkerOptions, PDFWorker } from "pdfjs-dist";
+import { tr } from "@t3tools/shared/i18n";
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import fallbackUrl from "pdfjs-dist/wasm/openjpeg_nowasm_fallback.js?url";
 
@@ -23,10 +24,10 @@ export class BinaryDataFactory {
     const assets = kind === "cMapUrl" ? cMaps : kind === "wasmUrl" ? wasm : standardFonts;
     const directory = kind === "cMapUrl" ? "cmaps" : kind === "wasmUrl" ? "wasm" : "standard_fonts";
     const url = assets[`../../../node_modules/pdfjs-dist/${directory}/${filename}`];
-    if (!url) throw new Error(`Unsupported PDF ${directory} asset.`);
+    if (!url) throw new Error(tr("Unsupported PDF {directory} asset.", { directory: directory }));
     const response = await fetch(url);
     if (!response.ok || response.headers.get("content-type")?.startsWith("text/html"))
-      throw new Error(`PDF ${directory} asset unavailable.`);
+      throw new Error(tr("PDF {directory} asset unavailable.", { directory: directory }));
     return new Uint8Array(await response.arrayBuffer());
   }
 }

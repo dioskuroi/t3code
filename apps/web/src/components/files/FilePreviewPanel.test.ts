@@ -5,6 +5,8 @@ import { ProjectReadFileError } from "@t3tools/contracts";
 import * as Schema from "effect/Schema";
 import { describe, expect, it, vi } from "vite-plus/test";
 
+import { tr } from "@t3tools/shared/i18n";
+
 import { remapFileCommentAnnotations } from "./fileCommentAnnotations";
 import {
   filePreviewReadErrorMessage,
@@ -172,7 +174,7 @@ describe("document preview contents", () => {
           "</spine></package>",
       )
       .file("chapter.xhtml", "<html><body>" + "<figcaption/>".repeat(30_000) + "</body></html>");
-    await expect(openEpub(archive)).rejects.toThrow("too large");
+    await expect(openEpub(archive)).rejects.toThrow(tr("The rendered document is too large to preview."));
   });
 
   it("decodes rich text formatting and Unicode without showing hidden destinations", () => {
@@ -201,7 +203,7 @@ describe("document preview contents", () => {
       "<p>Third</p>",
     ]);
     expect(() => openRtf(bytes(String.raw`{\rtf1 ` + String.raw`\page`.repeat(501) + "}"))).toThrow(
-      "500 pages",
+      tr("Rich text preview limited to 500 pages."),
     );
   });
 
@@ -213,7 +215,9 @@ describe("document preview contents", () => {
     const result = openRtf(input.buffer);
     if (result.type !== "document") throw new Error("Expected document");
     expect(result.pages[0]!.html).toBe("<p>А А<br>あ</p>");
-    expect(() => openRtf(bytes(String.raw`{\rtf1\ansicpg99999 text}`))).toThrow("code page");
+    expect(() => openRtf(bytes(String.raw`{\rtf1\ansicpg99999 text}`))).toThrow(
+      tr("This rich text code page is not supported."),
+    );
   });
 
   it("resolves scoped ODF namespaces and explicit spreadsheet whitespace", async () => {
@@ -245,7 +249,7 @@ describe("document preview contents", () => {
       .file("picture.png", pixels);
     const image = archive.file("picture.png")!;
     const read = vi.spyOn(image, "async");
-    await expect(openDocument(archive, "odp")).rejects.toThrow("too large");
+    await expect(openDocument(archive, "odp")).rejects.toThrow(tr("The rendered document is too large to preview."));
     expect(read.mock.calls.filter(([type]) => type === "base64")).toHaveLength(2);
     expect(read).toHaveBeenCalledTimes(5);
   });
@@ -294,12 +298,14 @@ describe("document preview contents", () => {
         },
       ],
     });
-    expect(() => openNotebook(bytes('{"nbformat":3,"cells":[]}'))).toThrow("version 4");
+    expect(() => openNotebook(bytes('{"nbformat":3,"cells":[]}'))).toThrow(
+      tr("Preview supports version 4 notebooks with up to 500 cells."),
+    );
     expect(() =>
       openNotebook(
         bytes(JSON.stringify({ nbformat: 4, cells: Array.from({ length: 501 }, () => ({})) })),
       ),
-    ).toThrow("500 cells");
+    ).toThrow(tr("Preview supports version 4 notebooks with up to 500 cells."));
   });
 
   it("bounds repeated OpenDocument spreadsheet cells and keeps sheet names and values", async () => {
@@ -360,7 +366,9 @@ describe("document preview contents", () => {
       "content.xml",
       '<!DOCTYPE x [<!ENTITY external SYSTEM "file:///etc/passwd">]><x>&external;</x>',
     );
-    await expect(openDocument(archive, kind)).rejects.toThrow("unsupported XML");
+    await expect(openDocument(archive, kind)).rejects.toThrow(
+      tr("This document contains invalid or unsupported XML."),
+    );
   });
 
   it("reads EPUB chapters in spine order and removes active and remote content", async () => {
