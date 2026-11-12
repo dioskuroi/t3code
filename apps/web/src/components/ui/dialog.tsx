@@ -1,4 +1,5 @@
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { XIcon } from "lucide-react";
 import { type ComponentProps, createContext, type ReactNode, use, useState } from "react";
 import { cn } from "~/lib/utils";
@@ -119,7 +120,7 @@ function DialogPopup({
           {children}
           {showCloseButton && (
             <DialogPrimitive.Close
-              aria-label="Close"
+              aria-label={tr("Close")}
               className="absolute end-2 top-2"
               render={<Button size="icon" variant="ghost" />}
             >

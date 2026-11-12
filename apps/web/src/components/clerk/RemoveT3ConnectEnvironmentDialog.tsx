@@ -1,4 +1,5 @@
 import { Discovery } from "@t3tools/client-runtime/relay";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentId } from "@t3tools/contracts";
 import { useState } from "react";
 
@@ -46,10 +47,10 @@ export function RemoveT3ConnectEnvironmentDialog({
         openAccountPage();
       }}
     >
-      T3 Connect settings
+      {tr("T3 Connect settings")}
     </InlineButton>
   ) : (
-    "T3 Connect settings"
+    tr("T3 Connect settings")
   );
 
   return (
@@ -62,30 +63,34 @@ export function RemoveT3ConnectEnvironmentDialog({
       >
         <AlertDialogPopup>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove {shown.label} from this device?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {tr("Remove {label} from this device?", { label: shown.label ?? "" })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This forgets its pairing, credentials, and cached threads here.
+              {tr("This forgets its pairing, credentials, and cached threads here.")}
             </AlertDialogDescription>
             <AlertDialogDescription>
               {shown.registration === "registered" ? (
                 <>
-                  It stays on your T3 Connect account and keeps its host space. Deregister it in{" "}
-                  {accountPageLink} to free it.
+                  {tr("It stays on your T3 Connect account and keeps its host space.")}
+                  {tr("Deregister it in")} {accountPageLink} {tr("to free it.")}
                 </>
               ) : shown.registration === "unregistered" ? (
-                "It's no longer on your T3 Connect account."
+                tr("It's no longer on your T3 Connect account.")
               ) : (
                 <>
-                  This doesn't change your T3 Connect account. To deregister it there, use{" "}
-                  {accountPageLink}.
+                  {tr("This doesn't change your T3 Connect account.")}
+                  {tr("To deregister it there, use")} {accountPageLink}.
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogClose render={<Button variant="outline" />}>Cancel</AlertDialogClose>
+            <AlertDialogClose render={<Button variant="outline" />}>
+              {tr("Cancel")}
+            </AlertDialogClose>
             <Button variant="destructive" onClick={onConfirm}>
-              Remove from this device
+              {tr("Remove from this device")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogPopup>

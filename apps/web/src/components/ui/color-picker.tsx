@@ -6,6 +6,7 @@ import {
   type PointerEvent,
   type RefObject,
 } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { HsvColor } from "../../lib/color";
 import { cn } from "../../lib/utils";
@@ -122,13 +123,14 @@ export function ColorSaturationValuePlane({
       {...handlers}
     >
       <span id={instructionsId} className="sr-only">
-        Use arrow keys to adjust the focused value. Hold Shift for larger steps. Use Home and End
-        for the minimum and maximum. Press Tab to move between saturation and brightness.
+        {tr(
+          "Use arrow keys to adjust the focused value. Hold Shift for larger steps. Use Home and End for the minimum and maximum. Press Tab to move between saturation and brightness.",
+        )}
       </span>
       {(
         [
-          ["s", "Saturation"],
-          ["v", "Brightness"],
+          ["s", tr("Saturation")],
+          ["v", tr("Brightness")],
         ] as const
       ).map(([axis, axisLabel]) => (
         <label key={axis} className="contents">

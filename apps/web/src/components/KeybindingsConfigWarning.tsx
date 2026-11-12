@@ -3,6 +3,7 @@ import {
   type EditorId,
   type EnvironmentId,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
 
 import { useOpenInPreferredEditor } from "../editorPreferences";
@@ -40,13 +41,14 @@ export function KeybindingsConfigWarning({
             toastManager.add(
               stackedThreadToast({
                 type: "error",
-                title: "Unable to open keybindings file",
-                description: error instanceof Error ? error.message : "Unknown error opening file.",
+                title: tr("Unable to open keybindings file"),
+                description:
+                  error instanceof Error ? error.message : tr("Unknown error opening file."),
               }),
             );
           }}
         >
-          Open keybindings.json
+          {tr("Open keybindings.json")}
         </Button>
       </span>
     </>

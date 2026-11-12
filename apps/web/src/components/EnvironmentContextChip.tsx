@@ -1,4 +1,5 @@
 import { type EnvironmentContextRecord, resolveEnvironmentMachineKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import { useEnvironment } from "~/state/environments";
 import { ContextChip, ContextChipLabel } from "./ContextChip";
@@ -22,7 +23,7 @@ export function EnvironmentContextChip(props: {
           <ContextChip
             kind="environment"
             tabIndex={0}
-            aria-label={`Machine, ${label}`}
+            aria-label={tr("Machine, {label}", { label: label })}
             data-markdown-copy={props.copyMarkdown}
           >
             <EnvironmentMachineIcon
@@ -33,7 +34,7 @@ export function EnvironmentContextChip(props: {
         }
       />
       <TooltipPopup side="top">
-        {environment ? "T3 Code environment" : "Machine not in this app"}
+        {environment ? tr("T3 Code environment") : tr("Machine not in this app")}
       </TooltipPopup>
     </Tooltip>
   );
