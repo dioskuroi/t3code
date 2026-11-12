@@ -1327,8 +1327,14 @@ const TOOL_NOISE = [
 const FAILURE_DETAIL_MAX_LENGTH = 320;
 
 export function readableFailure(failure: unknown, hint: string): string {
-  const raw =
-    failure instanceof Error ? failure.message : typeof failure === "string" ? failure : "";
+  // 消息 getter 已本地化（T02 起），英文前缀正则剥离失效——改读结构化字段，跨语言稳健。
+  const raw = isPullRequestOperationError(failure)
+    ? failure.detail
+    : failure instanceof Error
+      ? failure.message
+      : typeof failure === "string"
+        ? failure
+        : "";
   const detail = raw.replace(OPERATION_PREFIX, "").trim();
   if (detail.length === 0 || TOOL_NOISE.some((pattern) => pattern.test(detail))) return hint;
   const bounded =

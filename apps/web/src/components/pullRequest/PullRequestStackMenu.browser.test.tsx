@@ -29,10 +29,8 @@ function setup(detail: string) {
 
 const HEAD_MOVED = "The stack head moved. Refresh the stack before trying again.";
 
-// PullRequestOperationError.message is localized, so build the expected toast text with the
-// same key production renders instead of assuming the bare host detail survives.
-const operationFailure = (detail: string) =>
-  tr("Pull request operation {operation} failed: {detail}", { operation: "runAction", detail });
+// readableFailure 从结构化字段取 detail（前缀由 UI 标题承担），与本地化前的原始行为一致。
+const operationFailure = (detail: string) => detail;
 
 it.each([
   { label: "Merge stack", detail: HEAD_MOVED, description: operationFailure(HEAD_MOVED) },
@@ -40,7 +38,10 @@ it.each([
   {
     label: "Rebase stack",
     detail: "GitHub CLI command failed.",
-    description: operationFailure("GitHub CLI command failed."),
+    // 该 detail 命中 TOOL_NOISE，回落到 rebase 拒绝 hint。
+    description: tr(
+      "The host refused the rebase. A rebase stops at the first commit that does not apply cleanly.",
+    ),
   },
 ])("$label refused with $detail shows $description", async (row) => {
   setup(row.detail);
