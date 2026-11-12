@@ -30,6 +30,7 @@ vi.mock(import("../state/queries"), async (original) => ({
 }));
 
 import "~/index.css";
+import { tr } from "@t3tools/shared/i18n";
 import { render } from "../../test/render";
 import { WorktreeBaseBranchPicker } from "./WorktreeBaseBranchPicker";
 
@@ -61,7 +62,7 @@ describe("WorktreeBaseBranchPicker", () => {
       await userEvent.click(screen.getByRole("combobox"));
       let query = "";
       for (const char of "main") {
-        await userEvent.type(page.getByPlaceholder("Search refs..."), char);
+        await userEvent.type(page.getByPlaceholder(tr("Search refs...")), char);
         query += char;
         mocks.resolvedQueries.add(query);
         await screen.rerender(picker());

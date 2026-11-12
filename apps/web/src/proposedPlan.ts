@@ -1,4 +1,5 @@
 import { stripDisplayedPlanMarkdown, proposedPlanTitle } from "@t3tools/shared/proposedPlanText";
+import { tr } from "@t3tools/shared/i18n";
 
 export function buildCollapsedProposedPlanPreviewMarkdown(
   planMarkdown: string,
@@ -32,7 +33,7 @@ export function buildCollapsedProposedPlanPreviewMarkdown(
   }
 
   if (previewLines.length === 0) {
-    return proposedPlanTitle(planMarkdown) ?? "Plan preview unavailable.";
+    return proposedPlanTitle(planMarkdown) ?? tr("Plan preview unavailable.");
   }
 
   if (hasMoreContent) {
@@ -78,9 +79,9 @@ export function resolvePlanFollowUpSubmission(input: { draftText: string; planMa
 export function buildPlanImplementationThreadTitle(planMarkdown: string): string {
   const title = proposedPlanTitle(planMarkdown);
   if (!title) {
-    return "Implement plan";
+    return tr("Implement plan");
   }
-  return `Implement ${title}`;
+  return tr("Implement {title}", { title: title });
 }
 
 export function buildProposedPlanMarkdownFilename(planMarkdown: string): string {

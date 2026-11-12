@@ -28,6 +28,7 @@
     "W9 (#66)：品牌与信号短标签（1Password/INT/KILL/px）、CSS 选择器与字体预览示例（diff 片段、提示词样例文本）为标识符/示例内容，§3.5/§10 不译。",
     "W9 (#66)：words 增补品牌与技术名词（1Password、CLIProxyAPI、Lucide、OTLP、SIGINT、PATH、emoji、SettingsScopeProvider、agent-device、op CLI 名）；contains 增补示例分支前缀（feat/、fix/、refactor/）示例字面量。",
     "W9 (#66)：exact 增补应用商店品牌（App Store、Google Play）；contains 增补固定短语与示例分支字面量（boring sidebar、op account list、feat/add-search、fix/login-timeout、refactor/auth）。",
+    "#68（web diff/git 域）：exact \"600px\" 为 IntersectionObserver rootMargin 值（纯单位数值，§3.6 单位精神，非展示文案）；exact \"Diff worker operation ${...}...\" 为 DiffWorkerError TaggedError message getter 诊断面（ADR-0005 先例，退英文）；exact \"::pending\" 为 useReviewFilePatches cacheKey 哨兵字面量，非展示文案；exact \"-mx-px size-4.5\" 为 Tailwind className 误报。words 增补 \"Star\"（GitHub Star 功能名，短语标签保留）、\"HEAD\"（git detached HEAD 术语）、\"Changes\"（Diff 面板 Changes 范围标签，保留英文）。",
     "W9 (#66)：contains 补充 boring（boring sidebar 产品名，译文中以「在 boring 侧边栏」形式出现）。",
     "W9 (#66)：exact 增补 Effect.timeout 时长字面量（30 seconds，非 UI 文案）。",
     "W9 review (#66)：删 exact 尾空格变体与 words/ exact 冗余 1Password、words PATH（改译「环境变量」随存量）。",
@@ -727,7 +728,13 @@
     "240px",
     "480px",
     "-translate-y-1 opacity-0 duration-100",
-    "-ml-3 w-0"
+    "-ml-3 w-0",
+    "600px",
+    "-mx-px size-4.5",
+    "Diff worker operation ${this.operation} failed for theme ${this.themeName}.",
+    "Diff worker operation  failed for theme .",
+    ":pending",
+    "::pending"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -798,6 +805,9 @@
     "deltax",
     "deltay",
     "detached head",
+    "Changes",
+    "Star",
+    "HEAD",
     "dev server",
     "device_list",
     "deviceid",

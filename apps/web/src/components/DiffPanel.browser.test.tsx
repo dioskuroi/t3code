@@ -17,6 +17,8 @@ import { AsyncResult, Atom, AtomRegistry } from "effect/reactivity";
 import { expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
+import { tr } from "@t3tools/shared/i18n";
+
 import "~/index.css";
 import { render } from "../../test/render";
 import { makeThreadFixture } from "~/test-fixtures";
@@ -85,6 +87,12 @@ import DiffPanel from "./DiffPanel";
 import { useDiffPanelSessionStore, useDiffPanelStore } from "~/diffPanelStore";
 
 const cwd = "/project-worktree";
+const comparisonTargetName = new RegExp(
+  tr("Change comparison target. Currently {comparisonBaseRef}").replace(
+    "{comparisonBaseRef}",
+    ".*",
+  ),
+);
 const errorMessage = "Could not find a common commit between 'origin/orphan' and HEAD.";
 
 function preview(): ReviewDiffPreviewResult {
@@ -198,12 +206,17 @@ it.each([
       </RegistryContext.Provider>,
     );
     await expect.element(screen.getByText(errorMessage, { exact: true })).toBeVisible();
-    const selector = screen.getByRole("combobox", { name: /Change comparison target/ });
+    const selector = screen.getByRole("combobox", { name: comparisonTargetName });
     await vi.waitFor(() => expect(selector.query()).not.toBeNull());
     await userEvent.click(selector);
     await expect.element(page.getByRole("option", { name: "main", exact: true })).toBeVisible();
-    await userEvent.click(page.getByRole("option", { name: recovery, exact: true }));
-    await expect.element(screen.getByText("No net changes in this selection.")).toBeVisible();
+    await userEvent.click(
+      page.getByRole("option", {
+        name: recovery === "Automatic" ? tr("Automatic") : recovery,
+        exact: true,
+      }),
+    );
+    await expect.element(screen.getByText(tr("No net changes in this selection."))).toBeVisible();
     await expect.element(screen.getByText(errorMessage, { exact: true })).not.toBeInTheDocument();
     const key = scopedThreadKey(context.threadRef);
     await vi.waitFor(() => {
