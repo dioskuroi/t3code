@@ -172,7 +172,7 @@ describe("bounded binary previews", () => {
       await act(() => child()!.click());
       await vi.waitFor(() => expect(child()?.textContent).toBe("hello.txt"));
       const parent = () =>
-        screen.container.querySelector<HTMLButtonElement>('[aria-label="Parent folder"]')!;
+        screen.container.querySelector<HTMLButtonElement>(`[aria-label="${tr("Parent folder")}"]`)!;
       await act(() => parent().click());
       await act(() => parent().click());
       expect(parent().disabled).toBe(true);
@@ -278,7 +278,7 @@ describe("bounded binary previews", () => {
           "21",
           "14",
         ]);
-        const trigger = screen.container.querySelector<HTMLButtonElement>('[aria-label="Table"]')!;
+        const trigger = screen.container.querySelector<HTMLButtonElement>(`[aria-label="${tr("Table")}"]`)!;
         await act(() => trigger.focus());
         await userEvent.keyboard("{Enter}");
         await expect
@@ -543,13 +543,13 @@ describe("large text preview recovery", () => {
       await vi.waitFor(() => expect(screen.container.textContent).toContain("original"));
       assetUrlState.mockReturnValue({ _tag: "Failure" });
       await screen.rerender(preview("legacy-edit", 1));
-      expect(screen.container.textContent).toContain("Unable to load file preview.");
+      expect(screen.container.textContent).toContain(tr("Unable to load file preview."));
       refresh.mockClear();
       refresh.mockImplementation(async () => {
         state(`${changed}#retried`);
         return changed;
       });
-      await screen.getByRole("button", { name: "Try again" }).click();
+      await screen.getByRole("button", { name: tr("Try again") }).click();
       expect(refresh).toHaveBeenCalledOnce();
       await screen.rerender(preview("legacy-edit", 1));
       await vi.waitFor(() => expect(screen.container.textContent).toContain("changed"));
@@ -865,12 +865,12 @@ describe("large text preview recovery", () => {
       <LargeTextViewer name="log.txt" text={"bad\0text"} delimiter={null} />,
     );
     await vi.waitFor(
-      () => expect(screen.container.textContent).toContain("This file contains binary data."),
+      () => expect(screen.container.textContent).toContain(tr("This file contains binary data.")),
       10_000,
     );
     await screen.rerender(<LargeTextViewer name="log.txt" text="" delimiter={null} />);
     await vi.waitFor(
-      () => expect(screen.container.textContent).toContain("This file is empty."),
+      () => expect(screen.container.textContent).toContain(tr("This file is empty.")),
       10_000,
     );
     expect(screen.container.querySelector('[role="alert"]')).toBeNull();
@@ -1207,7 +1207,7 @@ it.each([
       ) {
         expect(result).toMatchObject({
           type: "error",
-          message: expect.stringContaining("Preview limited"),
+          message: expect.stringContaining("预览受限：此 Word 文档"),
         });
       } else {
         expect(result.type).toBe("docx");
@@ -1289,7 +1289,7 @@ it.each([
     });
     expect(result).toMatchObject({
       type: "error",
-      message: expect.stringContaining("Preview limited"),
+      message: expect.stringContaining("预览受限：此 Word 文档"),
     });
   } finally {
     worker.terminate();
@@ -1947,7 +1947,7 @@ it("clears an Office metadata error when the same URL becomes previewable", asyn
     <OfficeFilePreview src={src} name="report.docx" kind="docx" sizeBytes={100} />,
   );
   await vi.waitFor(() =>
-    expect(screen.container.querySelector('[aria-label="Loading file"]')).not.toBeNull(),
+    expect(screen.container.querySelector(`[aria-label="${tr("Loading file")}"]`)).not.toBeNull(),
   );
   expect(screen.container.textContent).not.toContain("under 50 MB");
   resolveBody("invalid-office-file");
@@ -2030,7 +2030,7 @@ describe("attachment HTML preview recovery", () => {
     refresh.mockResolvedValue(null);
     await toggleMode(screen, "Show HTML source");
     expect(attachmentFetches()).toEqual([]);
-    expect(alert(screen)?.textContent).toContain("Reconnect to the environment and try again.");
+    expect(alert(screen)?.textContent).toContain(tr("Reconnect to the environment and try again."));
 
     await toggleMode(screen, "Show rendered page");
     await toggleMode(screen, "Show HTML source");
@@ -2113,7 +2113,7 @@ it("opens a known empty attachment even when its range response is inaccessible"
     />,
   );
   await vi.waitFor(
-    () => expect(screen.container.textContent).toContain("This file is empty."),
+    () => expect(screen.container.textContent).toContain(tr("This file is empty.")),
     10_000,
   );
 });
@@ -2146,7 +2146,7 @@ it.each(["draft", "thread"] as const)(
       ),
     );
     expect(fetch).toHaveBeenCalled();
-    expect(screen.container.textContent).not.toContain("This file is empty.");
+    expect(screen.container.textContent).not.toContain(tr("This file is empty."));
   },
 );
 
@@ -2165,7 +2165,7 @@ it("refreshes authorization and retries a failed streamed attachment", async () 
     );
     // A cold large-text worker can take longer than waitFor's default to boot on CI.
     await vi.waitFor(
-      () => expect(screen.container.textContent).toContain("This file contains binary data."),
+      () => expect(screen.container.textContent).toContain(tr("This file contains binary data.")),
       { timeout: 10_000 },
     );
     await act(() =>
@@ -2336,16 +2336,16 @@ it("toggles a Mermaid attachment between diagram and source through the lazy pre
   await screen.getByRole("button", { name: tr("Expand diagram") }).click();
   await vi.waitFor(() => {
     const image = document.querySelector<HTMLImageElement>('[role="dialog"] img');
-    expect(image?.alt).toBe("Mermaid diagram");
+    expect(image?.alt).toBe(tr("Mermaid diagram"));
     expect(image?.naturalWidth).toBeGreaterThan(0);
   });
   await page
     .getByRole("button", { name: tr("Close {mediaLabel} preview", { mediaLabel: "image" }) })
     .click();
   await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
-  await screen.getByRole("button", { name: "Show Mermaid source" }).click();
+  await screen.getByRole("button", { name: tr("Show Mermaid source") }).click();
   await vi.waitFor(() => expect(screen.container.querySelector("pre")?.textContent).toBe(text));
-  await screen.getByRole("button", { name: "Show rendered diagram" }).click();
+  await screen.getByRole("button", { name: tr("Show rendered diagram") }).click();
   await vi.waitFor(() =>
     expect(screen.container.querySelector("[data-markdown-mermaid] svg path")).not.toBeNull(),
   );
@@ -2509,7 +2509,9 @@ async function workspacePdfPreview() {
 function pdfScroll(screen: Screen) {
   const region = () => screen.container.querySelector<HTMLElement>('[role="region"]')!;
   const canvas = (page: number) =>
-    region().querySelector<HTMLCanvasElement>(`canvas[aria-label="Page ${page}"]`)!;
+    region().querySelector<HTMLCanvasElement>(
+      `canvas[aria-label="${tr("Page {index}", { index: page })}"]`,
+    )!;
   const offset = (page: number) =>
     region().getBoundingClientRect().top - canvas(page).getBoundingClientRect().top;
   const scrollTo = (options: ScrollToOptions) =>
@@ -2530,12 +2532,12 @@ it("keeps workspace PDF scroll and zoom after reloads", async () => {
   await using screen = await render(preview(urls.original, "one"));
   await expect.element(screen.getByText("1 / 3 pages", { exact: true })).toBeVisible();
   using workers = vi.spyOn(window, "Worker");
-  await screen.getByRole("button", { name: "Next page", exact: true }).click();
+  await screen.getByRole("button", { name: tr("Next page"), exact: true }).click();
   await vi.waitFor(() => expect(screen.container.textContent).toContain("2 / 3 pages"));
-  await screen.getByRole("button", { name: "Next page", exact: true }).click();
+  await screen.getByRole("button", { name: tr("Next page"), exact: true }).click();
   await vi.waitFor(() => expect(screen.container.textContent).toContain("3 / 3 pages"));
   for (let index = 0; index < 4; index++) {
-    await screen.getByRole("button", { name: "Zoom in", exact: true }).click();
+    await screen.getByRole("button", { name: tr("Zoom in"), exact: true }).click();
   }
   const { region, offset, scrollTo } = pdfScroll(screen);
   const zoom = screen.container.textContent!.match(/\d+%/)![0];
@@ -2556,31 +2558,31 @@ it("keeps workspace PDF scroll and zoom after reloads", async () => {
     expect(region().scrollLeft).toBe(80);
     expect(offset(3)).toBeCloseTo(savedOffset, 0);
   });
-  await screen.getByRole("button", { name: "Previous page", exact: true }).click();
+  await screen.getByRole("button", { name: tr("Previous page"), exact: true }).click();
   await vi.waitFor(() => expect(screen.container.textContent).toContain("2 / 3 pages"));
-  await screen.getByRole("button", { name: "Fit width", exact: true }).click();
+  await screen.getByRole("button", { name: tr("Fit width"), exact: true }).click();
   await scrollTo({ top: region().scrollTop + 30 });
   const fitOffset = offset(2);
   await screen.rerender(preview(urls.original, "fit-width"));
   await expect.element(screen.getByText("2 / 3 pages", { exact: true })).toBeVisible();
   await vi.waitFor(() => {
-    expect(screen.container.textContent).toContain("Fit width");
+    expect(screen.container.textContent).toContain(tr("Fit width"));
     expect(region().scrollLeft).toBe(0);
     expect(offset(2)).toBeCloseTo(fitOffset, 0);
   });
-  await screen.getByRole("button", { name: "Previous page", exact: true }).click();
+  await screen.getByRole("button", { name: tr("Previous page"), exact: true }).click();
   await vi.waitFor(() => expect(screen.container.textContent).toContain("1 / 3 pages"));
-  await screen.getByRole("button", { name: "Zoom in", exact: true }).click();
+  await screen.getByRole("button", { name: tr("Zoom in"), exact: true }).click();
   const firstPageZoom = screen.container.textContent!.match(/\d+%/)![0];
   await screen.rerender(preview(urls.original, "first-page"));
   await expect.element(screen.getByText("1 / 3 pages", { exact: true })).toBeVisible();
   await vi.waitFor(() => expect(screen.container.textContent).toContain(firstPageZoom));
-  await screen.getByRole("button", { name: "Next page", exact: true }).click();
+  await screen.getByRole("button", { name: tr("Next page"), exact: true }).click();
   await vi.waitFor(() => expect(screen.container.textContent).toContain("2 / 3 pages"));
   await screen.rerender(preview(urls.original, "one", "/repo/another.pdf"));
   await expect.element(screen.getByText("1 / 3 pages", { exact: true })).toBeVisible();
   await vi.waitFor(() => {
-    expect(screen.container.textContent).toContain("Fit width");
+    expect(screen.container.textContent).toContain(tr("Fit width"));
     expect(region().scrollTop).toBe(0);
     expect(region().scrollLeft).toBe(0);
   });
@@ -2592,10 +2594,10 @@ it("clamps workspace PDF scroll when pages shrink or disappear", async () => {
   const { preview, urls } = fixture;
   await using screen = await render(preview(urls.original, "one"));
   await expect.element(screen.getByText("1 / 3 pages", { exact: true })).toBeVisible();
-  await screen.getByRole("button", { name: "Next page", exact: true }).click();
+  await screen.getByRole("button", { name: tr("Next page"), exact: true }).click();
   await expect.element(screen.getByText("2 / 3 pages", { exact: true })).toBeVisible();
   for (let index = 0; index < 4; index++) {
-    await screen.getByRole("button", { name: "Zoom in", exact: true }).click();
+    await screen.getByRole("button", { name: tr("Zoom in"), exact: true }).click();
   }
   const { region, canvas, offset, scrollTo } = pdfScroll(screen);
   const zoom = screen.container.textContent!.match(/\d+%/)![0];
@@ -2633,8 +2635,8 @@ it("unwraps one text attachment without turning off the word wrap setting", asyn
       file={file}
     />,
   );
-  await screen.getByRole("button", { name: "Disable word wrap" }).click();
-  await expect.element(screen.getByRole("button", { name: "Enable word wrap" })).toBeVisible();
+  await screen.getByRole("button", { name: tr("Disable word wrap") }).click();
+  await expect.element(screen.getByRole("button", { name: tr("Enable word wrap") })).toBeVisible();
   expect(getClientSettings().wordWrap).toBe(true);
   expect(screen.container.querySelector("pre")?.dataset.wordWrap).toBe("false");
 });

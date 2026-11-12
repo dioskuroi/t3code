@@ -1,5 +1,6 @@
 // Adapted from opencode (MIT). Copyright (c) 2025 opencode. See LICENSE.opencode.
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import {
   buildResidentRegionLayoutRequest,
   getLayoutKernelInputs,

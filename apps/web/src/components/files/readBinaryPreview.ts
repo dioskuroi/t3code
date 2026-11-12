@@ -1,12 +1,13 @@
 import { BINARY_PREVIEW_MAX_BYTES } from "./binaryPreviewProtocol";
+import { tr } from "@t3tools/shared/i18n";
 
 export async function readBinaryPreview(src: string, signal: AbortSignal) {
   const response = await fetch(src, { signal });
-  if (!response.ok) throw new Error("The file could not be loaded. Close it and try again.");
+  if (!response.ok) throw new Error(tr("The file could not be loaded. Close it and try again."));
   if (Number(response.headers.get("content-length")) > BINARY_PREVIEW_MAX_BYTES)
-    throw new Error("Preview limited to files under 50 MB.");
+    throw new Error(tr("Preview limited to files under 50 MB."));
   const reader = response.body?.getReader();
-  if (!reader) throw new Error("The file is unavailable.");
+  if (!reader) throw new Error(tr("The file is unavailable."));
   const chunks: Uint8Array<ArrayBuffer>[] = [];
   let size = 0;
   try {
@@ -14,7 +15,7 @@ export async function readBinaryPreview(src: string, signal: AbortSignal) {
       const { value, done } = await reader.read();
       if (done) break;
       size += value.length;
-      if (size > BINARY_PREVIEW_MAX_BYTES) throw new Error("Preview limited to files under 50 MB.");
+      if (size > BINARY_PREVIEW_MAX_BYTES) throw new Error(tr("Preview limited to files under 50 MB."));
       chunks.push(value);
     }
   } finally {

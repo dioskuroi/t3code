@@ -8,6 +8,7 @@ import {
   type XlsxCellRead,
   type XlsxRangeTarget,
 } from "@betteroffice/xlsx";
+import { tr } from "@t3tools/shared/i18n";
 import type { CellRange } from "@betteroffice/xlsx/headless";
 import { anchorRange, attempt, lastCell, parseRange, parseSpans } from "./sheet-cells";
 import { drawFrame, paintFrame } from "./sheet-frame";

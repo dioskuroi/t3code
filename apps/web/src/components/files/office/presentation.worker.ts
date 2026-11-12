@@ -9,6 +9,7 @@ import {
   type SlideDisplayList,
   type SlidePrimitive,
 } from "@betteroffice/pptx";
+import { tr } from "@t3tools/shared/i18n";
 import { slideFonts } from "./slide-fonts";
 import {
   maxImageSide,

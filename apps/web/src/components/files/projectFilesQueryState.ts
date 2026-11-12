@@ -1,4 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   type EnvironmentId,
   type ProjectListEntriesResult,
@@ -186,7 +187,7 @@ function failureCause<A>(result: AsyncResult.AsyncResult<A, unknown>): unknown {
 
 function errorMessage(cause: unknown): string | null {
   if (cause === null) return null;
-  return cause instanceof Error ? cause.message : "Workspace query failed.";
+  return cause instanceof Error ? cause.message : tr("Workspace query failed.");
 }
 
 const isProjectReadFileError = Schema.is(ProjectReadFileError);
@@ -212,7 +213,7 @@ export function useProjectEntriesQuery(
       ? null
       : canReadFiles
         ? errorMessage(failureCause(result))
-        : (fileAccess.error ?? "This connection cannot read host files."),
+        : (fileAccess.error ?? tr("This connection cannot read host files.")),
     isPending: fileAccess.isPending || result.waiting,
     refresh,
   };
@@ -281,9 +282,9 @@ export function useProjectFileQuery(
         ? null
         : canReadFiles
           ? isMissing && !optimisticFile
-            ? `'${relativePath}' does not exist.`
+            ? tr("'{relativePath}' does not exist.", { relativePath: relativePath ?? "" })
             : errorMessage(cause)
-          : (fileAccess.error ?? "This connection cannot read host files."),
+          : (fileAccess.error ?? tr("This connection cannot read host files.")),
     isPending: isQueryEnabled && (fileAccess.isPending || result.waiting),
     readError,
     isNotFile,
