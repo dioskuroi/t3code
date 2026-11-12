@@ -3,6 +3,7 @@ import type {
   GitStackedAction,
   VcsStatusResult,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { isTemporaryWorktreeBranch } from "@t3tools/shared/git";
 import type { ChangeRequestTerminology } from "@t3tools/client-runtime/source-control-clients";
 import {
@@ -81,8 +82,8 @@ export function resolveGitActionProgressPresentation(input: {
       currentLabel && currentLabel !== "Running source control action"
         ? currentLabel
         : isPull
-          ? "Pulling latest changes..."
-          : "Starting source control action...",
+          ? tr("Pulling latest changes...")
+          : tr("Starting source control action..."),
     output: !isPull && output ? output : null,
     startedAtMs: isPull
       ? input.phaseStartedAtMs
@@ -136,7 +137,7 @@ export function buildMenuItems(
 
   const commitItem: GitActionMenuItem = {
     id: "commit",
-    label: "Commit",
+    label: tr("Commit"),
     disabled: !canCommit,
     icon: "commit",
     kind: "open_dialog",
@@ -149,7 +150,7 @@ export function buildMenuItems(
 
   const pushItem: GitActionMenuItem = {
     id: "push",
-    label: "Push",
+    label: tr("Push"),
     disabled: !canPush,
     icon: "push",
     kind: "open_dialog",
@@ -165,7 +166,7 @@ export function buildMenuItems(
     pushItem,
     {
       id: "pr",
-      label: `Create ${terminology.shortLabel}`,
+      label: tr("Create {shortLabel}", { shortLabel: terminology.shortLabel }),
       disabled: !canCreatePr,
       icon: "pr",
       kind: "open_dialog",
@@ -181,15 +182,20 @@ export function resolveQuickAction(
   hasPrimaryRemote = true,
 ): GitQuickAction {
   if (isBusy) {
-    return { label: "Commit", disabled: true, kind: "show_hint", hint: "Git action in progress." };
+    return {
+      label: tr("Commit"),
+      disabled: true,
+      kind: "show_hint",
+      hint: tr("Git action in progress."),
+    };
   }
 
   if (!gitStatus) {
     return {
-      label: "Commit",
+      label: tr("Commit"),
       disabled: true,
       kind: "show_hint",
-      hint: "Git status is unavailable.",
+      hint: tr("Git status is unavailable."),
     };
   }
 
@@ -204,22 +210,29 @@ export function resolveQuickAction(
 
   if (!hasBranch) {
     return {
-      label: "Commit",
+      label: tr("Commit"),
       disabled: true,
       kind: "show_hint",
-      hint: `Create and checkout a ref before pushing or opening a ${terminology.singular}.`,
+      hint: tr("Create and checkout a ref before pushing or opening a {singular}.", {
+        singular: terminology.singular,
+      }),
     };
   }
 
   if (hasChanges) {
     if (isBehind || (!gitStatus.hasUpstream && !hasPrimaryRemote)) {
-      return { label: "Commit", disabled: false, kind: "run_action", action: "commit" };
+      return { label: tr("Commit"), disabled: false, kind: "run_action", action: "commit" };
     }
     if (hasOpenPr || isDefaultRef) {
-      return { label: "Commit & push", disabled: false, kind: "run_action", action: "commit_push" };
+      return {
+        label: tr("Commit & push"),
+        disabled: false,
+        kind: "run_action",
+        action: "commit_push",
+      };
     }
     return {
-      label: `Commit, push & ${terminology.shortLabel}`,
+      label: tr("Commit, push & {shortLabel}", { shortLabel: terminology.shortLabel }),
       disabled: false,
       kind: "run_action",
       action: "commit_push_pr",
@@ -229,7 +242,7 @@ export function resolveQuickAction(
   if (!gitStatus.hasUpstream) {
     if (!hasPrimaryRemote) {
       return {
-        label: "Publish repository",
+        label: tr("Publish repository"),
         disabled: false,
         kind: "open_publish",
       };
@@ -237,29 +250,29 @@ export function resolveQuickAction(
     if (!isAhead) {
       if (hasOpenPr) {
         return {
-          label: "Commit",
+          label: tr("Commit"),
           disabled: true,
           kind: "show_hint",
-          hint: "Branch is up to date. No action needed.",
+          hint: tr("Branch is up to date. No action needed."),
         };
       }
       return {
-        label: "Push",
+        label: tr("Push"),
         disabled: true,
         kind: "show_hint",
-        hint: "No local commits to push.",
+        hint: tr("No local commits to push."),
       };
     }
     if (hasOpenPr || isDefaultRef) {
       return {
-        label: "Push",
+        label: tr("Push"),
         disabled: false,
         kind: "run_action",
         action: isDefaultRef ? "commit_push" : "push",
       };
     }
     return {
-      label: `Push & create ${terminology.shortLabel}`,
+      label: tr("Push & create {shortLabel}", { shortLabel: terminology.shortLabel }),
       disabled: false,
       kind: "run_action",
       action: "create_pr",
@@ -268,16 +281,16 @@ export function resolveQuickAction(
 
   if (isDiverged) {
     return {
-      label: "Sync ref",
+      label: tr("Sync ref"),
       disabled: true,
       kind: "show_hint",
-      hint: "Branch has diverged from upstream. Rebase/merge first.",
+      hint: tr("Branch has diverged from upstream. Rebase/merge first."),
     };
   }
 
   if (isBehind) {
     return {
-      label: "Pull",
+      label: tr("Pull"),
       disabled: false,
       kind: "run_pull",
     };
@@ -286,14 +299,14 @@ export function resolveQuickAction(
   if (isAhead) {
     if (hasOpenPr || isDefaultRef) {
       return {
-        label: "Push",
+        label: tr("Push"),
         disabled: false,
         kind: "run_action",
         action: isDefaultRef ? "commit_push" : "push",
       };
     }
     return {
-      label: `Push & create ${terminology.shortLabel}`,
+      label: tr("Push & create {shortLabel}", { shortLabel: terminology.shortLabel }),
       disabled: false,
       kind: "run_action",
       action: "create_pr",
@@ -302,16 +315,16 @@ export function resolveQuickAction(
 
   if (hasOpenPr && gitStatus.hasUpstream) {
     return {
-      label: "Commit",
+      label: tr("Commit"),
       disabled: true,
       kind: "show_hint",
-      hint: "Branch is up to date. No action needed.",
+      hint: tr("Branch is up to date. No action needed."),
     };
   }
 
   if (hasDefaultBranchDelta && !isDefaultRef) {
     return {
-      label: `Create ${terminology.shortLabel}`,
+      label: tr("Create {shortLabel}", { shortLabel: terminology.shortLabel }),
       disabled: false,
       kind: "run_action",
       action: "create_pr",
@@ -319,10 +332,10 @@ export function resolveQuickAction(
   }
 
   return {
-    label: "Commit",
+    label: tr("Commit"),
     disabled: true,
     kind: "show_hint",
-    hint: "Branch is up to date. No action needed.",
+    hint: tr("Branch is up to date. No action needed."),
   };
 }
 
@@ -333,35 +346,52 @@ export function resolveDefaultBranchActionDialogCopy(input: {
   terminology: ChangeRequestTerminology;
 }): DefaultBranchActionDialogCopy {
   const branchLabel = input.branchName;
-  const suffix = ` on "${branchLabel}". You can continue on this ref or create a feature ref and run the same action there.`;
   const { terminology } = input;
 
   if (input.action === "push" || input.action === "commit_push") {
     if (input.includesCommit) {
       return {
-        title: "Commit & push to default ref?",
-        description: `This action will commit and push changes${suffix}`,
-        continueLabel: `Commit & push to ${branchLabel}`,
+        title: tr("Commit & push to default ref?"),
+        description: tr(
+          'This action will commit and push changes on "{branchLabel}". You can continue on this ref or create a feature ref and run the same action there.',
+          { branchLabel: branchLabel },
+        ),
+        continueLabel: tr("Commit & push to {branchLabel}", { branchLabel: branchLabel }),
       };
     }
     return {
-      title: "Push to default ref?",
-      description: `This action will push local commits${suffix}`,
-      continueLabel: `Push to ${branchLabel}`,
+      title: tr("Push to default ref?"),
+      description: tr(
+        'This action will push local commits on "{branchLabel}". You can continue on this ref or create a feature ref and run the same action there.',
+        { branchLabel: branchLabel },
+      ),
+      continueLabel: tr("Push to {branchLabel}", { branchLabel: branchLabel }),
     };
   }
 
   if (input.includesCommit) {
     return {
-      title: `Commit, push & create ${terminology.shortLabel} from default ref?`,
-      description: `This action will commit, push, and create a ${terminology.singular}${suffix}`,
-      continueLabel: `Commit, push & create ${terminology.shortLabel}`,
+      title: tr("Commit, push & create {shortLabel} from default ref?", {
+        shortLabel: terminology.shortLabel,
+      }),
+      description: tr(
+        'This action will commit, push, and create a {singular} on "{branchLabel}". You can continue on this ref or create a feature ref and run the same action there.',
+        { singular: terminology.singular, branchLabel: branchLabel },
+      ),
+      continueLabel: tr("Commit, push & create {shortLabel}", {
+        shortLabel: terminology.shortLabel,
+      }),
     };
   }
   return {
-    title: `Push & create ${terminology.shortLabel} from default ref?`,
-    description: `This action will push local commits and create a ${terminology.singular}${suffix}`,
-    continueLabel: `Push & create ${terminology.shortLabel}`,
+    title: tr("Push & create {shortLabel} from default ref?", {
+      shortLabel: terminology.shortLabel,
+    }),
+    description: tr(
+      'This action will push local commits and create a {singular} on "{branchLabel}". You can continue on this ref or create a feature ref and run the same action there.',
+      { singular: terminology.singular, branchLabel: branchLabel },
+    ),
+    continueLabel: tr("Push & create {shortLabel}", { shortLabel: terminology.shortLabel }),
   };
 }
 
@@ -371,7 +401,10 @@ export function resolveFeatureBranchUnavailableReason(input: {
   hasWorkingTreeChanges: boolean;
 }): string | null {
   if (input.hasWorkingTreeChanges) return null;
-  return `There are no changes to commit, so a feature branch can't be named. Create a branch yourself or continue on ${input.branchName}.`;
+  return tr(
+    "There are no changes to commit, so a feature branch can't be named. Create a branch yourself or continue on {branchName}.",
+    { branchName: input.branchName },
+  );
 }
 
 export function resolveThreadBranchUpdate(
