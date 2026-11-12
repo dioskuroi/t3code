@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";
 
@@ -17,14 +18,14 @@ it("explains a denied clipboard write and lets the same path be copied again", a
     .mockResolvedValue(undefined);
   using _console = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-  const copy = screen.getByRole("button", { name: "Copy file path" });
+  const copy = screen.getByRole("button", { name: tr("Copy file path") });
   await copy.click();
 
   await expect.element(page.getByText("Failed to copy text to the clipboard.")).toBeVisible();
   await page.getByRole("button", { name: "Dismiss notification" }).click();
   await copy.click();
 
-  await expect.element(page.getByText("Copied!", { exact: true })).toBeVisible();
+  await expect.element(page.getByText(tr("Copied!"), { exact: true })).toBeVisible();
   expect(write).toHaveBeenCalledTimes(2);
   expect(write).toHaveBeenLastCalledWith("apps/web/src/index.ts");
 });

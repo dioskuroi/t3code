@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";
 
@@ -17,5 +18,5 @@ it("shows copy confirmation when the version is clicked without waiting for a ho
   await screen.getByRole("button", { name: `复制版本 ${APP_VERSION}` }).click();
 
   expect(write).toHaveBeenCalledWith(APP_VERSION);
-  await expect.element(page.getByText(/^Copied!?$/)).toBeVisible();
+  await expect.element(page.getByText(tr("Copied!"))).toBeVisible();
 });

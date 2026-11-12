@@ -3,6 +3,7 @@ import {
   type PendingSubagentRequest,
   presentThreadShell,
 } from "@t3tools/client-runtime/state/models";
+import { tr } from "@t3tools/shared/i18n";
 import { isShownUnderParent } from "@t3tools/client-runtime/state/threads";
 import type { AnyRouter } from "@tanstack/react-router";
 import { threadKey } from "@t3tools/client-runtime/state/entities";
@@ -130,16 +131,16 @@ export function startThreadNotifications(
     };
     const title =
       kind === "completion"
-        ? "Thread completed"
+        ? tr("Thread completed")
         : status === "approval"
-          ? "Approval needed"
+          ? tr("Approval needed")
           : status === "limited"
-            ? "Usage limit reached"
+            ? tr("Usage limit reached")
             : status === "failed"
-              ? "Thread failed"
+              ? tr("Thread failed")
               : status === "request"
-                ? "Guest request"
-                : "Input needed";
+                ? tr("Guest request")
+                : tr("Input needed");
     if (hasNotificationSound(mode)) {
       void playNotificationSound(kind, () =>
         hasNotificationSound(getClientSettings().notificationMode),
@@ -173,7 +174,7 @@ export function startThreadNotifications(
             ),
         },
         actionProps: {
-          children: "Open thread",
+          children: tr("Open thread"),
           onClick: () => {
             toastManager.close(toastId);
             void router.navigate({

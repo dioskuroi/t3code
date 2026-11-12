@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   AuthEnvironmentMaintainScope,
   type AuthSessionState,
@@ -38,9 +39,9 @@ import { toastManager } from "./ui/toast";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "./ui/tooltip";
 
 const UPDATE_STAGE_LABELS: Record<ServerUpdateStage, string> = {
-  downloading: "Downloading…",
-  installing: "Downloading…",
-  resuming: "Restarting…",
+  downloading: tr("Downloading\u2026"),
+  installing: tr("Downloading\u2026"),
+  resuming: tr("Restarting\u2026"),
 };
 const pendingUpdateEnvironmentIds = new Set<EnvironmentId>();
 
@@ -56,7 +57,7 @@ function readUpdatesDenial(environmentId: EnvironmentId): string | undefined {
   );
 }
 
-const CROSS_TRACK_NOTE = "Switch tracks in About → Update track";
+const CROSS_TRACK_NOTE = tr("Switch tracks in About \u2192 Update track");
 
 /** Hosts refuse a Stable/Nightly crossing outside a track switch, which checks the database first. */
 function refusedCrossing(
@@ -80,7 +81,7 @@ function CrossTrackNote() {
 }
 
 function updateFailureMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Server update failed.";
+  return error instanceof Error ? error.message : tr("Server update failed.");
 }
 
 export interface ServerUpdateTarget {
@@ -120,7 +121,7 @@ export function useServerUpdate() {
       if (!quiet) {
         toastManager.add({
           type: "error",
-          title: `${serverLabel} not updated`,
+          title: tr("{serverLabel} not updated", { serverLabel }),
           description: denial,
         });
       }
@@ -149,7 +150,7 @@ export function useServerUpdate() {
       if (!quiet) {
         toastManager.add({
           type: "error",
-          title: `${serverLabel} update failed`,
+          title: tr("{serverLabel} update failed", { serverLabel }),
           description: message,
         });
       }
@@ -158,11 +159,11 @@ export function useServerUpdate() {
     if (!quiet) {
       toastManager.add({
         type: "success",
-        title: `${serverLabel} updated`,
+        title: tr("{serverLabel} updated", { serverLabel }),
         description:
           selfUpdate === "desktop-managed"
-            ? `Desktop app relaunched on ${result.value.targetVersion}.`
-            : `Reconnected on t3@${result.value.targetVersion}.`,
+            ? tr("Desktop app relaunched on {version}.", { version: result.value.targetVersion })
+            : tr("Reconnected on {version}.", { version: `t3@${result.value.targetVersion}` }),
       });
     }
     return { status: "updated" };
@@ -171,7 +172,7 @@ export function useServerUpdate() {
 
 export function ServerUpdatesAction({
   targets,
-  label = "Update all",
+  label = tr("Update all"),
   variant = "outline",
   size = "xs",
   className,
@@ -201,7 +202,10 @@ export function ServerUpdatesAction({
       if (desktopTargets.length > 0) {
         const confirmed =
           (await requestConfirmDialog(
-            `Update the T3 Code desktop apps on ${desktopTargets.map((target) => target.serverLabel).join(", ")}? They will close and relaunch on those machines.`,
+            tr(
+              "Update the T3 Code desktop apps on {machines}? They will close and relaunch on those machines.",
+              { machines: desktopTargets.map((target) => target.serverLabel).join("、") },
+            ),
           )) ?? true;
         if (!confirmed) return;
       }
@@ -263,7 +267,7 @@ export function ServerUpdateAction({
   desktopAppUpdate = false,
   targetVersion,
   channel,
-  label = "Update",
+  label = tr("Update"),
   variant = "outline",
   size = "xs",
   className,
@@ -281,17 +285,25 @@ export function ServerUpdateAction({
       toastManager.add({
         type: "success",
         title:
-          installation?.kind === "npm-global" ? "Update command copied" : "Relaunch command copied",
+          installation?.kind === "npm-global"
+            ? tr("Update command copied")
+            : tr("Relaunch command copied"),
         description:
           installation?.kind === "npm-global"
-            ? `Run \`${command}\` on ${serverLabel}, then restart t3 with your usual options.`
-            : `Stop t3 on ${serverLabel}, then relaunch with \`${command}\` using the same subcommand and options. This does not update an installed t3 command.`,
+            ? tr("Run `{command}` on {serverLabel}, then restart t3 with your usual options.", {
+                command: command,
+                serverLabel: serverLabel,
+              })
+            : tr(
+                "Stop t3 on {serverLabel}, then relaunch with `{command}` using the same subcommand and options. This does not update an installed t3 command.",
+                { serverLabel: serverLabel, command: command },
+              ),
       });
     },
     onError: (error) => {
       toastManager.add({
         type: "error",
-        title: "Could not copy update command",
+        title: tr("Could not copy update command"),
         description: error.message,
       });
     },
@@ -307,7 +319,10 @@ export function ServerUpdateAction({
     if (isDesktopAppUpdate) {
       const confirmed =
         (await requestConfirmDialog(
-          `Update the T3 Code desktop app that runs the ${serverLabel}? It will close and relaunch on that machine.`,
+          tr(
+            "Update the T3 Code desktop app that runs the {serverLabel}? It will close and relaunch on that machine.",
+            { serverLabel: serverLabel },
+          ),
         )) ?? true;
       if (!confirmed) {
         return;
@@ -338,7 +353,7 @@ export function ServerUpdateAction({
   if (selfUpdate === "desktop-managed" && !desktopAppUpdate) {
     return (
       <span className="text-muted-foreground text-xs">
-        Update the desktop app on that machine to update this server.
+        {tr("Update the desktop app on that machine to update this server.")}
       </span>
     );
   }
@@ -352,8 +367,8 @@ export function ServerUpdateAction({
   const actionLabel =
     manualCommand !== null
       ? installation?.kind === "npm-global"
-        ? "Copy update command"
-        : "Copy relaunch command"
+        ? tr("Copy update command")
+        : tr("Copy relaunch command")
       : label;
   const onClick =
     manualCommand !== null
@@ -369,7 +384,7 @@ export function ServerUpdateAction({
               size="icon-xs"
               variant="ghost-muted"
               className={className}
-              aria-label={`${actionLabel} for ${serverLabel}`}
+              aria-label={tr("{actionLabel} for {serverLabel}", { actionLabel, serverLabel })}
               disabled={manualCommand === null && !canUpdate}
               onClick={onClick}
             />
@@ -401,7 +416,7 @@ export function OutdatedServerUpdateAction({
   serverLabel,
   fromVersion,
   targetVersion,
-  label = "Update",
+  label = tr("Update"),
 }: {
   readonly environmentId: EnvironmentId;
   readonly serverLabel: string;
@@ -423,15 +438,17 @@ export function OutdatedServerUpdateAction({
       if (isAtomCommandInterrupted(result)) return;
       toastManager.add({
         type: "error",
-        title: `${serverLabel} update failed`,
+        title: tr("{serverLabel} update failed", { serverLabel }),
         description: updateFailureMessage(squashAtomCommandFailure(result)),
       });
       return;
     }
     toastManager.add({
       type: "success",
-      title: `${serverLabel} updated`,
-      description: `Reconnected on t3@${result.value.targetVersion}.`,
+      title: tr("{serverLabel} updated", { serverLabel }),
+      description: tr("Reconnected on {version}.", {
+        version: `t3@${result.value.targetVersion}`,
+      }),
     });
   };
   if (fromVersion !== undefined && crossesReleaseTrack(fromVersion, targetVersion)) {

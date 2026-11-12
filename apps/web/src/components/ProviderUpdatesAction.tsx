@@ -1,4 +1,5 @@
 import { AuthProvidersManageScope, PROVIDER_DISPLAY_NAMES } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { settlePromise } from "@t3tools/client-runtime/state/runtime";
 import { useRef, useState } from "react";
 
@@ -96,17 +97,18 @@ export function ProviderUpdatesAction() {
             disabled={isPending}
             onClick={() => void handleUpdate()}
           >
-            {isPending ? "Updating…" : "Update all"}
+            {isPending ? tr("Updating\u2026") : tr("Update all")}
           </Button>
         }
       />
       <TooltipPopup side="top">
         {machines.map((machine) => (
           <div key={machine.environmentId}>
-            {machine.label}:{" "}
+            {machine.label}
+            {"："}
             {machine.candidates
               .map((candidate) => PROVIDER_DISPLAY_NAMES[candidate.driver] ?? candidate.driver)
-              .join(", ")}
+              .join("、")}
           </div>
         ))}
       </TooltipPopup>
