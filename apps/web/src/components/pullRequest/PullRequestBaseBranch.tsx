@@ -32,16 +32,13 @@ function PullRequestBaseFreshnessWarning({
   readonly className?: string;
   readonly children?: ReactNode;
 }) {
-  const behind =
+  const summary =
     freshness.behindBy === null
-      ? ""
-      : ` by ${freshness.behindBy.toLocaleString()} ${
-          freshness.behindBy === 1 ? "commit" : "commits"
-        }`;
-  const summary = tr("This branch is out-of-date with {baseBranch}{behind}.", {
-    baseBranch: baseBranch,
-    behind: behind,
-  });
+      ? tr("This branch is out-of-date with {baseBranch}.", { baseBranch })
+      : tr("This branch is out-of-date with {baseBranch}, behind by {count} commits.", {
+          baseBranch,
+          count: freshness.behindBy.toLocaleString(),
+        });
   return (
     <Popover>
       <PopoverTrigger
