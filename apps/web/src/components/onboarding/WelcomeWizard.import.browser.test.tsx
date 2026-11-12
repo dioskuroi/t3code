@@ -136,7 +136,7 @@ import { WelcomeWizard } from "./WelcomeWizard";
 
 const primaryId = EnvironmentId.make("primary");
 const remoteId = EnvironmentId.make("remote");
-const permissionMessage = "This connection cannot import projects or thread history.";
+const permissionMessage = "此连接无法导入项目或 Thread 历史。";
 
 function session(scopes: ReadonlyArray<AuthEnvironmentScope>): AuthSessionState {
   return {
@@ -251,9 +251,9 @@ async function mountImport(remote = false) {
       </RegistryContext.Provider>,
     ),
   );
-  await click("Continue");
-  await click("Continue");
-  expect(pageText()).toContain("Import your projects");
+  await click("继续");
+  await click("继续");
+  expect(pageText()).toContain("导入你的项目");
   stack.move();
   return screen;
 }
@@ -295,27 +295,27 @@ function setup() {
 it("keeps the project selection after going back a stage", async () => {
   using _now = setup();
   await using _screen = await mountImport();
-  await click("Select none");
-  expect(pageText()).toContain("0 of 2 selected");
+  await click("全不选");
+  expect(pageText()).toContain("已选 0 / 2 项");
 
   await clickStage("Agents, step 2");
-  await click("Continue");
-  expect(pageText()).toContain("Import your projects");
-  expect(pageText()).toContain("0 of 2 selected");
+  await click("继续");
+  expect(pageText()).toContain("导入你的项目");
+  expect(pageText()).toContain("已选 0 / 2 项");
 });
 
 it("ticks the recent projects of a computer added after the selection changed", async () => {
   using _now = setup();
   await using _screen = await mountImport();
-  await click("Select none");
+  await click("全不选");
 
   state.addedEnvironments = ["remote"];
-  await clickStage("Connect, step 1");
-  await click("Continue");
-  await click("Continue");
-  expect(pageText()).toContain("2 of 4 selected");
+  await clickStage("连接, step 1");
+  await click("继续");
+  await click("继续");
+  expect(pageText()).toContain("已选 2 / 4 项");
 
-  await click("Import 2 projects");
+  await click("导入 2 个项目");
   const created = state.createProject.mock.calls as Array<[CreateProjectInput]>;
   expect(created.map(([call]) => call.environmentId)).toEqual([remoteId, remoteId]);
 });
@@ -328,7 +328,7 @@ it("rechecks after project creation and can retry its history without recreating
     return recordProject(input);
   });
   await using _screen = await mountImport();
-  await click("Import 2 projects");
+  await click("导入 2 个项目");
   expect(state.createProject).toHaveBeenCalledOnce();
   await act(async () => {
     setGrant(primaryId, false);
@@ -341,7 +341,7 @@ it("rechecks after project creation and can retry its history without recreating
   expect(pageText()).toContain(permissionMessage);
 
   await act(async () => setGrant(primaryId, true));
-  await click("Import 2 projects");
+  await click("导入 2 个项目");
   expect(state.createProject).toHaveBeenCalledTimes(2);
   expect(state.importThreads).toHaveBeenCalledTimes(2);
   expect(state.onDone).toHaveBeenCalledOnce();
@@ -355,7 +355,7 @@ it("completes accepted imports when permission is revoked after the final server
     AsyncResult.success(await imported.promise),
   );
   await using _screen = await mountImport();
-  await click("Import 1 project");
+  await click("导入 1 个项目");
   await act(async () => {
     setGrant(primaryId, false);
     imported.resolve({ importedCount: 1, skippedCount: 0 });
@@ -376,13 +376,13 @@ it("finishes setup without landing when the imported project never reaches the c
   state.completeOnboarding.mockRejectedValueOnce(new Error("offline"));
   await using _screen = await mountImport();
 
-  await click("Import 1 project");
+  await click("导入 1 个项目");
   await vi.waitFor(() => expect(state.completeOnboarding).toHaveBeenCalledOnce());
   // A failed completion hands the step back instead of leaving it importing.
-  await vi.waitFor(() => expect(button("Import 1 project").disabled).toBe(false));
+  await vi.waitFor(() => expect(button("导入 1 个项目").disabled).toBe(false));
   expect(state.onDone).not.toHaveBeenCalled();
 
-  await click("Import 1 project");
+  await click("导入 1 个项目");
   await vi.waitFor(() => expect(state.onDone).toHaveBeenCalledOnce());
   expect(state.onDone).toHaveBeenCalledWith(undefined);
 });

@@ -1,4 +1,5 @@
 import { UsageProviderKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 
 import { getLocalStorageItem, setLocalStorageItem } from "../../hooks/useLocalStorage";
@@ -17,7 +18,7 @@ export function readUsagePagePreferences(): UsagePagePreferences {
   try {
     return getLocalStorageItem(STORAGE_KEY, UsagePagePreferencesSchema) ?? DEFAULT_PREFERENCES;
   } catch (error) {
-    console.error("Could not read Usage page preferences.", error);
+    console.error(tr("Could not read Usage page preferences."), error);
     return DEFAULT_PREFERENCES;
   }
 }
@@ -26,6 +27,6 @@ export function saveUsagePagePreferences(preferences: UsagePagePreferences): voi
   try {
     setLocalStorageItem(STORAGE_KEY, preferences, UsagePagePreferencesSchema);
   } catch (error) {
-    console.error("Could not save Usage page preferences.", error);
+    console.error(tr("Could not save Usage page preferences."), error);
   }
 }

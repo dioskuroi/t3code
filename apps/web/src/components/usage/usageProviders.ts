@@ -1,4 +1,5 @@
 import type { UsageProviderKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import { ProviderDriverKind } from "@t3tools/contracts";
 
@@ -10,28 +11,28 @@ type UsageProviderPresentation = {
 
 export const PROVIDER_PRESENTATION = {
   codex: {
-    label: "Codex",
+    label: tr("Codex"),
     color: "var(--contrast-foreground)",
     driverKind: ProviderDriverKind.make("codex"),
   },
   claude: {
-    label: "Claude Code",
+    label: tr("Claude Code"),
     color: "#d97757",
     driverKind: ProviderDriverKind.make("claudeAgent"),
   },
   grok: {
-    label: "Grok Build",
+    label: tr("Grok Build"),
     color: "color-mix(in oklab, var(--contrast-foreground) 72%, var(--background))",
     driverKind: ProviderDriverKind.make("grok"),
   },
-  cursor: { label: "Cursor", color: "#8b8b8b", driverKind: ProviderDriverKind.make("cursor") },
+  cursor: { label: tr("Cursor"), color: "#8b8b8b", driverKind: ProviderDriverKind.make("cursor") },
   opencode: {
     label: "OpenCode",
     color: "#5b9bbd",
     driverKind: ProviderDriverKind.make("opencode"),
   },
   antigravity: {
-    label: "Antigravity",
+    label: tr("Antigravity"),
     color: "#8c7bd1",
     driverKind: ProviderDriverKind.make("antigravity"),
   },
@@ -41,7 +42,7 @@ export const PROVIDER_PRESENTATION = {
     driverKind: ProviderDriverKind.make("pi"),
   },
   muse: {
-    label: "Muse Code",
+    label: tr("Muse Code"),
     color: "#0866ff",
     driverKind: ProviderDriverKind.make("muse"),
   },

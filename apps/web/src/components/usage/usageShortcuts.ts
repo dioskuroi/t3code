@@ -1,19 +1,20 @@
 import type { KeybindingCommand, ResolvedKeybindingsConfig } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { UsageChartMetric } from "./UsageProviderChart";
 import { resolveShortcutCommand, type ShortcutEventLike } from "../../keybindings";
 
 export type UsageMetric = UsageChartMetric | "limits";
 export const METRIC_OPTIONS = [
-  { value: "cost", label: "Cost", command: "usage.cost" },
-  { value: "tokens", label: "Tokens", command: "usage.tokens" },
-  { value: "limits", label: "Limits", command: "usage.limits" },
+  { value: "cost", label: tr("Cost"), command: "usage.cost" },
+  { value: "tokens", label: tr("Tokens"), command: "usage.tokens" },
+  { value: "limits", label: tr("Limits"), command: "usage.limits" },
 ] as const satisfies readonly { value: UsageMetric; label: string; command: KeybindingCommand }[];
 
 export const WINDOW_OPTIONS = [
-  { days: 1, label: "Past 24h", command: "usage.period.day" },
-  { days: 7, label: "7 days", command: "usage.period.week" },
-  { days: 30, label: "30 days", command: "usage.period.month" },
-  { days: 90, label: "90 days", command: "usage.period.quarter" },
+  { days: 1, label: tr("Past 24h"), command: "usage.period.day" },
+  { days: 7, label: tr("7 days"), command: "usage.period.week" },
+  { days: 30, label: tr("30 days"), command: "usage.period.month" },
+  { days: 90, label: tr("90 days"), command: "usage.period.quarter" },
 ] as const;
 
 export function resolveUsageShortcut(
