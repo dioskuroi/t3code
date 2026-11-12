@@ -3,6 +3,7 @@ import {
   isAtomCommandInterrupted,
   runAtomCommand,
 } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import type {
   EnvironmentId,
   PullRequestFilesViewedResult,
@@ -248,7 +249,8 @@ const filesViewedStore = createFilesViewedStore({
       { reportFailure: false },
     ),
   refresh: (target) => appAtomRegistry.refresh(filesViewedAtom(target)),
-  reportFailure: () => toastManager.add({ type: "error", title: "Could not update viewed files" }),
+  reportFailure: () =>
+    toastManager.add({ type: "error", title: tr("Could not update viewed files") }),
 });
 
 export function filesViewedScope(target: FilesViewedTarget): FilesViewedScopeHandle {

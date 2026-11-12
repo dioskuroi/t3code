@@ -1,4 +1,5 @@
 import { ExternalLinkIcon, PaperclipIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 import { markdownImageSourceFragment } from "@t3tools/client-runtime/markdown-images";
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
 import {
@@ -45,7 +46,7 @@ function PullRequestHostVideo({
     <MediaVideoPlayer
       src={src === null ? null : src + markdownImageSourceFragment(url)}
       originalUrl={url}
-      label="Pull request video"
+      label={tr("Pull request video")}
       className="w-full"
       videoClassName="rounded-lg border border-border/60"
       onRetry={refreshAssetUrl}
@@ -113,7 +114,7 @@ export function PullRequestMarkdown({
               key={`${segment.id}:${segment.url}`}
               src={segment.url}
               originalUrl={segment.url}
-              label="Pull request video"
+              label={tr("Pull request video")}
               className="w-full"
               videoClassName="rounded-lg border border-border/60"
             />
@@ -130,7 +131,9 @@ export function PullRequestMarkdown({
           >
             <PaperclipIcon aria-hidden className="size-3.5 shrink-0 text-muted-foreground" />
             <span className="min-w-0 flex-1 truncate">
-              Open attachment on {hostMedia?.definition.label ?? new URL(segment.url).hostname}
+              {tr("Open attachment on {host}", {
+                host: hostMedia?.definition.label ?? new URL(segment.url).hostname,
+              })}
             </span>
             <ExternalLinkIcon aria-hidden className="size-3 shrink-0 text-muted-foreground" />
           </a>

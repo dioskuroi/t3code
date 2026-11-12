@@ -5,6 +5,7 @@ import {
   type PullRequestDetailView,
   type PullRequestDiffResult,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 
 import "~/index.css";
@@ -232,7 +233,11 @@ it("never requests the diff of a selected commit the pull request no longer has"
 
   await expect.element(screen.getByText("1 file", { exact: true })).toBeVisible();
   await expect
-    .element(screen.getByRole("button", { name: "Diff scope: All commits" }))
+    .element(
+      screen.getByRole("button", {
+        name: tr("Diff scope: {scopeLabel}", { scopeLabel: tr("All commits") }),
+      }),
+    )
     .toBeVisible();
   expect(mocks.diffCommits).not.toContain("gone");
 });

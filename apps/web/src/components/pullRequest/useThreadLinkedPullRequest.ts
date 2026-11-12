@@ -5,6 +5,7 @@ import {
   type ThreadLinkedPullRequest,
   type VcsStatusResult,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { scopedThreadKey } from "@t3tools/client-runtime/environment";
 import {
   isAtomCommandInterrupted,
@@ -89,8 +90,8 @@ export function useThreadLinkedPullRequest(input: {
       toastManager.add(
         stackedThreadToast({
           type: "error",
-          title: "Unable to update the thread pull request",
-          description: error instanceof Error ? error.message : "An error occurred.",
+          title: tr("Unable to update the thread pull request"),
+          description: error instanceof Error ? error.message : tr("An error occurred."),
         }),
       );
     });

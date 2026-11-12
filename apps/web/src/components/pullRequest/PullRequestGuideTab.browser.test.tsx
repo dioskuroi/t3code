@@ -4,6 +4,7 @@ import { userEvent } from "vite-plus/test/browser";
 
 vi.mock(import("./guide/useReviewGuideWriter"), () => ({ useReviewGuideWriter: vi.fn() }));
 
+import { tr } from "@t3tools/shared/i18n";
 import { render } from "../../../test/render";
 import { useReviewGuideWriter } from "./guide/useReviewGuideWriter";
 import { PullRequestGuideTab } from "./PullRequestGuideTab";
@@ -63,7 +64,7 @@ it("keeps Try again inside a short panel when a failed guide has long diagnostic
     { container: tab },
   );
 
-  const retry = screen.getByRole("button", { name: "Try again" });
+  const retry = screen.getByRole("button", { name: tr("Try again") });
   await expect.element(retry).toBeVisible();
   const panelBox = panel.getBoundingClientRect();
   const retryBox = retry.element().getBoundingClientRect();

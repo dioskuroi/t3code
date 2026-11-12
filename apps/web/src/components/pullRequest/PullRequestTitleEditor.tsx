@@ -1,4 +1,5 @@
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentId, PullRequestDetail, PullRequestRef } from "@t3tools/contracts";
 import { useState } from "react";
 import {
@@ -54,10 +55,10 @@ export function PullRequestTitleEditor({
     if (result._tag === "Failure") {
       toastManager.add({
         type: "error",
-        title: "The title could not be saved",
+        title: tr("The title could not be saved"),
         description: readableFailure(
           squashAtomCommandFailure(result),
-          "The host refused the new title.",
+          tr("The host refused the new title."),
         ),
       });
       return;
@@ -81,7 +82,7 @@ export function PullRequestTitleEditor({
         </Tooltip>
         {canEditPullRequestChangeRequest(detail) ? (
           <PullRequestEditButton
-            aria-label="Edit title"
+            aria-label={tr("Edit title")}
             onClick={() => setTitleScope({ pullRequestKey, text: detail.title })}
           />
         ) : null}
@@ -115,7 +116,7 @@ export function PullRequestTitleEditor({
           disabled={titleSaving}
           onClick={() => setTitleScope(null)}
         >
-          Cancel
+          {tr("Cancel")}
         </Button>
         <Button
           size="xs"
@@ -123,7 +124,7 @@ export function PullRequestTitleEditor({
           disabled={!canWriteSourceControl || titleSaving || titleDraft.trim().length === 0}
           onClick={() => void saveTitle(titleDraft)}
         >
-          {titleSaving ? "Saving..." : "Save"}
+          {titleSaving ? "Saving..." : tr("Save")}
         </Button>
       </div>
     </div>

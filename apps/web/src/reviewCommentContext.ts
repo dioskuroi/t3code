@@ -1,4 +1,5 @@
 import type { FileDiffMetadata, SelectedLineRange, SelectionSide } from "@pierre/diffs";
+import { tr } from "@t3tools/shared/i18n";
 import { PullRequestContextMetadata, type PullRequestReviewPosition } from "@t3tools/contracts";
 import * as Schema from "effect/Schema";
 
@@ -72,11 +73,14 @@ export function buildFileReviewComment(input: {
   return {
     id: input.id,
     sectionId: `file:${input.filePath}`,
-    sectionTitle: "File comment",
+    sectionTitle: tr("File comment"),
     filePath: input.filePath,
     startIndex: startLine - 1,
     endIndex: endLine - 1,
-    rangeLabel: startLine === endLine ? `L${startLine}` : `L${startLine} to L${endLine}`,
+    rangeLabel:
+      startLine === endLine
+        ? `L${startLine}`
+        : tr("L{startLine} to L{endLine}", { startLine: startLine, endLine: endLine }),
     text: input.text.trim(),
     diff: selectedLines.join("\n"),
     fenceLanguage: inferReviewCommentFenceLanguage(input.filePath),

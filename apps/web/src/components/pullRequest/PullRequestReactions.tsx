@@ -1,4 +1,5 @@
 import { useAtomCommand } from "~/state/use-atom-command";
+import { tr } from "@t3tools/shared/i18n";
 import type {
   EnvironmentId,
   PullRequestReaction,
@@ -76,7 +77,7 @@ export function PullRequestReactionBar({
         next.delete(content);
         return { signature: current.signature, values: next };
       });
-      toastManager.add({ type: "error", title: "The reaction could not be saved" });
+      toastManager.add({ type: "error", title: tr("The reaction could not be saved") });
       return;
     }
     onRefresh();
@@ -119,7 +120,7 @@ export function PullRequestReactionBar({
             render={
               <button
                 type="button"
-                aria-label="Add a reaction"
+                aria-label={tr("Add a reaction")}
                 className={cn(
                   PILL_CLASS,
                   "border-border/70 px-1.5 text-muted-foreground hover:border-primary/60 hover:text-foreground",

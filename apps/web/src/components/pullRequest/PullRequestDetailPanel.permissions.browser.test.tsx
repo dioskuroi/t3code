@@ -7,6 +7,7 @@ import {
   type PullRequestDetailView,
 } from "@t3tools/contracts";
 import { expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 import { DraftId, useComposerDraftStore } from "~/composerDraftStore";
 import { act, render } from "../../../test/render";
 
@@ -141,7 +142,7 @@ it.each([AuthSourceControlWriteScope, AuthOrchestrationOperateScope])(
   async (scope) => {
     setup();
     await using screen = await render(panel());
-    const resolve = screen.getByRole("button", { name: "Resolve conflicts" });
+    const resolve = screen.getByRole("button", { name: tr("Resolve conflicts") });
     await expect.element(resolve).toBeEnabled();
     if (scope === AuthSourceControlWriteScope) permissions.checkout = false;
     else permissions.operate = false;
@@ -155,10 +156,15 @@ it("can still add conflict resolution to an existing composer without checkout s
   permissions.checkout = false;
   permissions.operate = false;
   await using screen = await render(panel(true));
-  const resolve = screen.getByRole("button", { name: "Resolve conflicts" });
+  const resolve = screen.getByRole("button", { name: tr("Resolve conflicts") });
   await expect.element(resolve).toBeEnabled();
   await act(() => resolve.click());
   const draft = useComposerDraftStore.getState().getComposerDraft(draftId);
-  expect(draft?.prompt).toContain("conflicts");
+  expect(draft?.prompt).toContain(
+    tr(
+      "Bring the checked-out branch up to date with `{baseBranch}` using this repository's convention, resolve every conflict while preserving the intent of both sides, and verify the project still builds before pushing.",
+      { baseBranch: detail.baseBranch },
+    ),
+  );
   expect(draft?.prompt).toContain(detail.url);
 });

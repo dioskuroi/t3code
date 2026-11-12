@@ -7,6 +7,7 @@ import type {
   PullRequestThreadCommentsResult,
   PullRequestThreadComment,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { HammerIcon, MessageSquareIcon, Trash2Icon } from "lucide-react";
 import { Circle, CircleCheck } from "lucide";
 import { useRef, useState } from "react";
@@ -87,12 +88,12 @@ export function PendingReviewCommentCard({
     >
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <MessageSquareIcon className="size-3.5" />
-        <span>Pending. Sent when you submit the review</span>
+        <span>{tr("Pending. Sent when you submit the review")}</span>
         <Button
           size="icon-xs"
           variant="ghost"
           className="ml-auto"
-          aria-label="Discard this comment"
+          aria-label={tr("Discard this comment")}
           onClick={onRemove}
         >
           <Trash2Icon className="size-3.5" />
@@ -113,7 +114,7 @@ export function ReviewThreadCard({
   reference,
   pending,
   fixPending,
-  fixLabel = "Fix in a thread",
+  fixLabel = tr("Fix in a thread"),
   onFix,
   onReply,
   onLoadMore,
@@ -229,10 +230,10 @@ export function ReviewThreadCard({
           aria-expanded={expanded}
           onClick={() => setExpanded((current) => !current)}
         >
-          {thread.isResolved ? "Resolved" : "Open"} · {commentCount}{" "}
+          {thread.isResolved ? tr("Resolved") : tr("Open")} · {commentCount}{" "}
           {commentCount === 1 ? "comment" : "comments"}
         </button>
-        {thread.isOutdated ? <span>outdated</span> : null}
+        {thread.isOutdated ? <span>{tr("outdated")}</span> : null}
         {onFix ? (
           <Button
             size="xs"
@@ -253,7 +254,7 @@ export function ReviewThreadCard({
             disabled={pending}
             onClick={onToggleResolved}
           >
-            {thread.isResolved ? "Unresolve" : "Resolve"}
+            {thread.isResolved ? tr("Unresolve") : tr("Resolve")}
           </Button>
         ) : null}
       </div>
@@ -284,7 +285,7 @@ export function ReviewThreadCard({
                     value={comment.body}
                     cwd={workspaceRoot}
                     environmentId={environmentId}
-                    label="Edit comment"
+                    label={tr("Edit comment")}
                     saving={savingEdit}
                     onSave={(body) => void saveEdit(comment.id, body)}
                     onCancel={() => setEditingId(null)}
@@ -299,7 +300,7 @@ export function ReviewThreadCard({
                     />
                     {canEditComment(comment) ? (
                       <PullRequestEditButton
-                        aria-label="Edit comment"
+                        aria-label={tr("Edit comment")}
                         onClick={() => setEditingId(comment.id)}
                       />
                     ) : null}
@@ -316,7 +317,7 @@ export function ReviewThreadCard({
                 disabled={loadingMore}
                 onClick={() => void loadMore()}
               >
-                {loadingMore ? "Loading..." : "Load more comments"}
+                {loadingMore ? "Loading..." : tr("Load more comments")}
               </Button>
             </div>
           ) : null}
@@ -328,8 +329,8 @@ export function ReviewThreadCard({
                   autoFocus
                   size="sm"
                   value={reply}
-                  placeholder="Reply"
-                  aria-label="Reply to this conversation"
+                  placeholder={tr("Reply")}
+                  aria-label={tr("Reply to this conversation")}
                   onChange={(event) => setReply(event.target.value)}
                   onKeyDown={(event) =>
                     submitKeys({
@@ -342,20 +343,20 @@ export function ReviewThreadCard({
                 />
                 <div className="mt-2 flex justify-end gap-2">
                   <Button size="xs" variant="ghost" onClick={() => setReplying(false)}>
-                    Cancel
+                    {tr("Cancel")}
                   </Button>
                   <Button
                     size="xs"
                     disabled={pending || reply.trim().length === 0}
                     onClick={() => void send()}
                   >
-                    Reply
+                    {tr("Reply")}
                   </Button>
                 </div>
               </div>
             ) : (
               <Button size="xs" variant="ghost" className="mt-2" onClick={() => setReplying(true)}>
-                Reply
+                {tr("Reply")}
               </Button>
             )
           ) : null}
