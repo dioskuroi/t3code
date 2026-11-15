@@ -1,4 +1,5 @@
 import { useRef, useSyncExternalStore, use } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { useSyncExternalStoreWithSelector } from "use-sync-external-store/with-selector";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import {
@@ -445,8 +446,8 @@ export function useUpdateEnvironmentModelPreferences(environmentId: EnvironmentI
     } catch {
       toastManager.add({
         type: "error",
-        title: "Model preferences not saved",
-        description: "Could not load saved model preferences. Try again.",
+        title: tr("Model preferences not saved"),
+        description: tr("Could not load saved model preferences. Try again."),
       });
       return;
     }
@@ -472,8 +473,8 @@ export function useToggleEnvironmentModelFavorite(environmentId: EnvironmentId |
       } catch {
         toastManager.add({
           type: "error",
-          title: "Favorites not saved",
-          description: "Could not load saved model preferences. Try again.",
+          title: tr("Favorites not saved"),
+          description: tr("Could not load saved model preferences. Try again."),
         });
         return;
       }
@@ -553,8 +554,9 @@ export function usePrimarySettings<T = UnifiedSettings>(
   return useMergedSettings(settings, selector);
 }
 
-export const PRIMARY_SETTINGS_UNAVAILABLE_MESSAGE =
-  "This setting is saved on a server, and the hosted app is not anchored to one. Change it from the desktop app or from the server's own address.";
+export const PRIMARY_SETTINGS_UNAVAILABLE_MESSAGE = tr(
+  "This setting is saved on a server, and the hosted app is not anchored to one. Change it from the desktop app or from the server's own address.",
+);
 
 /** Hosted clients have no primary: usePrimarySettings reads defaults and cannot write. */
 export function usePrimarySettingsAvailable(): boolean {
@@ -601,8 +603,14 @@ function useUpdateSettingsTarget(environmentId: EnvironmentId | null) {
       const error = squashAtomCommandFailure(result);
       toastManager.add({
         type: "error",
-        title: "Setting not saved",
-        description: `Could not save on ${label}: ${error instanceof Error ? error.message : "The save failed. Try reconnecting and saving again."}`,
+        title: tr("Setting not saved"),
+        description: tr("Could not save on {label}: {errorMessage}", {
+          label,
+          errorMessage:
+            error instanceof Error
+              ? error.message
+              : tr("The save failed. Try reconnecting and saving again."),
+        }),
       });
     }
     return result;
@@ -623,8 +631,12 @@ function useUpdateSettingsTarget(environmentId: EnvironmentId | null) {
       options?.onFailed?.();
       toastManager.add({
         type: "warning",
-        title: "Setting not saved",
-        description: `This connection lacks permission to change settings on ${environments.find((target) => target.environmentId === environmentId)?.label ?? "the selected environment"}.`,
+        title: tr("Setting not saved"),
+        description: tr("This connection lacks permission to change settings on {label}.", {
+          label:
+            environments.find((target) => target.environmentId === environmentId)?.label ??
+            tr("the selected environment"),
+        }),
       });
     }
     if (Object.keys(serverPatch).length > 0 && canWriteServerPatch) {
@@ -634,7 +646,7 @@ function useUpdateSettingsTarget(environmentId: EnvironmentId | null) {
         options?.onFailed?.();
         return toastManager.add({
           type: "warning",
-          title: "Setting not saved",
+          title: tr("Setting not saved"),
           description,
         });
       };
@@ -684,9 +696,11 @@ function useUpdateSettingsTarget(environmentId: EnvironmentId | null) {
         if (writes.length === 0) {
           warnUnsaved(
             deniedLabels.length > 0
-              ? `This connection lacks permission to change settings on ${deniedLabels.join(", ")}.`
+              ? tr("This connection lacks permission to change settings on {labels}.", {
+                  labels: deniedLabels.join(", "),
+                })
               : targets.size > 0
-                ? "Update older servers to save this setting."
+                ? tr("Update older servers to save this setting.")
                 : undefined,
           );
         } else {
@@ -708,7 +722,13 @@ function useUpdateSettingsTarget(environmentId: EnvironmentId | null) {
               if (result._tag !== "Failure" || isAtomCommandInterrupted(result)) return [];
               const error = squashAtomCommandFailure(result);
               return [
-                `Could not save on ${label}: ${error instanceof Error ? error.message : "The save failed. Try reconnecting and saving again."}`,
+                tr("Could not save on {label}: {errorMessage}", {
+                  label,
+                  errorMessage:
+                    error instanceof Error
+                      ? error.message
+                      : tr("The save failed. Try reconnecting and saving again."),
+                }),
               ];
             });
             if (failures.length === 0) return;
@@ -717,10 +737,15 @@ function useUpdateSettingsTarget(environmentId: EnvironmentId | null) {
               .map(({ label }) => label);
             toastManager.add({
               type: "error",
-              title: saved.length > 0 ? "Setting saved on some environments" : "Setting not saved",
+              title:
+                saved.length > 0
+                  ? tr("Setting saved on some environments")
+                  : tr("Setting not saved"),
               description: [
                 ...failures,
-                ...(saved.length > 0 ? [`Saved on ${saved.join(", ")}.`] : []),
+                ...(saved.length > 0
+                  ? [tr("Saved on {labels}.", { labels: saved.join(", ") })]
+                  : []),
               ].join("\n"),
             });
           });

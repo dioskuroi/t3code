@@ -1,4 +1,5 @@
 import * as Cause from "effect/Cause";
+import { tr } from "@t3tools/shared/i18n";
 import { AsyncResult } from "effect/reactivity";
 
 import {
@@ -42,12 +43,12 @@ export function discardComposerDraft(target: ComposerThreadTarget): void {
   showThreadUndoNotice({
     action: "Discarded",
     claim,
-    failureTitle: "Failed to restore draft",
+    failureTitle: tr("Failed to restore draft"),
     undo: async () => {
       const current = useComposerDraftStore.getState().draftsByThreadKey[key];
       if (current && composerDraftHasUserContent(current)) {
         releaseDiscardedDraft();
-        return AsyncResult.failure(Cause.fail(new Error("The draft has new content.")));
+        return AsyncResult.failure(Cause.fail(new Error(tr("The draft has new content."))));
       }
       useComposerDraftStore.setState((state) => {
         const logicalProjectDraftThreadKeyByLogicalProjectKey = {

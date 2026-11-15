@@ -4,6 +4,7 @@ import {
   scopeThreadRef,
   scopedThreadKey,
 } from "@t3tools/client-runtime/environment";
+import { tr } from "@t3tools/shared/i18n";
 import { settlePromise, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
 import { canSnooze, threadWokeAt } from "@t3tools/client-runtime/state/thread-settled";
 import { threadRuntimeCanArchive } from "@t3tools/client-runtime/state/models";
@@ -68,7 +69,7 @@ export class ThreadArchiveBlockedError extends Schema.TaggedError<ThreadArchiveB
   },
 ) {
   override get message(): string {
-    return "Cannot archive while the provider is active.";
+    return tr("Cannot archive while the provider is active.");
   }
 }
 
@@ -80,7 +81,9 @@ export class ThreadSettlementUnsupportedError extends Schema.TaggedError<ThreadS
   },
 ) {
   override get message(): string {
-    return "This environment's server does not support settling yet. Update the server to use Settle.";
+    return tr(
+      "This environment's server does not support settling yet. Update the server to use Settle.",
+    );
   }
 }
 
@@ -92,7 +95,9 @@ export class ThreadSnoozeUnsupportedError extends Schema.TaggedError<ThreadSnooz
   },
 ) {
   override get message(): string {
-    return "This environment's server does not support snoozing yet. Update the server to use Snooze.";
+    return tr(
+      "This environment's server does not support snoozing yet. Update the server to use Snooze.",
+    );
   }
 }
 
@@ -104,7 +109,7 @@ export class ThreadSnoozeBlockedError extends Schema.TaggedError<ThreadSnoozeBlo
   },
 ) {
   override get message(): string {
-    return "This thread is waiting on you. Respond to the pending request before snoozing it.";
+    return tr("This thread is waiting on you. Respond to the pending request before snoozing it.");
   }
 }
 
@@ -125,7 +130,9 @@ export class ThreadAutoSettleOptOutUnsupportedError extends Schema.TaggedError<T
   },
 ) {
   override get message(): string {
-    return "This environment's server does not support turning auto-settle off per thread yet. Update the server to use it.";
+    return tr(
+      "This environment's server does not support turning auto-settle off per thread yet. Update the server to use it.",
+    );
   }
 }
 
@@ -137,7 +144,9 @@ export class ThreadPinningUnsupportedError extends Schema.TaggedError<ThreadPinn
   },
 ) {
   override get message(): string {
-    return "This environment's server does not support pinning yet. Update the server to use Pin.";
+    return tr(
+      "This environment's server does not support pinning yet. Update the server to use Pin.",
+    );
   }
 }
 
@@ -149,7 +158,9 @@ export class ThreadPinReorderUnsupportedError extends Schema.TaggedError<ThreadP
   },
 ) {
   override get message(): string {
-    return "This environment's server does not support reordering pinned threads yet. Update the server to reorder pins.";
+    return tr(
+      "This environment's server does not support reordering pinned threads yet. Update the server to reorder pins.",
+    );
   }
 }
 
@@ -161,7 +172,7 @@ export class ThreadActiveReorderUnsupportedError extends Schema.TaggedError<Thre
   },
 ) {
   override get message(): string {
-    return "Update this environment's server to reorder active threads.";
+    return tr("Update this environment's server to reorder active threads.");
   }
 }
 
@@ -178,8 +189,8 @@ async function requestThreadUnpinConfirmation(input: {
   return settlePromise(() =>
     confirm(
       [
-        `Unpin thread "${input.title}"?`,
-        "This will move the thread out of your pinned section.",
+        tr('Unpin thread "{title}"?', { title: input.title }),
+        tr("This will move the thread out of your pinned section."),
       ].join("\n"),
     ),
   );
@@ -192,8 +203,8 @@ export async function navigateAfterThreadDeletion(navigate: () => Promise<void>)
     toastManager.add(
       stackedThreadToast({
         type: "error",
-        title: "Thread deleted, but navigation failed",
-        description: error instanceof Error ? error.message : "An error occurred.",
+        title: tr("Thread deleted, but navigation failed"),
+        description: error instanceof Error ? error.message : tr("An error occurred."),
       }),
     );
   }
@@ -266,7 +277,7 @@ function threadOperationFailure(target: ScopedThreadRef) {
     : AsyncResult.failure(
         Cause.fail(
           new EnvironmentAuthorizationError({
-            message: "This connection cannot change threads.",
+            message: tr("This connection cannot change threads."),
             requiredScope: AuthOrchestrationOperateScope,
           }),
         ),
@@ -416,7 +427,7 @@ export function useThreadActions() {
       action: "Archived",
       claim: action,
       undo: () => unarchiveThread(threadRef, { navigate: shouldNavigateToDraft }),
-      failureTitle: "Failed to undo archive",
+      failureTitle: tr("Failed to undo archive"),
     });
 
     if (shouldNavigateToDraft && router.state.location.href === requestingRouteHref) {
@@ -523,10 +534,10 @@ export function useThreadActions() {
       const confirmationResult = await settlePromise(() =>
         localApi.dialogs.confirm(
           [
-            "This thread is the only one linked to this worktree:",
+            tr("This thread is the only one linked to this worktree:"),
             displayWorktreePath ?? orphanedWorktreePath,
             "",
-            "Delete the worktree too?",
+            tr("Delete the worktree too?"),
           ].join("\n"),
           { variant: "destructive" },
         ),
@@ -607,7 +618,7 @@ export function useThreadActions() {
       : AsyncResult.failure(
           Cause.fail(
             new EnvironmentAuthorizationError({
-              message: "This connection can no longer remove worktrees.",
+              message: tr("This connection can no longer remove worktrees."),
               requiredScope: AuthSourceControlWriteScope,
             }),
           ),
@@ -628,7 +639,7 @@ export function useThreadActions() {
     if (cleanupFailure) {
       const removalFailed = removeResult._tag === "Failure";
       const error = squashAtomCommandFailure(cleanupFailure);
-      const message = error instanceof Error ? error.message : "An error occurred.";
+      const message = error instanceof Error ? error.message : tr("An error occurred.");
       console.error("Worktree cleanup failed after thread deletion", {
         threadId: threadRef.threadId,
         projectCwd: threadProject.workspaceRoot,
@@ -639,10 +650,13 @@ export function useThreadActions() {
         stackedThreadToast({
           type: "error",
           title: removalFailed
-            ? "Failed to delete worktree"
-            : "Worktree deleted, but Git status refresh failed",
+            ? tr("Failed to delete worktree")
+            : tr("Worktree deleted, but Git status refresh failed"),
           description: removalFailed
-            ? `Could not remove ${displayWorktreePath ?? orphanedWorktreePath}. ${message}`
+            ? tr("Could not remove {worktreePath}. {errorMessage}", {
+                worktreePath: displayWorktreePath ?? orphanedWorktreePath,
+                errorMessage: message,
+              })
             : message,
         }),
       );
@@ -735,7 +749,7 @@ export function useThreadActions() {
         action: "Unpinned",
         claim: action,
         undo: () => runUndoPlan(target, undoPlan),
-        failureTitle: "Failed to undo unpin",
+        failureTitle: tr("Failed to undo unpin"),
       });
     } else {
       action.finish();
@@ -779,7 +793,7 @@ export function useThreadActions() {
       action: "Settled",
       claim: action,
       undo: () => runUndoPlan(target, undoPlan),
-      failureTitle: "Failed to undo settle",
+      failureTitle: tr("Failed to undo settle"),
     });
     return result;
   };
@@ -892,7 +906,7 @@ export function useThreadActions() {
       action: "Snoozed",
       claim: action,
       undo: () => runUndoPlan(target, ThreadUndo.planThreadUndo("snooze")),
-      failureTitle: "Failed to wake thread",
+      failureTitle: tr("Failed to wake thread"),
     });
     return result;
   };
@@ -932,8 +946,8 @@ export function useThreadActions() {
       const confirmationResult = await settlePromise(() =>
         localApi.dialogs.confirm(
           [
-            `Delete thread "${title}"?`,
-            "This permanently clears conversation history for this thread.",
+            tr('Delete thread "{title}"?', { title: title }),
+            tr("This permanently clears conversation history for this thread."),
           ].join("\n"),
           { variant: "destructive" },
         ),

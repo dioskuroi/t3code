@@ -3,6 +3,7 @@ import {
   fitImageAttachmentSize,
   IMAGE_ATTACHMENT_MAX_EDGE,
 } from "@t3tools/client-runtime/image-attachment-size";
+import { tr } from "@t3tools/shared/i18n";
 import {
   IMAGE_DIMENSIONS_HEADER_BYTES,
   readImageDimensions,
@@ -126,10 +127,10 @@ export function readFileAsDataUrl(file: Blob): Promise<string> {
         resolve(reader.result);
         return;
       }
-      reject(new Error("Could not read image data."));
+      reject(new Error(tr("Could not read image data.")));
     });
     reader.addEventListener("error", () => {
-      reject(reader.error ?? new Error("Failed to read image."));
+      reject(reader.error ?? new Error(tr("Failed to read image.")));
     });
     reader.readAsDataURL(file);
   });

@@ -1,4 +1,5 @@
 import type { ScopedThreadRef } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -50,7 +51,7 @@ export function useOpenLink(threadRef: ScopedThreadRef | null | undefined): (
       console.error(result.cause);
     }
     const api = readLocalApi();
-    if (!api) throw new Error("Link opening is unavailable.");
+    if (!api) throw new Error(tr("Link opening is unavailable."));
     await api.shell.openExternal(url);
   };
 }

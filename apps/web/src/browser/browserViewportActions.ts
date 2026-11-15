@@ -1,4 +1,5 @@
 import { runAtomCommand, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import type { PreviewViewportSetting, ScopedThreadRef } from "@t3tools/contracts";
 
 import { toastManager } from "~/components/ui/toast";
@@ -19,7 +20,7 @@ class BrowserViewportCommitTimeoutError extends Error {
   override readonly name = "BrowserViewportCommitTimeoutError";
 
   constructor(readonly tabId: string) {
-    super(`Timed out committing the browser viewport for tab ${tabId}`);
+    super(tr("Timed out committing the browser viewport for tab {tabId}", { tabId: tabId }));
   }
 }
 
@@ -79,8 +80,8 @@ async function resizeBrowserViewport(
     const error = squashAtomCommandFailure(result);
     toastManager.add({
       type: "error",
-      title: "Unable to resize browser viewport",
-      description: error instanceof Error ? error.message : "An error occurred.",
+      title: tr("Unable to resize browser viewport"),
+      description: error instanceof Error ? error.message : tr("An error occurred."),
     });
     throw error;
   }

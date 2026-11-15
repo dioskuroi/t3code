@@ -360,7 +360,7 @@ describe("thread action permissions", () => {
       const result = await useThreadActions().deleteThread(target);
       expect(result._tag).toBe("Success");
       expect(state.requests.map((request) => request.action)).toEqual(["stopSession", "delete"]);
-      expect(state.toasts).toContain("Failed to delete worktree");
+      expect(state.toasts).toContain("删除工作树失败");
       expect(state.localEffects).toContain("clear-terminal-ui");
     } finally {
       consoleError.mockRestore();

@@ -6,6 +6,7 @@ import type {
   PreviewSessionSnapshot,
   ScopedThreadRef,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { mediaFileReference } from "@t3tools/client-runtime/media-reference";
 import {
   type AtomCommandResult,
@@ -45,7 +46,7 @@ export class BrowserSettingsReadError extends Data.TaggedError("BrowserSettingsR
   readonly cause: unknown;
 }> {
   override get message(): string {
-    return "Saved browser settings could not be loaded.";
+    return tr("Saved browser settings could not be loaded.");
   }
 }
 
@@ -125,7 +126,7 @@ export async function openFileInPreview<AssetError, PreviewError>(input: {
     return AsyncResult.failure(
       Cause.fail(
         new BrowserPreviewUnavailableError({
-          message: "The integrated browser is unavailable in this runtime.",
+          message: tr("The integrated browser is unavailable in this runtime."),
         }),
       ),
     );
@@ -149,7 +150,7 @@ export async function openFileInPreview<AssetError, PreviewError>(input: {
   const assetUrl = resolveAssetUrl(input.httpBaseUrl, assetResult.value.relativeUrl);
   if (assetUrl === null) {
     return AsyncResult.failure(
-      Cause.die(new Error("The environment returned an invalid asset URL.")),
+      Cause.die(new Error(tr("The environment returned an invalid asset URL."))),
     );
   }
   return openUrlInPreview({

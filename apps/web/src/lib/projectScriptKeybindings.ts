@@ -6,7 +6,9 @@ import {
 } from "@t3tools/contracts";
 import * as Schema from "effect/Schema";
 
-export const PROJECT_SCRIPT_KEYBINDING_INVALID_MESSAGE = "Invalid keybinding.";
+import { tr } from "@t3tools/shared/i18n";
+
+export const PROJECT_SCRIPT_KEYBINDING_INVALID_MESSAGE = tr("Invalid keybinding.");
 
 const decodeKeybindingRule = Schema.decodeUnknownOption(KeybindingRuleSchema);
 
