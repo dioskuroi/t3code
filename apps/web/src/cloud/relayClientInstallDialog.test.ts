@@ -33,7 +33,7 @@ describe("relay client install dialog coordinator", () => {
     });
     expect(error).not.toHaveProperty("cause");
     expect((error as Error).message).toBe(
-      "Cannot confirm relay client installation 2026.11.0; installation 2026.10.0 has dialog status installing.",
+      "无法确认 relay 客户端安装 2026.11.0；安装 2026.10.0 的对话框状态为 installing。",
     );
   });
 });

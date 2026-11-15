@@ -3,6 +3,7 @@ import type {
   DesktopBridge,
   DesktopServerExposureState,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { Atom } from "effect/reactivity";
@@ -26,7 +27,7 @@ class DesktopNetworkAccessUnavailableError extends Schema.TaggedError<DesktopNet
   {},
 ) {
   override get message(): string {
-    return "Desktop network access is unavailable.";
+    return tr("Desktop network access is unavailable.");
   }
 }
 
@@ -35,7 +36,7 @@ class DesktopServerExposureStateLoadError extends Schema.TaggedError<DesktopServ
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Failed to load desktop server exposure state.";
+    return tr("Failed to load desktop server exposure state.");
   }
 }
 
@@ -44,7 +45,7 @@ class DesktopAdvertisedEndpointsLoadError extends Schema.TaggedError<DesktopAdve
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Failed to load advertised desktop endpoints.";
+    return tr("Failed to load advertised desktop endpoints.");
   }
 }
 
