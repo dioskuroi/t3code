@@ -1,4 +1,5 @@
 import { AuthDiagnosticsReadScope } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { AuthEnvironmentMaintainScope } from "@t3tools/contracts";
 import type {
   EnvironmentId,
@@ -40,13 +41,13 @@ export function useResourceTelemetry(
   });
   const retry = async () => {
     if (environmentId === null) {
-      throw new Error("No environment is selected.");
+      throw new Error(tr("No environment is selected."));
     }
     if (
       !readEnvironmentScope(environmentId, AuthEnvironmentMaintainScope) ||
       !readEnvironmentScope(environmentId, AuthDiagnosticsReadScope)
     ) {
-      throw new Error("This connection cannot restart the resource monitor.");
+      throw new Error(tr("This connection cannot restart the resource monitor."));
     }
     const result = await retryCommand({ environmentId, input: {} });
     if (result._tag === "Failure") {

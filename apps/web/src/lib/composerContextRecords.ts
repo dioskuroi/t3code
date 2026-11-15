@@ -2,6 +2,7 @@ import {
   capitalizeTerm,
   sourceControlClients,
 } from "@t3tools/client-runtime/source-control-clients";
+import { tr } from "@t3tools/shared/i18n";
 import {
   COMPOSER_CONTEXT_REVIEW_DIFF_MAX_CHARS,
   COMPOSER_CONTEXT_REVIEW_TEXT_MAX_CHARS,
@@ -119,7 +120,7 @@ export function previewAnnotationContextLabel(annotation: PreviewAnnotationPaylo
       ? `${comment.slice(0, PREVIEW_LABEL_MAX_CHARS - 1)}…`
       : comment;
   }
-  return annotation.pageTitle?.trim() || "Preview annotation";
+  return annotation.pageTitle?.trim() || tr("Preview annotation");
 }
 
 export function terminalContextReference(context: TerminalContextDraft): ComposerContextReference {
