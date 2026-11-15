@@ -9544,7 +9544,7 @@
   "{action} {count} threads": "{action} {count} 个 Thread",
   "{commitError} The project is in {workspaceRoot}.": "{commitError} 项目位于 {workspaceRoot}。",
   "{description} Run {TRIAGE_CLI_COMMAND} in a terminal on that machine instead.": "{description} 请改为在该机器的终端中运行 {TRIAGE_CLI_COMMAND}。",
-  "{errorMessage} It will appear in the sidebar once this client catches up.": "{errorMessage} 此客户端同步后它会显示在侧栏中。",
+  "{errorMessage} It will appear in the sidebar once this client catches up.": "{errorMessage} 此客户端同步后它会显示在侧边栏中。",
   "{errorMessage} Use Publish Repository in the Git menu to try again.": "{errorMessage} 请使用 Git 菜单中的“发布仓库”重试。",
   "{label}. Use arrow keys to resize.": "{label}。使用方向键调整大小。",
   "{shortcut} to undo": "按 {shortcut} 撤销",
