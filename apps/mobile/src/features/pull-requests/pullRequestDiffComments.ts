@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import type { PullRequestReviewPosition, PullRequestReviewThread } from "@t3tools/contracts";
 import type { NativeReviewDiffRow } from "../diffs/nativeReviewDiffSurface";
 import type { NativeReviewDiffData } from "../review/nativeReviewDiffAdapter";
@@ -24,7 +25,9 @@ export function discussionCommentCountLabel(count: number) {
 export function reviewPositionLabel(position: PullRequestReviewPosition) {
   const oldSide =
     position.kind === "deleted" || (position.kind === "context" && position.side === "left");
-  return `${oldSide ? "Old line" : "Line"} ${reviewLine(position)}`;
+  return oldSide
+    ? tr("Old line {line}", { line: reviewLine(position) })
+    : tr("Line {line}", { line: reviewLine(position) });
 }
 function reviewLine(position: PullRequestReviewPosition) {
   if (position.kind === "deleted" || (position.kind === "context" && position.side === "left"))
@@ -82,7 +85,7 @@ export function annotatePullRequestDiff(
     attach(
       anchor,
       `discussion:${thread.id}`,
-      `${first?.author?.login ?? "Discussion"}${thread.isResolved ? " · Resolved" : ""}\n${first?.body ?? ""}\n${discussionCommentCountLabel(thread.commentCount ?? thread.comments.length)} · Tap to open`,
+      `${first?.author?.login ?? tr("Discussion")}${thread.isResolved ? tr(" · Resolved") : ""}\n${first?.body ?? ""}\n${discussionCommentCountLabel(thread.commentCount ?? thread.comments.length)}${tr(" · Tap to open")}`,
       thread.line === null ? "file" : String(thread.line),
     );
   }

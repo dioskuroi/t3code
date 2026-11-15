@@ -92,7 +92,12 @@ export function modelFallbackBannerItem({
     variant: "info",
     icon: <GaugeIcon />,
     title: tr("Using {fallbackModelName}", { fallbackModelName: fallbackModelName }),
-    description: `${defaultProviderName} is out of usage${resetsAt ? ` · resets ${formatUpcomingTimestamp(resetsAt, timestampFormat)}` : ""}`,
+    description: resetsAt
+      ? tr("{provider} is out of usage · resets {timestamp}", {
+          provider: defaultProviderName,
+          timestamp: formatUpcomingTimestamp(resetsAt, timestampFormat),
+        })
+      : tr("{provider} is out of usage", { provider: defaultProviderName }),
     actions: (
       <Button size="xs" variant="ghost" onClick={onUseDefault}>
         {tr("Use")} {defaultModelName}

@@ -172,6 +172,12 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+/** effort 枚举展示名（静态映射，杜绝动态 tr key） */
+const EFFORT_LABELS: Record<string, string> = {
+  low: tr("Low"),
+  medium: tr("Medium"),
+  high: tr("High"),
+};
 export function workflowMemberMetadata(
   member: Pick<RuntimeSubagent, "model" | "effort" | "speed">,
   provider: Pick<ServerProvider, "driver" | "models"> | undefined,
@@ -190,9 +196,12 @@ export function workflowMemberMetadata(
         : [],
     )
     .find((option) => option.id === member.effort);
+
   return {
     model,
-    effort: member.effort ? (effortChoice?.label ?? capitalize(member.effort)) : null,
+    effort: member.effort
+      ? (effortChoice?.label ?? EFFORT_LABELS[member.effort] ?? capitalize(member.effort))
+      : null,
     speed: member.speed ? capitalize(member.speed) : null,
     fast: member.speed === "fast",
   };

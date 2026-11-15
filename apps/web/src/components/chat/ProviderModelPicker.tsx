@@ -224,7 +224,9 @@ export const ProviderModelPicker = memo(function ProviderModelPicker(props: {
       : `${selectedEntries
           .slice(0, 2)
           .map((selection) => selection.label)
-          .join(", ")}${selectedEntries.length > 2 ? `, ${selectedEntries.length - 2} more` : ""}`
+          .join(
+            ", ",
+          )}${selectedEntries.length > 2 ? tr(", {count} more", { count: selectedEntries.length - 2 }) : ""}`
     : undefined;
   const allModelNames = selectedEntries
     ? selectedEntries.map((selection) => selection.fullLabel).join(", ") || tr("Choose models")
