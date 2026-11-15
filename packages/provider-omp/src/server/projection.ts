@@ -636,12 +636,26 @@ export const createOmpThreadProjection = (input: {
     });
   });
 
+  // contentIndex restarts at 0 for every assistant message in a turn, so the key must
+  // carry messageId too: without it a second message reuses the first message's completed
+  // item and its streaming:false final pair is swallowed (reply stuck streaming forever).
+  // Absent messageId (older fixtures) degrades to the legacy key.
+  const streamItemNativeId = (
+    turn: OmpActiveTurn,
+    messageId: string | undefined,
+    contentIndex: number,
+  ): string =>
+    messageId === undefined
+      ? `${turn.nativeTurnId}:c${contentIndex}`
+      : `${turn.nativeTurnId}:${messageId}:c${contentIndex}`;
+
   const streamItemFor = Effect.fnUntraced(function* (
     turn: OmpActiveTurn,
     kind: OmpStreamItem["kind"],
     contentIndex: number,
+    messageId: string | undefined,
   ) {
-    const nativeItemId = `${turn.nativeTurnId}:c${contentIndex}`;
+    const nativeItemId = streamItemNativeId(turn, messageId, contentIndex);
     const existing = turn.streamItems.get(nativeItemId);
     if (existing !== undefined) return existing;
     const item: OmpStreamItem = {
@@ -858,6 +872,8 @@ export const createOmpThreadProjection = (input: {
     if (turn === null || event === undefined || type === undefined) return;
     const contentIndex = typeof event["contentIndex"] === "number" ? event["contentIndex"] : 0;
     const delta = typeof event["delta"] === "string" ? event["delta"] : undefined;
+    const messageId = frameString(frame, "messageId");
+    const streamItemKey = streamItemNativeId(turn, messageId, contentIndex);
     switch (type) {
       case "text_start":
       case "thinking_start": {
@@ -865,18 +881,19 @@ export const createOmpThreadProjection = (input: {
           turn,
           type === "text_start" ? "assistant_message" : "reasoning",
           contentIndex,
+          messageId,
         );
         return;
       }
       case "text_delta":
       case "thinking_delta": {
-        const key = `${turn.nativeTurnId}:c${contentIndex}`;
-        let item = turn.streamItems.get(key);
+        let item = turn.streamItems.get(streamItemKey);
         if (item === undefined) {
           item = yield* streamItemFor(
             turn,
             type === "text_delta" ? "assistant_message" : "reasoning",
             contentIndex,
+            messageId,
           );
         }
         item.text += delta ?? "";
@@ -885,7 +902,7 @@ export const createOmpThreadProjection = (input: {
       }
       case "text_end":
       case "thinking_end": {
-        const item = turn.streamItems.get(`${turn.nativeTurnId}:c${contentIndex}`);
+        const item = turn.streamItems.get(streamItemKey);
         if (item === undefined) return;
         yield* completeStreamItem(turn, item, delta);
         return;
