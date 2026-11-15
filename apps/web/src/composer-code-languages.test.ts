@@ -7,5 +7,5 @@ it("recognizes plain-text fence info strings without treating metadata as the la
     codeLanguageEntry(languageOfInfoString(` ${language} title=notes.txt`)),
   );
 
-  expect(entries).toEqual(Array.from({ length: 4 }, () => ({ id: "", label: "Plain text" })));
+  expect(entries).toEqual(Array.from({ length: 4 }, () => ({ id: "", label: "纯文本" })));
 });

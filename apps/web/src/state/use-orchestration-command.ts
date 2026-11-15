@@ -3,6 +3,7 @@ import type {
   AtomCommandOptions,
   AtomCommandResult,
 } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import {
   AuthOrchestrationOperateScope,
   EnvironmentAuthorizationError,
@@ -14,7 +15,9 @@ import { AsyncResult } from "effect/reactivity";
 import { readEnvironmentScope } from "./session";
 import { useAtomCommand } from "./use-atom-command";
 
-const ORCHESTRATION_OPERATE_DENIED_MESSAGE = "This connection cannot change threads or projects.";
+const ORCHESTRATION_OPERATE_DENIED_MESSAGE = tr(
+  "This connection cannot change threads or projects.",
+);
 
 export function useOrchestrationCommand<W extends { readonly environmentId: EnvironmentId }, A, E>(
   command: AtomCommand<W, A, E>,

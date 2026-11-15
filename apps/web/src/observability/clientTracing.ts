@@ -1,4 +1,5 @@
 import * as Exit from "effect/Exit";
+import { tr } from "@t3tools/shared/i18n";
 import * as Layer from "effect/Layer";
 import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as Scope from "effect/Scope";
@@ -120,7 +121,7 @@ async function applyClientTracingConfig(): Promise<void> {
 
     const error = squashAtomCommandFailure(delegateResult);
     const tracesUrl = new URL(otlpTracesUrl);
-    console.warn("Failed to configure client tracing exporter", {
+    console.warn(tr("Failed to configure client tracing exporter"), {
       scheme: tracesUrl.protocol.replace(/:$/, ""),
       host: tracesUrl.hostname,
       port: tracesUrl.port || undefined,

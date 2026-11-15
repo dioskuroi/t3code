@@ -1,4 +1,5 @@
 import { workspaceAreaProps } from "../lib/workspaceFocus";
+import { tr } from "@t3tools/shared/i18n";
 import { RefreshIcon } from "~/components/ui/refresh-icon";
 import { scopeProjectRef } from "@t3tools/client-runtime/environment";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -91,7 +92,7 @@ function IndexDraftLanding() {
 }
 
 function DraftStartError({ onRetry }: { readonly onRetry: () => void }) {
-  const contentArea = workspaceAreaProps("home", 1, "Home");
+  const contentArea = workspaceAreaProps("home", 1, tr("Home"));
   return (
     <SidebarInset
       {...contentArea}
@@ -101,14 +102,14 @@ function DraftStartError({ onRetry }: { readonly onRetry: () => void }) {
       {isElectron ? <WorkspacePageHeader electron /> : null}
       <Empty className="flex-1">
         <EmptyHeader className="max-w-md">
-          <EmptyTitle>Couldn’t start a new thread</EmptyTitle>
+          <EmptyTitle>{tr("Couldn\u2019t start a new thread")}</EmptyTitle>
           <EmptyDescription>
-            The project is still available. Try opening the draft again.
+            {tr("The project is still available. Try opening the draft again.")}
           </EmptyDescription>
           <div className="mt-5 flex justify-center">
             <Button size="sm" onClick={onRetry}>
               <RefreshIcon size="md" />
-              Try again
+              {tr("Try again")}
             </Button>
           </div>
         </EmptyHeader>

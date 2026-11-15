@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   type CheckpointDiffTarget,
   type ComposerPathSearchTarget,
@@ -236,7 +237,7 @@ export function usePaginatedBranches(target: VcsRefTarget) {
           const cause = Cause.squash(failed.cause);
           return cause instanceof Error && cause.message.trim().length > 0
             ? cause.message
-            : "Failed to load refs.";
+            : tr("Failed to load refs.");
         })()
       : null;
   const refresh = () => {
@@ -332,7 +333,7 @@ export function useProjectPathSearch(
         ? null
         : canReadFiles
           ? result.error
-          : (fileAccess.error ?? "This connection cannot search host files."),
+          : (fileAccess.error ?? tr("This connection cannot search host files.")),
     isPending:
       !areProjectPathSearchTargetsEqual(normalizedTarget, debouncedTarget) ||
       (hasTarget && (fileAccess.isPending || result.isPending)),
@@ -394,7 +395,7 @@ export function useProjectContentSearch(target: ProjectContentSearchTarget) {
         ? null
         : canReadFiles
           ? result.error
-          : (fileAccess.error ?? "This connection cannot search host files."),
+          : (fileAccess.error ?? tr("This connection cannot search host files.")),
     isPending:
       isCheckingAccess ||
       (canReadFiles && hasQuery && (query !== debouncedQuery || result.isPending)),

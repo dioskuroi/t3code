@@ -1,4 +1,5 @@
 import { parseNewThreadLink } from "@t3tools/shared/promptLinks";
+import { tr } from "@t3tools/shared/i18n";
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { NewThreadLinkView } from "../components/promptLinks/NewThreadLinkView";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "../components/ui/empty";
@@ -13,7 +14,7 @@ function NewThreadLinkRoute() {
       <SidebarInset className="h-dvh min-h-0 overflow-hidden overscroll-y-none">
         <Empty className="flex-1">
           <EmptyHeader className="max-w-md">
-            <EmptyTitle>Could not open the link</EmptyTitle>
+            <EmptyTitle>{tr("Could not open the link")}</EmptyTitle>
             <EmptyDescription>{parsed.error}</EmptyDescription>
           </EmptyHeader>
         </Empty>

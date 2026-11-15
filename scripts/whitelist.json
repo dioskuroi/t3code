@@ -46,7 +46,9 @@
     "W13 (#72) words 增补：Office/Word/Finder/DevTools（产品与工具品牌，随 §3.1）、TIFF/HEIC/EPUB/TAR/LZW/XML/XHTML/OpenDocument/Blob（格式与技术名词，随 §3 与 M2 PDF/Safari 先例）、DNS/CORS/Worker（技术缩写/平台术语，随 API/URL/HTTP 先例）。",
     "批 73（web device/usage/cloud/onboarding）：words 增补产品与计划品牌（Magic Keyboard/Face ID/Xcode/iOS/iPhone/Duo/T3 Chat/Premier/Premium）、开发工具面（Android Studio/Device Manager）与标识符（App ID/Bundle ID），随术语表 §3 品牌/标识符精神；contains \"T3 Chat Pro\" 为订阅计划产品名（Pro 为普通词不进 words）。与货币代码 USD（随 §3.6 单位精神）。 批 73 review：删 words Premium（SpeedPremium 加速溢价桶随图例标准/快速/极快改译「加速溢价」，非保留品牌）。",
     "批 74（web 组件杂项 2/2：clerk/auth/guest/search/ui/desktop/permissions + 平铺收尾）新增：exact 为批内日志/开发者断言 throw（模板插值归一化形态）、Tailwind 类名字面量与 CSS 值（16rem/-px 0，随 #68/#72 先例）、React key 哨兵后缀（::match/::code，随 #68 ::pending 先例）、guest 路由 URL 模板片段（?=&path=/?=&item=）、搜索开关字形示例（Aa/ab）与 t3.chat 域名（§3.5 标识符不译），均为非显示层文案。 批 74 补充：words \"lint\"（前端工程固定术语/工具名，随 §3.5 精神）；contains \"t3.chat\"（域名，§3.5 不译，供译文内容面扣除）、\"Replay (dev)\"（Provider 实例名即产品名）、\"Home 或 End\"（键位名混排片段，随 \"如 High\" 先例）。 ::match/::code 出处：apps/web/src/components/search/HighlightedSearchLine.tsx（行内 React key 模板 `${start}:${end}:match`/:code 经插值归一化后的形态，非死条目，随 #68 ::pending 同理）。",
-    "批 75（web 平铺 1/2：browser/hooks/lib）新增：exact 为批内日志/console 诊断串与 boot 错误报告字段前缀（Version:/Channel: 等诊断面退英文，随 #71/#86 先例）、undo action 哨兵字面量（Settled/Snoozed/Unpinned/Archived/Discarded 展示层走 tr，随 #78 先例）、SVG 图标标记串与 CSS 字体简写（随 #70/#72 先例）、URL 片段 ?channel=nightly（§3.5 标识符不译）、CSS 选择器片段（随 #60 先例）。 批 75 补充（75b 续）：exact 为 Tailwind 主题 token（2xs-5xs/2xl-4xl，CSS 值随 #68/#72 先例）、系统文件管理器产品名 File Explorer/Files（§3.5 不译，随 words \"Finder\" 先例；注意 \"Files\" exact 有屏蔽他处裸串风险，见批报告）、TaggedError 诊断 message 归一化形态（无 UI 渲染点，随 #71 先例）、diff cache key 哨兵前缀 :new:/:old:（随 ::match 先例）、CSS 选择器片段与 AST 词法 part 类型字面量 Literal（协议面不译）。"
+    "批 75（web 平铺 1/2：browser/hooks/lib）新增：exact 为批内日志/console 诊断串与 boot 错误报告字段前缀（Version:/Channel: 等诊断面退英文，随 #71/#86 先例）、undo action 哨兵字面量（Settled/Snoozed/Unpinned/Archived/Discarded 展示层走 tr，随 #78 先例）、SVG 图标标记串与 CSS 字体简写（随 #70/#72 先例）、URL 片段 ?channel=nightly（§3.5 标识符不译）、CSS 选择器片段（随 #60 先例）。 批 75 补充（75b 续）：exact 为 Tailwind 主题 token（2xs-5xs/2xl-4xl，CSS 值随 #68/#72 先例）、系统文件管理器产品名 File Explorer/Files（§3.5 不译，随 words \"Finder\" 先例；注意 \"Files\" exact 有屏蔽他处裸串风险，见批报告）、TaggedError 诊断 message 归一化形态（无 UI 渲染点，随 #71 先例）、diff cache key 哨兵前缀 :new:/:old:（随 ::match 先例）、CSS 选择器片段与 AST 词法 part 类型字面量 Literal（协议面不译）。",
+    "批 #76：exact +时长字面量/哨兵串/Tailwind 类串/clientMetadata 标识符/Open VSX category 字面量；contains +Unlicense（SPDX 标识符）；words +编程语言名（Bash/Dart/Java 等语言标签保留英文）、IndexedDB/manifest/ZIP64/Canvas 技术名词、配置键 editor.background。",
+    "批 #76 补注：Themes 兼作 settingsSearch 显示词（已有 tr() + 字典覆盖，exact 的遮蔽面已知）；T3 Code Desktop 双身份（clientMetadata 遥测字面量 + 字典「T3 Code 桌面版」显示词）。"
   ],
   "contains": [
     "/side",
@@ -107,7 +109,8 @@
     "T3 Chat Pro",
     "t3.chat",
     "Replay (dev)",
-    "Home 或 End"
+    "Home 或 End",
+    "Unlicense"
   ],
   "exact": [
     " READY ",
@@ -880,7 +883,15 @@
     ":new:",
     ":old:",
     ", [hidden], [aria-hidden=true], script, style, template, noscript, svg",
-    "Literal"
+    "Literal",
+    "3 seconds",
+    ":corrupt:",
+    ":empty",
+    "-me-0.5 ms-auto size-4.5 shrink-0 text-muted-foreground opacity-80 sm:size-4",
+    "Edge",
+    "Samsung Internet",
+    "T3 Code Desktop",
+    "Themes"
   ],
   "globs": [
     "**/*.browser.test.{ts,tsx}",
@@ -1331,6 +1342,27 @@
     "Bundle ID",
     "USD",
     "lint",
-    "MediaRecorder"
+    "MediaRecorder",
+    "assembly",
+    "bash",
+    "canvas",
+    "dart",
+    "dockerfile",
+    "editor.background",
+    "elixir",
+    "haskell",
+    "indexeddb",
+    "java",
+    "kotlin",
+    "manifest",
+    "python",
+    "ruby",
+    "rust",
+    "scala",
+    "svelte",
+    "swift",
+    "vue",
+    "zip64",
+    "zig"
   ]
 }

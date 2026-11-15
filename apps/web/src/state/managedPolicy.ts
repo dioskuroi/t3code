@@ -1,4 +1,5 @@
 import type { EnvironmentId, ManagedPolicySummary, ProviderDriverKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import { useServerConfigs } from "./entities";
 import { usePrimaryEnvironmentId } from "./environments";
@@ -62,6 +63,6 @@ export function managedInstanceLocks(
     configKeys: fieldsUnder("config."),
     environmentNames: fieldsUnder("environment."),
     wholeEnvironment: paths.includes("environment"),
-    reason: `Managed by ${policy.organization}.`,
+    reason: tr("Managed by {organization}.", { organization: policy.organization }),
   };
 }

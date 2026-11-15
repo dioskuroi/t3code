@@ -1,4 +1,5 @@
 import { presentThreadShell } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 import {
   EnvironmentId,
   MessageId,
@@ -30,7 +31,7 @@ export function makeThreadProjectionFixture(): OrchestrationV2ThreadProjection {
     thread: {
       id,
       projectId: ProjectId.make("project-test"),
-      title: "Thread",
+      title: tr("Thread"),
       providerInstanceId,
       modelSelection: { instanceId: providerInstanceId, model: "gpt-5.4" },
       runtimeMode: "full-access",
@@ -95,7 +96,7 @@ export function makeThreadFixture(overrides: ThreadFixtureOverrides = {}): Threa
   const shell = presentThreadShell(environmentId, {
     id,
     projectId,
-    title: overrides.title ?? "Thread",
+    title: overrides.title ?? tr("Thread"),
     providerInstanceId,
     modelSelection,
     runtimeMode: overrides.runtimeMode ?? "full-access",
@@ -163,7 +164,7 @@ export function makeStreamingTimelineFixture(text = "") {
       ...base("history-user-item", historyRunId, 0),
       type: "user_message",
       messageId: MessageId.make("history-user"),
-      text: "Inspect",
+      text: tr("Inspect"),
       attachments: [],
       inputIntent: "turn_start",
       createdBy: "user",
@@ -174,14 +175,14 @@ export function makeStreamingTimelineFixture(text = "") {
       type: "command_execution",
       status: "failed",
       input: "vp test",
-      output: "Test failed",
+      output: tr("Test failed"),
       exitCode: 1,
     },
     {
       ...base("history-assistant-item", historyRunId, 3),
       type: "assistant_message",
       messageId: MessageId.make("history-assistant"),
-      text: "Done",
+      text: tr("Done"),
       streaming: false,
       updatedAt: DateTime.makeUnsafe(time(4)),
     },
@@ -189,7 +190,7 @@ export function makeStreamingTimelineFixture(text = "") {
       ...base("live-user-item", runId, 5),
       type: "user_message",
       messageId: MessageId.make("live-user"),
-      text: "Continue",
+      text: tr("Continue"),
       attachments: [],
       inputIntent: "turn_start",
       createdBy: "user",
@@ -200,7 +201,7 @@ export function makeStreamingTimelineFixture(text = "") {
       type: "dynamic_tool",
       toolName: "read_file",
       input: { path: "/repo/src/index.ts" },
-      output: "Contents",
+      output: tr("Contents"),
     },
     {
       ...base("live-assistant-item", runId, 7),

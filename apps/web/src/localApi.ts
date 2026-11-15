@@ -1,4 +1,5 @@
 import type { ConfirmDialogOptions, ContextMenuItem, LocalApi } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import { requestConfirmDialog } from "./confirmDialog";
 import { dismissContextMenu, showContextMenuFallback } from "./contextMenuFallback";
@@ -22,7 +23,7 @@ export function createLocalApi(): LocalApi {
         if (window.desktopBridge) {
           const opened = await window.desktopBridge.openExternal(url);
           if (!opened) {
-            throw new Error("Unable to open link.");
+            throw new Error(tr("Unable to open link."));
           }
           return;
         }
@@ -31,11 +32,11 @@ export function createLocalApi(): LocalApi {
       },
       openSystemSettings: async (pane) => {
         if (!window.desktopBridge) {
-          throw new Error("Unable to open System Settings.");
+          throw new Error(tr("Unable to open System Settings."));
         }
         const opened = await window.desktopBridge.openSystemSettings(pane);
         if (!opened) {
-          throw new Error("Unable to open System Settings.");
+          throw new Error(tr("Unable to open System Settings."));
         }
       },
     },
@@ -84,7 +85,7 @@ export function readLocalApi(): LocalApi | undefined {
 export function ensureLocalApi(): LocalApi {
   const api = readLocalApi();
   if (!api) {
-    throw new Error("Local API not found");
+    throw new Error(tr("Local API not found"));
   }
   return api;
 }

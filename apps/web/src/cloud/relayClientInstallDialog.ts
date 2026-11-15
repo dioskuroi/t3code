@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import {
   RelayClientInstallProgressStageSchema,
   type RelayClientInstallProgressEvent,
@@ -15,7 +16,14 @@ export class RelayClientInstallConfirmationConflictError extends Schema.TaggedEr
   },
 ) {
   override get message(): string {
-    return `Cannot confirm relay client installation ${this.requestedVersion}; installation ${this.activeVersion} has dialog status ${this.activeDialogStatus}.`;
+    return tr(
+      "Cannot confirm relay client installation {requested}; installation {active} has dialog status {status}.",
+      {
+        requested: this.requestedVersion,
+        active: this.activeVersion,
+        status: this.activeDialogStatus,
+      },
+    );
   }
 }
 

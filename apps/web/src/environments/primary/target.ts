@@ -1,4 +1,5 @@
 import { PRIMARY_LOCAL_ENVIRONMENT_ID, type DesktopEnvironmentBootstrap } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 
 import { isLocalEnvironmentDisabled } from "../../localEnvironment";
@@ -27,7 +28,10 @@ export class PrimaryEnvironmentUrlInvalidError extends Schema.TaggedError<Primar
   },
 ) {
   override get message(): string {
-    return `Could not parse ${this.urlKind} for the ${this.source} primary environment target.`;
+    return tr("Could not parse {urlKind} for the {source} primary environment target.", {
+      urlKind: this.urlKind,
+      source: this.source,
+    });
   }
 }
 
@@ -39,7 +43,10 @@ export class PrimaryEnvironmentProtocolUnsupportedError extends Schema.TaggedErr
   },
 ) {
   override get message(): string {
-    return `The ${this.source} primary environment target uses unsupported protocol ${this.protocol}.`;
+    return tr("The {source} primary environment target uses unsupported protocol {protocol}.", {
+      source: this.source,
+      protocol: this.protocol,
+    });
   }
 }
 
@@ -55,7 +62,9 @@ export class DesktopEnvironmentBootstrapIncompleteError extends Schema.TaggedErr
       ...(this.hasHttpBaseUrl ? [] : ["httpBaseUrl"]),
       ...(this.hasWsBaseUrl ? [] : ["wsBaseUrl"]),
     ];
-    return `Desktop bootstrap is missing ${missing.join(" and ")} for the local environment.`;
+    return tr("Desktop bootstrap is missing {missing} for the local environment.", {
+      missing: missing.join(" and "),
+    });
   }
 }
 
@@ -64,7 +73,7 @@ export class PrimaryEnvironmentDisabledError extends Schema.TaggedError<PrimaryE
   {},
 ) {
   override get message(): string {
-    return "The local environment is disabled.";
+    return tr("The local environment is disabled.");
   }
 }
 
