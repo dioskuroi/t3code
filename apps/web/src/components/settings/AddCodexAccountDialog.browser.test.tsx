@@ -106,7 +106,7 @@ describe("AddCodexAccountDialog", () => {
       </AppAtomRegistryProvider>,
     );
 
-    await userEvent.click(page.getByRole("button", { name: "Continue" }));
+    await userEvent.click(page.getByRole("button", { name: "继续" }));
     const instanceId = createdInstanceId();
     await act(() => registry.set(atom, [codexProvider(instanceId, { status: "unauthenticated" })]));
     await expect.element(page.getByText("Sign in to ChatGPT")).toBeVisible();

@@ -132,9 +132,9 @@ const signInStep = () => document.querySelector('[aria-label="Sign-in step"]');
 async function prepareCodexInstance() {
   await using stack = new AsyncDisposableStack();
   const screen = stack.use(await render(dialog()));
-  await click("Configure manually");
+  await click("手动配置");
   await type("#add-provider-label", "Work");
-  await click("Next");
+  await click("下一个");
   stack.move();
   return screen;
 }
@@ -155,9 +155,9 @@ describe("AddProviderInstanceDialog environment routing", () => {
       providerInstances: { codex_2: { driver: "codex", enabled: false } },
     });
     await using _screen = await render(dialog());
-    await click("Configure manually");
-    await click("Next");
-    await click("Add instance");
+    await click("手动配置");
+    await click("下一个");
+    await click("添加实例");
     expect(settingsHooks.mutate).toHaveBeenCalledWith({
       operation: "create",
       instanceId: "codex_3",
@@ -173,15 +173,15 @@ describe("AddProviderInstanceDialog environment routing", () => {
   it("includes the explicitly added default accent color when creating a provider", async () => {
     setup();
     await using _screen = await render(dialog());
-    await click("Show more");
+    await click("显示更多");
     await click("Use Kilo Code");
     await act(async () =>
       document
-        .querySelector<HTMLButtonElement>('button[aria-label="Add accent color for Kilo Code"]')!
+        .querySelector<HTMLButtonElement>('button[aria-label="为 Kilo Code 添加强调色"]')!
         .click(),
     );
-    await click("Add color");
-    await click("Continue to sign-in");
+    await click("添加颜色");
+    await click("继续登录");
 
     expect(settingsHooks.mutate).toHaveBeenCalledWith({
       operation: "create",
@@ -197,12 +197,12 @@ describe("AddProviderInstanceDialog environment routing", () => {
     expect(radio("fx")).toBeUndefined();
     expect(document.body.textContent).not.toContain("Use Kilo Code");
 
-    await click("Show more");
+    await click("显示更多");
     button("Use Kilo Code");
     await act(async () => radio("fx")!.click());
-    await click("Next");
-    await click("Next");
-    await click("Add instance");
+    await click("下一个");
+    await click("下一个");
+    await click("添加实例");
     expect(settingsHooks.mutate).toHaveBeenCalledWith({
       operation: "create",
       instanceId: "fx",
@@ -215,11 +215,11 @@ describe("AddProviderInstanceDialog environment routing", () => {
     const mutation = deferred<{ readonly _tag: "Success"; readonly value: unknown }>();
     settingsHooks.mutate.mockReturnValueOnce(mutation.promise);
     await using _screen = await render(dialog());
-    await click("Show more");
+    await click("显示更多");
     await click("Use Kilo Code");
 
     expect(document.body.textContent).toContain("v4.2.0 · binary");
-    await click("Continue to sign-in");
+    await click("继续登录");
     expect(settingsHooks.mutate).toHaveBeenCalledWith({
       operation: "create",
       instanceId: "acpRegistry_kilo_code",
@@ -247,31 +247,29 @@ describe("AddProviderInstanceDialog environment routing", () => {
   it("creates a local command in the selected environment without a sign-in step", async () => {
     setup();
     await using _screen = await render(dialog());
-    await click("Show more");
+    await click("显示更多");
     await click("Use local command");
-    await click("Next");
-    expect(document.body.textContent).toContain("Executable is required.");
+    await click("下一个");
+    expect(document.body.textContent).toContain("必须提供可执行文件。");
     expect(settingsHooks.mutate).not.toHaveBeenCalled();
 
     await type("#add-provider-acpRegistry-manual-commandPath", "dsh");
     const commandArgs = ["--profile", "acp", " literal $(value) ; ", ""];
     for (const [index, argument] of commandArgs.entries()) {
-      await click("Add argument");
-      if (argument) await type(`input[aria-label="Argument ${index + 1}"]`, argument);
+      await click("添加参数");
+      if (argument) await type(`input[aria-label="参数 ${index + 1}"]`, argument);
     }
-    await click("Add variable");
-    await type('input[aria-label="Environment variable name 1"]', "DSH_PROFILE");
+    await click("添加变量");
+    await type('input[aria-label="环境变量名 1"]', "DSH_PROFILE");
     await act(async () =>
       document
-        .querySelector<HTMLButtonElement>(
-          'button[aria-label="Mark environment variable DSH_PROFILE as sensitive"]',
-        )!
+        .querySelector<HTMLButtonElement>('button[aria-label="将环境变量 DSH_PROFILE 标记为敏感"]')!
         .click(),
     );
-    await type('input[aria-label="Environment variable value 1"]', "work");
-    await click("Next");
+    await type('input[aria-label="环境变量值 1"]', "work");
+    await click("下一个");
     await type("#add-provider-label", "Deepseek Harness");
-    await click("Add instance");
+    await click("添加实例");
 
     expect(settingsHooks.useMutation).toHaveBeenCalledWith(remoteEnvironmentId);
     expect(settingsHooks.mutate).toHaveBeenCalledWith({
@@ -294,7 +292,7 @@ describe("AddProviderInstanceDialog environment routing", () => {
   it("rejects a queued save after the provider grant is revoked", async () => {
     setup();
     await using screen = await prepareCodexInstance();
-    const save = button("Add instance");
+    const save = button("添加实例");
     actions.canManageProviders = false;
     // Click before React renders the revoked grant.
     await act(async () => save.click());
@@ -303,6 +301,6 @@ describe("AddProviderInstanceDialog environment routing", () => {
     expect(actions.toast).not.toHaveBeenCalled();
     expect(actions.onOpenChange).not.toHaveBeenCalled();
     await screen.rerender(dialog());
-    expect(button("Add instance").disabled).toBe(true);
+    expect(button("添加实例").disabled).toBe(true);
   });
 });

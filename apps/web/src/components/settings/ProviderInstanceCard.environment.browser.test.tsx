@@ -17,10 +17,10 @@ describe("ProviderEnvironmentSection saved secrets", () => {
     await using screen = await render(
       <ProviderEnvironmentSection environment={[savedSecret]} onChange={onChange} />,
     );
-    const name = screen.getByRole("textbox", { name: "Environment variable name 1" });
-    const value = screen.getByLabelText("Environment variable value 1");
+    const name = screen.getByRole("textbox", { name: "环境变量名 1" });
+    const value = screen.getByLabelText("环境变量值 1");
     const lock = screen.getByRole("button", {
-      name: "Mark environment variable FAKE_API_KEY as sensitive",
+      name: "将环境变量 FAKE_API_KEY 标记为敏感",
     });
 
     await expect.element(name).toBeDisabled();
@@ -42,14 +42,12 @@ describe("ProviderEnvironmentSection saved secrets", () => {
     await userEvent.fill(name, "RENAMED_KEY");
     await userEvent.tab();
     await userEvent.click(
-      screen.getByRole("button", { name: "Mark environment variable RENAMED_KEY as sensitive" }),
+      screen.getByRole("button", { name: "将环境变量 RENAMED_KEY 标记为敏感" }),
     );
     expect(onChange).toHaveBeenLastCalledWith([
       { name: "RENAMED_KEY", value: "fake-replacement", sensitive: false, valueRedacted: false },
     ]);
-    await userEvent.click(
-      screen.getByRole("button", { name: "Remove environment variable RENAMED_KEY" }),
-    );
+    await userEvent.click(screen.getByRole("button", { name: "移除环境变量 RENAMED_KEY" }));
     expect(onChange).toHaveBeenLastCalledWith([]);
   });
 });

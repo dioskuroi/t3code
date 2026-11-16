@@ -196,7 +196,7 @@ function provider(): ServerProvider {
       updateCommand: "pnpm add -g @openai/codex@latest",
       canUpdate: true,
       checkedAt: "2026-07-24T12:00:00.000Z",
-      message: "Update available.",
+      message: "有可用更新。",
     },
   };
 }
@@ -253,9 +253,7 @@ describe("EnvironmentProviderSettings routing", () => {
     await setup();
     await setProviders([provider()]);
     await using _screen = await render(panel({ targetInstanceId: customId }));
-    await expect
-      .element(page.getByText("This provider instance is no longer available on this device."))
-      .toBeVisible();
+    await expect.element(page.getByText("此 Provider 实例在此设备上已不可用。")).toBeVisible();
     expect(state.updateSettings).not.toHaveBeenCalled();
   });
 
@@ -272,7 +270,7 @@ describe("EnvironmentProviderSettings routing", () => {
       },
     };
     await using _screen = await render(panel());
-    await userEvent.click(page.getByRole("switch", { name: "Enable Work" }).first());
+    await userEvent.click(page.getByRole("switch", { name: "启用 Work" }).first());
 
     expect(state.mutateProviderInstance).toHaveBeenCalledWith(
       {
@@ -311,7 +309,7 @@ describe("EnvironmentProviderSettings routing", () => {
       },
     ]);
     await using _screen = await render(panel({ targetInstanceId: instanceId }));
-    const link = page.getByRole("link", { name: "Continue authentication" });
+    const link = page.getByRole("link", { name: "继续认证" });
     link.element().addEventListener("click", (event) => event.preventDefault());
     await userEvent.click(link);
 
@@ -351,8 +349,8 @@ describe("EnvironmentProviderSettings routing", () => {
       },
     ]);
     await using _screen = await render(panel({ targetInstanceId: codexId }));
-    await expect.element(page.getByRole("button", { name: "Reconnect account" })).toBeVisible();
-    await userEvent.click(page.getByRole("button", { name: "Use existing CLI" }).element());
+    await expect.element(page.getByRole("button", { name: "重新连接账号" })).toBeVisible();
+    await userEvent.click(page.getByRole("button", { name: "使用现有 CLI" }).element());
 
     expect(state.mutateProviderInstance).toHaveBeenCalledWith(
       {
@@ -384,7 +382,7 @@ describe("EnvironmentProviderSettings instance removal", () => {
     };
     await setProviders([provider()]);
     await using _screen = await render(panel({ targetInstanceId: codexId }));
-    const reset = page.getByRole("button", { name: "Reset Codex provider settings to default" });
+    const reset = page.getByRole("button", { name: "将 Codex provider settings 重置为默认值" });
     await userEvent.click(reset);
 
     expect(state.mutateProviderInstance).not.toHaveBeenCalled();
@@ -416,14 +414,13 @@ describe("EnvironmentProviderSettings instance removal", () => {
     };
     await setProviders([{ ...provider(), instanceId: antigravityId, driver: antigravity }]);
     await using _screen = await render(panel({ targetInstanceId: antigravityId }));
-    await userEvent.click(page.getByRole("button", { name: /^Reset .* provider settings/ }));
-
-    expect(state.confirm).toHaveBeenCalledWith(
-      expect.stringContaining("It will also be turned off."),
-      {
-        variant: "destructive",
-      },
+    await userEvent.click(
+      page.getByRole("button", { name: /^将 .* provider settings 重置为默认值$/ }),
     );
+
+    expect(state.confirm).toHaveBeenCalledWith(expect.stringContaining(" 它也将一并关闭。"), {
+      variant: "destructive",
+    });
     expect(state.mutateProviderInstance).not.toHaveBeenCalled();
   });
 
@@ -436,7 +433,7 @@ describe("EnvironmentProviderSettings instance removal", () => {
       },
     };
     await using _screen = await render(panel({ targetInstanceId: customId }));
-    const remove = page.getByRole("button", { name: `Delete instance ${customId}` });
+    const remove = page.getByRole("button", { name: `删除实例 ${customId}` });
     await userEvent.click(remove);
 
     expect(state.mutateProviderInstance).not.toHaveBeenCalled();

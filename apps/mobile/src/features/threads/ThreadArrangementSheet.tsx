@@ -1,5 +1,5 @@
 import { SheetHeader } from "../../components/ui/SheetHeader";
-import { tr } from "@t3tools/shared/i18n";
+import { threadDisplayTitle, tr } from "@t3tools/shared/i18n";
 import { appAtomRegistry } from "../../state/atom-registry";
 import { useAtomValue } from "@effect/atom-react";
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
@@ -477,10 +477,10 @@ function ThreadArrangementSheet(props: { onClose: () => void }) {
                         {thread ? (
                           <>
                             <Text numberOfLines={2} className="flex-1 text-base">
-                              {thread.title}
+                              {threadDisplayTitle(thread.title)}
                             </Text>
                             <DragHandle
-                              title={thread.title}
+                              title={threadDisplayTitle(thread.title)}
                               disabled={
                                 dropBusy ||
                                 pendingOrder !== null ||

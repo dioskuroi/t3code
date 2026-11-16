@@ -1,5 +1,5 @@
 import { NativeScrollView } from "../../native/NativeScrollViewMarker";
-import { tr } from "@t3tools/shared/i18n";
+import { threadDisplayTitle, tr } from "@t3tools/shared/i18n";
 import { Button } from "../../components/ui/Button";
 import type {
   EnvironmentProject,
@@ -216,7 +216,7 @@ function ArchivedThreadRow(props: {
             className="min-w-0 flex-1 text-base font-t3-bold leading-snug text-foreground"
             numberOfLines={1}
           >
-            {props.thread.title}
+            {threadDisplayTitle(props.thread.title)}
           </Text>
           <Text className="min-w-[30px] text-right text-xs tabular-nums text-foreground-tertiary">
             <RelativeTime timestamp={props.thread.archivedAt ?? props.thread.updatedAt} />
@@ -261,13 +261,15 @@ function ArchivedThreadRow(props: {
       onSwipeableClose={props.onSwipeableClose}
       onSwipeableWillOpen={props.onSwipeableWillOpen}
       primaryAction={{
-        accessibilityLabel: tr("Unarchive {title}", { title: props.thread.title }),
+        accessibilityLabel: tr("Unarchive {title}", {
+          title: threadDisplayTitle(props.thread.title),
+        }),
         icon: "arrow.uturn.backward",
         label: tr("Unarchive"),
         onPress: props.onUnarchive,
       }}
       simultaneousWith={props.simultaneousSwipeGesture}
-      threadTitle={props.thread.title}
+      threadTitle={threadDisplayTitle(props.thread.title)}
     >
       {() => rowContent}
     </ThreadSwipeable>

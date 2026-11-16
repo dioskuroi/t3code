@@ -178,11 +178,11 @@ export const make = Effect.gen(function* () {
             click: settingsClick,
           },
           { type: "separator" },
-          { role: "services" },
+          { role: "services", label: tr("Services"), submenu: [] },
           { type: "separator" },
           { role: "hide", label: tr("Hide {name}", { name: environment.displayName }) },
-          { role: "hideOthers" },
-          { role: "unhide" },
+          { role: "hideOthers", label: tr("Hide Others") },
+          { role: "unhide", label: tr("Show All") },
           { type: "separator" },
           { role: "quit", label: tr("Quit {name}", { name: environment.displayName }) },
         ],
@@ -212,26 +212,29 @@ export const make = Effect.gen(function* () {
       {
         label: tr("Edit"),
         submenu: [
-          { role: "undo" },
-          { role: "redo" },
+          { role: "undo", label: tr("Undo") },
+          { role: "redo", label: tr("Redo") },
           { type: "separator" },
-          { role: "cut" },
-          { role: "copy" },
-          { role: "paste" },
+          { role: "cut", label: tr("Cut") },
+          { role: "copy", label: tr("Copy") },
+          { role: "paste", label: tr("Paste") },
           {
             label: tr("Paste as Text"),
             accelerator: "CmdOrCtrl+Shift+V",
             click: pasteAsTextClick,
           },
-          { role: "delete" },
+          { role: "delete", label: tr("Delete") },
           { type: "separator" },
-          { role: "selectAll" },
+          { role: "selectAll", label: tr("Select All") },
           ...(environment.platform === "darwin"
             ? [
                 { type: "separator" as const },
                 {
                   label: tr("Speech"),
-                  submenu: [{ role: "startSpeaking" as const }, { role: "stopSpeaking" as const }],
+                  submenu: [
+                    { role: "startSpeaking" as const, label: tr("Start Speaking") },
+                    { role: "stopSpeaking" as const, label: tr("Stop Speaking") },
+                  ],
                 },
               ]
             : []),
@@ -292,22 +295,27 @@ export const make = Effect.gen(function* () {
             click: zoomClick("out"),
           },
           { type: "separator" },
-          { role: "togglefullscreen" },
+          { role: "togglefullscreen", label: tr("Toggle Full Screen") },
         ],
       },
       {
         // Electron's default Window submenu adds a Ctrl+W close role off macOS.
         role: "windowMenu",
+        label: tr("Window"),
         submenu: [
-          { role: "minimize" },
-          { role: "zoom" },
+          { role: "minimize", label: tr("Minimize") },
+          { role: "zoom", label: tr("Zoom") },
           ...(environment.platform === "darwin"
-            ? [{ type: "separator" as const }, { role: "front" as const }]
+            ? [
+                { type: "separator" as const },
+                { role: "front" as const, label: tr("Bring All to Front") },
+              ]
             : []),
         ],
       },
       {
         role: "help",
+        label: tr("Help"),
         submenu: [
           {
             label: tr("Check for Updates..."),

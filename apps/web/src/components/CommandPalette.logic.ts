@@ -9,7 +9,7 @@ import {
   type SearchRange,
   type ThreadSearchSubject,
 } from "@t3tools/shared/paletteSearch";
-import { tr } from "@t3tools/shared/i18n";
+import { threadDisplayTitle, tr } from "@t3tools/shared/i18n";
 import { threadSearchSubject } from "@t3tools/client-runtime/state/thread-search";
 import type { CommandPaletteLinkedThreads } from "../commandPaletteBus";
 import {
@@ -49,7 +49,7 @@ export function buildLinkedThreadActionItems(
   return input.threads.map((thread) => ({
     kind: "action",
     value: `thread:${input.environmentId}:${thread.id}`,
-    title: thread.title || tr("Untitled thread"),
+    title: threadDisplayTitle(thread.title) || tr("Untitled thread"),
     description: thread.archivedAt === null ? tr("Linked thread") : tr("Archived thread"),
     searchTerms: [input.query, thread.title],
     icon: input.icon,
@@ -477,7 +477,7 @@ export function buildThreadActionItems<TThread extends BuildThreadActionItemsThr
           projectTitle,
           input.environmentLabelOf?.(thread),
         ),
-        title: thread.title,
+        title: threadDisplayTitle(thread.title),
         description,
         timestamp: formatRelativeTimeLabel(
           thread.latestUserMessageAt ?? thread.updatedAt ?? thread.createdAt,

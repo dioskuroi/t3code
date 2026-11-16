@@ -1,5 +1,5 @@
 import { ChildThreadApprovals } from "./chat/ChildThreadApprovals";
-import { tr } from "@t3tools/shared/i18n";
+import { threadDisplayTitle, tr } from "@t3tools/shared/i18n";
 import { workspaceAreaProps } from "../lib/workspaceFocus";
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
 import { resolveNewThreadModelSelection } from "@t3tools/shared/usageLimits";
@@ -629,7 +629,9 @@ export default function ChatView(props: ChatViewProps) {
       toastManager.add({
         type: "warning",
         title: tr("The composer is not ready"),
-        description: tr("Try citing the selection after the connection or pending input is resolved."),
+        description: tr(
+          "Try citing the selection after the connection or pending input is resolved.",
+        ),
       });
     }
     return inserted;
@@ -3329,7 +3331,7 @@ export default function ChatView(props: ChatViewProps) {
               activeThreadEnvironmentId={activeThread.environmentId}
               activeThreadId={activeThread.id}
               isServerThread={isServerThread}
-              activeThreadTitle={activeThread.title}
+              activeThreadTitle={threadDisplayTitle(activeThread.title)}
               activeThreadLinkOrigin={activeThreadShell?.linkOrigin?.label ?? null}
               activeProject={activeProject ?? null}
               parentThreadLink={headerParentThreadLink}

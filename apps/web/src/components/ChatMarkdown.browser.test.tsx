@@ -121,7 +121,9 @@ it("keeps compact audio playback loaded across signed URL renewals", async () =>
   await screen.rerender(preview(renewed));
   expect(screen.container.querySelector("audio")).toBe(audio);
   expect(audio.getAttribute("src")).toBe(original);
-  await expect.element(screen.getByRole("button", { name: "Pause clip.wav" })).toBeEnabled();
+  await expect
+    .element(screen.getByRole("button", { name: tr("Pause {name}", { name: "clip.wav" }) }))
+    .toBeEnabled();
   await screen.rerender(preview(renewed, "clip-v2"));
   expect(screen.container.querySelector("audio")).not.toBe(audio);
   expect(screen.container.querySelector("audio")?.getAttribute("src")).toBe(renewed);

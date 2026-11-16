@@ -1,5 +1,5 @@
 import { settingsScopeEnvironmentLabels } from "./settingsScopeAxis";
-import { tr } from "@t3tools/shared/i18n";
+import { threadDisplayTitle, tr } from "@t3tools/shared/i18n";
 import { Spinner } from "~/components/ui/spinner";
 import { ArchiveIcon, ArchiveX } from "lucide-react";
 import { type ScopedThreadRef } from "@t3tools/contracts";
@@ -236,7 +236,7 @@ export function ArchivedThreadsPanel() {
                     }
                   })();
                 }}
-                title={thread.title}
+                title={threadDisplayTitle(thread.title)}
                 description={
                   <span className={hasMultipleEnvironments ? "block truncate" : undefined}>
                     {hasMultipleEnvironments ? `${thread.environmentLabel} · ` : null}

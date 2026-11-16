@@ -1,5 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
-import { tr } from "@t3tools/shared/i18n";
+import { threadDisplayTitle, tr } from "@t3tools/shared/i18n";
 import type { ThreadRowProviderInstance } from "./thread-provider-instance";
 import {
   THREAD_LIST_V2_MONO_FONT as MONO_FONT,
@@ -757,7 +757,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
       : workingLabel) ?? (isUnread ? DONE_STATUS_LABEL : undefined);
   const recede = shouldRecedeThreadRow({ status, selected });
   const isRegeneratingTitle = thread.titleRegeneration != null;
-  const rowAccessibilityLabel = `${thread.title}${props.hasQueuedMessages ? tr(", messages queued to send") : ""}${isRegeneratingTitle ? tr(", regenerating title") : ""}`;
+  const rowAccessibilityLabel = `${threadDisplayTitle(thread.title)}${props.hasQueuedMessages ? tr(", messages queued to send") : ""}${isRegeneratingTitle ? tr(", regenerating title") : ""}`;
   const timeLabel = props.timeLabel;
 
   const visitThread = useAtomCommand(threadEnvironment.visit, { reportFailure: false });
@@ -1155,7 +1155,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
               : undefined
           }
         >
-          {thread.title}
+          {threadDisplayTitle(thread.title)}
         </Text>
         <View className="flex-row items-center gap-1.5" style={{ minHeight: titleLineHeight }}>
           {props.hasQueuedMessages ? <QueuedMessageIcon selected={selected} /> : null}
@@ -1443,7 +1443,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
               )}
               numberOfLines={1}
             >
-              {thread.title}
+              {threadDisplayTitle(thread.title)}
             </Text>
             {props.searchMatch ? (
               <ThreadSearchMatchExcerpt
@@ -1498,7 +1498,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         secondaryAction={secondaryAction}
         resetKey={`${thread.environmentId}:${thread.id}:${variant}:${snoozedRow}:${thread.settledAt}:${thread.unsettledAt}:${thread.snoozedUntil}:${thread.pinnedAt}`}
         simultaneousWith={props.simultaneousSwipeGesture}
-        threadTitle={thread.title}
+        threadTitle={threadDisplayTitle(thread.title)}
       >
         {(close) => (
           <Menu

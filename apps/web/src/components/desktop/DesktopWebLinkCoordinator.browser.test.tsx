@@ -284,7 +284,7 @@ it("adds the backend from a pairing link after the user confirms its host", asyn
     expect(state.connectPairing).toHaveBeenCalledExactlyOnceWith({ pairingUrl }),
   );
   expect(state.confirm).toHaveBeenCalledExactlyOnceWith(
-    "Add the backend at https://vps.example.com?",
+    "添加位于 https://vps.example.com 的后端？",
   );
   expect(state.navigate).not.toHaveBeenCalled();
 });

@@ -326,7 +326,7 @@ async function expectProjectAccessDeniedToast(title: string) {
       expect.objectContaining({
         type: "error",
         title,
-        description: "This connection cannot change projects in remote.",
+        description: "此连接无法更改 remote 中的项目。",
       }),
     ),
   );
@@ -480,7 +480,7 @@ describe("project settings permissions", () => {
 describe("project identity reset", () => {
   const scratchIcon = { kind: "lucide", name: "message-square-dashed", color: "gray" } as const;
   const resetButton = (screen: Screen, label: string) =>
-    screen.container.querySelector<HTMLButtonElement>(`[aria-label="Reset ${label} to default"]`);
+    screen.container.querySelector<HTMLButtonElement>(`[aria-label="将 ${label} 重置为默认值"]`);
   const asScratch = (project: Project): Project => ({
     ...project,
     isScratch: true,
@@ -569,13 +569,13 @@ it("opens the fallback search target across all environments from a checkout", a
     </RegistryContext.Provider>,
     { router: false },
   );
-  await userEvent.click(page.getByRole("button", { name: "Open all environments" }));
+  await userEvent.click(page.getByRole("button", { name: "打开所有环境" }));
   await vi.waitFor(() => expect(router.state.location.search).toEqual({}));
   expect(router.state.location.hash).toBe("fallback-model");
 });
 
 describe("project settings scope", () => {
-  const environmentMenu = () => page.getByRole("button", { name: /^Environment scope:/ });
+  const environmentMenu = () => page.getByRole("button", { name: /^环境范围:/ });
   const primaryOption = () => page.getByRole("menuitemradio", { name: /^primary/ });
   const remoteOption = () => page.getByRole("menuitemradio", { name: /^remote/ });
 
@@ -618,11 +618,8 @@ describe("project settings scope", () => {
   });
 
   it.each([
-    [undefined, "This project has no checkout on this environment."],
-    [
-      "removed-checkout",
-      "This checkout is no longer available in the selected project and environment.",
-    ],
+    [undefined, "此项目在此环境中没有签出。"],
+    ["removed-checkout", "此签出在所选项目和环境中已不可用。"],
   ])("recovers a stale environment link with checkout %s", async (checkout, message) => {
     setup();
     state.projects = state.projects.filter((project) => project.environmentId === primaryId);
@@ -634,19 +631,15 @@ describe("project settings scope", () => {
     });
 
     await expect.element(page.getByText(message, { exact: true })).toBeVisible();
-    await expect.element(page.getByRole("button", { name: /^Project scope:/ })).toBeVisible();
-    await expect
-      .element(page.getByRole("button", { name: "Environment scope: remote" }))
-      .toBeVisible();
-    await userEvent.click(page.getByRole("button", { name: "Show all environments" }));
+    await expect.element(page.getByRole("button", { name: /^项目范围:/ })).toBeVisible();
+    await expect.element(page.getByRole("button", { name: "环境范围: remote" })).toBeVisible();
+    await userEvent.click(page.getByRole("button", { name: "显示所有环境" }));
 
     await expect
       .element(page.getByRole("textbox", { name: "项目名称" }))
       .toHaveValue("Shared repo");
     expect(screen.router.state.location.search).toEqual({ project: key });
-    await expect
-      .element(page.getByRole("button", { name: "Environment scope: All environments" }))
-      .toBeVisible();
+    await expect.element(page.getByRole("button", { name: "环境范围: 所有环境" })).toBeVisible();
     await expect.element(page.getByText(message, { exact: true })).not.toBeInTheDocument();
     await expect.element(page.getByRole("button", { name: "移除项目", exact: true })).toBeEnabled();
   });

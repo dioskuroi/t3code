@@ -189,13 +189,13 @@ describe("resource monitor retry", () => {
     await expect.element(screen.getByText(startError, { exact: true })).toBeVisible();
     await expect.element(screen.getByText(historyError, { exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "Retry monitor" }).click();
+    await screen.getByRole("button", { name: "重试监视器" }).click();
 
     await expect.element(screen.getByText(startError, { exact: true })).not.toBeInTheDocument();
     await expect.element(screen.getByText(historyError, { exact: true })).not.toBeInTheDocument();
-    await expect.element(screen.getByText("Native healthy", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("原生 healthy", { exact: true })).toBeVisible();
     await expect
-      .element(screen.getByRole("button", { name: "Retry monitor" }))
+      .element(screen.getByRole("button", { name: "重试监视器" }))
       .not.toBeInTheDocument();
   });
 
@@ -210,8 +210,8 @@ describe("resource monitor retry", () => {
       );
       await using screen = await render(view(environmentId));
       await expect.element(screen.getByText(historyError, { exact: true })).toBeVisible();
-      await screen.getByRole("button", { name: "Retry monitor" }).click();
-      await expect.element(screen.getByRole("button", { name: "Retry monitor" })).toBeDisabled();
+      await screen.getByRole("button", { name: "重试监视器" }).click();
+      await expect.element(screen.getByRole("button", { name: "重试监视器" })).toBeDisabled();
       const selectedEnvironment = switchEnvironment ? EnvironmentId.make("other") : environmentId;
       if (switchEnvironment) await screen.rerender(view(selectedEnvironment));
       await screen.getByRole("button", { name: "5m", exact: true }).click();
@@ -223,7 +223,7 @@ describe("resource monitor retry", () => {
       await act(() => fixture.releaseRetry());
 
       if (switchEnvironment) {
-        await expect.element(screen.getByRole("button", { name: "Retry monitor" })).toBeEnabled();
+        await expect.element(screen.getByRole("button", { name: "重试监视器" })).toBeEnabled();
         await expect.element(screen.getByText(historyError, { exact: true })).toBeVisible();
         expect(fixture.registry.get(fixture.historyQueries(selectedKey))._tag).toBe("Failure");
         expect(fixture.historyReads).not.toHaveBeenCalled();
@@ -256,9 +256,9 @@ describe("resource monitor retry", () => {
     await expect.element(screen.getByText(startError, { exact: true })).toBeVisible();
     await expect.element(screen.getByText(historyError, { exact: true })).toBeVisible();
 
-    await screen.getByRole("button", { name: "Retry monitor" }).click();
+    await screen.getByRole("button", { name: "重试监视器" }).click();
 
-    await expect.element(screen.getByRole("button", { name: "Retry monitor" })).toBeEnabled();
+    await expect.element(screen.getByRole("button", { name: "重试监视器" })).toBeEnabled();
     expect(monitor.retry).toHaveBeenCalledExactlyOnceWith({ environmentId, input: {} });
     await expect.element(screen.getByText(startError, { exact: true })).toBeVisible();
     await expect.element(screen.getByText(historyError, { exact: true })).toBeVisible();

@@ -90,13 +90,13 @@ it.each(["niri", "hyprland"] as const)(
     using _env = setup();
     await using screen = await renderConfig(desktop);
     expect(screen.recorder().getAttribute("aria-label")).toBe(
-      "Record snapshot shortcut, currently Ctrl+Shift+2",
+      "录制快照快捷键，当前为 Ctrl+Shift+2",
     );
     expect(screen.advanced().textContent).toContain("manual binding");
     expect(bridge.previewSnapShotConfig).not.toHaveBeenCalled();
     await screen.click(tr("Review changes"));
     expect(screen.recorder().getAttribute("aria-label")).toBe(
-      "Record snapshot shortcut, currently Ctrl+Shift+2",
+      "录制快照快捷键，当前为 Ctrl+Shift+2",
     );
     expect(bridge.applySnapShotConfig).not.toHaveBeenCalled();
     expect(screen.diff()).not.toBeNull();

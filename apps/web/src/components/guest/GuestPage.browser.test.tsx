@@ -248,7 +248,7 @@ describe("GuestPage", () => {
         expect.stringContaining(`${GUEST_RENDER_ROUTE}?share=${SHARE_ID}&item=visual`),
       );
     // Guests cannot act on the thread, so no control offers to.
-    expect(screen.container.querySelector('[aria-label="Fork from this response"]')).toBeNull();
+    expect(screen.container.querySelector('[aria-label="从此回复分叉"]')).toBeNull();
     expect(socket).not.toHaveBeenCalled();
     // The composer names the thread's model, as the owner's does, with nothing to pick.
     await expect

@@ -55,7 +55,9 @@ describe("SidebarProviderUpdatePill exit", () => {
     setup([provider("succeeded")]);
     await screen.rerender(<SidebarProviderUpdatePill />);
     await advance(180);
-    expect(screen.container.textContent).toContain("Claude updated: v2.1.303");
+    expect(screen.container.textContent).toContain(
+      tr("{providerName} updated: {version}", { providerName: "Claude", version: "v2.1.303" }),
+    );
     expect(screen.container.querySelector('[role="status"]')).toBeNull();
 
     await advance(3_000);
@@ -67,7 +69,9 @@ describe("SidebarProviderUpdatePill exit", () => {
     setup([provider("failed")]);
     await using screen = await render(<SidebarProviderUpdatePill />);
     using _timers = fakeTimers();
-    expect(screen.container.textContent).toContain("Claude update failed");
+    expect(screen.container.textContent).toContain(
+      tr("{providerName} update failed", { providerName: "Claude" }),
+    );
 
     await act(() =>
       screen.container

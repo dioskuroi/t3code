@@ -298,7 +298,7 @@ it("keeps the project selection after going back a stage", async () => {
   await click("全不选");
   expect(pageText()).toContain("已选 0 / 2 项");
 
-  await clickStage("Agents, step 2");
+  await clickStage("Agents，第 2 步");
   await click("继续");
   expect(pageText()).toContain("导入你的项目");
   expect(pageText()).toContain("已选 0 / 2 项");
@@ -310,7 +310,7 @@ it("ticks the recent projects of a computer added after the selection changed", 
   await click("全不选");
 
   state.addedEnvironments = ["remote"];
-  await clickStage("连接, step 1");
+  await clickStage("连接，第 1 步");
   await click("继续");
   await click("继续");
   expect(pageText()).toContain("已选 2 / 4 项");

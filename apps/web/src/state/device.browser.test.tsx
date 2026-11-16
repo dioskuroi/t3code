@@ -179,7 +179,7 @@ it("reports a failed first device load and retries it", async () => {
 
   await expect.element(screen.getByRole("alert").getByText("Device access denied")).toBeVisible();
 
-  await screen.getByRole("button", { name: "Retry" }).click();
-  await expect.element(screen.getByRole("button", { name: "Refresh devices" })).toBeVisible();
+  await screen.getByRole("button", { name: "重试" }).click();
+  await expect.element(screen.getByRole("button", { name: "刷新设备" })).toBeVisible();
   expect(screen.container.querySelector('[role="alert"]')).toBeNull();
 });

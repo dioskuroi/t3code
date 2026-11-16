@@ -21,3 +21,9 @@ export function tr(key: string, params?: TrParams): string {
   }
   return out;
 }
+
+// 服务端给未命名会话线填的默认标题是数据面英文串（存储与检索都按原文，见下方判等），
+// 只有展示层经此处本地化；重命名等写路径不走这里。
+export function threadDisplayTitle(title: string | null | undefined): string {
+  return title === "New thread" ? tr("New thread") : (title ?? "");
+}

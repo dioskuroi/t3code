@@ -154,25 +154,25 @@ it("does not import with provider management alone", async () => {
   setup();
   grants.scopes.delete("orchestration:operate");
   await using screen = await renderSection();
-  await screen.click("List sessions");
-  expect(screen.button("Import").disabled).toBe(true);
-  await screen.click("Import");
+  await screen.click("列出会话");
+  expect(screen.button("导入").disabled).toBe(true);
+  await screen.click("导入");
   expect(commands.import).not.toHaveBeenCalled();
 });
 
 it("rechecks task access after confirming deletion", async () => {
   setup();
   await using screen = await renderSection();
-  await screen.click("List sessions");
+  await screen.click("列出会话");
   dialogs.confirm.mockImplementationOnce(async () => {
     grants.scopes.delete("orchestration:operate");
     return true;
   });
-  await screen.click("Delete");
+  await screen.click("删除");
   expect(commands.delete).not.toHaveBeenCalled();
 });
 
-it.each(["Save", "Disable"])("keeps other provider edits through a %s refetch", async (action) => {
+it.each(["保存", "禁用"])("keeps other provider edits through a %s refetch", async (action) => {
   setup();
   const providers: AcpRegistryConfigurableProvider[] = ["google", "other"].map((providerId) => ({
     providerId,
@@ -183,7 +183,7 @@ it.each(["Save", "Disable"])("keeps other provider edits through a %s refetch", 
   const response = { _tag: "Success" as const, value: { providers } };
   commands.listProviders.mockResolvedValue(response);
   await using screen = await renderSection();
-  await screen.click("List providers");
+  await screen.click("列出 Provider");
   const input = (label: string) =>
     screen.container.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!;
   await userEvent.fill(input("other base URL"), "https://other.example.test/v1");
@@ -199,18 +199,18 @@ it.each(["Save", "Disable"])("keeps other provider edits through a %s refetch", 
   const mutation = new Promise<void>((resolve) => {
     resolveMutation = resolve;
   });
-  const command = action === "Save" ? commands.setProvider : commands.disableProvider;
+  const command = action === "保存" ? commands.setProvider : commands.disableProvider;
   command.mockReturnValueOnce(
     mutation.then(() => ({
       _tag: "Success",
-      value: action === "Save" ? { configured: true } : { disabled: true },
+      value: action === "保存" ? { configured: true } : { disabled: true },
     })),
   );
   await screen.click(action);
-  expect(screen.button("Refresh").disabled).toBe(true);
+  expect(screen.button("刷新").disabled).toBe(true);
   await act(async () => resolveMutation());
   for (const button of screen.container.querySelectorAll<HTMLButtonElement>("button")) {
-    if (button.textContent === "Save" || button.textContent === "Disable") {
+    if (button.textContent === "保存" || button.textContent === "禁用") {
       expect(button.disabled).toBe(true);
     }
   }
@@ -220,7 +220,7 @@ it.each(["Save", "Disable"])("keeps other provider edits through a %s refetch", 
   expect(input("other base URL").value).toBe("https://newer.example.test/v1");
   expect(input("other write-only headers JSON").value).toBe('{"X-Test":"unsaved"}');
   expect(input("google write-only headers JSON").value).toBe("");
-  await screen.click("Refresh");
+  await screen.click("刷新");
   expect(input("other base URL").value).toBe("https://api.example.test/v1");
   expect(input("other write-only headers JSON").value).toBe("");
 });

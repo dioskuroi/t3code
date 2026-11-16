@@ -1,5 +1,5 @@
 import { ThreadHoverCard, ThreadHoverCardPopup } from "../ThreadHoverCard";
-import { tr } from "@t3tools/shared/i18n";
+import { threadDisplayTitle, tr } from "@t3tools/shared/i18n";
 import { ThreadTerminalStatusButton } from "../ThreadStatusIndicators";
 import { discardComposerDraft } from "../../lib/discardComposerDraft";
 import { requestCustomSnooze } from "../CustomSnoozeDialog";
@@ -268,7 +268,7 @@ function SidebarThreadTooltip({
   return (
     <ThreadHoverCardPopup side="right" align="start" sideOffset={4}>
       <ThreadHoverCard
-        title={thread.title}
+        title={threadDisplayTitle(thread.title)}
         footer={
           supportsMultiplePullRequests && thread.pullRequests.length > 0 ? (
             <div className="border-t border-border/60 pt-2 pl-0.5 text-xs text-muted-foreground">
@@ -844,7 +844,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
       readEnvironmentScope(threadRef.environmentId, AuthOrchestrationOperateScope)
     ) {
       event.preventDefault();
-      onStartRename(threadRef, thread.title);
+      onStartRename(threadRef, threadDisplayTitle(thread.title));
       return;
     }
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -864,7 +864,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
     }
     if ((event.target as HTMLElement).closest("button, a, input")) return;
     event.preventDefault();
-    onStartRename(threadRef, thread.title);
+    onStartRename(threadRef, threadDisplayTitle(thread.title));
   };
   const [isFileDragOver, setIsFileDragOver] = useState(false);
   const fileDropHandlers = onFileDropThreads
@@ -1001,7 +1001,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
     ) : null;
 
   const accessibility = resolveSidebarRowAccessibility({
-    title: thread.title,
+    title: threadDisplayTitle(thread.title),
     statusLabel: topStatus?.label ?? null,
     projectDisplayName: props.projectDisplayName,
     isActive: props.isActive,
@@ -1041,12 +1041,14 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
             ),
         isRegeneratingTitle && "opacity-55",
       )}
-      dir={textDirection(thread.title)}
+      dir={textDirection(threadDisplayTitle(thread.title))}
     >
-      {thread.title}
+      {threadDisplayTitle(thread.title)}
     </span>
   );
-  const accessibleTitle = isRenaming ? null : <span className="sr-only">{thread.title}</span>;
+  const accessibleTitle = isRenaming ? null : (
+    <span className="sr-only">{threadDisplayTitle(thread.title)}</span>
+  );
 
   const prBadgeShape = supportsMultiplePullRequests
     ? resolveThreadPullRequestBadge(thread.pullRequests)
@@ -1739,7 +1741,7 @@ export const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props
                   thread.titleRegeneration != null && "opacity-55",
                 )}
               >
-                {thread.title}
+                {threadDisplayTitle(thread.title)}
               </span>
               <span id={`${props.resultId}-pr`} className="contents">
                 <ThreadSearchPullRequestNumber

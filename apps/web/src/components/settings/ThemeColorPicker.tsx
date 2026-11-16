@@ -177,7 +177,7 @@ function ThemeColorPickerPanel({
           onInteractionEnd={committer.flush}
         />
         <ColorHueSlider
-          label={`${label} hue`}
+          label={tr("{label} hue", { label })}
           value={hsv.h}
           onChange={(h) => commitHsv({ ...hsv, h })}
           onInteractionEnd={committer.flush}

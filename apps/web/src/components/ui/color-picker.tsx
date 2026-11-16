@@ -110,7 +110,7 @@ export function ColorSaturationValuePlane({
 
   return (
     <div
-      aria-label={`${label} saturation and brightness`}
+      aria-label={tr("{label} saturation and brightness", { label })}
       role="group"
       className={cn(
         "relative cursor-crosshair touch-none overflow-hidden bg-[linear-gradient(to_top,#000,transparent),linear-gradient(to_right,#fff,transparent)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-popover",
@@ -141,7 +141,7 @@ export function ColorSaturationValuePlane({
             max={100}
             step="any"
             value={value[axis] * 100}
-            aria-label={`${label} ${axisLabel.toLowerCase()}`}
+            aria-label={tr("{label} {axis}", { label, axis: axisLabel })}
             aria-describedby={instructionsId}
             aria-valuetext={`${Math.round(value[axis] * 100)}%`}
             className="peer sr-only"
