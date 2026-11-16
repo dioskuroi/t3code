@@ -109,7 +109,7 @@ internal class ActivityPresentation(data: Map<String, String>, private val activ
     attentionCount == 1 -> "1 项需要你处理"
     attentionCount > 1 -> "$attentionCount 项需要你处理"
     activeCount > 0 && failedCount > 0 -> "$failedCount 个失败"
-    activeCount > 0 -> "$activeCount 个工作中"
+    activeCount > 0 -> "$activeCount 个进行中"
     failedCount > 0 -> "已结束，$failedCount 个失败"
     else -> "全部完成"
   }

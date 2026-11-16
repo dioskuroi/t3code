@@ -414,7 +414,7 @@ class T3WorkspaceNavigationView(
 
   private fun tabTitle(tab: String) = when (tab) {
     "threads" -> "对话"
-    "pullRequests" -> "拉取"
+    "pullRequests" -> "PR"
     "usage" -> "用量"
     else -> "设置"
   }

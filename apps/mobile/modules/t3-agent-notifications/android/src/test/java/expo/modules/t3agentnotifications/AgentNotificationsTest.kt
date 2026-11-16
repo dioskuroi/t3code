@@ -476,7 +476,7 @@ class AgentNotificationsTest {
     AgentNotifications.receive(context, data)
     val card = manager.activeNotifications.single().notification
     assertEquals("2 个活跃", card.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
-    assertEquals("2 个工作中", card.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+    assertEquals("2 个进行中", card.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
     assertEquals("Project · 2 个活跃", card.extras.getString(Notification.EXTRA_SUB_TEXT))
     assertEquals(
       "Working Build feature\nDone Write tests",
