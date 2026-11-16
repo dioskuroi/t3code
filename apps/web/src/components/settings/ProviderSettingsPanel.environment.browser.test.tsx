@@ -454,7 +454,7 @@ describe("EnvironmentProviderSettings health check interval", () => {
   it("commits interval drafts and allows retrying rejected edits", async () => {
     await setup();
     await using _screen = await render(panel());
-    const input = page.getByRole("textbox", { name: "Provider health check interval in seconds" });
+    const input = page.getByRole("textbox", { name: "Provider 健康检查间隔（秒）" });
 
     await userEvent.type(input, "{ArrowUp}{ArrowDown}");
     expect(
@@ -495,7 +495,7 @@ describe("EnvironmentProviderSettings health check interval", () => {
   it("restores the saved interval when a cleared field loses focus", async () => {
     await setup();
     await using _screen = await render(panel());
-    const input = page.getByRole("textbox", { name: "Provider health check interval in seconds" });
+    const input = page.getByRole("textbox", { name: "Provider 健康检查间隔（秒）" });
 
     await userEvent.type(input, "{Backspace}{Backspace}{Backspace}");
     await userEvent.tab();

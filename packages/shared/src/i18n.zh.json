@@ -9785,5 +9785,6 @@
   "Minimize": "最小化",
   "Bring All to Front": "前置全部窗口",
   "Toggle Full Screen": "切换全屏幕",
-  "change request templates": "变更请求模板"
+  "change request templates": "变更请求模板",
+  "provider health check interval": "Provider 健康检查间隔"
 }

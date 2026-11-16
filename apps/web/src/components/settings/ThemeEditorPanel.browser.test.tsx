@@ -129,7 +129,7 @@ describe("ThemeEditorPanel", () => {
     const hex = page.getByRole("textbox", { name: "强调色 hex value" });
     const original = (hex.element() as HTMLInputElement).value;
     await userEvent.click(page.getByRole("button", { name: "选择 强调色 颜色" }));
-    const hue = page.getByRole("slider", { name: "强调色 hue" });
+    const hue = page.getByRole("slider", { name: "强调色 色相" });
     await expect.element(hue).toBeInTheDocument();
     const hueSlider = hue.element() as HTMLElement;
 

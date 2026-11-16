@@ -575,7 +575,7 @@ it("opens the fallback search target across all environments from a checkout", a
 });
 
 describe("project settings scope", () => {
-  const environmentMenu = () => page.getByRole("button", { name: /^环境范围:/ });
+  const environmentMenu = () => page.getByRole("button", { name: /^环境范围：/ });
   const primaryOption = () => page.getByRole("menuitemradio", { name: /^primary/ });
   const remoteOption = () => page.getByRole("menuitemradio", { name: /^remote/ });
 
@@ -631,15 +631,15 @@ describe("project settings scope", () => {
     });
 
     await expect.element(page.getByText(message, { exact: true })).toBeVisible();
-    await expect.element(page.getByRole("button", { name: /^项目范围:/ })).toBeVisible();
-    await expect.element(page.getByRole("button", { name: "环境范围: remote" })).toBeVisible();
+    await expect.element(page.getByRole("button", { name: /^项目范围：/ })).toBeVisible();
+    await expect.element(page.getByRole("button", { name: "环境范围：remote" })).toBeVisible();
     await userEvent.click(page.getByRole("button", { name: "显示所有环境" }));
 
     await expect
       .element(page.getByRole("textbox", { name: "项目名称" }))
       .toHaveValue("Shared repo");
     expect(screen.router.state.location.search).toEqual({ project: key });
-    await expect.element(page.getByRole("button", { name: "环境范围: 所有环境" })).toBeVisible();
+    await expect.element(page.getByRole("button", { name: "环境范围：所有环境" })).toBeVisible();
     await expect.element(page.getByText(message, { exact: true })).not.toBeInTheDocument();
     await expect.element(page.getByRole("button", { name: "移除项目", exact: true })).toBeEnabled();
   });
