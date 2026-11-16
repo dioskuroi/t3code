@@ -88,7 +88,7 @@ describe("mobile stack merge scope", () => {
         layer.number === 2 ? { ...layer, isDraft: true } : layer,
       ),
     };
-    expect(pullRequestStackMerge(draft, 3, GITHUB).reason).toContain("可审查");
+    expect(pullRequestStackMerge(draft, 3, GITHUB).reason).toContain("可供评审");
     expect(pullRequestStackMerge(draft, 1, GITHUB).reason).toBeNull();
   });
   it("blocks missing revisions and a PR removed from the stack", () => {
