@@ -2824,6 +2824,9 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
       icon: "icon.icns",
       category: "public.app-category.developer-tools",
       extendInfo: {
+        // 声明本地化后，macOS 系统 role 菜单（服务/听写/Window 菜单等）随系统语言汉化。
+        CFBundleAllowMixedLocalizations: true,
+        CFBundleLocalizations: ["zh-Hans", "en"],
         // macOS 26 offers Messages/Mail codes in every text field unless opted out.
         NSAutoFillRequiresTextContentTypeForOneTimeCodeOnMac: true,
         NSLocalNetworkUsageDescription:
