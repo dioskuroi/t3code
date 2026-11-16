@@ -9767,5 +9767,9 @@
   "Zoom In": "放大",
   "Zoom out": "缩小",
   "Zoom Out": "缩小",
-  "Zygote": "Zygote"
+  "Zygote": "Zygote",
+  "{time}, {date}": "{date} {time}",
+  "just now": "刚刚",
+  "yesterday at {time}": "昨天 {time}",
+  "tomorrow at {time}": "明天 {time}"
 }
