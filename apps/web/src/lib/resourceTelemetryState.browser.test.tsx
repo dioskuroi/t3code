@@ -193,7 +193,7 @@ describe("resource monitor retry", () => {
 
     await expect.element(screen.getByText(startError, { exact: true })).not.toBeInTheDocument();
     await expect.element(screen.getByText(historyError, { exact: true })).not.toBeInTheDocument();
-    await expect.element(screen.getByText("原生 healthy", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("原生 正常", { exact: true })).toBeVisible();
     await expect
       .element(screen.getByRole("button", { name: "重试监视器" }))
       .not.toBeInTheDocument();

@@ -139,7 +139,7 @@ function ScopeMenu({
   const Trigger = options.length > 6 ? ComboboxTrigger : MenuTrigger;
   const trigger = (
     <Trigger
-      aria-label={`${ariaLabel}: ${label}`}
+      aria-label={`${ariaLabel}：${label}`}
       render={<Button variant="outline" size="sm" />}
       className="min-w-0 max-w-72"
     >

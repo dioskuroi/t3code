@@ -78,6 +78,15 @@ const THERMAL_STATE_LABELS: Record<string, string> = {
   unknown: "未知",
 };
 
+// 展示层映射；判等与上报仍用原始枚举值。
+const RESOURCE_STATUS_TEXT: Record<string, string> = {
+  starting: "启动中",
+  healthy: "正常",
+  degraded: "降级",
+  unavailable: "不可用",
+  stopped: "已停止",
+};
+
 function formatRate(value: number): string {
   return `${formatBytes(value)}/s`;
 }
@@ -205,7 +214,7 @@ function SourceStatusBadge({
           tone === "danger" && "bg-destructive",
         )}
       />
-      {label} {presentation?.label ?? status}
+      {label} {presentation?.label ?? RESOURCE_STATUS_TEXT[status]}
     </span>
   );
 }

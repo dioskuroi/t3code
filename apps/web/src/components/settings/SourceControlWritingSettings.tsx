@@ -483,7 +483,7 @@ export function SourceControlWritingSettingsSection() {
             templatesMixed ||
             style.followChangeRequestTemplates !== defaults.followChangeRequestTemplates ? (
               <SettingResetButton
-                label="change request templates"
+                label={tr("change request templates")}
                 onClick={() =>
                   updateSettings({
                     sourceControlWritingStyle: {

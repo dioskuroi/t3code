@@ -1,5 +1,4 @@
 import type { DesktopBridge, DesktopUpdateState } from "@t3tools/contracts";
-import { tr } from "@t3tools/shared/i18n";
 
 const FALLBACK_TRIAGE_COMMAND = "npx t3 triage";
 const DOWNLOAD_URL = "https://t3.codes/download";
@@ -8,9 +7,11 @@ const LAST_FAILURE_KEY = "t3code:boot-failed-at";
 const REPEAT_FAILURE_MS = 5 * 60_000;
 const MAX_CAUSES = 3;
 const MAX_ERROR_CHARS = 6_000;
-const COPY_BLOCKED = tr("Copy was blocked. The text is selected so you can copy it manually.");
-const UPDATE_DOWNLOAD_FAILED = tr("The update download failed. Try Download update again.");
-const UPDATE_INSTALL_FAILED = tr("The update install failed. Try Restart to update again.");
+// 引导期错误文案直写中文：此模块在 vite 别名解析可用前就要能独立运行，
+// 不能依赖 @t3tools/shared/i18n（bundledDev 测试以 configFile:false 复现该约束）。
+const COPY_BLOCKED = "复制被阻止。文本已选中，你可以手动复制。";
+const UPDATE_DOWNLOAD_FAILED = "更新下载失败。请重试“下载更新”。";
+const UPDATE_INSTALL_FAILED = "更新安装失败。请重试“重启以更新”。";
 
 /** The Windows launcher is a `.cmd` run from PowerShell, which needs `&` to run a quoted path. */
 function launcherCommand(launcherPath: string) {

@@ -977,19 +977,28 @@ describe("MessagesTimeline attachments", () => {
       const audio = screen.container.querySelector("audio")!;
       const duration = vi.spyOn(audio, "duration", "get").mockReturnValue(Infinity);
       const play = vi.spyOn(audio, "play").mockResolvedValue();
-      expect(screen.button("Loading recording.webm")).toHaveProperty("disabled", true);
+      expect(screen.button(tr("Loading {name}", { name: "recording.webm" }))).toHaveProperty(
+        "disabled",
+        true,
+      );
       await act(() => audio.dispatchEvent(new Event(readyEvent)));
-      expect(screen.button("Play recording.webm")).toHaveProperty("disabled", false);
+      expect(screen.button(tr("Play {name}", { name: "recording.webm" }))).toHaveProperty(
+        "disabled",
+        false,
+      );
       expect(screen.text()).toContain("0:00");
       expect(screen.text()).not.toContain("/");
-      await click(screen.button("Play recording.webm"));
+      await click(screen.button(tr("Play {name}", { name: "recording.webm" })));
       expect(play).toHaveBeenCalledOnce();
       await act(() => {
         vi.spyOn(audio, "currentTime", "get").mockReturnValue(3);
         audio.dispatchEvent(new Event("play"));
         audio.dispatchEvent(new Event("timeupdate"));
       });
-      expect(screen.button("Pause recording.webm")).toHaveProperty("disabled", false);
+      expect(screen.button(tr("Pause {name}", { name: "recording.webm" }))).toHaveProperty(
+        "disabled",
+        false,
+      );
       expect(screen.text()).toContain("0:03");
       const progress = screen.container.querySelector<HTMLElement>("span[aria-hidden]")!;
       expect(progress.style.width).toBe("0%");
@@ -1009,10 +1018,17 @@ describe("MessagesTimeline attachments", () => {
       });
       expect(screen.text()).not.toContain("/");
       expect(progress.style.width).toBe("0%");
-      expect(screen.button("Pause recording.webm")).toHaveProperty("disabled", false);
+      expect(screen.button(tr("Pause {name}", { name: "recording.webm" }))).toHaveProperty(
+        "disabled",
+        false,
+      );
       await screen.rerender(preview(true));
-      expect(screen.text()).toContain("Unavailable");
-      await click(screen.button("Audio unavailable. Open recording.webm"));
+      expect(screen.text()).toContain(tr("Unavailable"));
+      await click(
+        screen.button(
+          `${tr("Audio unavailable.")} ${tr("Open {name}", { name: "recording.webm" })}`,
+        ),
+      );
       expect(onOpen).toHaveBeenCalledOnce();
     },
   );

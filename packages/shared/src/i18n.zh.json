@@ -2037,7 +2037,6 @@
   "Copy URL": "复制 URL",
   "Copy version": "复制版本",
   "Copy version {APP_VERSION}": "复制版本 {APP_VERSION}",
-  "Copy was blocked. The text is selected so you can copy it manually.": "复制被阻止。文本已选中，你可以手动复制。",
   "Copy webhook URL": "复制 webhook URL",
   "Copying context…": "正在复制上下文…",
   "Copying files": "正在复制文件",
@@ -8280,8 +8279,6 @@
   "The tool this host is read through is not installed or set up.": "读取此主机所用的工具未安装或未配置。",
   "The unresolved review threads are attached to this message, each on the line it was written against.": "未解决的评审 Thread 已附在这条消息上，各自挂在其针对的那一行。",
   "The unsent message could not be restored.": "无法恢复未发送的消息。",
-  "The update download failed. Try Download update again.": "更新下载失败。请重试“下载更新”。",
-  "The update install failed. Try Restart to update again.": "更新安装失败。请重试“重启以更新”。",
   "The update track did not change.": "更新通道未更改。",
   "The upload was refused.": "上传被拒绝。",
   "The URL appears after you save.": "URL 会在保存后显示。",
@@ -9787,5 +9784,6 @@
   "Stop Speaking": "停止朗读",
   "Minimize": "最小化",
   "Bring All to Front": "前置全部窗口",
-  "Toggle Full Screen": "切换全屏幕"
+  "Toggle Full Screen": "切换全屏幕",
+  "change request templates": "变更请求模板"
 }
