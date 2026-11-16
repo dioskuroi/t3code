@@ -1,4 +1,5 @@
 import { ChevronRightIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 import { type ReactNode, useState } from "react";
 
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "../ui/collapsible";
@@ -30,7 +31,7 @@ export function AdvancedSettings({
           aria-hidden
           className="size-3.5 shrink-0 transition-transform duration-150 group-data-panel-open:rotate-90 motion-reduce:transition-none"
         />
-        Advanced
+        {tr("Advanced")}
       </CollapsibleTrigger>
       <CollapsiblePanel>
         <div className="border-t border-border/50 [&>*+*]:border-t [&>*+*]:border-border/50">

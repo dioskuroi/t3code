@@ -1,4 +1,5 @@
 import type { CommandOutputView } from "@t3tools/client-runtime/state/command-output";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentId, ThreadId, TurnItemId } from "@t3tools/contracts";
 import { TERMINAL_PALETTES, terminalOutputSpans } from "@t3tools/shared/terminalOutput";
 import { useLayoutEffect, useRef } from "react";
@@ -47,16 +48,24 @@ export function CommandOutputPanel(props: {
   });
 
   if (text.length === 0) {
-    if (error) return <div className="text-destructive">Couldn&apos;t load output: {error}</div>;
-    if (data === null) return <div className="text-muted-foreground italic">Loading output…</div>;
-    return data.running ? null : <div className="text-muted-foreground italic">No output.</div>;
+    if (error)
+      return (
+        <div className="text-destructive">
+          {tr("Couldn't load output:")} {error}
+        </div>
+      );
+    if (data === null)
+      return <div className="text-muted-foreground italic">{tr("Loading output\u2026")}</div>;
+    return data.running ? null : (
+      <div className="text-muted-foreground italic">{tr("No output.")}</div>
+    );
   }
   // Parse after all hooks to preserve the text/theme compiler cache.
   const spans = terminalOutputSpans(text, TERMINAL_PALETTES[resolvedTheme]);
   return (
     <div>
       {data?.output.truncated ? (
-        <div className="text-muted-foreground italic">Earlier output not shown</div>
+        <div className="text-muted-foreground italic">{tr("Earlier output not shown")}</div>
       ) : null}
       <div
         ref={scrollRef}

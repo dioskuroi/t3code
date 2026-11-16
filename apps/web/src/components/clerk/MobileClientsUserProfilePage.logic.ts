@@ -1,4 +1,5 @@
 import type { RelayClientDeviceRecord } from "@t3tools/contracts/relay";
+import { tr } from "@t3tools/shared/i18n";
 
 const mobileClientUpdatedAtFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
@@ -6,10 +7,10 @@ const mobileClientUpdatedAtFormatter = new Intl.DateTimeFormat(undefined, {
 });
 
 const NOTIFICATION_PREFERENCES = [
-  ["notifyOnApproval", "approvals"],
-  ["notifyOnInput", "input requests"],
-  ["notifyOnCompletion", "completions"],
-  ["notifyOnFailure", "failures"],
+  ["notifyOnApproval", tr("approvals")],
+  ["notifyOnInput", tr("input requests")],
+  ["notifyOnCompletion", tr("completions")],
+  ["notifyOnFailure", tr("failures")],
 ] as const satisfies ReadonlyArray<
   readonly [keyof RelayClientDeviceRecord["notifications"], string]
 >;
@@ -17,29 +18,29 @@ const NOTIFICATION_PREFERENCES = [
 export function mobileClientPlatformLabel(device: RelayClientDeviceRecord): string {
   const platform =
     device.platform === "android"
-      ? "Android"
+      ? tr("Android")
       : device.iosMajorVersion === null
-        ? "iOS"
-        : `iOS ${device.iosMajorVersion}`;
-  return `${platform}${device.appVersion ? ` · T3 Code ${device.appVersion}` : ""}`;
+        ? tr("iOS")
+        : tr("iOS {version}", { version: device.iosMajorVersion });
+  return `${platform}${device.appVersion ? tr(" · T3 Code {version}", { version: device.appVersion }) : ""}`;
 }
 
 export function mobileClientNotificationDetail(device: RelayClientDeviceRecord): string {
   if (!device.notifications.enabled) {
-    return "Push notifications are disabled on this device.";
+    return tr("Push notifications are disabled on this device.");
   }
 
   const enabledPreferences = NOTIFICATION_PREFERENCES.flatMap(([preference, label]) =>
     device.notifications[preference] ? [label] : [],
   );
   return enabledPreferences.length > 0
-    ? `Alerts enabled for ${enabledPreferences.join(", ")}.`
-    : "Push notifications are enabled, but no alert types are selected.";
+    ? tr("Alerts enabled for {types}.", { types: enabledPreferences.join("、") })
+    : tr("Push notifications are enabled, but no alert types are selected.");
 }
 
 export function mobileClientUpdatedAtLabel(updatedAt: string): string {
   const date = new Date(updatedAt);
   return Number.isNaN(date.getTime())
-    ? "Update time unavailable"
-    : `Updated ${mobileClientUpdatedAtFormatter.format(date)}`;
+    ? tr("Update time unavailable")
+    : tr("Updated {time}", { time: mobileClientUpdatedAtFormatter.format(date) });
 }

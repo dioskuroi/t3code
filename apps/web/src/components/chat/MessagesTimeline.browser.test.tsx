@@ -28,6 +28,7 @@ import {
 import * as DateTime from "effect/DateTime";
 import { Atom } from "effect/reactivity";
 import { describe, expect, it, onTestFinished, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 import "~/index.css";
 
@@ -237,7 +238,9 @@ describe("MessagesTimeline work rows", () => {
       />,
       { container },
     );
-    const heading = screen.getByRole("button", { name: /^Worked for/ });
+    const heading = screen.getByRole("button", {
+      name: new RegExp("^" + tr("Worked for {duration}", { duration: "8s" }).replace(" 8s", "")),
+    });
     // LegendList keeps rows click-through until its initial scroll settles on animation
     // frames, which the fake clock below would freeze.
     await expect.element(heading).toHaveStyle({ pointerEvents: "auto" });
@@ -327,7 +330,7 @@ describe("MessagesTimeline work rows", () => {
         expect(screen.text()).toContain("Final implementation report");
         expect(screen.text()).toContain("Follow-up explanation");
         expect(screen.text()).not.toContain("Old interrupted progress");
-        await click(screen.buttons("Open Simplify delivery")[0]!);
+        await click(screen.buttons(tr("Open {title}", { title: "Simplify delivery" }))[0]!);
         expect(onOpenThread).toHaveBeenCalledWith(childThreadId);
       } else if (source === "legacy") {
         expect(screen.text()).toContain("Old interrupted progress");
@@ -615,7 +618,7 @@ describe("MessagesTimeline usage limit notice", () => {
   it("labels the retry time with the viewer's timezone", async () => {
     await using screen = await renderTimeline(usageLimitEntries("2026-03-17T19:30:00.000Z"));
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    expect(screen.text()).toMatch(/Usage limit reached\. Retry after .+\./);
+    expect(screen.text()).toMatch(/已达用量限额。.+后重试。/);
     expect(screen.text()).toContain(`(${timeZone})`);
   });
 
@@ -749,7 +752,7 @@ describe("MessagesTimeline automation prompts", () => {
     await using screen = await renderTimeline([
       message(AUTOMATION_PROMPT, { scheduledTaskId: TASK_ID }),
     ]);
-    const row = screen.button(/^Automation/);
+    const row = screen.button(/^自动化/);
     expect(row.textContent).toContain("Nightly triage");
     expect(row.getAttribute("aria-expanded")).toBe("false");
     expect(screen.text()).not.toContain("close duplicates");
@@ -757,10 +760,10 @@ describe("MessagesTimeline automation prompts", () => {
     await click(row);
     expect(screen.text()).toContain("Label every new issue and close duplicates.");
     const link = [...screen.container.querySelectorAll("a")].find(
-      (anchor) => anchor.textContent === "Open automation",
+      (anchor) => anchor.textContent === "打开自动化",
     );
     expect(link?.getAttribute("href")).toContain(`taskId=${TASK_ID}`);
-    expect(screen.buttons(/copy/i)).not.toHaveLength(0);
+    expect(screen.buttons(/复制/)).not.toHaveLength(0);
   });
 
   it("falls back to the prompt's first line without a task title", async () => {
@@ -768,13 +771,13 @@ describe("MessagesTimeline automation prompts", () => {
     await using screen = await renderTimeline([
       message(AUTOMATION_PROMPT, { scheduledTaskId: TASK_ID }),
     ]);
-    expect(screen.button(/^Automation/).textContent).toContain("Triage the inbox");
+    expect(screen.button(/^自动化/).textContent).toContain("Triage the inbox");
   });
 
   it("leaves ordinary user messages as full bubbles", async () => {
     setup();
     await using screen = await renderTimeline([message(AUTOMATION_PROMPT)]);
-    expect(screen.buttons(/^Automation/)).toHaveLength(0);
+    expect(screen.buttons(/^自动化/)).toHaveLength(0);
     expect(screen.text()).toContain("Label every new issue and close duplicates.");
   });
 
@@ -787,7 +790,7 @@ describe("MessagesTimeline automation prompts", () => {
       activeFindMatch: { entryId: "entry-message-1", runId: null, occurrence: 0 },
     });
     await vi.waitFor(() =>
-      expect(screen.button(/^Automation/).getAttribute("aria-expanded")).toBe("true"),
+      expect(screen.button(/^自动化/).getAttribute("aria-expanded")).toBe("true"),
     );
     const { range } = collectThreadFindRanges(screen.container, "duplicates")[0]!;
     const details = screen.container.querySelector("[data-thread-find-text]")!;
@@ -827,9 +830,9 @@ describe("MessagesTimeline automation prompts", () => {
         ],
       },
     );
-    expect(screen.buttons("Edit from here")).toHaveLength(0);
-    await click(screen.button(/^Automation/));
-    expect(screen.buttons("Edit from here")).toHaveLength(1);
+    expect(screen.buttons("从此处编辑")).toHaveLength(0);
+    await click(screen.button(/^自动化/));
+    expect(screen.buttons("从此处编辑")).toHaveLength(1);
   });
 });
 
@@ -848,11 +851,11 @@ describe("MessagesTimeline agent messages", () => {
     expect(row.textContent).toContain("Review finished");
     expect(row.getAttribute("aria-expanded")).toBe("false");
     expect(screen.text()).not.toContain("drops the index");
-    expect(screen.buttons("Open thread")).toHaveLength(0);
+    expect(screen.buttons("打开 Thread")).toHaveLength(0);
 
     await click(row);
     expect(screen.text()).toContain("The migration drops the index before backfilling it.");
-    await click(screen.button("Open thread"));
+    await click(screen.button("打开 Thread"));
     expect(onOpenThread).toHaveBeenCalledWith(SENDER_THREAD_ID);
 
     await click(screen.button(/^Agent/));
@@ -914,7 +917,7 @@ describe("MessagesTimeline attachments", () => {
         sizeBytes: attachment.sizeBytes,
       };
       await using screen = await renderTimeline([message("", { attachments: [attachment] })]);
-      expect(screen.buttons("Copy message")).toHaveLength(0);
+      expect(screen.buttons(tr("Copy message"))).toHaveLength(0);
       await screen.rerender(
         <MessagesTimeline
           {...baseProps()}
@@ -926,7 +929,7 @@ describe("MessagesTimeline attachments", () => {
           ]}
         />,
       );
-      expect(screen.buttons("Copy message")).toHaveLength(0);
+      expect(screen.buttons(tr("Copy message"))).toHaveLength(0);
       await screen.rerender(
         <MessagesTimeline
           {...baseProps()}
@@ -949,7 +952,7 @@ describe("MessagesTimeline attachments", () => {
         />,
       );
       using write = vi.spyOn(navigator.clipboard, "write").mockResolvedValue();
-      await click(screen.button("Copy message"));
+      await click(screen.button(tr("Copy message")));
       await vi.waitFor(() => expect(write).toHaveBeenCalledOnce());
       const [item] = write.mock.calls[0]![0];
       const text = await (await item!.getType("text/plain")).text();
@@ -978,19 +981,28 @@ describe("MessagesTimeline attachments", () => {
       const audio = screen.container.querySelector("audio")!;
       const duration = vi.spyOn(audio, "duration", "get").mockReturnValue(Infinity);
       const play = vi.spyOn(audio, "play").mockResolvedValue();
-      expect(screen.button("Loading recording.webm")).toHaveProperty("disabled", true);
+      expect(screen.button(tr("Loading {name}", { name: "recording.webm" }))).toHaveProperty(
+        "disabled",
+        true,
+      );
       await act(() => audio.dispatchEvent(new Event(readyEvent)));
-      expect(screen.button("Play recording.webm")).toHaveProperty("disabled", false);
+      expect(screen.button(tr("Play {name}", { name: "recording.webm" }))).toHaveProperty(
+        "disabled",
+        false,
+      );
       expect(screen.text()).toContain("0:00");
       expect(screen.text()).not.toContain("/");
-      await click(screen.button("Play recording.webm"));
+      await click(screen.button(tr("Play {name}", { name: "recording.webm" })));
       expect(play).toHaveBeenCalledOnce();
       await act(() => {
         vi.spyOn(audio, "currentTime", "get").mockReturnValue(3);
         audio.dispatchEvent(new Event("play"));
         audio.dispatchEvent(new Event("timeupdate"));
       });
-      expect(screen.button("Pause recording.webm")).toHaveProperty("disabled", false);
+      expect(screen.button(tr("Pause {name}", { name: "recording.webm" }))).toHaveProperty(
+        "disabled",
+        false,
+      );
       expect(screen.text()).toContain("0:03");
       const progress = screen.container.querySelector<HTMLElement>("span[aria-hidden]")!;
       expect(progress.style.width).toBe("0%");
@@ -1010,10 +1022,17 @@ describe("MessagesTimeline attachments", () => {
       });
       expect(screen.text()).not.toContain("/");
       expect(progress.style.width).toBe("0%");
-      expect(screen.button("Pause recording.webm")).toHaveProperty("disabled", false);
+      expect(screen.button(tr("Pause {name}", { name: "recording.webm" }))).toHaveProperty(
+        "disabled",
+        false,
+      );
       await screen.rerender(preview(true));
-      expect(screen.text()).toContain("Unavailable");
-      await click(screen.button("Audio unavailable. Open recording.webm"));
+      expect(screen.text()).toContain(tr("Unavailable"));
+      await click(
+        screen.button(
+          `${tr("Audio unavailable.")} ${tr("Open {name}", { name: "recording.webm" })}`,
+        ),
+      );
       expect(onOpen).toHaveBeenCalledOnce();
     },
   );
@@ -1371,7 +1390,7 @@ describe("ChangedFilesCard", () => {
         screen.container.querySelector<HTMLButtonElement>(
           toggle === "folder"
             ? '[data-changed-file-row="src"] button'
-            : 'button[aria-label$="all folders"]',
+            : `button[aria-label$=${tr("Expand all folders")}], button[aria-label$=${tr("Collapse all folders")}]`,
         )!;
       await act(() => {
         flushSync(() => button().click());
@@ -1459,15 +1478,15 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
     />
   );
   await using screen = await renderElement(ui());
-  await expect.element(screen.getByRole("group", { name: "Command approval" })).toBeVisible();
+  await expect.element(screen.getByRole("group", { name: tr("Command approval") })).toBeVisible();
   await expect
-    .element(screen.getByRole("group", { name: "App permission approval" }))
+    .element(screen.getByRole("group", { name: tr("App permission approval") }))
     .toBeVisible();
   await expect.element(screen.getByText(approvals[0]!.detail!, { exact: true })).toBeVisible();
   await expect.element(screen.getByText("Needs permission to run the command")).toBeVisible();
   await vi.waitFor(() => {
     expect(
-      getComputedStyle(screen.getByLabelText("Command", { exact: true }).element()).userSelect,
+      getComputedStyle(screen.getByLabelText(tr("Command"), { exact: true }).element()).userSelect,
     ).toBe("text");
     expect(
       getComputedStyle(screen.getByText("Needs permission to run the command").element())
@@ -1478,15 +1497,17 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
   await click(screen.button("Why am I being asked this?"));
   await expect.element(page.getByText(/an ask rule in the agent's own settings/)).toBeVisible();
   await click(screen.button("Why am I being asked this?"));
-  await click(screen.buttons("More approval options")[1]!);
+  await click(screen.buttons(tr("More approval options"))[1]!);
   await expect.element(page.getByRole("menuitem", { name: "Always allow Safari" })).toBeVisible();
   await page.getByRole("menuitem", { name: "Always allow Safari" }).click();
   expect(onRespondToApproval).toHaveBeenLastCalledWith(appRequest, "acceptAlways");
-  await click(screen.buttons("More approval options")[0]!);
-  await expect.element(page.getByRole("menuitem", { name: "Cancel", exact: true })).toBeVisible();
-  await page.getByRole("menuitem", { name: "Always allow this session" }).click();
+  await click(screen.buttons(tr("More approval options"))[0]!);
+  await expect
+    .element(page.getByRole("menuitem", { name: tr("Cancel"), exact: true }))
+    .toBeVisible();
+  await page.getByRole("menuitem", { name: tr("Always allow this session") }).click();
   expect(onRespondToApproval).toHaveBeenLastCalledWith(commandRequest, "acceptForSession");
-  await click(screen.button("Decline"));
+  await click(screen.button(tr("Decline")));
   expect(onRespondToApproval).toHaveBeenLastCalledWith(commandRequest, "decline");
   await click(screen.button("Allow once"));
   expect(onRespondToApproval).toHaveBeenLastCalledWith(appRequest, "accept");
@@ -1495,19 +1516,19 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
       ui({ timelineEntries, heldApprovalRequestIds: new Set([commandRequest]) }),
     );
     await expect
-      .element(screen.getByRole("group", { name: "Command approval" }))
+      .element(screen.getByRole("group", { name: tr("Command approval") }))
       .not.toBeInTheDocument();
-    await vi.waitFor(() => expect(screen.buttons("Approve")).toHaveLength(0));
+    await vi.waitFor(() => expect(screen.buttons(tr("Approve"))).toHaveLength(0));
     await expect
       .element(screen.getByRole("button", { name: "Allow once", exact: true }))
       .toBeVisible();
     await screen.rerender(ui({ timelineEntries }));
-    await expect.element(screen.getByRole("group", { name: "Command approval" })).toBeVisible();
-    await vi.waitFor(() => expect(screen.buttons("Approve")).toHaveLength(1));
+    await expect.element(screen.getByRole("group", { name: tr("Command approval") })).toBeVisible();
+    await vi.waitFor(() => expect(screen.buttons(tr("Approve"))).toHaveLength(1));
   }
   await screen.rerender(ui({ timelineEntries: [], isWorking: false }));
-  await expect.element(screen.getByRole("group", { name: "Command approval" })).toBeVisible();
-  await click(screen.button("Approve"));
+  await expect.element(screen.getByRole("group", { name: tr("Command approval") })).toBeVisible();
+  await click(screen.button(tr("Approve")));
   expect(onRespondToApproval).toHaveBeenLastCalledWith(commandRequest, "accept");
   await click(screen.button("Deny"));
   expect(onRespondToApproval).toHaveBeenLastCalledWith(appRequest, "decline");
@@ -1519,17 +1540,23 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
     }),
   );
   await expect
-    .element(screen.getByLabelText("Command", { exact: true }))
-    .toHaveTextContent("Command approval");
+    .element(screen.getByLabelText(tr("Command"), { exact: true }))
+    .toHaveTextContent(tr("Command approval"));
   await screen.rerender(ui({ canOperateThread: false }));
-  await expect.element(screen.getByRole("button", { name: "Approve", exact: true })).toBeDisabled();
+  await expect
+    .element(screen.getByRole("button", { name: tr("Approve"), exact: true }))
+    .toBeDisabled();
   await vi.waitFor(() =>
     expect(
-      screen.buttons("More approval options").every((button) => button.hasAttribute("disabled")),
+      screen
+        .buttons(tr("More approval options"))
+        .every((button) => button.hasAttribute("disabled")),
     ).toBe(true),
   );
   await screen.rerender(ui({ respondingRequestIds: [commandRequest] }));
-  await expect.element(screen.getByRole("button", { name: "Approve", exact: true })).toBeDisabled();
+  await expect
+    .element(screen.getByRole("button", { name: tr("Approve"), exact: true }))
+    .toBeDisabled();
   await expect
     .element(screen.getByRole("button", { name: "Allow once", exact: true }))
     .toBeEnabled();
@@ -1537,14 +1564,16 @@ it("keeps concurrent approvals actionable outside collapsed work and restores se
     ui({ pendingApprovals: [{ ...approvals[0]!, responseCapability: "not_resumable" }] }),
   );
   await expect
-    .element(screen.getByText("Provider process is gone. Interrupt or restart the run to respond."))
+    .element(
+      screen.getByText(tr("Provider process is gone. Interrupt or restart the run to respond.")),
+    )
     .toBeVisible();
-  await vi.waitFor(() => expect(screen.buttons("Approve")).toHaveLength(0));
+  await vi.waitFor(() => expect(screen.buttons(tr("Approve"))).toHaveLength(0));
   await screen.rerender(
     ui({ pendingApprovals: [], timelineEntries: entries(true), isWorking: false }),
   );
   await expect
-    .element(screen.getByRole("group", { name: "Command approval" }))
+    .element(screen.getByRole("group", { name: tr("Command approval") }))
     .not.toBeInTheDocument();
   await vi.waitFor(() => expect(screen.text()).not.toContain("Waiting for approval"));
   await screen.getByRole("button", { expanded: false }).click();

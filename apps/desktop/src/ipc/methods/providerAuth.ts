@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 import * as Option from "effect/Option";
 import {
@@ -27,8 +28,9 @@ export const receiveProviderAuthCallback = DesktopIpc.makeIpcMethod({
         receiveCodexAuthCallback(authorizationUrl, (url) => runPromise(shell.openExternal(url))),
       catch: () =>
         new CodexAuthCallbackError({
-          detail:
+          detail: tr(
             "Could not receive ChatGPT sign-in on this computer. Try again or paste the redirect URL.",
+          ),
         }),
     });
     const window = yield* windows.currentMainOrFirst;
@@ -44,6 +46,6 @@ export const cancelProviderAuthCallback = DesktopIpc.makeIpcMethod({
   handler: (authorizationUrl) =>
     Effect.try({
       try: () => cancelCodexAuthCallback(authorizationUrl),
-      catch: () => new CodexAuthCallbackError({ detail: "Invalid ChatGPT sign-in request." }),
+      catch: () => new CodexAuthCallbackError({ detail: tr("Invalid ChatGPT sign-in request.") }),
     }),
 });

@@ -125,6 +125,7 @@ vi.mock("./vcs", () => ({
 }));
 
 import { useSelectedThreadGitActions } from "./use-selected-thread-git-actions";
+import { tr } from "@t3tools/shared/i18n";
 
 describe("thread Git mutation permissions", () => {
   beforeEach(() => {
@@ -300,7 +301,7 @@ describe("automatic feature branch refs", () => {
     );
     expect(await useSelectedThreadGitActions().refreshSelectedThreadBranches()).toBeNull();
     expect(state.results).toEqual([
-      { type: "error", title: "Git action failed", description: "Cannot list refs" },
+      { type: "error", title: tr("Git action failed"), description: "Cannot list refs" },
     ]);
   });
 });

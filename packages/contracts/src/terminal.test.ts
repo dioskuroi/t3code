@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -32,7 +33,9 @@ describe("TerminalProviderEnvironmentError", () => {
       cause,
     });
     expect(decoded.message).toBe(
-      "Could not prepare the terminal environment for provider instance: codex_work",
+      tr("Could not prepare the terminal environment for provider instance: {providerInstanceId}", {
+        providerInstanceId: "codex_work",
+      }),
     );
     expect(decoded.message).not.toContain("secret backend unavailable");
   });

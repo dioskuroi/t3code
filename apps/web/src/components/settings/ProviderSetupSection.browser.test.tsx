@@ -193,9 +193,9 @@ describe("Antigravity setup", () => {
     setup.startInstall.mockReturnValueOnce(command);
     await using screen = await renderSetup({ provider: { ...provider, installed: false } });
 
-    await screen.click("Install Antigravity");
+    await screen.click("安装 Antigravity");
     await expect
-      .element(screen.getByRole("status").filter({ hasText: "Starting installation." }))
+      .element(screen.getByRole("status").filter({ hasText: "正在开始安装" }))
       .toBeVisible();
 
     setup.installation = {
@@ -206,13 +206,11 @@ describe("Antigravity setup", () => {
       totalBytes: 2_000_000,
     };
     await publish();
-    await expect
-      .element(screen.getByRole("button", { name: "Cancel installation" }))
-      .toBeDisabled();
+    await expect.element(screen.getByRole("button", { name: "取消安装" })).toBeDisabled();
     await act(async () => resolveStart());
-    await expect.element(screen.getByRole("button", { name: "Cancel installation" })).toBeEnabled();
+    await expect.element(screen.getByRole("button", { name: "取消安装" })).toBeEnabled();
     await expect
-      .element(screen.getByRole("status").filter({ hasText: "Downloading 1.0 MB of 2.0 MB." }))
+      .element(screen.getByRole("status").filter({ hasText: "正在下载 1.0 MB，共 2.0 MB。" }))
       .toBeVisible();
   });
 
@@ -221,25 +219,25 @@ describe("Antigravity setup", () => {
     const callbackUrl = "http://127.0.0.1:5555/?state=test-only&code=test-only";
     await using screen = await renderSetup();
     await userEvent.fill(screen.callbackInput(), callbackUrl);
-    await screen.click("Continue");
+    await screen.click("继续");
 
     expect(setup.completeAuth).toHaveBeenCalledWith({
       environmentId,
       input: { instanceId, flowId: "flow-1", callbackUrl },
     });
-    expect(screen.occurrences("Signed in.")).toBe(0);
+    expect(screen.occurrences("已登录。")).toBe(0);
     expect(screen.callbackInput().value).toBe("");
 
     setup.auth = authState({ phase: "verifying", authorizationUrl: null });
     await publish();
-    expect(screen.occurrences("Signed in.")).toBe(0);
+    expect(screen.occurrences("已登录。")).toBe(0);
     setup.auth = authState({ phase: "succeeded", authorizationUrl: null });
     await screen.rerender(
       section({
         provider: { ...provider, status: "ready", auth: { status: "authenticated" } },
       }),
     );
-    expect(screen.occurrences("Signed in.")).toBe(1);
+    expect(screen.occurrences("已登录。")).toBe(1);
   });
 
   it("does not send a callback left over from a replaced sign-in flow", async () => {
@@ -278,7 +276,7 @@ describe("Antigravity setup", () => {
       provider: { ...provider, installed: false },
       binaryPath: "/missing/antigravity",
     });
-    expect(screen.button("Sign in")?.disabled).toBe(true);
+    expect(screen.button("登录")?.disabled).toBe(true);
     expect(setup.startAuth).not.toHaveBeenCalled();
   });
 });

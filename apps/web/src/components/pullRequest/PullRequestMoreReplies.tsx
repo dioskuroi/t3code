@@ -1,4 +1,5 @@
 import type { PullRequestReplyAvailability } from "./pullRequestDetail.logic";
+import { tr } from "@t3tools/shared/i18n";
 
 export function PullRequestMoreReplies({
   moreReplies,
@@ -11,7 +12,7 @@ export function PullRequestMoreReplies({
       <span>
         {moreReplies > 0
           ? `${moreReplies.toLocaleString()} more ${moreReplies === 1 ? "reply" : "replies"}`
-          : "More replies"}
+          : tr("More replies")}
       </span>
       {url ? (
         <a
@@ -20,7 +21,7 @@ export function PullRequestMoreReplies({
           rel="noopener noreferrer"
           className="hover:text-foreground hover:underline"
         >
-          View on host
+          {tr("View on host")}
         </a>
       ) : null}
     </div>

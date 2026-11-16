@@ -4,6 +4,7 @@ import type {
   SetThreadRuntimeModeInput,
   StartThreadTurnInput,
 } from "@t3tools/client-runtime/operations";
+import { tr } from "@t3tools/shared/i18n";
 import type { AtomCommandResult } from "@t3tools/client-runtime/state/runtime";
 import type {
   EnvironmentId,
@@ -69,7 +70,7 @@ export async function resumeThread<E>(input: {
         message: {
           messageId: input.messageId,
           role: "user",
-          text: "Continue where you left off.",
+          text: tr("Continue where you left off."),
           attachments: [],
         },
         runtimeMode,

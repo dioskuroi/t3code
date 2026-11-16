@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import * as Dialog from "../../components/ui/Dialog";
 import type { EnvironmentId, ThreadId, TurnItemId } from "@t3tools/contracts";
@@ -81,7 +82,7 @@ const confirm = (title: string, message: string, action: string) =>
       title,
       message,
       [
-        { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+        { text: tr("Cancel"), style: "cancel", onPress: () => resolve(false) },
         { text: action, onPress: () => resolve(true) },
       ],
       // Android dismisses earlier alerts when showing another; decline dismissed requests to release their slots.
@@ -326,9 +327,9 @@ export function ThreadMcpApp(props: {
         if (
           !info.value.readOnly &&
           !(await confirm(
-            `Allow ${app.server} to run ${info.value.title ?? name}?`,
+            tr("Allow {app} to run {title}?", { app: app.server, title: info.value.title ?? name }),
             JSON.stringify(args, null, 2),
-            "Allow",
+            tr("Allow"),
           ))
         ) {
           throw new McpAppHostRefusal({ message: "Declined by the user." });
@@ -491,7 +492,7 @@ export function ThreadMcpApp(props: {
         className="items-center justify-center rounded-lg border border-border"
       >
         <Text className="text-sm text-foreground-muted">
-          The {app.server} app is open full screen
+          {tr("The {app} app is open full screen", { app: app.server })}
         </Text>
       </View>
     );
@@ -503,10 +504,12 @@ export function ThreadMcpApp(props: {
         style={{ height, marginBottom: ROW_BOTTOM_MARGIN }}
         className="items-center justify-center gap-2 rounded-lg border border-border"
       >
-        <Text className="text-sm text-foreground-muted">The {app.server} app was closed</Text>
+        <Text className="text-sm text-foreground-muted">
+          {tr("The {app} app was closed", { app: app.server })}
+        </Text>
         <View className="items-center">
           <Button
-            label="Show app"
+            label={tr("Show app")}
             tone="secondary"
             onPress={() => {
               reopenDocument();
@@ -523,7 +526,7 @@ export function ThreadMcpApp(props: {
       {navigatedAway ? (
         <View className="flex-1 items-center justify-center">
           <Text className="text-sm text-foreground-muted">
-            The {app.server} app left its page and was stopped
+            {tr("The {app} app left its page and was stopped", { app: app.server })}
           </Text>
         </View>
       ) : uri !== null && !crashed ? (
@@ -568,7 +571,9 @@ export function ThreadMcpApp(props: {
         />
       ) : asset._tag === "Failure" || crashed ? (
         <View className="flex-1 items-center justify-center">
-          <Text className="text-sm text-foreground-muted">Unable to load the {app.server} app</Text>
+          <Text className="text-sm text-foreground-muted">
+            {tr("Unable to load the {app} app", { app: app.server })}
+          </Text>
         </View>
       ) : null}
       {uri !== null && !loaded && !crashed && !navigatedAway ? (

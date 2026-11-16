@@ -1,4 +1,5 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { AsyncResult } from "effect/reactivity";
 
 import { copyTextWithHaptic } from "../../../lib/copyTextWithHaptic";
@@ -39,13 +40,13 @@ export function DatabaseStorageNotice({
           icon="doc.on.doc"
           label={targets.find((target) => target.environmentId === environmentId)?.label ?? ""}
           description={status.compactCommand}
-          detail={`${(status.reclaimableBytes / 1024 ** 3).toFixed(1)} GiB`}
+          detail={tr("{size} GiB", { size: (status.reclaimableBytes / 1024 ** 3).toFixed(1) })}
           onPress={() => copyTextWithHaptic(status.compactCommand, { target: "command" })}
         />
       ))}
       <SettingsActionRow
         icon="xmark"
-        label="Dismiss"
+        label={tr("Dismiss")}
         onPress={() =>
           updatePreferences({
             transform: (current) => ({

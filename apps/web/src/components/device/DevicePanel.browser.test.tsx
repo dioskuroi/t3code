@@ -144,7 +144,7 @@ const devicePanel = (threadRef: ScopedThreadRef, surface = picker) => (
     onDismissSetup={() => undefined}
   />
 );
-const startButton = () => container.querySelector<HTMLButtonElement>('[aria-label="Start Phone"]');
+const startButton = () => container.querySelector<HTMLButtonElement>('[aria-label="启动 Phone"]');
 const click = (button: HTMLButtonElement | null) =>
   act(async () => {
     button!.click();

@@ -1,4 +1,5 @@
 import DOMPurify from "dompurify";
+import { tr } from "@t3tools/shared/i18n";
 import type { DiagramType, MathResolver } from "pele/lazy";
 import { use, useState } from "react";
 
@@ -247,7 +248,7 @@ export function MermaidDiagram({
       onRender: () => setRenderError(null),
       onError: (error) =>
         setRenderError(
-          error instanceof Error ? error.message : "The diagram could not be rendered.",
+          error instanceof Error ? error.message : tr("The diagram could not be rendered."),
         ),
     });
     return () => mounted.destroy();
@@ -256,7 +257,7 @@ export function MermaidDiagram({
   if (load.status === "failed") {
     return (
       <DiagramError
-        message="The diagram renderer failed to load."
+        message={tr("The diagram renderer failed to load.")}
         source={source}
         onRetry={() => {
           if (core.status === "failed") coreLoad = null;
@@ -276,7 +277,7 @@ export function MermaidDiagram({
       {renderError ? <DiagramError message={renderError} source={source} /> : null}
       <button
         type="button"
-        aria-label="Expand diagram"
+        aria-label={tr("Expand diagram")}
         hidden={renderError !== null}
         className="block w-full cursor-zoom-in rounded-md focus-visible:outline-2 focus-visible:outline-ring"
         onClick={(event) => {
@@ -302,10 +303,12 @@ function DiagramError({
   return (
     <div>
       <div className="flex items-center justify-between gap-2">
-        <p className="m-0 text-xs text-destructive">Unable to render diagram: {message}</p>
+        <p className="m-0 text-xs text-destructive">
+          {tr("Unable to render diagram:")} {message}
+        </p>
         {onRetry ? (
           <Button type="button" variant="ghost" size="xs" onClick={onRetry}>
-            Retry
+            {tr("Retry")}
           </Button>
         ) : null}
       </div>

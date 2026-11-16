@@ -1,5 +1,6 @@
 // @effect-diagnostics globalTimers:off -- Bound session-bus registration at a native callback boundary.
 import { Message, MessageType, NameFlag, RequestNameReply, sessionBus } from "dbus-next";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   NIRI_CAPTURE_INTERFACE as INTERFACE,
@@ -48,13 +49,13 @@ export async function startNiriCaptureShortcut(
       failure,
       new Promise<never>((_, reject) => {
         timer = setTimeout(
-          () => reject(new Error("Niri capture shortcut registration timed out.")),
+          () => reject(new Error(tr("Niri capture shortcut registration timed out."))),
           5_000,
         );
       }),
     ]);
     if (result !== RequestNameReply.PRIMARY_OWNER)
-      throw new Error("Another T3 Code instance already owns the capture shortcut.");
+      throw new Error(tr("Another T3 Code instance already owns the capture shortcut."));
     return close;
   } catch (error) {
     close();

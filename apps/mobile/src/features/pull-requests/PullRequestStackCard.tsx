@@ -26,7 +26,7 @@ export function PullRequestStackCard(props: {
     return (
       <PullRequestCardGroup>
         <PullRequestCardRow
-          title="Stack"
+          title={tr("Stack")}
           icon={PullRequestGlyph.stack}
           value={`${summary.position} of ${summary.size}`}
           last
@@ -38,10 +38,17 @@ export function PullRequestStackCard(props: {
   return (
     <PullRequestCardGroup>
       <PullRequestCardRow
-        title="Stack"
+        title={tr("Stack")}
         icon={PullRequestGlyph.stack}
-        value={`${position} of ${stack.layers.length}`}
-        accessibilityLabel={`Stack, ${position} of ${stack.layers.length}${props.state.isFresh ? "" : ", showing saved stack"}`}
+        value={tr("{position} of {total}", { position, total: stack.layers.length })}
+        accessibilityLabel={
+          props.state.isFresh
+            ? tr("Stack, {position} of {total}", { position, total: stack.layers.length })
+            : tr("Stack, {position} of {total}, showing saved stack", {
+                position,
+                total: stack.layers.length,
+              })
+        }
         expanded={expanded}
         onPress={() => setExpanded(!expanded)}
         last={!expanded}
@@ -60,8 +67,8 @@ export function PullRequestStackCard(props: {
                   title={layer.title ?? layer.headBranch}
                   icon={status.icon}
                   tint={status.tint}
-                  value={selected ? "Current" : status.label}
-                  detail={`#${layer.number} · ${index + 1} of ${stack.layers.length}`}
+                  value={selected ? tr("Current") : status.label}
+                  detail={`#${layer.number} · ${tr("{position} of {total}", { position: index + 1, total: stack.layers.length })}`}
                   onPress={
                     selected
                       ? undefined
@@ -79,7 +86,12 @@ export function PullRequestStackCard(props: {
             );
           })}
           <Text className="px-4 py-3 text-xs text-foreground-muted">
-            Base: {stack.base}. Open a layer to review it or merge the stack through that layer.
+            {stack.base
+              ? tr(
+                  "Base: {base}. Open a layer to review it or merge the stack through that layer.",
+                  { base: stack.base },
+                )
+              : tr("Base:")}
           </Text>
         </View>
       ) : null}

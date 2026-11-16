@@ -1,4 +1,5 @@
 import { Button, HStack, Picker, Popover, Spacer, Text, VStack } from "@expo/ui/swift-ui";
+import { tr } from "@t3tools/shared/i18n";
 import {
   accessibilityLabel,
   buttonBorderShape,
@@ -76,7 +77,7 @@ export function NumberField(props: NumberFieldProps) {
             </Picker>
             <HStack>
               <Button
-                label="Cancel"
+                label={tr("Cancel")}
                 systemImage="xmark"
                 onPress={() => setOpen(false)}
                 modifiers={[
@@ -88,7 +89,7 @@ export function NumberField(props: NumberFieldProps) {
               />
               <Spacer />
               <Button
-                label="Done"
+                label={tr("Done")}
                 systemImage="checkmark"
                 onPress={() => {
                   setOpen(false);

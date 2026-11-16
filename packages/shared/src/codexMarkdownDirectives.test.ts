@@ -8,6 +8,7 @@ import {
   renderCodexInlineDirectivesAsMarkdown,
   splitCodexArtifactTemplateMarkdown,
 } from "./codexMarkdownDirectives.ts";
+import { tr } from "./i18n.ts";
 import { parseMarkdownFileLink } from "./markdownLinks.ts";
 
 interface TestNode {
@@ -165,7 +166,7 @@ describe("directive copy adapter", () => {
         `Created ${FILE_CITATION}.\n\n${ARTIFACT_TEMPLATE}\n\n- ${FOLLOW_UP}`,
       ),
     ).toBe(
-      "Created [report.xlsx](<outputs/report.xlsx>).\n\nHello World (Document template)\n\n- Prepare print version",
+      `Created [report.xlsx](<outputs/report.xlsx>).\n\nHello World (${tr("Document template")})\n\n- Prepare print version`,
     );
   });
 });

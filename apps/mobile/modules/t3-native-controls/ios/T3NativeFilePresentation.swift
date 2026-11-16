@@ -343,7 +343,7 @@ final class T3NativeFilePresentation: NSObject, QLPreviewControllerDataSource,
       let stem = filename.deletingPathExtension
       var name = String(stem.prefix(60)).components(separatedBy: .controlCharacters).joined(separator: "_")
       while name.utf8.count > 200 { name.removeLast() }
-      let baseName = name.isEmpty ? "Preview" : name
+      let baseName = name.isEmpty ? "预览" : name
       let file = directory.appendingPathComponent(
         fileExtension.isEmpty ? baseName : "\(baseName).\(fileExtension)")
       try FileManager.default.moveItem(at: download, to: file)

@@ -5,6 +5,7 @@ import {
   ProviderInstanceId,
   type ServerProvider,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Cause from "effect/Cause";
 import { AsyncResult } from "effect/reactivity";
 
@@ -165,8 +166,8 @@ describe("provider update launch notification logic", () => {
     expect(view).toMatchObject({
       key: "loading:claudeAgent:running",
       tone: "loading",
-      title: "Updating Claude",
-      description: "Claude update in progress.",
+      title: tr("Updating {provider}", { provider: "Claude" }),
+      description: tr("{providers} update in progress.", { providers: "Claude" }),
     });
   });
 
@@ -204,7 +205,7 @@ describe("provider update launch notification logic", () => {
     expect(view).toMatchObject({
       key: "succeeded:claudeAgent:2026-04-23T10:01:00.000Z:Provider updated.",
       tone: "success",
-      title: "Claude updated: v1.1.0",
+      title: tr("{providerName} updated: {version}", { providerName: "Claude", version: "v1.1.0" }),
     });
   });
 
@@ -261,7 +262,7 @@ describe("provider update launch notification logic", () => {
     expect(successView).toMatchObject({
       key: "succeeded:codex:2026-04-23T10:01:00.000Z:Provider updated.",
       tone: "success",
-      title: "Codex updated: v1.2.0",
+      title: tr("{providerName} updated: {version}", { providerName: "Codex", version: "v1.2.0" }),
     });
 
     const failureView = getProviderUpdateSidebarPillView(providers, {
@@ -271,7 +272,10 @@ describe("provider update launch notification logic", () => {
     expect(failureView).toMatchObject({
       key: "failed:claudeAgent:2026-04-23T10:00:00.000Z:Update command exited with code 1.",
       tone: "error",
-      title: "Claude v1.1.0 update failed",
+      title: tr("{providerName} {version} update failed", {
+        providerName: "Claude",
+        version: "v1.1.0",
+      }),
     });
   });
 });
@@ -350,8 +354,17 @@ describe("getProviderUpdateRunToastView", () => {
 
     expect(view).toEqual({
       type: "error",
-      title: "2 of 3 provider updates failed",
-      description: "Mac Studio · Claude: npm exited with code 1.\nLaptop · Codex: WebSocket closed",
+      title: tr("{failedCount} of {totalCount} provider updates failed", {
+        failedCount: 2,
+        totalCount: 3,
+      }),
+      description:
+        tr("{label}: {message}", {
+          label: "Mac Studio · Claude",
+          message: "npm exited with code 1.",
+        }) +
+        "\n" +
+        tr("{label}: {message}", { label: "Laptop · Codex", message: "WebSocket closed" }),
     });
   });
 });

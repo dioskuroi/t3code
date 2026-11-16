@@ -1,4 +1,5 @@
 import * as NodeFS from "node:fs";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   createMobileThemeVariables,
@@ -27,7 +28,8 @@ export function readGeneratedMobileThemeVariables(themeName: string): MobileThem
   const variant = new RegExp(`@variant ${themeName} \\{([\\s\\S]*?)\\n    \\}`, "u").exec(
     stylesheet,
   )?.[1];
-  if (variant === undefined) throw new Error(`Missing generated ${themeName} theme.`);
+  if (variant === undefined)
+    throw new Error(tr("Missing generated {themeName} theme.", { themeName: themeName }));
 
   return Object.fromEntries(
     Array.from(variant.matchAll(/(--color-[a-z0-9-]+):\s*([^;]+);/gu), ([, name, value]) => [

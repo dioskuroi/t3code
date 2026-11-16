@@ -1,4 +1,5 @@
 import { sessionHasLegacyPermissions, type EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { AnyRouter } from "@tanstack/react-router";
 import * as Schema from "effect/Schema";
 import { Atom } from "effect/reactivity";
@@ -42,13 +43,14 @@ function showPermissionNotice(
     toastManager.close(id);
   };
   const id = toastManager.add({
-    title: `Permissions have changed for ${label}`,
-    description:
+    title: tr("Permissions have changed for {label}", { label: label }),
+    description: tr(
       "This connection still uses the old permissions, so some actions may no longer be available. Pair again using a new link with the permissions you need.",
+    ),
     timeout: 0,
     onClose: persistDismissal,
     actionProps: {
-      children: "Open Sharing & access",
+      children: tr("Open Sharing & access"),
       onClick: () => {
         dismiss();
         void router.navigate({ to: "/settings/access" });
@@ -56,7 +58,7 @@ function showPermissionNotice(
     },
     data: {
       actionLayout: "stacked-end",
-      secondaryActionProps: { children: "Dismiss", onClick: dismiss },
+      secondaryActionProps: { children: tr("Dismiss"), onClick: dismiss },
       secondaryActionVariant: "ghost",
     },
   });

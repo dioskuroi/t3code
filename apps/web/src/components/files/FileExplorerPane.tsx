@@ -1,4 +1,5 @@
 import { type CSSProperties, type ReactNode, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import { RightPanelResizeHandle } from "~/components/preview/RightPanelResizeHandle";
 import { RESIZABLE_WIDTH_PROPERTY, useResizableWidth } from "~/hooks/useResizableWidth";
@@ -20,7 +21,7 @@ export function FileExplorerPane({
   defaultWidth = 256,
   defaultWidthFraction,
   minWidth = MIN_WIDTH,
-  resizeLabel = "Resize file explorer",
+  resizeLabel = tr("Resize file explorer"),
 }: {
   resizable: boolean;
   children: ReactNode;
@@ -61,7 +62,7 @@ export function FileExplorerPane({
         measure();
         return observeResize(row, measure);
       }}
-      aria-label="File explorer"
+      aria-label={tr("File explorer")}
       className={cn(
         "relative flex min-h-0 min-w-0 shrink-0 bg-background",
         resizable ? "border-l border-border/60" : "flex-1",

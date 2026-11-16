@@ -57,7 +57,7 @@ final class T3NativeVideoPresentation: NSObject, AVPlayerViewControllerDelegate,
         self.playbackError = item.error ?? NSError(
           domain: "T3NativeVideo",
           code: 1,
-          userInfo: [NSLocalizedDescriptionKey: "This video couldn't be played on this device."]
+          userInfo: [NSLocalizedDescriptionKey: "此设备无法播放该视频。"]
         )
         self.dismiss()
       }

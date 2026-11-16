@@ -1,4 +1,5 @@
 import { Toolbar } from "./Toolbar";
+import { tr } from "@t3tools/shared/i18n";
 import { AppActivityIndicator } from "./AppActivityIndicator";
 import type { HeaderBarButtonMailSearchToolbarItem } from "react-native-screens";
 import { NavigationContext } from "@react-navigation/native";

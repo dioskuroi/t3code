@@ -1,5 +1,6 @@
 import type { ThreadPullRequestLink } from "@t3tools/contracts";
 import { ProjectId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 import { savedPullRequestStack, pullRequestStackView } from "./pullRequestStackSnapshot";
 
@@ -73,11 +74,17 @@ describe("saved stack navigation", () => {
     expect(pullRequestStackView(query, saved)).toMatchObject({
       data: saved,
       isFresh: false,
-      notice: expect.stringContaining("Refreshing"),
+      notice: expect.stringContaining(tr("Refreshing stack… Showing saved data.").slice(0, 5)),
     });
     expect(
       pullRequestStackView({ ...query, isPending: false, error: "Rate limited" }, saved),
-    ).toMatchObject({ data: saved, isFresh: false, notice: expect.stringContaining("stale") });
+    ).toMatchObject({
+      data: saved,
+      isFresh: false,
+      notice: expect.stringContaining(
+        tr("Stack data may be stale. We couldn’t refresh it.").slice(0, 3),
+      ),
+    });
   });
   it("prefers refreshed data and honors a successful absence", () => {
     const saved = savedPullRequestStack([link], reference);

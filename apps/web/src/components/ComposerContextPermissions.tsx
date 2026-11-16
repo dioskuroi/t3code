@@ -1,4 +1,5 @@
 import type { EnvironmentId, RuntimeMode } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomValue } from "@effect/atom-react";
 
 import { shortcutLabelForCommand } from "../keybindings";
@@ -43,7 +44,7 @@ export function ComposerContextPermissions(props: {
                 <ComposerControl
                   size="xs"
                   className="ms-auto min-w-0 shrink-0"
-                  aria-label={`Permissions: ${label}`}
+                  aria-label={tr("Permissions: {label}", { label: label })}
                   data-composer-context-control
                 />
               }
@@ -53,7 +54,7 @@ export function ComposerContextPermissions(props: {
           <Icon aria-hidden="true" className="size-3" />
           <ComposerContextLabel>{label}</ComposerContextLabel>
         </TooltipTrigger>
-        <TooltipPopup>Permissions{shortcutLabel ? ` · ${shortcutLabel}` : null}</TooltipPopup>
+        <TooltipPopup>{tr("Permissions")}{shortcutLabel ? ` · ${shortcutLabel}` : null}</TooltipPopup>
       </Tooltip>
       <MenuPopup side="top" align="end" {...composerMenuProps}>
         <ComposerPermissionsSection

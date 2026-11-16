@@ -17,6 +17,7 @@ import {
   Persistence,
   makeStoredShellSnapshotEncoder,
 } from "@t3tools/client-runtime/platform";
+import { tr } from "@t3tools/shared/i18n";
 import { TokenStore } from "@t3tools/client-runtime/authorization";
 import {
   ConnectionTransientError,
@@ -93,10 +94,25 @@ const encodeStoredServerConfig = Schema.encodeEffect(StoredServerConfigJson);
 const decodeStoredVcsRefs = Schema.decodeUnknownEffect(StoredVcsRefsJson);
 const encodeStoredVcsRefs = Schema.encodeEffect(StoredVcsRefsJson);
 
+const CATALOG_OPERATION_LABELS: Record<string, string> = {
+  open: tr("open"),
+  read: tr("read"),
+  write: tr("write"),
+  remove: tr("remove"),
+  decode: tr("decode"),
+  encode: tr("encode"),
+  load: tr("load"),
+  save: tr("save"),
+  "save pull request routing permissions in": tr("save pull request routing permissions in"),
+};
+
 function catalogError(operation: string, cause: unknown) {
   return new ConnectionTransientError({
     reason: "remote-unavailable",
-    detail: `Could not ${operation} the local connection catalog: ${String(cause)}`,
+    detail: tr("Could not {operation} the local connection catalog: {message}", {
+      operation: CATALOG_OPERATION_LABELS[operation] ?? operation,
+      message: String(cause),
+    }),
   });
 }
 
@@ -122,9 +138,32 @@ function persistenceError(
     | "clear-environment",
   cause: unknown,
 ) {
+  const labels = {
+    "list-targets": tr("list targets"),
+    "list-disabled-targets": tr("list disabled targets"),
+    "register-connection": tr("register connection"),
+    "set-connection-routes": tr("set connection routes"),
+    "remove-connection": tr("remove connection"),
+    "set-connection-enabled": tr("set connection enabled"),
+    "load-shell": tr("load shell"),
+    "save-shell": tr("save shell"),
+    "load-thread": tr("load thread"),
+    "save-thread": tr("save thread"),
+    "remove-thread": tr("remove thread"),
+    "load-server-config": tr("load server config"),
+    "save-server-config": tr("save server config"),
+    "load-vcs-refs": tr("load vcs refs"),
+    "save-vcs-refs": tr("save vcs refs"),
+    "remove-vcs-refs": tr("remove vcs refs"),
+    "clear-vcs-refs": tr("clear vcs refs"),
+    "clear-environment": tr("clear environment"),
+  } as const;
   return new Persistence.ConnectionPersistenceError({
     operation,
-    message: `Could not ${operation.replaceAll("-", " ")}: ${String(cause)}`,
+    message: tr("Could not {operation}: {message}", {
+      operation: labels[operation] ?? operation,
+      message: String(cause),
+    }),
   });
 }
 
@@ -132,7 +171,7 @@ const openDatabase = Effect.fn("web.connectionStorage.openDatabase")(function* (
   return yield* Effect.callback<IDBDatabase, ConnectionTransientError>((resume) => {
     if (typeof indexedDB === "undefined") {
       resume(
-        Effect.fail(catalogError("open", "IndexedDB is unavailable in this browser context.")),
+        Effect.fail(catalogError("open", tr("IndexedDB is unavailable in this browser context."))),
       );
       return;
     }
@@ -161,7 +200,7 @@ const openDatabase = Effect.fn("web.connectionStorage.openDatabase")(function* (
         }
       });
       request.addEventListener("error", () => {
-        resume(Effect.fail(catalogError("open", request.error ?? "Unknown IndexedDB error")));
+        resume(Effect.fail(catalogError("open", request.error ?? tr("Unknown IndexedDB error"))));
       });
       request.addEventListener("success", () => {
         resume(Effect.succeed(request.result));
@@ -245,7 +284,9 @@ function readDatabaseValueOnConnection(database: IDBDatabase, storeName: string,
     try {
       const request = database.transaction(storeName, "readonly").objectStore(storeName).get(key);
       request.addEventListener("error", () => {
-        resume(Effect.fail(catalogError("read", request.error ?? "Unknown IndexedDB read error")));
+        resume(
+          Effect.fail(catalogError("read", request.error ?? tr("Unknown IndexedDB read error"))),
+        );
       });
       request.addEventListener("success", () => {
         resume(Effect.succeed(request.result));
@@ -268,7 +309,9 @@ function writeDatabaseValueOnConnection(
       // Commit failures can fire abort without error; every failed write fires abort.
       transaction.addEventListener("abort", () => {
         resume(
-          Effect.fail(catalogError("write", transaction.error ?? "Unknown IndexedDB write error")),
+          Effect.fail(
+            catalogError("write", transaction.error ?? tr("Unknown IndexedDB write error")),
+          ),
         );
       });
       transaction.addEventListener("complete", () => {
@@ -292,7 +335,7 @@ function removeDatabaseValueOnConnection(
       transaction.addEventListener("abort", () => {
         resume(
           Effect.fail(
-            catalogError("remove", transaction.error ?? "Unknown IndexedDB remove error"),
+            catalogError("remove", transaction.error ?? tr("Unknown IndexedDB remove error")),
           ),
         );
       });
@@ -317,7 +360,7 @@ function removeDatabaseValuesInRangeOnConnection(
       transaction.addEventListener("abort", () => {
         resume(
           Effect.fail(
-            catalogError("remove", transaction.error ?? "Unknown IndexedDB cursor error"),
+            catalogError("remove", transaction.error ?? tr("Unknown IndexedDB cursor error")),
           ),
         );
       });
@@ -327,7 +370,9 @@ function removeDatabaseValuesInRangeOnConnection(
       const request = transaction.objectStore(storeName).openCursor(range);
       request.addEventListener("error", () => {
         resume(
-          Effect.fail(catalogError("remove", request.error ?? "Unknown IndexedDB cursor error")),
+          Effect.fail(
+            catalogError("remove", request.error ?? tr("Unknown IndexedDB cursor error")),
+          ),
         );
       });
       request.addEventListener("success", () => {
@@ -503,7 +548,7 @@ export function makeCatalogBackend(database: DatabaseHandle): CatalogBackend {
               : Effect.fail(
                   catalogError(
                     "save",
-                    "Desktop secure storage is unavailable in this system context.",
+                    tr("Desktop secure storage is unavailable in this system context."),
                   ),
                 ),
           ),
@@ -545,22 +590,25 @@ export const makeCatalogStore = Effect.fn("web.connectionStorage.makeCatalogStor
       catalog = yield* decodeCatalog(raw).pipe(
         Effect.catch((error) =>
           Effect.gen(function* () {
-            yield* Effect.logWarning("Discarding a corrupt web connection catalog.", {
+            yield* Effect.logWarning(tr("Discarding a corrupt web connection catalog."), {
               error: error.message,
             });
             if (backend.quarantine !== undefined) {
               yield* backend.quarantine(raw).pipe(
                 Effect.catch((cause) =>
-                  Effect.logWarning("Could not quarantine the corrupt web connection catalog.", {
-                    error: cause.message,
-                  }),
+                  Effect.logWarning(
+                    tr("Could not quarantine the corrupt web connection catalog."),
+                    {
+                      error: cause.message,
+                    },
+                  ),
                 ),
               );
             }
             const encoded = yield* encodeCatalog(EMPTY_CONNECTION_CATALOG_DOCUMENT);
             yield* backend.write(encoded).pipe(
               Effect.catch((cause) =>
-                Effect.logWarning("Could not persist the recovered web connection catalog.", {
+                Effect.logWarning(tr("Could not persist the recovered web connection catalog."), {
                   error: cause.message,
                 }),
               ),
@@ -675,7 +723,7 @@ export function makeBrowserPullRequestRoutingPermissions(
       if (connectionKey === null)
         return yield* new ConnectionBlockedError({
           reason: "configuration",
-          detail: "This environment does not have a saved connection endpoint.",
+          detail: tr("This environment does not have a saved connection endpoint."),
         });
       return yield* write(
         entry.target.environmentId,

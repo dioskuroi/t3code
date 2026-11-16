@@ -1,5 +1,6 @@
 import * as Schema from "effect/Schema";
 import * as Dialog from "./ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { useContext, useEffect, useEffectEvent, useState } from "react";
 import { Platform } from "react-native";
 
@@ -54,7 +55,7 @@ async function resolvePreviewUri(
   // Refresh expired URLs before handing them to Quick Look or ACTION_VIEW, which retain them.
   const url = await refreshAssetUrl(item.environmentId, item.resource, signal)
     .then((value) => {
-      if (!value) throw new Error("Reconnect to this environment and try again.");
+      if (!value) throw new Error(tr("Reconnect to this environment and try again."));
       return value;
     })
     .catch((error: unknown) => {
@@ -83,7 +84,7 @@ function ResolvedFilePreview(props: {
   );
   const onResolutionError = useEffectEvent((error: PreviewResolutionError) => {
     if (props.onOpenError) props.onOpenError(error.cause);
-    else Dialog.alert("Could not open preview", error.fallbackMessage);
+    else Dialog.alert(tr("Could not open preview"), error.fallbackMessage);
     props.onRequestClose();
   });
   // Resolves once per presentation and holds local file leases until it closes.
@@ -142,12 +143,12 @@ function ResolvedFilePreview(props: {
   if (!uri) return null;
   const onOpenError = (error: unknown) => {
     if (props.onOpenError) return props.onOpenError(error);
-    Dialog.alert("Could not open preview", nativeViewerErrorMessage(error), [
-      { text: "Cancel", style: "cancel" },
+    Dialog.alert(tr("Could not open preview"), nativeViewerErrorMessage(error), [
+      { text: tr("Cancel"), style: "cancel" },
       ...(selected.kind === "document"
         ? [
             {
-              text: "Save or share",
+              text: tr("Save or share"),
               onPress: () => {
                 const input = {
                   attachment: {

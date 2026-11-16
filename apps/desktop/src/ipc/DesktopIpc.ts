@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
@@ -35,7 +36,10 @@ export class DesktopIpcRegistrationError extends Schema.TaggedError<DesktopIpcRe
   },
 ) {
   override get message(): string {
-    return `Failed to register the ${this.handlerKind} IPC handler for ${this.channel}.`;
+    return tr("Failed to register the {handlerKind} IPC handler for {channel}.", {
+      handlerKind: this.handlerKind,
+      channel: this.channel,
+    });
   }
 }
 
@@ -48,7 +52,10 @@ export class DesktopIpcUnregistrationError extends Schema.TaggedError<DesktopIpc
   },
 ) {
   override get message(): string {
-    return `Failed to unregister the ${this.handlerKind} IPC handler for ${this.channel}.`;
+    return tr("Failed to unregister the {handlerKind} IPC handler for {channel}.", {
+      handlerKind: this.handlerKind,
+      channel: this.channel,
+    });
   }
 }
 

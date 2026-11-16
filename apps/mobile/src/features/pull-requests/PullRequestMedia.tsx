@@ -52,7 +52,7 @@ export function PullRequestMedia(props: {
   const withGallery = useFilePreviewGallery();
   const [image, setImage] = useState<FilePreviewSource | null>(null);
   const [video, setVideo] = useState<VideoPreviewSource | null>(null);
-  const name = props.caption || new URL(props.url).pathname.split("/").pop() || "Attachment";
+  const name = props.caption || new URL(props.url).pathname.split("/").pop() || tr("Attachment");
   if (props.kind === "image")
     return (
       <>
@@ -122,7 +122,7 @@ export function PullRequestImageAttachment(props: {
     <>
       <Pressable
         accessibilityRole="imagebutton"
-        accessibilityLabel={`View attachment: ${props.caption}`}
+        accessibilityLabel={tr("View attachment: {caption}", { caption: props.caption })}
         onPress={() => setPreview({ ...props.source, gallery: props.gallery })}
         className="gap-2 active:opacity-70"
         style={{ width: 176 }}

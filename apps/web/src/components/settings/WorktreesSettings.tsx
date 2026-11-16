@@ -1,4 +1,5 @@
 import { DEFAULT_UNIFIED_SETTINGS } from "@t3tools/contracts/settings";
+import { tr } from "@t3tools/shared/i18n";
 
 import { AdvancedSettings } from "./AdvancedSettings";
 import { BranchNamingSettings } from "./BranchNamingSettings";
@@ -23,7 +24,9 @@ function StartFromRemoteRow() {
       serverScoped
       settingKeys={["newWorktreesStartFromOrigin"]}
       {...searchableSetting("start-from-origin")}
-      description="Uses the latest commit of the base branch’s tracked remote branch, even if its name differs. Otherwise uses the same-named branch on origin. Uses your local branch if that remote branch is missing."
+      description={tr(
+        "Uses the latest commit of the base branch\u2019s tracked remote branch, even if its name differs. Otherwise uses the same-named branch on origin. Uses your local branch if that remote branch is missing.",
+      )}
       resetAction={
         settings.newWorktreesStartFromOrigin !==
         DEFAULT_UNIFIED_SETTINGS.newWorktreesStartFromOrigin ? (
@@ -44,7 +47,7 @@ function StartFromRemoteRow() {
           onCheckedChange={(checked) =>
             updateSettings({ newWorktreesStartFromOrigin: Boolean(checked) })
           }
-          aria-label="Start new worktrees from remote by default"
+          aria-label={tr("Start new worktrees from remote by default")}
         />
       }
     />
@@ -57,14 +60,14 @@ export function WorktreesSettingsPanel() {
 
   return (
     <SettingsPageContainer>
-      <SettingsSection id="worktree-creation" title="Creation">
+      <SettingsSection id="worktree-creation" title={tr("Creation")}>
         {!isProjectScope && <WorktreesDirectoryRow />}
         <StartFromRemoteRow />
         <AdvancedSettings targetIds={[searchableSetting("worktree-submodules").id]}>
           <WorktreeSubmodulesRow />
         </AdvancedSettings>
       </SettingsSection>
-      <SettingsSection id="worktree-branches" title="Branches">
+      <SettingsSection id="worktree-branches" title={tr("Branches")}>
         <BranchNamingSettings />
       </SettingsSection>
       <WorktreeCleanupSection />

@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import {
   AuthOrchestrationOperateScope,
   AuthSourceControlWriteScope,
@@ -145,7 +146,7 @@ function renderDialog() {
 }
 
 function prepareAction(label: "Local" | "Worktree") {
-  const action = findAction(renderDialog(), label);
+  const action = findAction(renderDialog(), tr(label));
   if (!action) throw new Error(`${label} action missing`);
   return action;
 }

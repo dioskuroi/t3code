@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 const CODEX_ARTIFACT_TEMPLATE_KINDS = [
   "document",
   "presentation",
@@ -27,16 +28,16 @@ export interface CodexArtifactTemplate {
 }
 
 const CODEX_ARTIFACT_TEMPLATE_LABEL_BY_KIND = {
-  document: "Document template",
-  presentation: "Presentation template",
-  spreadsheet: "Spreadsheet template",
-  site: "Site template",
-  "google-docs": "Google Doc template",
-  "google-slides": "Google Slides template",
-  "google-sheets": "Google Sheet template",
-  image: "Image template",
-  email: "Email template",
-  slack: "Slack template",
+  document: tr("Document template"),
+  presentation: tr("Presentation template"),
+  spreadsheet: tr("Spreadsheet template"),
+  site: tr("Site template"),
+  "google-docs": tr("Google Doc template"),
+  "google-slides": tr("Google Slides template"),
+  "google-sheets": tr("Google Sheet template"),
+  image: tr("Image template"),
+  email: tr("Email template"),
+  slack: tr("Slack template"),
 } satisfies Record<CodexArtifactTemplateKind, string>;
 
 export type CodexArtifactTemplateAttributes = Readonly<Record<string, string | null | undefined>>;
@@ -94,16 +95,21 @@ export function resolveCodexArtifactTemplate(
 }
 
 const USE_PROMPT_BY_KIND: Record<CodexArtifactTemplateKind, (skill: string) => string> = {
-  document: (skill) => `Create a document using this ${skill} about…`,
-  presentation: (skill) => `Create a presentation using the ${skill} template about…`,
-  spreadsheet: (skill) => `Create a spreadsheet using this ${skill} about…`,
-  site: (skill) => `Create a Site using this ${skill} about…`,
-  "google-docs": (skill) => `Create a Google Doc using this ${skill} about…`,
-  "google-slides": (skill) => `Create a Google Slides presentation using this ${skill} about…`,
-  "google-sheets": (skill) => `Create a Google Sheet using this ${skill} about…`,
-  image: (skill) => `Create an image using this ${skill} of…`,
-  email: (skill) => `Draft an email using this ${skill} about…`,
-  slack: (skill) => `Draft a Slack message using this ${skill} about…`,
+  document: (skill) => tr("Create a document using this {skill} about\u2026", { skill: skill }),
+  presentation: (skill) =>
+    tr("Create a presentation using the {skill} template about\u2026", { skill: skill }),
+  spreadsheet: (skill) =>
+    tr("Create a spreadsheet using this {skill} about\u2026", { skill: skill }),
+  site: (skill) => tr("Create a Site using this {skill} about\u2026", { skill: skill }),
+  "google-docs": (skill) =>
+    tr("Create a Google Doc using this {skill} about\u2026", { skill: skill }),
+  "google-slides": (skill) =>
+    tr("Create a Google Slides presentation using this {skill} about\u2026", { skill: skill }),
+  "google-sheets": (skill) =>
+    tr("Create a Google Sheet using this {skill} about\u2026", { skill: skill }),
+  image: (skill) => tr("Create an image using this {skill} of\u2026", { skill: skill }),
+  email: (skill) => tr("Draft an email using this {skill} about\u2026", { skill: skill }),
+  slack: (skill) => tr("Draft a Slack message using this {skill} about\u2026", { skill: skill }),
 };
 
 export function codexArtifactTemplateUsePrompt(template: CodexArtifactTemplate): string {

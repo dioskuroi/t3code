@@ -1,4 +1,5 @@
 import type { DesktopUpdateState } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
@@ -81,30 +82,45 @@ const actionLink = (action: StartupRecoveryAction, label: string, primary = fals
 function describeOffer(offer: StartupRecoveryOffer): { text: string; action: string } {
   switch (offer._tag) {
     case "Checking":
-      return { text: "Checking for a newer version…", action: "" };
+      return { text: tr("Checking for a newer version\u2026"), action: "" };
     case "Update":
       return {
-        text: `Version ${offer.version} is available. It can contain a fix.`,
-        action: actionLink("update", `Update to ${offer.version}`, true),
+        text: tr("Version {version} is available. It can contain a fix.", {
+          version: offer.version,
+        }),
+        action: actionLink("update", tr("Update to {version}", { version: offer.version }), true),
       };
     case "Downloading":
       return {
-        text: `Downloading ${offer.version}${offer.percent === null ? "" : ` (${Math.floor(offer.percent / 10) * 10}%)`}. T3 Code restarts when the download is done.`,
+        text:
+          offer.percent === null
+            ? tr("Downloading {version}. T3 Code restarts when the download is done.", {
+                version: offer.version,
+              })
+            : tr("Downloading {version} ({percent}). T3 Code restarts when the download is done.", {
+                version: offer.version,
+                percent: `${Math.floor(offer.percent / 10) * 10}%`,
+              }),
         action: "",
       };
     case "Reinstall":
       return {
-        text: `Version ${offer.version} started correctly on this computer. Download it and install it to go back.`,
-        action: actionLink("reinstall", `Download ${offer.version}`, true),
+        text: tr(
+          "Version {version} started correctly on this computer. Download it and install it to go back.",
+          { version: offer.version },
+        ),
+        action: actionLink("reinstall", tr("Download {version}", { version: offer.version }), true),
       };
     case "Releases":
       return {
-        text: "Get a different version from the releases page.",
-        action: actionLink("releases", "Open releases", true),
+        text: tr("Get a different version from the releases page."),
+        action: actionLink("releases", tr("Open releases"), true),
       };
     case "ManagedPolicy":
       return {
-        text: "Your organization's managed policy stopped T3 Code from starting. Send the details below to your IT administrator.",
+        text: tr(
+          "Your organization's managed policy stopped T3 Code from starting. Send the details below to your IT administrator.",
+        ),
         action: "",
       };
   }
@@ -132,8 +148,8 @@ pre{flex:1;min-height:60px;margin:0;overflow:auto;background:var(--code);border:
 <h1>T3 Code could not start</h1>
 <p>${escapeHtml(input.failure.reason)}</p>
 <p>${escapeHtml(offer.text)}</p>
-<div class="actions">${offer.action}${actionLink("copy", "Copy details")}${actionLink("quit", "Quit")}</div>
-<pre>${escapeHtml(output.length > 0 ? output : "The server wrote no output.")}</pre>
+<div class="actions">${offer.action}${actionLink("copy", tr("Copy details"))}${actionLink("quit", tr("Quit"))}</div>
+<pre>${escapeHtml(output.length > 0 ? output : tr("The server wrote no output."))}</pre>
 <p class="muted">Version ${escapeHtml(input.appVersion)}. T3 Code tries again in the background. Logs: ${escapeHtml(input.logDir)}</p>
 </body></html>`;
 }
@@ -268,7 +284,7 @@ export const listen: Effect.Effect<
           minWidth: 420,
           minHeight: 320,
           show: false,
-          title: "T3 Code could not start",
+          title: tr("T3 Code could not start"),
           autoHideMenuBar: true,
           backgroundColor: shouldUseDarkColors ? "#000000" : "#ffffff",
           webPreferences: {

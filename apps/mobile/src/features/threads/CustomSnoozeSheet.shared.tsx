@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import { DateTimePicker } from "@expo/ui/community/datetime-picker";
 import {
   localSnoozeDate,
@@ -42,16 +43,16 @@ export function CustomSnoozeSheet(props: {
           contentContainerStyle={{ padding: 24, paddingBottom: 24, gap: 20 }}
         >
           <AppText accessibilityRole="header" className="text-xl font-t3-semibold">
-            Custom snooze
+            {tr("Custom snooze")}
           </AppText>
           <AppText className="text-base text-foreground-secondary">
-            Choose when snoozed threads return to your inbox.
+            {tr("Choose when snoozed threads return to your inbox.")}
           </AppText>
           <SegmentedControl
             options={
               [
-                { value: "date", label: "Date and time" },
-                { value: "duration", label: "Duration" },
+                { value: "date", label: tr("Date and time") },
+                { value: "duration", label: tr("Duration") },
               ] as const
             }
             selected={mode}
@@ -68,11 +69,11 @@ export function CustomSnoozeSheet(props: {
                 <Pressable
                   key={value}
                   accessibilityRole="button"
-                  accessibilityLabel={value === "date" ? "Choose date" : "Choose time"}
+                  accessibilityLabel={value === "date" ? tr("Choose date") : tr("Choose time")}
                   className="min-h-12 flex-row items-center justify-between rounded-xl bg-subtle px-3"
                   onPress={() => setPicker(value)}
                 >
-                  <AppText>{value === "date" ? "Date" : "Time"}</AppText>
+                  <AppText>{value === "date" ? tr("Date") : tr("Time")}</AppText>
                   <AppText>
                     {value === "date"
                       ? date.toLocaleDateString()
@@ -103,9 +104,9 @@ export function CustomSnoozeSheet(props: {
             </View>
           ) : (
             <View className="gap-3">
-              <AppText>Snooze for</AppText>
+              <AppText>{tr("Snooze for")}</AppText>
               <TextInput
-                accessibilityLabel="Duration"
+                accessibilityLabel={tr("Duration")}
                 className="min-h-12 rounded-xl bg-subtle px-3 text-base text-foreground"
                 keyboardType="decimal-pad"
                 value={amount}
@@ -131,7 +132,11 @@ export function CustomSnoozeSheet(props: {
                     }}
                   >
                     <AppText>
-                      {value === "minutes" ? "Minutes" : value === "hours" ? "Hours" : "Days"}
+                      {value === "minutes"
+                        ? tr("Minutes")
+                        : value === "hours"
+                          ? tr("Hours")
+                          : tr("Days")}
                     </AppText>
                   </Pressable>
                 ))}
@@ -144,9 +149,9 @@ export function CustomSnoozeSheet(props: {
             </AppText>
           )}
           <View className="flex-row justify-end gap-3">
-            <Button label="Cancel" tone="text" onPress={props.onClose} />
+            <Button label={tr("Cancel")} tone="text" onPress={props.onClose} />
             <Button
-              label="Snooze"
+              label={tr("Snooze")}
               tone="secondary"
               onPress={() => {
                 const input: CustomSnoozeInput =
@@ -157,8 +162,8 @@ export function CustomSnoozeSheet(props: {
                 if (!snoozedUntil) {
                   setError(
                     mode === "date"
-                      ? "Choose a date and time in the future."
-                      : "Enter a positive duration.",
+                      ? tr("Choose a date and time in the future.")
+                      : tr("Enter a positive duration."),
                   );
                   return;
                 }

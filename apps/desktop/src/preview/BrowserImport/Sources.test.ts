@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off - Builds a Chromium-shaped cookie
 // table with the same native bindings the source reads.
 import * as NodePath from "node:path";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
 import * as HostProcess from "@t3tools/shared/HostProcess";
@@ -912,7 +913,7 @@ describe("Safari profiles", () => {
         });
         const profiles = yield* listSourceProfiles(safari, context);
         assert.deepEqual(profiles, [
-          { directory: ".", name: "Personal" },
+          { directory: ".", name: tr("Personal") },
           { directory: store(workUuid), name: "Ping" },
         ]);
         assert.strictEqual(

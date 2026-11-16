@@ -12,6 +12,7 @@ import * as Statement from "effect/sql/Statement";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 import * as Stream from "effect/Stream";
 import type * as Tracer from "effect/Tracer";
+import { tr } from "@t3tools/shared/i18n";
 import { vi } from "vite-plus/test";
 
 import * as SqliteClient from "./nodeSqliteClient.ts";
@@ -350,7 +351,10 @@ it.effect("fails a read-only transaction whose reader stops, then starts a new r
         .pipe(SqliteClient.readOnly, Effect.flip);
 
       assert.equal(error._tag, "SqlError");
-      assert.include(String(error.reason.cause), "Database reader exited");
+      assert.include(
+        String(error.reason.cause),
+        tr("Database reader exited with code {code}", { code: 1 }),
+      );
       assert.equal(yield* countEntries(sql).pipe(SqliteClient.readOnly), 1);
       assert.equal(startedWorkers.length, startedBefore + 2);
     }),

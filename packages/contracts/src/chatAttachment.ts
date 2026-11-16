@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   IsoDateTime,
@@ -114,13 +115,22 @@ export const SnapShotAccessibility = SnapShotAccessibilityWire.check(
       const node = stack.pop()!;
       nodes += 1;
       if (nodes > SNAP_SHOT_ACCESSIBILITY_MAX_NODES) {
-        return `Accessibility trees must not exceed ${SNAP_SHOT_ACCESSIBILITY_MAX_NODES} nodes.`;
+        return tr(
+          "Accessibility trees must not exceed {SNAP_SHOT_ACCESSIBILITY_MAX_NODES} nodes.",
+          { SNAP_SHOT_ACCESSIBILITY_MAX_NODES: SNAP_SHOT_ACCESSIBILITY_MAX_NODES },
+        );
       }
       stack.push(...node.children);
     }
     return (
       JSON.stringify(accessibility).length <= SNAP_SHOT_ACCESSIBILITY_MAX_SERIALIZED_CHARS ||
-      `Accessibility trees must not exceed ${SNAP_SHOT_ACCESSIBILITY_MAX_SERIALIZED_CHARS} serialized characters.`
+      tr(
+        "Accessibility trees must not exceed {SNAP_SHOT_ACCESSIBILITY_MAX_SERIALIZED_CHARS} serialized characters.",
+        {
+          SNAP_SHOT_ACCESSIBILITY_MAX_SERIALIZED_CHARS:
+            SNAP_SHOT_ACCESSIBILITY_MAX_SERIALIZED_CHARS,
+        },
+      )
     );
   }),
 );
@@ -209,7 +219,10 @@ export function getProviderAttachmentLimitError(
   attachments: ReadonlyArray<Pick<ChatAttachment, "type" | "mimeType" | "sizeBytes">>,
 ): string | undefined {
   if (attachments.length > PROVIDER_SEND_TURN_MAX_ATTACHMENTS) {
-    return `You can attach up to ${PROVIDER_SEND_TURN_MAX_ATTACHMENTS} files per message or question response.`;
+    return tr(
+      "You can attach up to {PROVIDER_SEND_TURN_MAX_ATTACHMENTS} files per message or question response.",
+      { PROVIDER_SEND_TURN_MAX_ATTACHMENTS: PROVIDER_SEND_TURN_MAX_ATTACHMENTS },
+    );
   }
   const imageBytes = attachments.reduce(
     (total, attachment) =>
@@ -220,7 +233,9 @@ export function getProviderAttachmentLimitError(
     0,
   );
   if (imageBytes > PROVIDER_SEND_TURN_MAX_TOTAL_IMAGE_BYTES) {
-    return "Images can total up to 80 MiB per message or question response. Use smaller images or send fewer at once.";
+    return tr(
+      "Images can total up to 80 MiB per message or question response. Use smaller images or send fewer at once.",
+    );
   }
 }
 

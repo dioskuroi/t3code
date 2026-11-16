@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { MaximizeIcon, MinusIcon, PlusIcon, ScanIcon } from "lucide-react";
 import { ExpandedImageDialog } from "~/components/chat/ExpandedImageDialog";
 import { observeResize } from "~/lib/observeResize";
@@ -34,18 +35,18 @@ export default function PreviewImageContent(props: {
     : 1;
   const scale = zoom ?? fit;
   const changeZoom = (factor: number) => setZoom(Math.max(0.05, Math.min(8, scale * factor)));
-  if (failed) return <FileSurfaceFailure message="Unable to load image." />;
+  if (failed) return <FileSurfaceFailure message={tr("Unable to load image.")} />;
   return (
     <>
       <div className="flex min-h-10 shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border/60 px-3 py-1 text-xs text-muted-foreground">
         <span className="tabular-nums">
           {natural.width
             ? `${natural.width.toLocaleString()} × ${natural.height.toLocaleString()}`
-            : "Loading image…"}
+            : tr("Loading image\u2026")}
         </span>
         <div className="flex items-center gap-1">
           <FileSurfaceAction
-            label="Zoom out"
+            label={tr("Zoom out")}
             disabled={!natural.width || scale <= 0.05}
             onPress={() => changeZoom(1 / 1.25)}
           >
@@ -53,21 +54,21 @@ export default function PreviewImageContent(props: {
           </FileSurfaceAction>
           <span className="min-w-10 text-center tabular-nums">{Math.round(scale * 100)}%</span>
           <FileSurfaceAction
-            label="Zoom in"
+            label={tr("Zoom in")}
             disabled={!natural.width || scale >= 8}
             onPress={() => changeZoom(1.25)}
           >
             <PlusIcon className="size-3.5" />
           </FileSurfaceAction>
           <FileSurfaceAction
-            label="Fit image"
+            label={tr("Fit image")}
             pressed={zoom === null}
             onPress={() => setZoom(null)}
           >
             <ScanIcon className="size-3.5" />
           </FileSurfaceAction>
           <FileSurfaceAction
-            label="Actual image size"
+            label={tr("Actual image size")}
             pressed={zoom === 1}
             onPress={() => setZoom(1)}
           >
@@ -85,7 +86,7 @@ export default function PreviewImageContent(props: {
         >
           <button
             type="button"
-            aria-label={`Zoom ${props.name}`}
+            aria-label={tr("Zoom {name}", { name: props.name })}
             className="shrink-0 cursor-zoom-in"
             onClick={() => setExpanded(true)}
           >

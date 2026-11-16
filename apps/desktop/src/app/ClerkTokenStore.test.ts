@@ -4,6 +4,7 @@ import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { assert, describe, it } from "@effect/vitest";
 import { vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 vi.mock("node:fs", { spy: true });
 
@@ -174,7 +175,18 @@ describePosix("ClerkTokenStore", () => {
       NodeFS.chmodSync(outsideDirectory, 0o755);
       NodeFS.symlinkSync(outsideDirectory, NodePath.join(stateDir, "clerk"));
 
-      assert.throws(() => openClerkTokenStorage(stateDir, idleStorage), /must be a real directory/);
+      const realDirectoryMessage = tr(
+        'Clerk token directory "{directory}" must be a real directory.',
+      );
+      let throwsMessage: string | null = null;
+      try {
+        openClerkTokenStorage(stateDir, idleStorage);
+      } catch (error) {
+        throwsMessage = error instanceof Error ? error.message : String(error);
+      }
+      assert.ok(throwsMessage !== null);
+      assert.ok(throwsMessage.startsWith(realDirectoryMessage.split("{directory}")[0] ?? ""));
+      assert.ok(throwsMessage.endsWith(realDirectoryMessage.split("{directory}")[1] ?? ""));
       assert.equal(modeOf(outsideDirectory), 0o755);
       NodeFS.unlinkSync(NodePath.join(stateDir, "clerk"));
 
@@ -182,7 +194,16 @@ describePosix("ClerkTokenStore", () => {
       NodeFS.writeFileSync(outsideFile, "secret", { mode: 0o644 });
       NodeFS.chmodSync(outsideFile, 0o644);
       NodeFS.symlinkSync(outsideFile, NodePath.join(stateDir, "clerk-tokens.json"));
-      assert.throws(() => openClerkTokenStorage(stateDir, idleStorage), /must be a regular file/);
+      const regularFileMessage = tr('Clerk token file "{path}" must be a regular file.');
+      let regularFileThrows: string | null = null;
+      try {
+        openClerkTokenStorage(stateDir, idleStorage);
+      } catch (error) {
+        regularFileThrows = error instanceof Error ? error.message : String(error);
+      }
+      assert.ok(regularFileThrows !== null);
+      assert.ok(regularFileThrows.startsWith(regularFileMessage.split("{path}")[0] ?? ""));
+      assert.ok(regularFileThrows.endsWith(regularFileMessage.split("{path}")[1] ?? ""));
       assert.equal(modeOf(outsideFile), 0o644);
     });
   });

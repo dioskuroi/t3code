@@ -1,9 +1,10 @@
 import { type ChatFileAttachment, type ChatImageAttachment } from "../../types";
+import { tr } from "@t3tools/shared/i18n";
 import type { ComposerContextRecord, KnownComposerContextRecord } from "@t3tools/contracts";
 import { asKnownContextRecord } from "~/lib/composerContextRecords";
 
 export function userMessageFileLabel(file: Pick<ChatFileAttachment, "name" | "source">) {
-  return file.source?._tag === "pasted-text" ? "Pasted text" : file.name;
+  return file.source?._tag === "pasted-text" ? tr("Pasted text") : file.name;
 }
 
 export function resolvePreviewAnnotationImage(input: {

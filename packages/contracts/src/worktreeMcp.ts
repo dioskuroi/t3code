@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { TrimmedNonEmptyString } from "./baseSchemas.ts";
 
@@ -7,23 +8,24 @@ export const WorktreeMcpHandoffInput = Schema.Struct({
   branch: TrimmedNonEmptyString,
   baseRef: Schema.optional(
     TrimmedNonEmptyString.annotate({
-      description: "Default: checked-out branch.",
+      description: tr("Default: checked-out branch."),
     }),
   ),
   startFromOrigin: Schema.optional(
     Schema.Boolean.annotate({
-      description:
+      description: tr(
         "True: fetch, start from the remote ref; check `startedFromOrigin`. Default: server setting.",
+      ),
     }),
   ),
   runSetupScript: Schema.optional(
     Schema.Boolean.annotate({
-      description: "Default true.",
+      description: tr("Default true."),
     }),
   ),
   continuationPrompt: Schema.optional(
     TrimmedNonEmptyString.check(Schema.isMaxLength(120_000)).annotate({
-      description: "Work to resume in the worktree next turn. Omitted: thread waits.",
+      description: tr("Work to resume in the worktree next turn. Omitted: thread waits."),
     }),
   ),
 });
@@ -80,7 +82,7 @@ export const WorktreeMcpStatusResult = Schema.Struct({
   branch: Schema.NullOr(TrimmedNonEmptyString),
   projectWorkspaceRoot: TrimmedNonEmptyString,
   defaultStartFromOrigin: Schema.Boolean.annotate({
-    description: "`startFromOrigin` default for `t3_worktree_handoff`.",
+    description: tr("`startFromOrigin` default for `t3_worktree_handoff`."),
   }),
 });
 export type WorktreeMcpStatusResult = typeof WorktreeMcpStatusResult.Type;

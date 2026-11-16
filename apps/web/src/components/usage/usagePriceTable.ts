@@ -4,6 +4,7 @@ import {
   USAGE_PRICE_FIELDS,
   type UsagePriceForm,
 } from "./usagePriceForm";
+import { tr } from "@t3tools/shared/i18n";
 import type { UsagePriceChange, UsagePriceTarget } from "./usagePriceTargets";
 
 export type UsagePriceField = (typeof USAGE_PRICE_FIELDS)[number]["key"];
@@ -37,10 +38,10 @@ function modelAlias(target: UsagePriceTarget, model: string) {
 
 export function usageAliasCell(targets: readonly UsagePriceTarget[], model: string) {
   if (targets.some((target) => target.aliases === null))
-    return { value: "", placeholder: "Unavailable" };
+    return { value: "", placeholder: tr("Unavailable") };
   const values = targets.map((target) => modelAlias(target, model) ?? "");
-  if (values.some((value) => value !== values[0])) return { value: "", placeholder: "Mixed" };
-  return { value: values[0] ?? "", placeholder: "None" };
+  if (values.some((value) => value !== values[0])) return { value: "", placeholder: tr("Mixed") };
+  return { value: values[0] ?? "", placeholder: tr("None") };
 }
 
 export function usagePriceCell(
@@ -53,11 +54,11 @@ export function usagePriceCell(
     modelPrice(target, model) ? usagePriceForm(model, modelPrice(target, model))[field] : null,
   );
   if (targets.some((target) => target.prices === null))
-    return { value: "", placeholder: "Unavailable" };
-  if (values.some((value) => value !== values[0])) return { value: "", placeholder: "Mixed" };
+    return { value: "", placeholder: tr("Unavailable") };
+  if (values.some((value) => value !== values[0])) return { value: "", placeholder: tr("Mixed") };
   return {
     value: values[0] ?? "",
-    placeholder: values[0] === null ? "Automatic" : optional ? "Input rate" : "0.00",
+    placeholder: values[0] === null ? tr("Automatic") : optional ? tr("Input rate") : "0.00",
   };
 }
 
@@ -85,8 +86,8 @@ export function usagePriceTableChanges(
         );
         continue;
       }
-      if (model === "") errors.set(draft.id, "Enter a model ID.");
-      else if (alias === model) errors.set(draft.id, "Map to a different model.");
+      if (model === "") errors.set(draft.id, tr("Enter a model ID."));
+      else if (alias === model) errors.set(draft.id, tr("Map to a different model."));
       else {
         if (alias !== currentAlias) changes.push({ model, alias });
         if (modelPrice(target, model)) changes.push({ model, price: null });
@@ -111,10 +112,10 @@ export function usagePriceTableChanges(
       errors.set(
         draft.id,
         model === ""
-          ? "Enter a model ID."
+          ? tr("Enter a model ID.")
           : missing
             ? `${missing.label} is required on ${target.label}.`
-            : "Use non-negative numbers for prices.",
+            : tr("Use non-negative numbers for prices."),
       );
       continue;
     }
@@ -135,7 +136,10 @@ export function usagePriceTableChanges(
     const seen = new Set<string>();
     while (aliases.has(model)) {
       if (seen.has(model)) {
-        errors.set(draft.id, `Model mappings cannot form a cycle on ${target.label}.`);
+        errors.set(
+          draft.id,
+          tr("Model mappings cannot form a cycle on {label}.", { label: target.label }),
+        );
         break;
       }
       seen.add(model);

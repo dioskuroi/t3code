@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, it, vi } from "vite-plus/test";
@@ -102,11 +103,11 @@ it("retries a failed image once its URI comes back through null", async () => {
   try {
     await act(async () => root.render(view("https://example.test/a.png")));
     await act(async () => harness.failImage());
-    expect(container.textContent).toContain("Image unavailable");
+    expect(container.textContent).toContain(tr("Image unavailable"));
 
     await act(async () => root.render(view(null)));
     await act(async () => root.render(view("https://example.test/a.png")));
-    expect(container.textContent).not.toContain("Image unavailable");
+    expect(container.textContent).not.toContain(tr("Image unavailable"));
     expect(container.querySelector("img")).not.toBeNull();
   } finally {
     await act(async () => root.unmount());
@@ -144,17 +145,17 @@ it("fetches a failed SVG again on the next mount but keeps a parsed one", async 
   try {
     fetchSvg.mockRejectedValueOnce(new Error("offline"));
     await act(async () => root.render(view(true)));
-    await vi.waitFor(() => expect(container.textContent).toContain("Image unavailable"));
+    await vi.waitFor(() => expect(container.textContent).toContain(tr("Image unavailable")));
 
     await act(async () => root.render(view(false)));
-    fetchSvg.mockResolvedValue({ ok: true, status: 200, text: async () => "<svg />" } as never);
+    fetchSvg.mockResolvedValue({ ok: true, status: 200, text: async () => tr("<svg />") } as never);
     await act(async () => root.render(view(true)));
-    await vi.waitFor(() => expect(container.textContent).not.toContain("Image unavailable"));
+    await vi.waitFor(() => expect(container.textContent).not.toContain(tr("Image unavailable")));
     expect(fetchSvg).toHaveBeenCalledTimes(2);
 
     await act(async () => root.render(view(false)));
     await act(async () => root.render(view(true)));
-    expect(container.textContent).not.toContain("Image unavailable");
+    expect(container.textContent).not.toContain(tr("Image unavailable"));
     expect(fetchSvg).toHaveBeenCalledTimes(2);
   } finally {
     await act(async () => root.unmount());

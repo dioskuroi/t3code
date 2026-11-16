@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import {
   T3_CODE_DARK_THEME_COLORS,
   T3_CODE_LIGHT_THEME_COLORS,
@@ -125,7 +126,7 @@ export function htmlRenderFileName(title: string) {
     .trim()
     .slice(0, 120)
     .trim();
-  return `${name || "Page"}.html`;
+  return `${name || tr("Page")}.html`;
 }
 
 export function clampHtmlRenderHeight(height: number): number {
@@ -286,7 +287,7 @@ export function readHtmlRenderImageRequest(
   const { src, name } = params as Record<string, unknown>;
   if (typeof src !== "string" || !/^(?:https?:\/\/|data:image\/)/i.test(src)) return undefined;
   const label = typeof name === "string" ? name.trim().slice(0, HTML_RENDER_MAX_TITLE_LENGTH) : "";
-  return { src, name: label || "Image" };
+  return { src, name: label || tr("Image") };
 }
 
 export function readHtmlRenderKeyDown(data: unknown):

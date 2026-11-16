@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import {
@@ -124,10 +125,10 @@ export function deriveProviderSettingsFields(
           control: formAnnotation.control ?? "text",
           label:
             isLocalAcp && key === "commandPath"
-              ? "Executable"
+              ? tr("Executable")
               : (annotatedTitle ?? titleizeFieldKey(key)),
           ...(isLocalAcp && key === "commandPath"
-            ? { description: "Executable name or path on this environment." }
+            ? { description: tr("Executable name or path on this environment.") }
             : annotatedDescription !== undefined
               ? { description: annotatedDescription }
               : {}),
@@ -226,8 +227,8 @@ function ProviderCommandArguments({
 
   return (
     <SettingsRow
-      title="Arguments"
-      description="One literal argument per row, in launch order."
+      title={tr("Arguments")}
+      description={tr("One literal argument per row, in launch order.")}
       managed={managedReason}
       control={
         <Button
@@ -237,7 +238,7 @@ function ProviderCommandArguments({
           onClick={() => updateArguments([...rows, makeCommandArgumentDraftRow("")])}
         >
           <PlusIcon />
-          Add argument
+          {tr("Add argument")}
         </Button>
       }
     >
@@ -261,7 +262,7 @@ function ProviderCommandArguments({
                       ),
                     )
                   }
-                  aria-label={`Argument ${index + 1}`}
+                  aria-label={tr("Argument {index}", { index: index + 1 })}
                   spellCheck={false}
                 />
                 <Button
@@ -271,7 +272,7 @@ function ProviderCommandArguments({
                   onClick={() =>
                     updateArguments(rows.filter((current) => current.id !== argument.id))
                   }
-                  aria-label={`Remove argument ${index + 1}`}
+                  aria-label={tr("Remove argument {index}", { index: index + 1 })}
                 >
                   <XIcon />
                 </Button>
@@ -384,7 +385,7 @@ function SecretSettingsControl({
           size="icon-sm"
           variant="ghost-destructive"
           onClick={() => onChange(nextProviderConfigWithFieldValue(value, field, ""))}
-          aria-label={`Clear ${field.label}`}
+          aria-label={tr("Clear {label}", { label: field.label })}
         >
           <XIcon className="size-3.5" />
         </Button>
@@ -534,7 +535,7 @@ function ProviderSettingsFieldRow({
               size="icon-sm"
               variant="ghost-destructive"
               onClick={() => onChange(nextProviderConfigWithFieldValue(value, field, ""))}
-              aria-label={`Clear ${field.label}`}
+              aria-label={tr("Clear {label}", { label: field.label })}
             >
               <XIcon className="size-3.5" />
             </Button>

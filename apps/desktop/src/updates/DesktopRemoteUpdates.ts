@@ -3,6 +3,7 @@ import type {
   DesktopUpdateRemoteOutcome,
   DesktopUpdateState,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Duration from "effect/Duration";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
@@ -122,7 +123,7 @@ export const listen: Effect.Effect<
             prepared.value.status === "committing" &&
             state.errorContext === "install"
           ) {
-            const reason = state.message ?? "The desktop app failed to install the update.";
+            const reason = state.message ?? tr("The desktop app failed to install the update.");
             if (yield* recordPreparedFailure(prepared.value.requestId, reason)) {
               yield* publishReport(state, { outcome: "failed", reason }, prepared.value.requestId);
             }
@@ -171,7 +172,7 @@ export const listen: Effect.Effect<
             yield* updates.getState,
             {
               outcome: "failed",
-              reason: "A prepared desktop update is already in progress.",
+              reason: tr("A prepared desktop update is already in progress."),
             },
             request.requestId,
           );
@@ -197,8 +198,9 @@ export const listen: Effect.Effect<
               current,
               {
                 outcome: "failed",
-                reason:
+                reason: tr(
                   "This desktop app also runs WSL backends, whose databases a remote switch cannot check. Switch it on that machine.",
+                ),
               },
               request.requestId,
             );
@@ -291,7 +293,7 @@ export const listen: Effect.Effect<
                   state,
                   {
                     outcome: "failed",
-                    reason: "The desktop app lost the downloaded update.",
+                    reason: tr("The desktop app lost the downloaded update."),
                   },
                   request.requestId,
                 );
@@ -321,7 +323,9 @@ export const listen: Effect.Effect<
                   compareSemverVersions(state.currentVersion, request.targetVersion) < 0)
                   ? {
                       outcome: "failed" as const,
-                      reason: `The desktop app found no build of ${request.targetVersion}.`,
+                      reason: tr("The desktop app found no build of {version}.", {
+                        version: request.targetVersion,
+                      }),
                     }
                   : next;
               yield* publishReport(
@@ -456,7 +460,7 @@ export const listen: Effect.Effect<
           yield* updates.getState,
           {
             outcome: "failed",
-            reason: "This desktop update is no longer prepared.",
+            reason: tr("This desktop update is no longer prepared."),
           },
           commit.requestId,
         );
@@ -467,7 +471,8 @@ export const listen: Effect.Effect<
           current,
           {
             outcome: "failed",
-            reason: claim.prepared.failureReason ?? "The desktop app failed to install the update.",
+            reason:
+              claim.prepared.failureReason ?? tr("The desktop app failed to install the update."),
           },
           commit.requestId,
         );
@@ -478,7 +483,7 @@ export const listen: Effect.Effect<
       }
       yield* Ref.set(activeRequestIdRef, Option.some(commit.requestId));
       if (current.downloadedVersion !== claim.prepared.downloadedVersion) {
-        const reason = "This desktop update is no longer prepared.";
+        const reason = tr("This desktop update is no longer prepared.");
         if (yield* recordPreparedFailure(commit.requestId, reason)) {
           yield* publishReport(current, { outcome: "failed", reason }, commit.requestId);
         }
@@ -497,7 +502,7 @@ export const listen: Effect.Effect<
         return;
       }
       if (!result.accepted || result.failed) {
-        const reason = result.state.message ?? "The desktop app could not start the install.";
+        const reason = result.state.message ?? tr("The desktop app could not start the install.");
         if (yield* recordPreparedFailure(commit.requestId, reason)) {
           yield* publishReport(result.state, { outcome: "failed", reason }, commit.requestId);
         }

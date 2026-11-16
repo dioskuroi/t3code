@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { videoMimeType } from "@t3tools/shared/video";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -29,7 +30,7 @@ export async function loadLocalAttachmentPreview(
       attachment.fileUri;
     const file = new File(uri);
     if (!file.exists) {
-      throw new Error("The local attachment file is missing.");
+      throw new Error(tr("The local attachment file is missing."));
     }
     let disposed = false;
     return {
@@ -63,7 +64,9 @@ export async function loadLocalAttachmentPreview(
   } catch (cause) {
     release();
     if (signal.aborted) return null;
-    throw new Error("This attachment is no longer available. Attach the file again.", { cause });
+    throw new Error(tr("This attachment is no longer available. Attach the file again."), {
+      cause,
+    });
   }
 }
 

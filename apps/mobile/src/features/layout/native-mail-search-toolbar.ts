@@ -1,4 +1,5 @@
 import type { HeaderBarButtonMailSearchToolbarItem } from "react-native-screens";
+import { tr } from "@t3tools/shared/i18n";
 
 import { NATIVE_LIQUID_GLASS_SUPPORTED } from "../../native/native-glass";
 
@@ -15,7 +16,7 @@ export function createNativeMailSearchToolbarItem(
   input: NativeMailSearchToolbarInput,
 ): HeaderBarButtonMailSearchToolbarItem {
   return {
-    placeholder: "Search",
+    placeholder: tr("Search"),
     ...input,
     type: "mailSearchToolbar",
     useFallbackSearchField: true,

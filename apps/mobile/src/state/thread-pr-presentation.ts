@@ -129,8 +129,14 @@ export function resolveThreadPrSource(
 
 export function resolveThreadPrBadgeAction(pr: ThreadPrPresentation) {
   return pr.kind === "stack" || pr.others > 0
-    ? { kind: "list" as const, accessibilityLabel: `Show ${pr.accessibilityLabel}` }
-    : { kind: "open" as const, accessibilityLabel: `Open ${pr.accessibilityLabel}` };
+    ? {
+        kind: "list" as const,
+        accessibilityLabel: tr("Show {label}", { label: pr.accessibilityLabel }),
+      }
+    : {
+        kind: "open" as const,
+        accessibilityLabel: tr("Open {label}", { label: pr.accessibilityLabel }),
+      };
 }
 
 /** Records `value` as the newest entry, evicting the least recently answered beyond `limit`. */

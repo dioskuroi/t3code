@@ -3,6 +3,7 @@ import * as NodeFSP from "node:fs/promises";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 const execute = vi.hoisted(() => vi.fn());
 const startEffects = vi.hoisted(() => vi.fn());
 vi.mock("node:child_process", () => ({ execFile: execute }));
@@ -105,7 +106,9 @@ it("does not overwrite a linked executable", async () => {
   const executable = hyprlandCaptureExecutable(paths);
   await NodeFSP.mkdir(NodePath.dirname(executable), { recursive: true });
   await NodeFSP.symlink(paths.bundle, executable);
-  await expect(setup.perform("install-hyprland-helper")).rejects.toThrow("not a link");
+  await expect(setup.perform("install-hyprland-helper")).rejects.toThrow(
+    tr("The capture helper must be a regular file, not a link."),
+  );
   expect(await NodeFSP.readFile(paths.bundle, "utf8")).toBe("bundled executable");
 });
 it.each([true, false])("uses the active config syntax and user bindings (Lua: %s)", async (lua) => {

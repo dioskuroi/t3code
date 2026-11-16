@@ -157,36 +157,36 @@ describe("ScheduledTasksSettings", () => {
         <ScheduledTasksSettings />
       </RegistryContext.Provider>,
     );
-    const create = screen.getByRole("button", { name: "New task" });
+    const create = screen.getByRole("button", { name: "新任务" });
     await expect.element(create).toBeEnabled();
     await act(() => registry.set(permissions.get(secondaryId)!, false));
     await expect.element(create).toBeDisabled();
     await act(() => registry.set(permissions.get(secondaryId)!, true));
     await expect.element(create).toBeEnabled();
     await create.click();
-    await expect.element(page.getByLabelText("Runs on")).toHaveTextContent("Secondary");
+    await expect.element(page.getByLabelText("运行于")).toHaveTextContent("Secondary");
   });
 
   it("keeps the permitted representative as the creation target", async () => {
     setup();
     state.secondary = true;
     await using screen = await render(<ScheduledTasksSettings />);
-    await screen.getByRole("button", { name: "New task" }).click();
-    await expect.element(page.getByLabelText("Runs on")).toHaveTextContent("Laptop");
+    await screen.getByRole("button", { name: "新任务" }).click();
+    await expect.element(page.getByLabelText("运行于")).toHaveTextContent("Laptop");
   });
 
   it("disables creation without a connected target", async () => {
     setup();
     state.connected = false;
     await using screen = await render(<ScheduledTasksSettings />);
-    await expect.element(screen.getByRole("button", { name: "New task" })).toBeDisabled();
+    await expect.element(screen.getByRole("button", { name: "新任务" })).toBeDisabled();
   });
 
   it("keeps a linked task's unsaved edits across a disconnect and reconnect", async () => {
     setup();
     await using screen = await render(<ScheduledTasksSettings taskId={task.id} />);
     await expect.element(page.getByRole("dialog").getByText("Fix login bug")).toBeVisible();
-    const name = page.getByRole("dialog").getByRole("textbox", { name: "Name" });
+    const name = page.getByRole("dialog").getByRole("textbox", { name: "名称" });
     await expect.element(name).toHaveValue("Review issues");
     await userEvent.fill(name, "Review stale issues");
 
@@ -204,15 +204,15 @@ describe("ScheduledTasksSettings", () => {
     setup();
     state.tasksLoaded = false;
     await using screen = await render(<ScheduledTasksSettings taskId={task.id} />);
-    await userEvent.click(page.getByRole("button", { name: "New task" }));
+    await userEvent.click(page.getByRole("button", { name: "新任务" }));
     const dialog = page.getByRole("dialog");
-    const name = dialog.getByRole("textbox", { name: "Name" });
+    const name = dialog.getByRole("textbox", { name: "名称" });
     await userEvent.fill(name, "My draft");
 
     state.tasksLoaded = true;
     await screen.rerender(<ScheduledTasksSettings taskId={task.id} />);
 
-    await expect.element(dialog.getByRole("heading", { name: "New task" })).toBeInTheDocument();
+    await expect.element(dialog.getByRole("heading", { name: "新任务" })).toBeInTheDocument();
     await expect.element(name).toHaveValue("My draft");
   });
 });

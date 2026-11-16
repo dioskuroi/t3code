@@ -1,4 +1,5 @@
 import type { RootContent } from "mdast";
+import { tr } from "@t3tools/shared/i18n";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 
@@ -86,7 +87,7 @@ export function splitMarkdownDetails(markdown: string): ReadonlyArray<MarkdownDe
     const label = summary ? decodeHtmlEntities(summary[1]!.replace(/<[^>]*>/g, "")).trim() : "";
     segments.push({
       kind: "details",
-      summary: label || "Details",
+      summary: label || tr("Details"),
       body,
       open: fold.open,
       sourceOffset: fold.start,

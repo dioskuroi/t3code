@@ -1,4 +1,5 @@
 import type { EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { AppBarMenuItem } from "../../components/ui/AppBar.types";
 

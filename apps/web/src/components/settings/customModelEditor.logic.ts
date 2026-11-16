@@ -3,6 +3,7 @@ import {
   ProviderDriverKind,
   type ProviderOptionDescriptor,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { type CustomModelDefinition, createModelCapabilities } from "@t3tools/shared/model";
 
 export interface EditorChoice {
@@ -37,76 +38,76 @@ export interface DescriptorPreset {
 }
 
 const EFFORT_CHOICES = [
-  { id: "low", label: "Low" },
-  { id: "medium", label: "Medium", isDefault: true },
-  { id: "high", label: "High" },
-  { id: "xhigh", label: "Extra High" },
+  { id: "low", label: tr("Low") },
+  { id: "medium", label: tr("Medium"), isDefault: true },
+  { id: "high", label: tr("High") },
+  { id: "xhigh", label: tr("Extra High") },
 ] as const;
 
 export const DESCRIPTOR_PRESETS_BY_KIND: Partial<
   Record<ProviderDriverKind, ReadonlyArray<DescriptorPreset>>
 > = {
   [ProviderDriverKind.make("codex")]: [
-    { id: "reasoningEffort", label: "Reasoning", type: "select", choices: EFFORT_CHOICES },
+    { id: "reasoningEffort", label: tr("Reasoning"), type: "select", choices: EFFORT_CHOICES },
     {
       id: "serviceTier",
-      label: "Speed",
+      label: tr("Speed"),
       type: "select",
       choices: [
-        { id: "default", label: "Standard", isDefault: true },
-        { id: "fast", label: "Fast" },
+        { id: "default", label: tr("Standard"), isDefault: true },
+        { id: "fast", label: tr("Fast") },
       ],
     },
   ],
   [ProviderDriverKind.make("claudeAgent")]: [
     {
       id: "effort",
-      label: "Reasoning",
+      label: tr("Reasoning"),
       type: "select",
       choices: [
-        { id: "low", label: "Low" },
-        { id: "medium", label: "Medium" },
-        { id: "high", label: "High", isDefault: true },
-        { id: "xhigh", label: "Extra High" },
-        { id: "max", label: "Max" },
+        { id: "low", label: tr("Low") },
+        { id: "medium", label: tr("Medium") },
+        { id: "high", label: tr("High"), isDefault: true },
+        { id: "xhigh", label: tr("Extra High") },
+        { id: "max", label: tr("Max") },
       ],
     },
-    { id: "fastMode", label: "Fast Mode", type: "boolean" },
-    { id: "thinking", label: "Thinking", type: "boolean" },
+    { id: "fastMode", label: tr("Fast Mode"), type: "boolean" },
+    { id: "thinking", label: tr("Thinking"), type: "boolean" },
   ],
   [ProviderDriverKind.make("cursor")]: [
-    { id: "reasoning", label: "Reasoning", type: "select", choices: EFFORT_CHOICES },
-    { id: "fastMode", label: "Fast Mode", type: "boolean" },
-    { id: "thinking", label: "Thinking", type: "boolean" },
+    { id: "reasoning", label: tr("Reasoning"), type: "select", choices: EFFORT_CHOICES },
+    { id: "fastMode", label: tr("Fast Mode"), type: "boolean" },
+    { id: "thinking", label: tr("Thinking"), type: "boolean" },
   ],
   [ProviderDriverKind.make("grok")]: [
-    { id: "reasoningEffort", label: "Reasoning", type: "select", choices: EFFORT_CHOICES },
+    { id: "reasoningEffort", label: tr("Reasoning"), type: "select", choices: EFFORT_CHOICES },
   ],
   [ProviderDriverKind.make("pi")]: [
     {
       id: "thinking",
-      label: "Thinking",
+      label: tr("Thinking"),
       type: "select",
       choices: [
-        { id: "off", label: "Off" },
-        { id: "minimal", label: "Minimal" },
-        { id: "low", label: "Low" },
-        { id: "medium", label: "Medium", isDefault: true },
-        { id: "high", label: "High" },
-        { id: "xhigh", label: "Extra High" },
-        { id: "max", label: "Max" },
+        { id: "off", label: tr("Off") },
+        { id: "minimal", label: tr("Minimal") },
+        { id: "low", label: tr("Low") },
+        { id: "medium", label: tr("Medium"), isDefault: true },
+        { id: "high", label: tr("High") },
+        { id: "xhigh", label: tr("Extra High") },
+        { id: "max", label: tr("Max") },
       ],
     },
   ],
   [ProviderDriverKind.make("opencode")]: [
-    { id: "variant", label: "Reasoning", type: "select", choices: EFFORT_CHOICES },
+    { id: "variant", label: tr("Reasoning"), type: "select", choices: EFFORT_CHOICES },
     {
       id: "agent",
-      label: "Agent",
+      label: tr("Agent"),
       type: "select",
       choices: [
-        { id: "build", label: "Build", isDefault: true },
-        { id: "plan", label: "Plan" },
+        { id: "build", label: tr("Build"), isDefault: true },
+        { id: "plan", label: tr("Plan") },
       ],
     },
   ],
@@ -197,20 +198,25 @@ export function descriptorsFromCapabilities(
 export function validateDraft(draft: CustomModelDraft): string | null {
   const seenIds = new Set<string>();
   for (const [index, descriptor] of draft.descriptors.entries()) {
-    const position = `Option ${index + 1}`;
+    const position = tr("Option {index}", { index: index + 1 });
     const id = descriptor.id.trim();
-    if (!id) return `${position} needs an id.`;
-    if (seenIds.has(id)) return `${position}: id "${id}" is used twice.`;
+    if (!id) return tr("{position} needs an id.", { position: position });
+    if (seenIds.has(id))
+      return tr('{position}: id "{id}" is used twice.', { position: position, id: id });
     seenIds.add(id);
-    if (!descriptor.label.trim()) return `${position} needs a label.`;
+    if (!descriptor.label.trim()) return tr("{position} needs a label.", { position: position });
     if (descriptor.type !== "select") continue;
-    if (descriptor.choices.length === 0) return `${position} needs at least one choice.`;
+    if (descriptor.choices.length === 0)
+      return tr("{position} needs at least one choice.", { position: position });
     const seenChoices = new Set<string>();
     for (const choice of descriptor.choices) {
       const choiceId = choice.id.trim();
-      if (!choiceId) return `${position} has a choice without a value.`;
+      if (!choiceId) return tr("{position} has a choice without a value.", { position: position });
       if (seenChoices.has(choiceId)) {
-        return `${position}: choice "${choiceId}" is used twice.`;
+        return tr('{position}: choice "{choiceId}" is used twice.', {
+          position: position,
+          choiceId: choiceId,
+        });
       }
       seenChoices.add(choiceId);
     }

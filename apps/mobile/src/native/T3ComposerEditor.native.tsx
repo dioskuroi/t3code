@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { PASTED_TEXT_ATTACHMENT_THRESHOLD_BYTES } from "@t3tools/client-runtime/text-paste";
 import { PROVIDER_SEND_TURN_MAX_INPUT_CHARS } from "@t3tools/contracts";
 import { collectComposerInlineTokens } from "@t3tools/shared/composerInlineTokens";
@@ -199,7 +200,7 @@ export function ComposerEditor({
             token.type === "skill"
               ? (skillLabels.get(token.value) ?? token.value)
               : token.type === "context"
-                ? `${token.label}${props.context?.records.some((record) => record.contextId === token.contextId) ? "" : " · unavailable"}`
+                ? `${props.context?.records.some((record) => record.contextId === token.contextId) ? token.label : tr("{label} · unavailable", { label: token.label })}`
                 : basename(token.value),
           detail: token.type === "context" ? composerChipSizeSuffix(record) : "",
           iconUri: contextChipIconUri(icon),

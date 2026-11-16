@@ -1,4 +1,5 @@
 import type { LineAnnotation, SelectedLineRange } from "@pierre/diffs";
+import { tr } from "@t3tools/shared/i18n";
 
 export interface FileCommentAnnotationEntry {
   id: string;
@@ -32,7 +33,7 @@ export function normalizeFileCommentRange(range: SelectedLineRange): {
 }
 
 export function formatFileCommentRange(startLine: number, endLine: number): string {
-  return startLine === endLine ? `L${startLine}` : `L${startLine} to L${endLine}`;
+  return startLine === endLine ? `L${startLine}` : tr("L{startLine} to L{endLine}", { startLine: startLine, endLine: endLine });
 }
 
 export function remapFileCommentAnnotations(

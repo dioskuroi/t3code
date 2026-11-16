@@ -1,5 +1,6 @@
 // @effect-diagnostics globalTimers:off -- Poll TCC only while the native permission helper is open.
 import * as Electron from "electron";
+import { tr } from "@t3tools/shared/i18n";
 import { MAC_PERMISSION_HELPER_CHANNEL } from "../ipc/channels.ts";
 
 import {
@@ -92,7 +93,7 @@ export class MacPermissionHelper {
     const appIcon = iconPaths
       .map((iconPath) => Electron.nativeImage.createFromPath(iconPath))
       .find((image) => !image.isEmpty());
-    if (!appIcon) throw new Error("The packaged T3 Code icon is missing.");
+    if (!appIcon) throw new Error(tr("The packaged T3 Code icon is missing."));
     const icon = appIcon.resize({ width: 64, height: 64 });
     const window = new Electron.BrowserWindow({
       width: 560,
@@ -109,7 +110,7 @@ export class MacPermissionHelper {
       fullscreenable: false,
       alwaysOnTop: true,
       skipTaskbar: true,
-      title: `Set up ${MAC_PERMISSION_TITLES[permission]}`,
+      title: tr("Set up {permission}", { permission: MAC_PERMISSION_TITLES[permission] }),
       webPreferences: { preload, sandbox: true, contextIsolation: true, nodeIntegration: false },
     });
     this.window = window;

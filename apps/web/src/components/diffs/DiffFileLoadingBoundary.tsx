@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import { useStableCallback } from "~/hooks/useStableCallback";
 import { observeIntersection } from "~/lib/observeIntersection";
@@ -23,7 +24,7 @@ export function DiffFileLoadingBoundary({ load, count }: { load: () => void; cou
   }, [isNear, count, loadLatest]);
 
   return (
-    <div ref={observe} role="status" aria-label="Loading diff…">
+    <div ref={observe} role="status" aria-label={tr("Loading diff\u2026")}>
       {Array.from({ length: Math.min(count, 4) }, (_, index) => (
         <div key={index} aria-hidden className="border-b border-border/40">
           <DiffFileHeaderSkeleton titleWidth="medium" />

@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off globalTimers:off - Native loopback helper uses a bounded Node listener with AbortController cleanup.
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeHttp from "node:http";
 import { codexAuthorizationRequest, codexCallbackUrl } from "@t3tools/shared/codexAuthHandoff";
 
@@ -28,7 +29,7 @@ export async function receiveCodexAuthCallback(
 ) {
   const request = codexAuthorizationRequest(authorizationUrl);
   if (listeners.has(request.state))
-    throw new Error("This sign-in is already open on this computer.");
+    throw new Error(tr("This sign-in is already open on this computer."));
   const abort = new AbortController();
   const interrupted = () => abort.abort();
   signal?.addEventListener("abort", interrupted, { once: true });
@@ -63,31 +64,33 @@ export async function receiveCodexAuthCallback(
       }
       callback.resolve(url);
     } catch {
-      response.writeHead(400).end("This response does not belong to the active sign-in.");
+      response.writeHead(400).end(tr("This response does not belong to the active sign-in."));
     }
   });
-  const cancelled = () => callback.reject(new Error("Sign-in cancelled on this computer."));
+  const cancelled = () => callback.reject(new Error(tr("Sign-in cancelled on this computer.")));
   abort.signal.addEventListener("abort", cancelled, { once: true });
   const timer = setTimeout(
-    () => callback.reject(new Error("Sign-in expired. Try again.")),
+    () => callback.reject(new Error(tr("Sign-in expired. Try again."))),
     300_000,
   );
   timer.unref();
   try {
-    if (signal?.aborted) throw new Error("Sign-in cancelled on this computer.");
+    if (signal?.aborted) throw new Error(tr("Sign-in cancelled on this computer."));
     await new Promise<void>((resolve, reject) => {
       server.once("error", () =>
         reject(
           new Error(
-            "The ChatGPT callback port is in use on this computer. Close the other sign-in and try again, or paste the redirect URL in T3 Code.",
+            tr(
+              "The ChatGPT callback port is in use on this computer. Close the other sign-in and try again, or paste the redirect URL in T3 Code.",
+            ),
           ),
         ),
       );
       server.listen(Number(new URL(request.redirectUri).port), "127.0.0.1", resolve);
     });
-    if (abort.signal.aborted) throw new Error("Sign-in cancelled on this computer.");
+    if (abort.signal.aborted) throw new Error(tr("Sign-in cancelled on this computer."));
     if (!(await openBrowser(request.authorizationUrl)))
-      throw new Error("Could not open your sign-in browser.");
+      throw new Error(tr("Could not open your sign-in browser."));
     return await callback.promise;
   } finally {
     clearTimeout(timer);

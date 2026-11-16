@@ -12,6 +12,7 @@ import {
   type StaticConfig,
   type TypedNavigator,
 } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import {
   NativeStackView,
   type NativeStackNavigationEventMap,

@@ -14,6 +14,7 @@ import {
   type DesktopEnvironmentBootstrap,
   type PickedThemeFile,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { PROJECT_FAVICON_EXTENSIONS } from "@t3tools/shared/projectFavicon";
 import { resolveEditorCommand } from "@t3tools/shared/editor";
 import * as HostProcess from "@t3tools/shared/HostProcess";
@@ -160,7 +161,10 @@ export const getLocalEnvironmentBootstraps = DesktopIpc.makeSyncIpcMethod({
       const runningDistro = config.value.runningDistro ?? null;
       bootstraps.push({
         id: instance.id,
-        label: runningDistro === null ? yield* instance.label : `WSL (${runningDistro})`,
+        label:
+          runningDistro === null
+            ? yield* instance.label
+            : tr("WSL ({runningDistro})", { runningDistro: runningDistro }),
         runningDistro,
         httpBaseUrl: httpBaseUrl.href,
         wsBaseUrl: toWebSocketBaseUrl(httpBaseUrl),
@@ -271,7 +275,7 @@ export const pickProjectFavicon = DesktopIpc.makeIpcMethod({
       multiple: false,
       filters: [
         {
-          name: "Images",
+          name: tr("Images"),
           extensions: PROJECT_FAVICON_EXTENSIONS.map((extension) => extension.slice(1)),
         },
       ],

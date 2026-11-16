@@ -91,13 +91,13 @@ function ConfiguredConnectOnboardingRouteScreen() {
         ) : (
           <View collapsable={false} className="rounded-[24px] bg-grouped-card p-5">
             <Text className="text-sm leading-normal text-foreground-muted">
-              Sign in to your T3 account to set up T3 Connect.
+              {tr("Sign in to your T3 account to set up T3 Connect.")}
             </Text>
           </View>
         )}
 
         {userId ? (
-          <Button label={"Don't show this again"} tone="text" onPress={handleDontShowAgain} />
+          <Button label={tr("Don't show this again")} tone="text" onPress={handleDontShowAgain} />
         ) : null}
       </ScrollView>
     </View>

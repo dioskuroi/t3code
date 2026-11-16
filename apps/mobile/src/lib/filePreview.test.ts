@@ -7,6 +7,7 @@ import {
   useMemo,
   type ReactNode,
 } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
@@ -467,7 +468,7 @@ describe("ThreadInlineFilePreview playback", () => {
       const link = Array.from(container.querySelectorAll("button")).find((button) =>
         button.textContent?.startsWith("open target.ts"),
       )!;
-      const playLabel = kind === "audio" ? "Play audio" : `Play ${name}`;
+      const playLabel = kind === "audio" ? tr("Play audio") : `Play ${name}`;
       const play = () =>
         container.querySelector<HTMLButtonElement>(`[aria-label="${playLabel}"]`)!.click();
       if (playback !== "initial play") {
@@ -525,7 +526,7 @@ describe("ThreadInlineFilePreview playback", () => {
       }
       expect(container.querySelector(`[aria-label="${playLabel}"]`)).toBeNull();
       if (kind === "audio")
-        expect(container.querySelector('[aria-label="Pause audio"]')).not.toBeNull();
+        expect(container.querySelector(`[aria-label="${tr("Pause audio")}"]`)).not.toBeNull();
       else {
         if (playback === "native resume") {
           audio.video.playing = true;
@@ -586,7 +587,8 @@ describe("ThreadInlineFilePreview playback", () => {
         [...container.querySelectorAll("button")]
           .find(
             (button) =>
-              button.getAttribute("aria-label") === "Play audio" || button.textContent === "Play",
+              button.getAttribute("aria-label") === tr("Play audio") ||
+              button.textContent === tr("Play"),
           )!
           .click(),
       );
@@ -616,8 +618,8 @@ describe("ThreadInlineFilePreview playback", () => {
             [...container.querySelectorAll("button")]
               .find(
                 (button) =>
-                  button.getAttribute("aria-label") === "Pause audio" ||
-                  button.textContent === "Pause",
+                  button.getAttribute("aria-label") === tr("Pause audio") ||
+                  button.textContent === tr("Pause"),
               )!
               .click(),
           );
@@ -705,7 +707,8 @@ describe("ThreadInlineFilePreview playback", () => {
       [...container.querySelectorAll("button")]
         .find(
           (button) =>
-            button.getAttribute("aria-label") === "Play audio" || button.textContent === "Play",
+            button.getAttribute("aria-label") === tr("Play audio") ||
+            button.textContent === tr("Play"),
         )!
         .click(),
     );
@@ -735,15 +738,21 @@ describe("ThreadInlineFilePreview playback", () => {
       ),
     );
     await act(async () =>
-      container.querySelector<HTMLButtonElement>('button[aria-label="Play audio"]')!.click(),
+      container
+        .querySelector<HTMLButtonElement>(`button[aria-label="${tr("Play audio")}"]`)!
+        .click(),
     );
     expect(audio.played).toHaveBeenCalledOnce();
     await act(async () =>
-      container.querySelector<HTMLButtonElement>('button[aria-label="Open sound.mp3"]')!.click(),
+      container
+        .querySelector<HTMLButtonElement>(
+          `button[aria-label="${tr("Open {name}", { name: "sound.mp3" })}"]`,
+        )!
+        .click(),
     );
     expect(audio.enabled).toBe(true);
     const play = [...container.querySelectorAll("button")].find(
-      (button) => button.textContent === "Play",
+      (button) => button.textContent === tr("Play"),
     )!;
     await act(async () => play.click());
     expect(audio.played).toHaveBeenCalledTimes(2);
@@ -777,17 +786,17 @@ describe("ThreadInlineFilePreview playback", () => {
         ),
       );
       const play = [...container.querySelectorAll("button")].find(
-        (button) => button.textContent === "Play",
+        (button) => button.textContent === tr("Play"),
       )!;
       await act(async () => play.click());
-      expect(play.textContent).toBe("Pause");
+      expect(play.textContent).toBe(tr("Pause"));
       let recording: ReturnType<typeof acquireAudioSession> | undefined;
       if (action === "pause") await act(async () => play.click());
       else if (action === "recording") {
         await act(async () => {
           recording = acquireAudioSession("recording");
         });
-        expect(play.textContent).toBe("Play");
+        expect(play.textContent).toBe(tr("Play"));
         await activateAudioSession(recording!);
       } else {
         await act(async () => root!.unmount());
@@ -816,7 +825,7 @@ describe("ThreadInlineFilePreview playback", () => {
       await act(async () => render());
       await act(async () =>
         [...container.querySelectorAll("button")]
-          .find((button) => button.textContent === "Play")!
+          .find((button) => button.textContent === tr("Play"))!
           .click(),
       );
       audio.status = { ...audio.status, playing: true };
@@ -825,7 +834,7 @@ describe("ThreadInlineFilePreview playback", () => {
       if (transition === "seek") {
         await act(async () =>
           [...container.querySelectorAll("button")]
-            .find((button) => button.textContent === "+15s")!
+            .find((button) => button.textContent === tr("+15s"))!
             .click(),
         );
         expect(audio.player.seekTo).toHaveBeenCalledWith(10);
@@ -835,7 +844,7 @@ describe("ThreadInlineFilePreview playback", () => {
       expect(audio.player.pause).not.toHaveBeenCalled();
       expect(
         [...container.querySelectorAll("button")].map((button) => button.textContent),
-      ).toContain("Pause");
+      ).toContain(tr("Pause"));
       audio.status = { ...audio.status, playing: true, isBuffering: false };
       await act(async () => render());
       expect(audio.played).toHaveBeenCalledOnce();
@@ -865,7 +874,7 @@ describe("ThreadInlineFilePreview playback", () => {
       await act(async () => render());
       await act(async () =>
         [...container.querySelectorAll("button")]
-          .find((button) => button.textContent === "Play")!
+          .find((button) => button.textContent === tr("Play"))!
           .click(),
       );
       audio.status = { ...audio.status, playing: true };
@@ -882,7 +891,7 @@ describe("ThreadInlineFilePreview playback", () => {
         }
         await act(async () =>
           [...container.querySelectorAll("button")]
-            .find((button) => button.textContent === "Pause")!
+            .find((button) => button.textContent === tr("Pause"))!
             .click(),
         );
       } else {
@@ -895,7 +904,7 @@ describe("ThreadInlineFilePreview playback", () => {
       await act(async () => render());
       expect(
         [...container.querySelectorAll("button")].map((button) => button.textContent),
-      ).toContain("Play");
+      ).toContain(tr("Play"));
       audio.player.pause.mockClear();
       const recording = acquireAudioSession("recording");
       expect(audio.player.pause).not.toHaveBeenCalled();
@@ -1054,7 +1063,9 @@ describe("ThreadInlineFilePreview playback", () => {
           }),
         ),
       );
-      const button = container.querySelector<HTMLButtonElement>('button[aria-label="Play audio"]')!;
+      const button = container.querySelector<HTMLButtonElement>(
+        `button[aria-label="${tr("Play audio")}"]`,
+      )!;
       await act(async () => button.click());
       expect(audio.setAudioMode).toHaveBeenLastCalledWith({
         allowsRecording: false,
@@ -1064,8 +1075,8 @@ describe("ThreadInlineFilePreview playback", () => {
       });
       expect(audio.player.play).not.toHaveBeenCalled();
       if (intent.endsWith("failure")) {
-        expect(container.textContent).toContain("Unavailable · tap play to retry");
-        expect(button.getAttribute("aria-label")).toBe("Retry audio");
+        expect(container.textContent).toContain(tr("Unavailable · tap play to retry"));
+        expect(button.getAttribute("aria-label")).toBe(tr("Retry audio"));
         expect(audio.setActive).not.toHaveBeenCalledWith(false);
         return;
       }
@@ -1082,7 +1093,7 @@ describe("ThreadInlineFilePreview playback", () => {
       await act(async () => activate());
       if (intent === "play") {
         expect(audio.player.play).toHaveBeenCalledOnce();
-        expect(button.getAttribute("aria-label")).toBe("Pause audio");
+        expect(button.getAttribute("aria-label")).toBe(tr("Pause audio"));
       } else {
         expect(audio.player.play).not.toHaveBeenCalled();
         expect(audio.setActive).toHaveBeenLastCalledWith(true);
@@ -1093,7 +1104,7 @@ describe("ThreadInlineFilePreview playback", () => {
             audio.player.release.mock.invocationCallOrder[0]!,
           );
         }
-        if (intent === "cancel") expect(button.getAttribute("aria-label")).toBe("Play audio");
+        if (intent === "cancel") expect(button.getAttribute("aria-label")).toBe(tr("Play audio"));
       }
     },
   );
@@ -1127,7 +1138,9 @@ describe("ThreadInlineFilePreview playback", () => {
           }),
         ),
       );
-      const button = container.querySelector<HTMLButtonElement>('button[aria-label="Play audio"]')!;
+      const button = container.querySelector<HTMLButtonElement>(
+        `button[aria-label="${tr("Play audio")}"]`,
+      )!;
       await act(async () => button.click());
       expect(audio.player.play).toHaveBeenCalledTimes(phase === "playing" ? 1 : 0);
       expect(audio.refresh).toHaveBeenCalledTimes(phase === "URL pending" ? 1 : 0);
@@ -1136,7 +1149,7 @@ describe("ThreadInlineFilePreview playback", () => {
         recording = acquireAudioSession("recording");
       });
       expect(audio.player.pause).toHaveBeenCalled();
-      expect(button.getAttribute("aria-label")).toBe("Play audio");
+      expect(button.getAttribute("aria-label")).toBe(tr("Play audio"));
       native.resolve();
       await activateAudioSession(recording);
       expect(audio.setAudioMode).toHaveBeenLastCalledWith({
@@ -1164,7 +1177,9 @@ describe("ThreadInlineFilePreview playback", () => {
           }),
         ),
       );
-      const replay = container.querySelector<HTMLButtonElement>('button[aria-label="Play audio"]')!;
+      const replay = container.querySelector<HTMLButtonElement>(
+        `button[aria-label="${tr("Play audio")}"]`,
+      )!;
       await act(async () => replay.click());
       expect(audio.player.play).toHaveBeenCalledTimes(phase === "playing" ? 2 : 1);
       expect(audio.setAudioMode).toHaveBeenLastCalledWith({
@@ -1202,16 +1217,18 @@ describe("ThreadInlineFilePreview playback", () => {
           }),
         ),
       );
-      const button = container.querySelector<HTMLButtonElement>('button[aria-label="Play audio"]')!;
+      const button = container.querySelector<HTMLButtonElement>(
+        `button[aria-label="${tr("Play audio")}"]`,
+      )!;
       await act(async () => button.click());
       if (intent !== "unmount") {
         await act(async () => button.click());
-        expect(button.getAttribute("aria-label")).toBe("Play audio");
+        expect(button.getAttribute("aria-label")).toBe(tr("Play audio"));
       }
       const replay = intent.startsWith("replay");
       if (replay) {
         await act(async () => button.click());
-        expect(button.getAttribute("aria-label")).toBe("Pause audio");
+        expect(button.getAttribute("aria-label")).toBe(tr("Pause audio"));
         expect(audio.refresh).toHaveBeenCalledTimes(2);
       } else if (intent === "unmount") {
         act(() => root!.unmount());
@@ -1223,9 +1240,9 @@ describe("ThreadInlineFilePreview playback", () => {
       expect(audio.player.play).toHaveBeenCalledTimes(latestFirst ? 1 : 0);
       expect(audio.player.replace).toHaveBeenCalledTimes(latestFirst ? 1 : 0);
       if (replay) {
-        expect(button.getAttribute("aria-label")).toBe("Pause audio");
+        expect(button.getAttribute("aria-label")).toBe(tr("Pause audio"));
         if (!latestFirst) {
-          expect(container.textContent).toContain("Loading…");
+          expect(container.textContent).toContain(tr("Loading…"));
           await act(async () => resolutions[1]!("https://example.com/latest.mp3"));
         }
         expect(audio.player.replace).toHaveBeenCalledExactlyOnceWith({
@@ -1264,15 +1281,17 @@ describe("ThreadInlineFilePreview playback", () => {
         onOpen() {},
       });
       act(() => root!.render(preview));
-      const button = container.querySelector<HTMLButtonElement>('button[aria-label="Play audio"]')!;
+      const button = container.querySelector<HTMLButtonElement>(
+        `button[aria-label="${tr("Play audio")}"]`,
+      )!;
       await act(async () => button.click());
       expect(audio.player.play).toHaveBeenCalledTimes(isLoaded ? 1 : 0);
       expect(button.disabled).toBe(false);
-      expect(button.getAttribute("aria-label")).toBe("Pause audio");
+      expect(button.getAttribute("aria-label")).toBe(tr("Pause audio"));
       expect(button.getAttribute("aria-busy")).toBe("true");
       await act(async () => button.click());
       expect(audio.player.pause).toHaveBeenCalled();
-      expect(button.getAttribute("aria-label")).toBe("Play audio");
+      expect(button.getAttribute("aria-label")).toBe(tr("Play audio"));
       expect(button.getAttribute("aria-busy")).toBe("false");
       if (!isLoaded) await act(async () => resolve("https://example.com/sound.mp3"));
       expect(audio.player.play).toHaveBeenCalledTimes(isLoaded ? 1 : 0);
@@ -1286,7 +1305,7 @@ describe("ThreadInlineFilePreview playback", () => {
       await act(async () =>
         root!.render(createElement(ThreadInlineFilePreview, { ...preview.props })),
       );
-      expect(button.getAttribute("aria-label")).toBe("Play audio");
+      expect(button.getAttribute("aria-label")).toBe(tr("Play audio"));
       await act(async () => button.click());
       expect(audio.player.seekTo).toHaveBeenCalledWith(0);
       expect(audio.player.play).toHaveBeenCalledTimes(isLoaded ? 3 : 2);
@@ -1407,7 +1426,11 @@ describe("ThreadFeed previews", () => {
     try {
       await act(async () => root.render(element(ThreadId.make("thread-1"))));
       await act(async () =>
-        container.querySelector<HTMLButtonElement>('[aria-label="Open report.pdf"]')!.click(),
+        container
+          .querySelector<HTMLButtonElement>(
+            `[aria-label="${tr("Open {name}", { name: "report.pdf" })}"]`,
+          )!
+          .click(),
       );
       expect(container.querySelector('[data-file-preview="report.pdf"]')).not.toBeNull();
       committedPreviews.length = 0;
@@ -1416,7 +1439,11 @@ describe("ThreadFeed previews", () => {
 
       // A preview hidden by a presentation change stays closed when the content comes back.
       await act(async () =>
-        container.querySelector<HTMLButtonElement>('[aria-label="Open report.pdf"]')!.click(),
+        container
+          .querySelector<HTMLButtonElement>(
+            `[aria-label="${tr("Open {name}", { name: "report.pdf" })}"]`,
+          )!
+          .click(),
       );
       expect(container.querySelector('[data-file-preview="report.pdf"]')).not.toBeNull();
       await act(async () => root.render(element(ThreadId.make("thread-2"), { kind: "loading" })));

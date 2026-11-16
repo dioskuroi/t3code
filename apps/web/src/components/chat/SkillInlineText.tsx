@@ -1,4 +1,5 @@
 import type { ScopedThreadRef, ServerProviderSkill } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { formatProviderSkillDisplayName } from "@t3tools/shared/inlineSkills";
 import { Children, cloneElement, isValidElement, type ReactNode } from "react";
 import { matchInlineSkills } from "@t3tools/shared/inlineSkills";
@@ -94,15 +95,15 @@ export function SkillChipPopover(props: {
       kind="skill"
       icon={<SkillChipIcon />}
       label={props.label}
-      accessibleLabel={`Skill ${props.label}`}
+      accessibleLabel={tr("Skill {label}", { label: props.label })}
       copyMarkdown={props.copyMarkdown}
     >
       <div className="space-y-3 p-2 text-sm">
         <p className="font-medium">{props.label}</p>
-        <p>{props.description || "No description is available for this skill."}</p>
+        <p>{props.description || tr("No description is available for this skill.")}</p>
         {props.onViewInstructions ? (
           <Button variant="outline" size="sm" onClick={props.onViewInstructions}>
-            View instructions
+            {tr("View instructions")}
           </Button>
         ) : null}
       </div>

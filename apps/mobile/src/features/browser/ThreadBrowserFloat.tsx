@@ -1,4 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentId, PreviewSessionSnapshot, ThreadId } from "@t3tools/contracts";
 import { previewPdfAssetUrl } from "@t3tools/shared/preview";
 import * as Option from "effect/Option";
@@ -100,8 +101,8 @@ function FloatingBrowserPlayer(props: {
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Open browser, ${browserTabTitle(props.tab)}`}
-        accessibilityHint="Opens the browser tab full screen"
+        accessibilityLabel={tr("Open browser, {title}", { title: browserTabTitle(props.tab) })}
+        accessibilityHint={tr("Opens the browser tab full screen")}
         onPress={props.onOpen}
         className="flex-1"
       >
@@ -126,7 +127,7 @@ function FloatingBrowserPlayer(props: {
       </Pressable>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Close floating preview"
+        accessibilityLabel={tr("Close floating preview")}
         hitSlop={8}
         onPress={props.onClose}
         className="absolute right-1.5 top-1.5 size-6 items-center justify-center rounded-full bg-black/55"

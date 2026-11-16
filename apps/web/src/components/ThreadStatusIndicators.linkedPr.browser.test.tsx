@@ -1,4 +1,5 @@
 import { EnvironmentId, type ThreadPullRequestLink } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 
 import { render } from "../../test/render";
@@ -49,18 +50,36 @@ it("updates palette PR status from linked snapshots without a legacy link or bra
     </AppAtomRegistryProvider>
   );
   await using screen = await render(row(link));
-  await expect.element(screen.getByLabelText("PR #7 - Merged: Linked change")).toBeVisible();
-  await expect.element(screen.getByLabelText("PR #7, status pending")).not.toBeInTheDocument();
+  await expect.element(screen.getByLabelText("PR #7 - 已合并: Linked change")).toBeVisible();
+  await expect
+    .element(
+      screen.getByLabelText(
+        tr("{shortLabel} #{number}, status pending", { shortLabel: "PR", number: 7 }),
+      ),
+    )
+    .not.toBeInTheDocument();
 
   await screen.rerender(row({ ...link, snapshot: null }));
-  await expect.element(screen.getByLabelText("PR #7, status pending")).toBeVisible();
   await expect
-    .element(screen.getByLabelText("PR #7 - Merged: Linked change"))
+    .element(
+      screen.getByLabelText(
+        tr("{shortLabel} #{number}, status pending", { shortLabel: "PR", number: 7 }),
+      ),
+    )
+    .toBeVisible();
+  await expect
+    .element(screen.getByLabelText("PR #7 - 已合并: Linked change"))
     .not.toBeInTheDocument();
 
   await screen.rerender(
     row({ ...link, snapshot: { ...link.snapshot!, state: "open", isDraft: true } }),
   );
-  await expect.element(screen.getByLabelText("PR #7 - Draft: Linked change")).toBeVisible();
-  await expect.element(screen.getByLabelText("PR #7, status pending")).not.toBeInTheDocument();
+  await expect.element(screen.getByLabelText("PR #7 - 草稿: Linked change")).toBeVisible();
+  await expect
+    .element(
+      screen.getByLabelText(
+        tr("{shortLabel} #{number}, status pending", { shortLabel: "PR", number: 7 }),
+      ),
+    )
+    .not.toBeInTheDocument();
 });

@@ -1,4 +1,5 @@
 import { AsyncResult } from "effect/reactivity";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomRefresh } from "@effect/atom-react";
 import { StackActions, useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
@@ -47,7 +48,7 @@ function useActionSubmission(params: PullRequestParams) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "The provider could not complete this action. Try again.",
+          : tr("The provider could not complete this action. Try again."),
       );
     }
   };
@@ -55,11 +56,11 @@ function useActionSubmission(params: PullRequestParams) {
 }
 
 const VERDICTS = [
-  { value: "comment", title: "Comment" },
-  { value: "approve", title: "Approve" },
+  { value: "comment", title: tr("Comment") },
+  { value: "approve", title: tr("Approve") },
   {
     value: "request-changes",
-    title: "Request changes",
+    title: tr("Request changes"),
   },
 ] as const;
 
@@ -115,7 +116,7 @@ export function PullRequestReviewSheet({
   const perform = () =>
     submission.submit(async () => {
       if (!canSubmit)
-        throw new Error("Add your feedback and check your permissions before submitting.");
+        throw new Error(tr("Add your feedback and check your permissions before submitting."));
       const submitted = store.draft;
       const response =
         reviewing && verdict
@@ -141,21 +142,21 @@ export function PullRequestReviewSheet({
     });
   return (
     <SheetContent
-      title={reviewing ? "Submit review" : "Add comment"}
-      subtitle={`#${params.number}${reviewing && result.data?.headSha ? ` · reviewing ${result.data.headSha.slice(0, 7)}` : ` · ${params.repository}`}`}
+      title={reviewing ? tr("Submit review") : tr("Add comment")}
+      subtitle={`#${params.number}${reviewing && result.data?.headSha ? tr(" · reviewing {sha}", { sha: result.data.headSha.slice(0, 7) }) : tr(" · {repository}", { repository: params.repository })}`}
       busy={submission.busy}
       footer={
         <Button
           label={
             submission.busy
-              ? "Submitting…"
+              ? tr("Submitting\u2026")
               : reviewing
                 ? verdict?.value === "approve"
-                  ? "Approve"
+                  ? tr("Approve")
                   : verdict?.value === "request-changes"
-                    ? "Request changes"
-                    : "Submit review"
-                : "Post comment"
+                    ? tr("Request changes")
+                    : tr("Submit review")
+                : tr("Post comment")
           }
           fullWidth
           tone={Platform.OS === "android" ? "primary" : "contrast"}
@@ -176,7 +177,7 @@ export function PullRequestReviewSheet({
         />
       ) : null}
       <Text className="px-4 text-xs text-foreground-muted">
-        {reviewing ? "Summary" : "Comment"}
+        {reviewing ? tr("Summary") : tr("Comment")}
       </Text>
       <PullRequestCompletionSuggestions completions={completions} />
       <TextInput
@@ -188,9 +189,9 @@ export function PullRequestReviewSheet({
         placeholder={
           reviewing
             ? summaryRequired
-              ? "Summary required to request changes…"
-              : "Summarize your review…"
-            : "Write a comment…"
+              ? tr("Summary required to request changes\u2026")
+              : tr("Summarize your review\u2026")
+            : tr("Write a comment\u2026")
         }
         placeholderTextColorClassName="accent-foreground-muted"
         editable={store.ready && !submission.busy}
@@ -203,8 +204,9 @@ export function PullRequestReviewSheet({
       {reviewing && store.draft.comments.length ? (
         <View className="gap-2">
           <Text className="text-sm font-t3-medium">
-            {store.draft.comments.length} pending line{" "}
-            {store.draft.comments.length === 1 ? "comment" : "comments"}
+            {store.draft.comments.length === 1
+              ? tr("{count} pending comment", { count: store.draft.comments.length })
+              : tr("{count} pending comments", { count: store.draft.comments.length })}
           </Text>
           {store.draft.comments.map((draft) => (
             <Pressable
@@ -240,8 +242,8 @@ export function PullRequestReviewSheet({
               </Text>
               <Text className="text-2xs text-foreground-muted">
                 {draft.headSha !== result.data?.headSha
-                  ? "Branch changed · Tap to choose a new line"
-                  : "Tap to edit"}
+                  ? tr("Branch changed \u00B7 Tap to choose a new line")
+                  : tr("Tap to edit")}
               </Text>
             </Pressable>
           ))}
@@ -249,14 +251,19 @@ export function PullRequestReviewSheet({
       ) : null}
       {reviewing && stale ? (
         <Text className="text-sm text-danger-foreground">
-          The branch changed since you wrote a comment. Choose its current line before submitting.
+          {tr(
+            "The branch changed since you wrote a comment. Choose its current line before submitting.",
+          )}
         </Text>
       ) : null}
       {reviewing && !canSubmitComments ? (
         <Text className="text-sm text-danger-foreground">
-          You can no longer submit line comments on this{" "}
-          {sourceControlClients.get(result.data?.provider).changeRequest.singular}. Your drafts are
-          kept here.
+          {tr(
+            "You can no longer submit line comments on this {singular}. Your drafts are kept here.",
+            {
+              singular: sourceControlClients.get(result.data?.provider).changeRequest.singular,
+            },
+          )}
         </Text>
       ) : null}
       {submission.error || result.error || store.error ? (

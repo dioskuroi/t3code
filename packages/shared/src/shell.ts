@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 // @effect-diagnostics nodeBuiltinImport:off
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
@@ -218,7 +219,7 @@ export function buildEnvironmentCaptureCommand(
   return names
     .map((name) => {
       if (!SHELL_ENV_NAME_PATTERN.test(name)) {
-        throw new Error(`Unsupported environment variable name: ${name}`);
+        throw new Error(tr("Unsupported environment variable name: {name}", { name }));
       }
 
       if (isNushell) {
@@ -256,7 +257,7 @@ function buildWindowsEnvironmentCaptureCommand(names: ReadonlyArray<string>): st
     "$ErrorActionPreference = 'Stop'",
     ...names.flatMap((name) => {
       if (!SHELL_ENV_NAME_PATTERN.test(name)) {
-        throw new Error(`Unsupported environment variable name: ${name}`);
+        throw new Error(tr("Unsupported environment variable name: {name}", { name }));
       }
 
       return [

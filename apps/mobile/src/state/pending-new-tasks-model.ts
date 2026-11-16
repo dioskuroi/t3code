@@ -1,4 +1,5 @@
 import type { EnvironmentId, ProjectId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import { deriveThreadTitleFromPrompt } from "../lib/projectThreadStartTurn";
 import type { QueuedThreadCreation, QueuedThreadMessage } from "./thread-outbox-model";
@@ -44,7 +45,7 @@ function draftTitle(draft: ComposerDraft): string {
     return deriveThreadTitleFromPrompt(draft.text);
   }
   const count = draft.attachments.length;
-  return count === 1 ? "1 attachment" : `${count} attachments`;
+  return count === 1 ? tr("1 attachment") : `${count} attachments`;
 }
 
 /** A project's new-task defaults, as useNewTaskProjectDefaults resolves them. */

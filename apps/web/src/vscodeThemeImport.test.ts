@@ -90,7 +90,7 @@ describe("theme import text", () => {
     '{ "name": "Test", "colors": { "editor.background": "#002b36" } } /* unterminated',
     '{ "name": "Test", "colors": { "editor.background": "#002b36" } } extra',
   ])("rejects malformed input rather than using parser recovery: %s", (source) => {
-    expect(() => parseThemeImport(source)).toThrow("That theme file is not valid JSON.");
+    expect(() => parseThemeImport(source)).toThrow("该主题文件不是有效的 JSON。");
   });
 
   it("preserves native T3 theme parsing and strict JSON syntax", () => {
@@ -109,12 +109,12 @@ describe("theme import text", () => {
   it("still validates theme structure after parsing JSONC", () => {
     expect(() =>
       parseThemeImport('{ /* not a theme */ "colors": { "editor.foreground": "#fff" } }'),
-    ).toThrow('no "editor.background"');
+    ).toThrow("editor.background");
     expect(() =>
       parseThemeImport(
         '{ "version": 1, "name": "Bad native", "appearance": "dark", "colors": { "unknown": "#fff" } }',
       ),
-    ).toThrow('"unknown" is not a supported theme color role.');
+    ).toThrow("“unknown”不是受支持的主题颜色角色。");
   });
 });
 

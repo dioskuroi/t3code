@@ -1,4 +1,5 @@
 import { DEFAULT_CLIENT_SETTINGS, EnvironmentId, ProjectId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
 
@@ -74,7 +75,7 @@ describe("sidebar header new thread", () => {
       </SidebarProvider>,
     );
 
-    await userEvent.click(screen.getByRole("button", { name: "New thread", exact: true }), {
+    await userEvent.click(screen.getByRole("button", { name: tr("New thread"), exact: true }), {
       modifiers: scenario.shift ? ["Shift"] : [],
     });
 

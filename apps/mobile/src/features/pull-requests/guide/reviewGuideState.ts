@@ -1,4 +1,5 @@
 import type { PullRequestReviewGuideResult } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 export function reviewGuideState(data: PullRequestReviewGuideResult | null) {
   const guide = data?.guide ?? null;
@@ -24,51 +25,54 @@ export function guideNoticeState(state: {
   if (state.running) {
     return {
       kind: "writing" as const,
-      title: "Rewriting guide",
+      title: tr("Rewriting guide"),
       description: guide
-        ? "You can keep reading this guide while the agent writes the update."
-        : "An agent is reading the change and writing the tour. You can leave and come back when it’s ready.",
-      action: guide ? "Rewriting…" : "Writing guide…",
+        ? tr("You can keep reading this guide while the agent writes the update.")
+        : tr(
+            "An agent is reading the change and writing the tour. You can leave and come back when it\u2019s ready.",
+          ),
+      action: guide ? tr("Rewriting\u2026") : tr("Writing guide\u2026"),
     };
   }
   const error = state.startError ?? failure;
   if (error) {
     return {
       kind: "failed" as const,
-      title: "Could not write guide",
+      title: tr("Could not write guide"),
       description: error,
-      action: "Try again",
+      action: tr("Try again"),
     };
   }
   if (state.error) {
     return {
       kind: "unavailable" as const,
-      title: "Could not refresh guide",
+      title: tr("Could not refresh guide"),
       description: state.error,
-      action: "Try again",
+      action: tr("Try again"),
     };
   }
   if (!state.data) {
     return {
       kind: "loading" as const,
-      title: "Review guide",
-      description: "Checking for a saved guide…",
-      action: "Loading guide…",
+      title: tr("Review guide"),
+      description: tr("Checking for a saved guide\u2026"),
+      action: tr("Loading guide\u2026"),
     };
   }
   if (stale) {
     return {
       kind: "stale" as const,
-      title: "New changes since this guide",
-      description: "You can read the previous guide, or rewrite it for the latest changes.",
-      action: "Rewrite guide",
+      title: tr("New changes since this guide"),
+      description: tr("You can read the previous guide, or rewrite it for the latest changes."),
+      action: tr("Rewrite guide"),
     };
   }
   return {
     kind: guide ? ("ready" as const) : ("empty" as const),
-    title: "Review guide",
-    description:
+    title: tr("Review guide"),
+    description: tr(
       "Get a tour of the change, with code excerpts and notes on what needs a closer look.",
-    action: "Write guide",
+    ),
+    action: tr("Write guide"),
   };
 }

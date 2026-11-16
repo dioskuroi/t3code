@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";
 
@@ -17,14 +18,14 @@ it("explains a denied clipboard write and lets the same message be copied again"
     .mockResolvedValue(undefined);
   using _console = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-  const copy = screen.getByRole("button", { name: "Copy message" });
+  const copy = screen.getByRole("button", { name: tr("Copy message") });
   await copy.click();
 
-  await expect.element(page.getByText("Failed to copy text to the clipboard.")).toBeVisible();
+  await expect.element(page.getByText("无法将 text 复制到剪贴板。")).toBeVisible();
   await expect.element(copy).toBeEnabled();
-  await page.getByRole("button", { name: "Dismiss notification" }).click();
+  await page.getByRole("button", { name: tr("Dismiss notification") }).click();
   await copy.click();
 
-  await expect.element(page.getByText("Copied!", { exact: true })).toBeVisible();
+  await expect.element(page.getByText(tr("Copied!"), { exact: true })).toBeVisible();
   await expect.element(copy).toBeDisabled();
 });

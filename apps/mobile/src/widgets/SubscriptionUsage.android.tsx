@@ -5,6 +5,7 @@ import {
   LinearProgressIndicator,
   Text,
 } from "@expo/ui/jetpack-compose";
+import { tr } from "@t3tools/shared/i18n";
 import {
   fillMaxSize,
   fillMaxWidth,
@@ -41,8 +42,20 @@ export function SubscriptionUsage(props: SubscriptionUsageProps, environment: Wi
     : getMaterialColors({ scheme: appearance });
   const muted = colors.onSurfaceVariant;
   const providers = props.providers ?? [
-    { name: "Codex", detail: "Open T3 to connect", windows: [], expiresAt: 0, totalWindows: 0 },
-    { name: "Claude", detail: "Open T3 to connect", windows: [], expiresAt: 0, totalWindows: 0 },
+    {
+      name: tr("Codex"),
+      detail: tr("Open T3 to connect"),
+      windows: [],
+      expiresAt: 0,
+      totalWindows: 0,
+    },
+    {
+      name: tr("Claude"),
+      detail: tr("Open T3 to connect"),
+      windows: [],
+      expiresAt: 0,
+      totalWindows: 0,
+    },
   ];
   return (
     // Android lacks widgetURL; one card Button routes taps to the app listener opening props.url.
@@ -71,7 +84,7 @@ export function SubscriptionUsage(props: SubscriptionUsageProps, environment: Wi
               </Text>
               {shown.length === 0 ? (
                 <Text color={muted} maxLines={1} style={{ fontSize: 11 }}>
-                  {stale ? "Open T3 to refresh" : provider.detail}
+                  {stale ? tr("Open T3 to refresh") : provider.detail}
                 </Text>
               ) : null}
               {shown.map((window) => {
@@ -83,7 +96,10 @@ export function SubscriptionUsage(props: SubscriptionUsageProps, environment: Wi
                       maxLines={1}
                       style={{ fontSize: 11 }}
                     >
-                      {`${window.label} · ${window.remaining}% left`}
+                      {tr("{label} · {remaining}% left", {
+                        label: window.label,
+                        remaining: window.remaining,
+                      })}
                     </Text>
                     <Column modifiers={[fillMaxWidth(), padding(0, 3, 0, 3)]}>
                       <LinearProgressIndicator
@@ -101,7 +117,7 @@ export function SubscriptionUsage(props: SubscriptionUsageProps, environment: Wi
               })}
               {hidden > 0 ? (
                 <Text color={muted} maxLines={1} style={{ fontSize: 10 }}>
-                  {`${hidden} more in T3`}
+                  {tr("{count} more in T3", { count: hidden })}
                 </Text>
               ) : null}
             </Column>
@@ -114,8 +130,15 @@ export function SubscriptionUsage(props: SubscriptionUsageProps, environment: Wi
           modifiers={[padding(0, 10, 0, 0)]}
         >
           {props.checkedAt
-            ? `As of ${new Date(props.checkedAt).toLocaleString(undefined, { hour: "numeric", minute: "2-digit", month: "short", day: "numeric" })}`
-            : "Tap to connect in T3"}
+            ? tr("As of {time}", {
+                time: new Date(props.checkedAt).toLocaleString(undefined, {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  month: "short",
+                  day: "numeric",
+                }),
+              })
+            : tr("Tap to connect in T3")}
         </Text>
       </Column>
     </Button>

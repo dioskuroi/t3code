@@ -1,4 +1,5 @@
 import type { PreviewSessionSnapshot } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 export function latestBrowserTab(tabs: ReadonlyArray<PreviewSessionSnapshot>) {
   return tabs.reduce<PreviewSessionSnapshot | null>(
@@ -12,7 +13,7 @@ export function browserTabUrl(tab: PreviewSessionSnapshot) {
 }
 
 export function browserTabTitle(tab: PreviewSessionSnapshot) {
-  if (tab.navStatus._tag === "Idle") return "New tab";
+  if (tab.navStatus._tag === "Idle") return tr("New tab");
   if (tab.navStatus.title.trim()) return tab.navStatus.title;
   try {
     return new URL(tab.navStatus.url).host || tab.navStatus.url;

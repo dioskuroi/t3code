@@ -59,21 +59,23 @@ const ensureRelayClientAvailable = Effect.fn("linkEnvironment.ensureRelayClientA
     const registry = yield* EnvironmentRegistry.EnvironmentRegistry;
     const status = yield* registry
       .run(environmentId, request(WS_METHODS.cloudGetRelayClientStatus, {}))
-      .pipe(Effect.mapError(relayClientRpcError("Could not check relay client availability.")));
+      .pipe(Effect.mapError(relayClientRpcError(tr("Could not check relay client availability."))));
     if (status.status === "available") return;
     if (status.status === "unsupported") {
       return yield* new CloudEnvironmentLinkError({
-        message: `T3 Code cannot install the relay client automatically on ${status.platform}-${status.arch}.`,
+        message: tr("T3 Code cannot install the relay client automatically on {platform}.", {
+          platform: `${status.platform}-${status.arch}`,
+        }),
       });
     }
 
     const confirmed = yield* Effect.tryPromise({
       try: () => requestRelayClientInstallConfirmation(status.version),
-      catch: relayClientRpcError("Could not confirm relay client installation."),
+      catch: relayClientRpcError(tr("Could not confirm relay client installation.")),
     });
     if (!confirmed) {
       return yield* new CloudEnvironmentLinkError({
-        message: "Relay client installation was cancelled.",
+        message: tr("Relay client installation was cancelled."),
       });
     }
 
@@ -86,12 +88,12 @@ const ensureRelayClientAvailable = Effect.fn("linkEnvironment.ensureRelayClientA
       )
       .pipe(
         Stream.runLast,
-        Effect.mapError(relayClientRpcError("Could not install the relay client.")),
+        Effect.mapError(relayClientRpcError(tr("Could not install the relay client."))),
         Effect.ensuring(Effect.sync(finishRelayClientInstall)),
       );
     if (Option.isNone(installed) || installed.value.type !== "complete") {
       return yield* new CloudEnvironmentLinkError({
-        message: "The relay client install completed without a final status.",
+        message: tr("The relay client install completed without a final status."),
       });
     }
     const installedStatus = installed.value.status;
@@ -99,8 +101,10 @@ const ensureRelayClientAvailable = Effect.fn("linkEnvironment.ensureRelayClientA
       return yield* new CloudEnvironmentLinkError({
         message:
           installedStatus.status === "unsupported"
-            ? `T3 Code cannot install the relay client automatically on ${installedStatus.platform}-${installedStatus.arch}.`
-            : "The relay client is still unavailable after installation.",
+            ? tr("T3 Code cannot install the relay client automatically on {platform}.", {
+                platform: `${installedStatus.platform}-${installedStatus.arch}`,
+              })
+            : tr("The relay client is still unavailable after installation."),
       });
     }
   },
@@ -168,12 +172,12 @@ function ensureLinkedEnvironmentMatches(input: {
 }): Effect.Effect<void, CloudEnvironmentLinkError> {
   if (input.link.environmentId !== input.expectedEnvironmentId) {
     return new CloudEnvironmentLinkError({
-      message: "Relay returned credentials for a different environment.",
+      message: tr("Relay returned credentials for a different environment."),
     });
   }
   if (input.link.endpoint.providerKind !== input.expectedProviderKind) {
     return new CloudEnvironmentLinkError({
-      message: "Relay returned credentials for a different endpoint provider.",
+      message: tr("Relay returned credentials for a different endpoint provider."),
     });
   }
   return Effect.void;
@@ -310,7 +314,7 @@ export const unlinkEnvironmentFromCloud: (input: {
       })
       .pipe(
         Effect.catch((cause) =>
-          Effect.logWarning("Could not revoke cloud environment link after local unlink.", {
+          Effect.logWarning(tr("Could not revoke cloud environment link after local unlink."), {
             cause,
           }),
         ),
@@ -338,7 +342,7 @@ export const linkEnvironmentToCloud: (input: {
   const configuredRelayUrl = relayUrl();
   if (!configuredRelayUrl) {
     return yield* new CloudEnvironmentLinkError({
-      message: "T3CODE_RELAY_URL is not configured.",
+      message: tr("T3CODE_RELAY_URL is not configured."),
     });
   }
   const managedTunnelsEnabled = (input.mode ?? "managed") === "managed";

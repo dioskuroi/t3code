@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import DocumentPages, { sanitizeDocumentHtml } from "./DocumentPages";
 import { act, render, stubGlobal, type Screen } from "../../../test/render";
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
@@ -194,7 +195,7 @@ describe("bounded binary previews", () => {
       await act(() => child()!.click());
       await vi.waitFor(() => expect(child()?.textContent).toBe("hello.txt"));
       const parent = () =>
-        screen.container.querySelector<HTMLButtonElement>('[aria-label="Parent folder"]')!;
+        screen.container.querySelector<HTMLButtonElement>(`[aria-label="${tr("Parent folder")}"]`)!;
       await act(() => parent().click());
       await act(() => parent().click());
       expect(parent().disabled).toBe(true);
@@ -253,9 +254,7 @@ describe("bounded binary previews", () => {
         } else {
           await vi.waitFor(
             () =>
-              expect(screen.container.querySelector('[role="alert"]')?.textContent).toContain(
-                "too large or damaged",
-              ),
+              expect(screen.container.querySelector('[role="alert"]')?.textContent).toContain(tr("An archive entry is too large or damaged.")),
             10_000,
           );
         }
@@ -300,11 +299,13 @@ describe("bounded binary previews", () => {
           "21",
           "14",
         ]);
-        const trigger = screen.container.querySelector<HTMLButtonElement>('[aria-label="Table"]')!;
+        const trigger = screen.container.querySelector<HTMLButtonElement>(`[aria-label="${tr("Table")}"]`)!;
         await act(() => trigger.focus());
         await userEvent.keyboard("{Enter}");
         await expect
-          .element(page.getByRole("option", { name: "zzInventory (1 rows)" }))
+          .element(page.getByRole("option", {
+            name: tr("{name} ({count} rows)", { name: "zzInventory", count: (1).toLocaleString() }),
+          }))
           .toBeVisible();
         await userEvent.keyboard("{ArrowDown}{Enter}");
         await vi.waitFor(() =>
@@ -315,7 +316,9 @@ describe("bounded binary previews", () => {
         await vi.waitFor(() => expect(document.activeElement).toBe(trigger));
         await userEvent.keyboard("{Enter}");
         await expect
-          .element(page.getByRole("option", { name: "zzInventory (1 rows)" }))
+          .element(page.getByRole("option", {
+            name: tr("{name} ({count} rows)", { name: "zzInventory", count: (1).toLocaleString() }),
+          }))
           .toBeVisible();
         await userEvent.keyboard("{Escape}");
       } finally {
@@ -341,9 +344,7 @@ describe("bounded binary previews", () => {
       />,
     );
     await vi.waitFor(() =>
-      expect(screen.container.querySelector('[role="alert"]')?.textContent).toContain(
-        "Unable to load image.",
-      ),
+      expect(screen.container.querySelector('[role="alert"]')?.textContent).toContain(tr("Unable to load image.")),
     );
     await act(() =>
       screen.container.querySelector<HTMLButtonElement>('[role="alert"] button')!.click(),
@@ -475,7 +476,7 @@ describe("bounded binary previews", () => {
     try {
       await expect(
         decodeImagePreview(invalid, false, new AbortController().signal),
-      ).rejects.toThrow("metadata");
+      ).rejects.toThrow(tr("This TIFF has too much or truncated metadata."));
     } finally {
       URL.revokeObjectURL(invalid);
     }
@@ -537,7 +538,7 @@ describe("large text preview recovery", () => {
       await vi.waitFor(() => expect(screen.container.textContent).toContain("original"));
       // A cold worker can take longer than waitFor allows to load and index on CI.
       await indexed[0];
-      await vi.waitFor(() => expect(screen.container.textContent).toContain("1,000 lines"));
+      await vi.waitFor(() => expect(screen.container.textContent).toContain("1,000 行"));
       const viewport = screen.container.querySelector<HTMLElement>('[tabindex="0"]')!;
       await act(() =>
         viewport.dispatchEvent(
@@ -565,13 +566,13 @@ describe("large text preview recovery", () => {
       await vi.waitFor(() => expect(screen.container.textContent).toContain("original"));
       assetUrlState.mockReturnValue({ _tag: "Failure" });
       await screen.rerender(preview("legacy-edit", 1));
-      expect(screen.container.textContent).toContain("Unable to load file preview.");
+      expect(screen.container.textContent).toContain(tr("Unable to load file preview."));
       refresh.mockClear();
       refresh.mockImplementation(async () => {
         state(`${changed}#retried`);
         return changed;
       });
-      await screen.getByRole("button", { name: "Try again" }).click();
+      await screen.getByRole("button", { name: tr("Try again") }).click();
       expect(refresh).toHaveBeenCalledOnce();
       await screen.rerender(preview("legacy-edit", 1));
       await vi.waitFor(() => expect(screen.container.textContent).toContain("changed"));
@@ -887,12 +888,12 @@ describe("large text preview recovery", () => {
       <LargeTextViewer name="log.txt" text={"bad\0text"} delimiter={null} />,
     );
     await vi.waitFor(
-      () => expect(screen.container.textContent).toContain("This file contains binary data."),
+      () => expect(screen.container.textContent).toContain(tr("This file contains binary data.")),
       10_000,
     );
     await screen.rerender(<LargeTextViewer name="log.txt" text="" delimiter={null} />);
     await vi.waitFor(
-      () => expect(screen.container.textContent).toContain("This file is empty."),
+      () => expect(screen.container.textContent).toContain(tr("This file is empty.")),
       10_000,
     );
     expect(screen.container.querySelector('[role="alert"]')).toBeNull();
@@ -983,7 +984,7 @@ it("rejects oversized embedded images before decoding pixels and retains ordinar
   new DataView(bytes).setUint32(20, 12000);
   const decode = vi.spyOn(globalThis, "createImageBitmap");
   try {
-    await expect(officeImageBitmap(new Blob([bytes]))).rejects.toThrow("pixel limit");
+    await expect(officeImageBitmap(new Blob([bytes]))).rejects.toThrow(tr("This embedded image exceeds the preview pixel limit."));
     expect(decode).not.toHaveBeenCalled();
     const bitmap = await officeImageBitmap(blob);
     expect([bitmap.width, bitmap.height]).toEqual([2, 3]);
@@ -1229,7 +1230,7 @@ it.each([
       ) {
         expect(result).toMatchObject({
           type: "error",
-          message: expect.stringContaining("Preview limited"),
+          message: expect.stringContaining("预览受限：此 Word 文档"),
         });
       } else {
         expect(result.type).toBe("docx");
@@ -1311,7 +1312,7 @@ it.each([
     });
     expect(result).toMatchObject({
       type: "error",
-      message: expect.stringContaining("Preview limited"),
+      message: expect.stringContaining("预览受限：此 Word 文档"),
     });
   } finally {
     worker.terminate();
@@ -1703,7 +1704,7 @@ it.each(["repeated binary", "XML relationship alias", "duplicate relationship ID
       });
       expect(result).toMatchObject({
         type: "error",
-        message: expect.stringContaining("expanded markup"),
+        message: expect.stringContaining(tr("Preview limited: this Word document has too much expanded markup.")),
       });
     } finally {
       worker.terminate();
@@ -1745,7 +1746,7 @@ it.each(["XFD200", "XFD1048576", "AX500", "AZ9999999"])(
       if (ref === "AZ9999999" || ref === "XFD1048576") {
         expect(result).toMatchObject({
           type: "error",
-          message: expect.stringContaining(ref === "AZ9999999" ? "invalid" : "preview limit"),
+          message: expect.stringContaining(ref === "AZ9999999" ? tr("This workbook contains invalid worksheet dimensions.") : tr("This workbook exceeds the preview limit: 250,000 rows.")),
         });
       } else {
         expect(result.type).toBe("xlsx");
@@ -1869,7 +1870,7 @@ it.each([60, 100])("prepares all %i pages of a table-heavy Word report", async (
   await vi.waitFor(() => expect(screen.container.textContent).toContain("page " + pages), {
     timeout: 10_000,
   });
-  expect(screen.container.textContent).not.toContain("Preview limited");
+  expect(screen.container.textContent).not.toContain("预览仅限");
   expect(screen.container.querySelector('[role="alert"]')).toBeNull();
 });
 
@@ -1886,7 +1887,7 @@ describe("standalone Mermaid previews", () => {
     await using screen = await render(<MermaidFilePreview text={`flowchart LR\n${node}`} />);
     await vi.waitFor(() =>
       expect(screen.container.querySelector('[role="alert"]')?.textContent).toContain(
-        "Show Mermaid source",
+        tr("This diagram contains resource URLs, markup, node metadata, or custom configuration. Show Mermaid source to inspect it safely."),
       ),
     );
     expect(imageSource).not.toHaveBeenCalled();
@@ -1964,14 +1965,14 @@ it("clears an Office metadata error when the same URL becomes previewable", asyn
   await using screen = await render(
     <OfficeFilePreview src={src} name="report.docx" kind="docx" sizeBytes={51 * 1024 * 1024} />,
   );
-  await vi.waitFor(() => expect(screen.container.textContent).toContain("under 50 MB"));
+  await vi.waitFor(() => expect(screen.container.textContent).toContain(tr("Preview limited to files under 50 MB.")));
   await screen.rerender(
     <OfficeFilePreview src={src} name="report.docx" kind="docx" sizeBytes={100} />,
   );
   await vi.waitFor(() =>
-    expect(screen.container.querySelector('[aria-label="Loading file"]')).not.toBeNull(),
+    expect(screen.container.querySelector(`[aria-label="${tr("Loading file")}"]`)).not.toBeNull(),
   );
-  expect(screen.container.textContent).not.toContain("under 50 MB");
+  expect(screen.container.textContent).not.toContain(tr("Preview limited to files under 50 MB."));
   resolveBody("invalid-office-file");
   await vi.waitFor(() => expect(screen.container.textContent).toContain("not a readable ZIP"), {
     timeout: 10_000,
@@ -2023,7 +2024,7 @@ describe("attachment HTML preview recovery", () => {
     await using screen = await openRemote();
     expect(screen.container.querySelector("iframe")?.getAttribute("src")).toBe(originalUrl);
     now = 61 * 60_000;
-    await toggleMode(screen, "Show HTML source");
+    await toggleMode(screen, tr("Show HTML source"));
     await act(async () => {
       await import("./ReadOnlySourcePreview");
     });
@@ -2032,9 +2033,9 @@ describe("attachment HTML preview recovery", () => {
       expect(screen.container.querySelector("pre")?.textContent).toBe("<p>Captured HTML</p>"),
     );
 
-    await toggleMode(screen, "Show rendered page");
+    await toggleMode(screen, tr("Show rendered page"));
     expect(screen.container.querySelector("iframe")?.getAttribute("src")).toBe(renewedUrl);
-    await toggleMode(screen, "Show HTML source");
+    await toggleMode(screen, tr("Show HTML source"));
     expect(refresh).toHaveBeenCalledTimes(2);
     expect(attachmentFetches()).toEqual([renewedUrl, renewedUrl]);
   });
@@ -2050,12 +2051,12 @@ describe("attachment HTML preview recovery", () => {
     await using screen = await openRemote();
     now = 61 * 60_000;
     refresh.mockResolvedValue(null);
-    await toggleMode(screen, "Show HTML source");
+    await toggleMode(screen, tr("Show HTML source"));
     expect(attachmentFetches()).toEqual([]);
-    expect(alert(screen)?.textContent).toContain("Reconnect to the environment and try again.");
+    expect(alert(screen)?.textContent).toContain(tr("Reconnect to the environment and try again."));
 
-    await toggleMode(screen, "Show rendered page");
-    await toggleMode(screen, "Show HTML source");
+    await toggleMode(screen, tr("Show rendered page"));
+    await toggleMode(screen, tr("Show HTML source"));
     expect(refresh).toHaveBeenCalledTimes(3);
     expect(attachmentFetches()).toEqual([]);
   });
@@ -2077,10 +2078,14 @@ describe("attachment HTML preview recovery", () => {
         file={file}
       />,
     );
-    await toggleMode(screen, "Show HTML source");
-    await vi.waitFor(() => expect(alert(screen)?.textContent).toContain("not UTF-8"));
+    await toggleMode(screen, tr("Show HTML source"));
+    await vi.waitFor(() =>
+      expect(alert(screen)?.textContent).toContain(
+        tr("This file is not UTF-8 text. Open it in another app to view its contents."),
+      ),
+    );
 
-    await toggleMode(screen, "Show rendered page");
+    await toggleMode(screen, tr("Show rendered page"));
     expect(alert(screen)).toBeNull();
     expect(screen.container.querySelector("iframe")?.title).toBe("document.html");
   });
@@ -2131,7 +2136,7 @@ it("opens a known empty attachment even when its range response is inaccessible"
     />,
   );
   await vi.waitFor(
-    () => expect(screen.container.textContent).toContain("This file is empty."),
+    () => expect(screen.container.textContent).toContain(tr("This file is empty.")),
     10_000,
   );
 });
@@ -2160,11 +2165,11 @@ it.each(["draft", "thread"] as const)(
     );
     await vi.waitFor(() =>
       expect(screen.container.textContent).toContain(
-        "This file contains binary data and cannot be shown as text.",
+        tr("This file contains binary data and cannot be shown as text."),
       ),
     );
     expect(fetch).toHaveBeenCalled();
-    expect(screen.container.textContent).not.toContain("This file is empty.");
+    expect(screen.container.textContent).not.toContain(tr("This file is empty."));
   },
 );
 
@@ -2183,7 +2188,7 @@ it("refreshes authorization and retries a failed streamed attachment", async () 
     );
     // A cold large-text worker can take longer than waitFor's default to boot on CI.
     await vi.waitFor(
-      () => expect(screen.container.textContent).toContain("This file contains binary data."),
+      () => expect(screen.container.textContent).toContain(tr("This file contains binary data.")),
       { timeout: 10_000 },
     );
     await act(() =>
@@ -2229,7 +2234,7 @@ it.each([
       await vi.waitFor(
         () =>
           expect(screen.container.textContent).toContain(
-            row > 250000 ? "This workbook exceeds the preview limit" : "worksheet value",
+            row > 250000 ? tr("This workbook exceeds the preview limit: 250,000 rows.") : "worksheet value",
           ),
         { timeout: 10_000 },
       );
@@ -2251,7 +2256,7 @@ it("copies every indexed line rather than the mounted preview rows", async () =>
     timeout: 10_000,
   });
   const first = copyContents.current!();
-  await expect(copyContents.current!()).rejects.toThrow("Another copy is in progress.");
+  await expect(copyContents.current!()).rejects.toThrow(tr("Another copy is in progress."));
   expect(await first).toBe(text);
   expect(await copyContents.current!()).toBe(text);
   expect(screen.container.querySelector('[role="alert"]')).toBeNull();
@@ -2351,17 +2356,19 @@ it("toggles a Mermaid attachment between diagram and source through the lazy pre
   await vi.waitFor(() =>
     expect(screen.container.querySelector("[data-markdown-mermaid] svg path")).not.toBeNull(),
   );
-  await screen.getByRole("button", { name: "Expand diagram" }).click();
+  await screen.getByRole("button", { name: tr("Expand diagram") }).click();
   await vi.waitFor(() => {
     const image = document.querySelector<HTMLImageElement>('[role="dialog"] img');
-    expect(image?.alt).toBe("Mermaid diagram");
+    expect(image?.alt).toBe(tr("Mermaid diagram"));
     expect(image?.naturalWidth).toBeGreaterThan(0);
   });
-  await page.getByRole("button", { name: "Close image preview" }).click();
+  await page
+    .getByRole("button", { name: tr("Close {mediaLabel} preview", { mediaLabel: "image" }) })
+    .click();
   await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
-  await screen.getByRole("button", { name: "Show Mermaid source" }).click();
+  await screen.getByRole("button", { name: tr("Show Mermaid source") }).click();
   await vi.waitFor(() => expect(screen.container.querySelector("pre")?.textContent).toBe(text));
-  await screen.getByRole("button", { name: "Show rendered diagram" }).click();
+  await screen.getByRole("button", { name: tr("Show rendered diagram") }).click();
   await vi.waitFor(() =>
     expect(screen.container.querySelector("[data-markdown-mermaid] svg path")).not.toBeNull(),
   );
@@ -2568,8 +2575,8 @@ it("unwraps one text attachment without turning off the word wrap setting", asyn
       file={file}
     />,
   );
-  await screen.getByRole("button", { name: "Disable word wrap" }).click();
-  await expect.element(screen.getByRole("button", { name: "Enable word wrap" })).toBeVisible();
+  await screen.getByRole("button", { name: tr("Disable word wrap") }).click();
+  await expect.element(screen.getByRole("button", { name: tr("Enable word wrap") })).toBeVisible();
   expect(getClientSettings().wordWrap).toBe(true);
   expect(screen.container.querySelector("pre")?.dataset.wordWrap).toBe("false");
 });
@@ -2762,7 +2769,7 @@ it.each(["rtf", "epub", "ods"] as const)(
           expect(screen.container.textContent).toContain("North");
           expect(screen.container.textContent).toContain("150");
           expect(screen.container.textContent).not.toContain("private note");
-          expect(screen.container.textContent).toContain("1 rows · 2 columns");
+          expect(screen.container.textContent).toContain("1 行 · 2 列");
           expect(screen.container.textContent).not.toContain("Limited to 500");
         } else {
           const frame = screen.container.querySelector("iframe");
@@ -2894,11 +2901,11 @@ it.each([
   );
   using _fetch = stubGlobal("fetch", fetchAsset);
   await expect(factory.fetch({ kind, filename })).rejects.toThrow(
-    `PDF ${directory} asset unavailable.`,
+    tr("PDF {directory} asset unavailable.", { directory }),
   );
   fetchAsset.mockImplementation(async () => new Response(new Uint8Array([1, 2, 3])));
   await expect(factory.fetch({ kind, filename })).resolves.toEqual(new Uint8Array([1, 2, 3]));
   await expect(factory.fetch({ kind, filename: "missing" })).rejects.toThrow(
-    `Unsupported PDF ${directory} asset.`,
+    tr("Unsupported PDF {directory} asset.", { directory }),
   );
 });

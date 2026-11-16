@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const mocks = vi.hoisted(() => ({
@@ -142,7 +143,7 @@ describe("localAttachmentPreviewAtom", () => {
     const state = await reader.state;
     expect(state.uri).toBeNull();
     expect(state.error?.message).toBe(
-      "This attachment is no longer available. Attach the file again.",
+      tr("This attachment is no longer available. Attach the file again."),
     );
     reader.unsubscribe();
     registry.dispose();

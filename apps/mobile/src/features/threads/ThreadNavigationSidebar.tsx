@@ -1,4 +1,5 @@
 import { useActiveNewTask } from "../../state/active-new-task";
+import { tr } from "@t3tools/shared/i18n";
 import { ThreadUndoNotice } from "../home/ThreadUndoNotice";
 import { useAndroidControlSizing } from "../../components/ui/useAndroidControlSizing";
 import {
@@ -561,16 +562,16 @@ function ThreadNavigationSidebarPane(props: ThreadNavigationSidebarProps) {
       }
     >
       {catalogState.isLoadingConnections
-        ? "Loading threads…"
+        ? tr("Loading threads\u2026")
         : Platform.OS === "android" && !catalogState.hasConnections
-          ? "No environments connected"
+          ? tr("No environments connected")
           : props.searchQuery.trim().length > 0
             ? threadSearch.isPending
-              ? "Searching thread messages…"
-              : "No matching threads"
+              ? tr("Searching thread messages\u2026")
+              : tr("No matching threads")
             : selectedProjectScope !== null
-              ? `No threads in ${selectedProjectScope.title}`
-              : "No threads yet"}
+              ? tr("No threads in {scope}", { scope: selectedProjectScope.title })
+              : tr("No threads yet")}
     </Text>
   );
 

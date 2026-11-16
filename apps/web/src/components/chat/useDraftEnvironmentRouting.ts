@@ -1,4 +1,5 @@
 import { useLoadBalancedEnvironment } from "../../hooks/useLoadBalancedEnvironment";
+import { tr } from "@t3tools/shared/i18n";
 import { useLogicalProjectEnvironments } from "../../hooks/useLogicalProjectEnvironments";
 import { useScratchProject } from "../../hooks/useScratchProject";
 import { useStableCallback } from "../../hooks/useStableCallback";
@@ -138,9 +139,10 @@ export function useDraftEnvironmentRouting(input: DraftEnvironmentRoutingInput) 
       toastManager.add({
         type: "warning",
         id: "load-balancing-attachments",
-        title: "Keep attachments on this machine",
-        description:
+        title: tr("Keep attachments on this machine"),
+        description: tr(
           "Remove attachments before choosing automatic routing, then attach them on the selected machine.",
+        ),
       });
       return;
     }
@@ -157,12 +159,12 @@ export function useDraftEnvironmentRouting(input: DraftEnvironmentRoutingInput) 
   const onAutoEnvironmentStable = useStableCallback(onAutoEnvironment);
   const autoEnvironmentLabel = automaticEnvironment
     ? draftThread?.loadBalancedEnvironmentId
-      ? "Auto balance"
+      ? tr("Auto balance")
       : loadBalancing.pending
-        ? "Checking machines…"
+        ? tr("Checking machines\u2026")
         : loadBalancing.failed
-          ? "Auto balance unavailable"
-          : "Auto balance"
+          ? tr("Auto balance unavailable")
+          : tr("Auto balance")
     : undefined;
 
   // A change in flight belongs to the draft and project it started on.
@@ -251,7 +253,7 @@ export function useDraftEnvironmentRouting(input: DraftEnvironmentRoutingInput) 
       return;
     }
     setBusyEnvironmentChange(request);
-    void openScratchProject(target.environmentId, "Could not switch machine")
+    void openScratchProject(target.environmentId, tr("Could not switch machine"))
       .then((project) => {
         if (project) retarget(project);
       })

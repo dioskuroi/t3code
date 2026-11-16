@@ -1,4 +1,5 @@
 import { useIsFocused, useNavigation, type StaticScreenProps } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ThreadId, TurnItemId } from "@t3tools/contracts";
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
 import { turnItemDetailRevision } from "@t3tools/client-runtime/work-log/item-detail";
@@ -126,7 +127,9 @@ export function McpAppFullscreenScreen({ route }: McpAppFullscreenScreenProps) {
       >
         {app === undefined ? (
           detail.data === undefined ? null : (
-            <Text className="m-6 text-sm text-foreground-muted">This app cannot be shown.</Text>
+            <Text className="m-6 text-sm text-foreground-muted">
+              {tr("This app cannot be shown.")}
+            </Text>
           )
         ) : size.width > 0 ? (
           <ThreadMcpApp

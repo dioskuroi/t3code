@@ -1,4 +1,5 @@
 import type { ToolCallDiffTarget } from "../../diffPanelStore";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
 import type { ThreadPreviewState } from "../../previewStateStore";
 import { formatFilePathForClipboard } from "@t3tools/client-runtime/media-actions";
@@ -123,7 +124,7 @@ export function useRightPanelActions(input: RightPanelActionsInput) {
         toastManager.add(
           stackedThreadToast({
             type: "error",
-            title: "Unable to open browser",
+            title: tr("Unable to open browser"),
             description: error.message,
           }),
         );
@@ -260,8 +261,8 @@ export function useRightPanelActions(input: RightPanelActionsInput) {
       toastManager.add(
         stackedThreadToast({
           type: "error",
-          title: "Failed to copy path",
-          description: "Clipboard API unavailable.",
+          title: tr("Failed to copy path"),
+          description: tr("Clipboard API unavailable."),
         }),
       );
       return;
@@ -275,7 +276,7 @@ export function useRightPanelActions(input: RightPanelActionsInput) {
       () => {
         toastManager.add({
           type: "success",
-          title: "Path copied",
+          title: tr("Path copied"),
           description: clipboardPath,
         });
       },
@@ -283,8 +284,8 @@ export function useRightPanelActions(input: RightPanelActionsInput) {
         toastManager.add(
           stackedThreadToast({
             type: "error",
-            title: "Failed to copy path",
-            description: error instanceof Error ? error.message : "An error occurred.",
+            title: tr("Failed to copy path"),
+            description: error instanceof Error ? error.message : tr("An error occurred."),
           }),
         );
       },

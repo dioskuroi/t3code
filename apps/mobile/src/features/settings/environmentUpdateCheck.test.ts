@@ -58,9 +58,7 @@ describe("environmentReleaseCheckAtom", () => {
 
     await vi.advanceTimersByTimeAsync(20_000);
     expect(signal.aborted).toBe(true);
-    expect(releaseCheckError(registry.get(atom))).toBe(
-      "Checking for updates timed out. Try again.",
-    );
+    expect(releaseCheckError(registry.get(atom))).toBe("检查更新超时，请重试。");
     unmount();
     flush();
   });

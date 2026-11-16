@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ThreadId, type ScopedThreadRef } from "@t3tools/contracts";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -167,8 +168,8 @@ export function unknownThreadLinkLabel(
   messageEnvironmentId: EnvironmentId,
 ): string {
   return link.environmentId === null || link.environmentId === messageEnvironmentId
-    ? "Thread no longer available"
-    : "Thread on another machine";
+    ? tr("Thread no longer available")
+    : tr("Thread on another machine");
 }
 
 /** Rewrites each link outside code `replace` answers for. `label` is a Markdown link's own text. */

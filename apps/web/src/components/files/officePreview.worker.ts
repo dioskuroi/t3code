@@ -1,4 +1,5 @@
 import { boundedArchive, prepareOffice } from "./officeArchive";
+import { tr } from "@t3tools/shared/i18n";
 import { PREVIEW_PAGE_ROWS } from "./largeTextProtocol";
 import type { OfficeWorkerRequest, OfficeWorkerResult } from "./officePreviewProtocol";
 
@@ -9,7 +10,7 @@ function reply(result: OfficeWorkerResult) {
 async function handle(input: OfficeWorkerRequest) {
   if (input.type === "sheet-page") {
     const rows = workbook[input.sheet];
-    if (!rows) throw new Error("This sheet is unavailable.");
+    if (!rows) throw new Error(tr("This sheet is unavailable."));
     reply({
       type: "sheet-page",
       sheet: input.sheet,
@@ -46,7 +47,7 @@ self.addEventListener("message", (event: MessageEvent<OfficeWorkerRequest>) => {
   void handle(event.data).catch((cause: unknown) =>
     reply({
       type: "error",
-      message: cause instanceof Error ? cause.message : "Could not parse this file.",
+      message: cause instanceof Error ? cause.message : tr("Could not parse this file."),
     }),
   );
 });

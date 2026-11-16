@@ -1,6 +1,7 @@
 import { assert, it as effectIt } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import { OrchestrationProjectShell } from "./orchestrationProject.ts";
@@ -44,14 +45,21 @@ describe("project RPC errors", () => {
       cause,
     });
 
-    expect(searchError.message).toBe("Failed to search workspace entries in '/workspace'.");
+    expect(searchError.message).toBe(
+      tr("Failed to search workspace entries in '{cwd}'.", { cwd: "/workspace" }),
+    );
     expect(searchError.message).not.toContain(cause.message);
     expect(searchError.normalizedCwd).toBe("/workspace");
     expect(searchError.queryLength).toBe("authorization: Bearer secret-token".length);
     expect(searchError).not.toHaveProperty("query");
     expect(searchError.message).not.toMatch(/Bearer|secret-token/);
     expect(searchError.cause).toBe(cause);
-    expect(readError.message).toBe("Failed to read workspace file 'src/index.ts' in '/workspace'.");
+    expect(readError.message).toBe(
+      tr("Failed to read workspace file '{relativePath}' in '{cwd}'.", {
+        relativePath: "src/index.ts",
+        cwd: "/workspace",
+      }),
+    );
     expect(readError.message).not.toContain(cause.message);
     expect(readError.cause).toBe(cause);
 
@@ -62,7 +70,9 @@ describe("project RPC errors", () => {
       failure: "search_index_search_failed",
       cause,
     });
-    expect(contentSearchError.message).toBe("Failed to search workspace contents in '/workspace'.");
+    expect(contentSearchError.message).toBe(
+      tr("Failed to search workspace contents in '{cwd}'.", { cwd: "/workspace" }),
+    );
     expect(contentSearchError.message).not.toContain(cause.message);
     expect(contentSearchError).not.toHaveProperty("query");
     expect(contentSearchError.cause).toBe(cause);

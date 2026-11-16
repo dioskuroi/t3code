@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import { describePullRequestDiffError } from "./pullRequestDiffError";
@@ -29,8 +30,8 @@ describe("describePullRequestDiffError", () => {
       "pull request",
     );
 
-    expect(result.title).toBe("Couldn't load the changes");
-    expect(result.description).toContain("Try again");
+    expect(result.title).toBe(tr("Couldn't load the changes"));
+    expect(result.description).toContain(tr("Try again"));
     expect(result.description).not.toContain("localhost");
     expect(result.description).not.toContain("limit");
   });

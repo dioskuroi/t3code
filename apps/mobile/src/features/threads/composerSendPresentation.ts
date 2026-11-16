@@ -2,6 +2,7 @@ import {
   alternateComposerDispatchAction,
   type ActiveTurnComposerAction,
 } from "@t3tools/client-runtime/state/composer-dispatch";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { FollowUpBehavior } from "../../lib/followUpBehavior";
 
@@ -19,9 +20,9 @@ export interface ComposerSendPresentation {
 }
 
 const ACTION_LABEL: Record<ActiveTurnComposerAction, string> = {
-  queue: "Queue",
-  steer: "Steer",
-  restart: "Restart",
+  queue: tr("Queue"),
+  steer: tr("Steer"),
+  restart: tr("Restart"),
 };
 
 export function resolveComposerSendPresentation(input: {
@@ -33,7 +34,7 @@ export function resolveComposerSendPresentation(input: {
 }): ComposerSendPresentation {
   if (input.editingQueuedMessage) {
     return {
-      label: "Update queued message",
+      label: tr("Update queued message"),
       icon: "checkmark",
       action: null,
       alternate: null,
@@ -42,7 +43,7 @@ export function resolveComposerSendPresentation(input: {
   }
   if (!input.running) {
     return {
-      label: input.deliveryDeferred ? "Queue" : "Send",
+      label: input.deliveryDeferred ? tr("Queue") : tr("Send"),
       icon: input.deliveryDeferred ? "tray.and.arrow.up" : "arrow.up",
       action: null,
       alternate: null,

@@ -18,10 +18,10 @@ describe("PR attachments", () => {
     );
     expect(pullRequestDescriptionContent(document, media).attachments).toEqual([
       { uri, caption: "Screenshot", kind: "image" },
-      { uri: "https://drop.example.com/demo.mp4", caption: "Video", kind: "video" },
+      { uri: "https://drop.example.com/demo.mp4", caption: "视频", kind: "video" },
       {
         uri: "https://github.com/user-attachments/assets/123-abc",
-        caption: "Video",
+        caption: "视频",
         kind: "video",
       },
     ]);

@@ -2,6 +2,7 @@ import {
   createAdvertisedEndpoint,
   type CreateAdvertisedEndpointInput,
 } from "@t3tools/shared/advertisedEndpoint";
+import { tr } from "@t3tools/shared/i18n";
 import {
   DesktopServerExposureModeSchema,
   type AdvertisedEndpoint,
@@ -50,14 +51,14 @@ interface DesktopAdvertisedEndpointInput {
 
 const DESKTOP_CORE_ENDPOINT_PROVIDER: AdvertisedEndpointProvider = {
   id: "desktop-core",
-  label: "Desktop",
+  label: tr("Desktop"),
   kind: "core",
   isAddon: false,
 };
 
 const DESKTOP_MANUAL_ENDPOINT_PROVIDER: AdvertisedEndpointProvider = {
   id: "manual",
-  label: "Manual",
+  label: tr("Manual"),
   kind: "manual",
   isAddon: false,
 };
@@ -165,11 +166,11 @@ const resolveDesktopCoreAdvertisedEndpoints = (
   const endpoints: AdvertisedEndpoint[] = [
     createDesktopEndpoint({
       id: `desktop-loopback:${input.port}`,
-      label: "This machine",
+      label: tr("This machine"),
       httpBaseUrl: input.exposure.localHttpUrl,
       reachability: "loopback",
       status: "available",
-      description: "Loopback endpoint for this desktop app.",
+      description: tr("Loopback endpoint for this desktop app."),
     }),
   ];
 
@@ -177,12 +178,12 @@ const resolveDesktopCoreAdvertisedEndpoints = (
     endpoints.push(
       createDesktopEndpoint({
         id: `desktop-lan:${input.exposure.endpointUrl}`,
-        label: "Local network",
+        label: tr("Local network"),
         httpBaseUrl: input.exposure.endpointUrl,
         reachability: "lan",
         status: "available",
         isDefault: true,
-        description: "Reachable from devices on the same network.",
+        description: tr("Reachable from devices on the same network."),
       }),
     );
   }
@@ -193,14 +194,14 @@ const resolveDesktopCoreAdvertisedEndpoints = (
       endpoints.push(
         createManualEndpoint({
           id: `manual:${customEndpointUrl}`,
-          label: isHttpsEndpoint ? "Custom HTTPS" : "Custom endpoint",
+          label: isHttpsEndpoint ? tr("Custom HTTPS") : tr("Custom endpoint"),
           httpBaseUrl: customEndpointUrl,
           reachability: "public",
           ...(isHttpsEndpoint ? ({ hostedHttpsCompatibility: "compatible" } as const) : {}),
           status: "unknown",
           description: isHttpsEndpoint
-            ? "User-configured HTTPS endpoint for this desktop backend."
-            : "User-configured endpoint for this desktop backend.",
+            ? tr("User-configured HTTPS endpoint for this desktop backend.")
+            : tr("User-configured endpoint for this desktop backend."),
         }),
       );
     } catch {}

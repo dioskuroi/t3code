@@ -2,6 +2,7 @@ import {
   EasDeviceHostConfig,
   type EasDeviceHostConfig as EasDeviceHostConfigType,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 
 export const parseEasDeviceHostDraft = Schema.decodeUnknownOption(EasDeviceHostConfig);
@@ -9,7 +10,7 @@ export const parseEasDeviceHostDraft = Schema.decodeUnknownOption(EasDeviceHostC
 export const newEasDeviceHost = (id: string): EasDeviceHostConfigType => ({
   kind: "eas",
   id,
-  label: "EAS Simulator",
+  label: tr("EAS Simulator"),
   accessToken: "",
   maxSessionMinutes: 30,
   idleMinutes: 10,
@@ -37,6 +38,11 @@ export function updateEasDeviceHosts(
 
 export function easSessionLimits(host: EasDeviceHostConfigType) {
   const sessions =
-    host.maxConcurrentSessions === 1 ? "1 session" : `${host.maxConcurrentSessions} sessions`;
-  return `Up to ${sessions} at once, each stopped after ${host.maxSessionMinutes} min or ${host.idleMinutes} idle min`;
+    host.maxConcurrentSessions === 1
+      ? tr("1 session")
+      : tr("{count} sessions", { count: host.maxConcurrentSessions });
+  return tr(
+    "Up to {sessions} at once, each stopped after {sessionMinutes} min or {idleMinutes} idle min",
+    { sessions, sessionMinutes: host.maxSessionMinutes, idleMinutes: host.idleMinutes },
+  );
 }

@@ -1,4 +1,5 @@
 import type { LegendListRef } from "@legendapp/list/react";
+import { tr } from "@t3tools/shared/i18n";
 import type { AssistantCitation, MessageId, ScopedThreadRef } from "@t3tools/contracts";
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 import {
@@ -194,8 +195,8 @@ function observeAssistantCitationSource({
             request.onComplete();
             toastManager.add({
               type: "warning",
-              title: "Could not open the cited response",
-              description: "Click the citation to try again.",
+              title: tr("Could not open the cited response"),
+              description: tr("Click the citation to try again."),
             });
           },
         );
@@ -207,8 +208,8 @@ function observeAssistantCitationSource({
       if (!range) {
         toastManager.add({
           type: "warning",
-          title: "The quoted text has changed",
-          description: "Showing the source response. The saved quote is unchanged.",
+          title: tr("The quoted text has changed"),
+          description: tr("Showing the source response. The saved quote is unchanged."),
         });
       }
     }

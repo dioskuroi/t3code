@@ -3,6 +3,7 @@ import {
   resolveProviderInstanceDisplayName,
   shouldShowInstanceBadge,
 } from "@t3tools/client-runtime/state/provider-instance-display";
+import { tr } from "@t3tools/shared/i18n";
 
 import type {
   ModelCapabilities,
@@ -66,8 +67,8 @@ function providerDisplayLabel(provider: {
   readonly instanceId: string;
 }): string {
   if (provider.displayName) return provider.displayName;
-  if (provider.driver === "codex") return "Codex";
-  if (provider.driver === "claudeAgent") return "Claude";
+  if (provider.driver === "codex") return tr("Codex");
+  if (provider.driver === "claudeAgent") return tr("Claude");
   if (provider.driver === "pi") return "Pi";
   return provider.instanceId;
 }
@@ -207,18 +208,20 @@ export function describeUnavailableModelSelection(
       instanceId: selection.instanceId,
     });
     return {
-      title: "Provider not allowed",
-      detail: `${disallowedProviderMessage(config?.managedPolicy?.organization, label)} Choose another model.`,
+      title: tr("Provider not allowed"),
+      detail: tr("{message} Choose another model.", {
+        message: disallowedProviderMessage(config?.managedPolicy?.organization, label),
+      }),
     };
   }
   return isDisabledForProject(config, provider, selection.instanceId, projectId)
     ? {
-        title: "Model turned off for this project",
-        detail: "Turn it back on from web or desktop, or choose another model.",
+        title: tr("Model turned off for this project"),
+        detail: tr("Turn it back on from web or desktop, or choose another model."),
       }
     : {
-        title: "Antigravity model unavailable",
-        detail: "Set up Antigravity on web or desktop, or choose another model.",
+        title: tr("Antigravity model unavailable"),
+        detail: tr("Set up Antigravity on web or desktop, or choose another model."),
       };
 }
 

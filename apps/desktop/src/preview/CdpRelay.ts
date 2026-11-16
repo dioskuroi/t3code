@@ -1,4 +1,4 @@
-// Electron allows one debugger per webContents; share the manager's attachment.
+import { tr } from "@t3tools/shared/i18n"; // Electron allows one debugger per webContents; share the manager's attachment.
 
 export interface CdpRelayTarget {
   readonly send: (
@@ -161,7 +161,7 @@ export function createCdpRelayConnection(
       case "Target.attachToTarget": {
         const targetId = command.params?.["targetId"];
         if (targetId !== (await target.targetId()))
-          throw new Error("Only this preview tab's page can be attached.");
+          throw new Error(tr("Only this preview tab's page can be attached."));
         return { sessionId: newSession("page") };
       }
       case "Target.detachFromTarget": {

@@ -1,4 +1,5 @@
 import type { DesktopSshPasswordPromptRequest } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it } from "vite-plus/test";
 
 import { render, stubGlobal } from "../../../test/render";
@@ -28,5 +29,5 @@ it("shows a prompt that arrived before the dialog mounted", async () => {
   }
 
   await using screen = await render(<SshPasswordPromptDialog />);
-  await expect.element(screen.getByText("SSH verification required")).toBeVisible();
+  await expect.element(screen.getByText(tr("SSH verification required"))).toBeVisible();
 });

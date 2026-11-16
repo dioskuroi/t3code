@@ -214,9 +214,9 @@ describe("getCachedNativeReviewDiffData", () => {
   });
 
   it.each([
-    [true, false, "Old file has no newline at end of file."],
-    [false, true, "New file has no newline at end of file."],
-    [true, true, "Old and new files have no newline at end of file."],
+    [true, false, "旧文件末尾没有换行符。"],
+    [false, true, "新文件末尾没有换行符。"],
+    [true, true, "新旧文件末尾均没有换行符。"],
     [false, false, null],
   ])("shows missing-newline notices for old=%s new=%s", (oldMissing, newMissing, notice) => {
     const data = buildNativeReviewDiffData(
@@ -297,7 +297,7 @@ describe("buildNativeReviewDiffData row bound", () => {
     expect(hugeRows.at(-2)).toMatchObject({ kind: "line", newLineNumber: 99_999 });
     expect(hugeRows.at(-1)).toMatchObject({
       kind: "notice",
-      text: "This diff is too large to show in full.",
+      text: "此差异过大，无法完整显示。",
     });
     const ordinaryRows = data.rows.filter((row) => row.fileId === ordinaryHeader?.fileId);
     expect(ordinaryRows.filter((row) => row.kind === "line")).toHaveLength(1_000);

@@ -1,4 +1,5 @@
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/reactivity";
 import { getRecordingPermissionsAsync, requestRecordingPermissionsAsync } from "expo-audio";
@@ -86,8 +87,8 @@ const KINDS: Record<
     icon: "cable.connector",
   },
   bluetooth: {
-    label: "Bluetooth",
-    row: "Other Bluetooth",
+    label: tr("Bluetooth"),
+    row: tr("Other Bluetooth"),
     rowDescription:
       Platform.OS === "android"
         ? "Earbuds, headsets, and cars, including Android Auto, not listed here"
@@ -96,14 +97,14 @@ const KINDS: Record<
   },
   builtIn: {
     label: "Built-in",
-    row: "Built-in microphone",
-    rowDescription: "The microphone on this device",
+    row: tr("Built-in microphone"),
+    rowDescription: tr("The microphone on this device"),
     icon: "iphone",
   },
   carPlay: {
     label: "CarPlay",
     row: "CarPlay",
-    rowDescription: "The car’s microphone",
+    rowDescription: tr("The car\u2019s microphone"),
     icon: "car",
   },
 };
@@ -290,10 +291,10 @@ export function SettingsVoiceRouteScreen() {
         ) : null}
         {permission === "ask" || permission === "denied" ? (
           <>
-            <SettingsSection title="Microphone access">
+            <SettingsSection title={tr("Microphone access")}>
               <SettingsActionRow
                 icon="mic"
-                label={permission === "ask" ? "Allow microphone access" : "Open Settings"}
+                label={permission === "ask" ? tr("Allow microphone access") : tr("Open Settings")}
                 onPress={
                   permission === "ask" ? requestPermission : () => void Linking.openSettings()
                 }
@@ -306,7 +307,7 @@ export function SettingsVoiceRouteScreen() {
             </Text>
           </>
         ) : null}
-        <SettingsSection title="Preferred order">
+        <SettingsSection title={tr("Preferred order")}>
           {entries.map((entry, index) => {
             const key = microphoneEntryKey(entry);
             const shift =
@@ -386,8 +387,13 @@ function MicrophoneRow(props: {
     <View className="flex-row items-center bg-grouped-card">
       <View
         accessible
-        accessibilityLabel={`${title}, ${kind.label}, ${props.position} of ${props.count}`}
-        accessibilityActions={onForget ? [{ name: "forget", label: "Forget" }] : undefined}
+        accessibilityLabel={tr("{title}, {kind}, {position} of {count}", {
+          title: title,
+          kind: kind.label,
+          position: props.position,
+          count: props.count,
+        })}
+        accessibilityActions={onForget ? [{ name: "forget", label: tr("Forget") }] : undefined}
         onAccessibilityAction={({ nativeEvent }) => {
           if (nativeEvent.actionName === "forget") onForget?.();
         }}
@@ -428,10 +434,10 @@ function MicrophoneRow(props: {
           fullSwipeWidth={windowWidth - 40}
           onDelete={onForget}
           primaryAction={{
-            accessibilityLabel: `Forget ${title}`,
+            accessibilityLabel: tr("Forget {title}", { title: title }),
             destructive: true,
             icon: "trash",
-            label: "Forget",
+            label: tr("Forget"),
             onPress: onForget,
           }}
           secondaryAction={null}

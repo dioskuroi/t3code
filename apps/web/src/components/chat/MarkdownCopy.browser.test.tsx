@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
@@ -40,8 +41,8 @@ describe("markdown copy without the async clipboard", () => {
     );
     using clipboard = withoutAsyncClipboard();
 
-    await userEvent.click(screen.getByRole("button", { name: "Copy code" }));
-    await expect.element(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: tr("Copy code") }));
+    await expect.element(screen.getByRole("button", { name: tr("Copied") })).toBeInTheDocument();
     expect(clipboard.execCommand).toHaveBeenCalledWith("copy");
   });
 
@@ -64,9 +65,9 @@ describe("markdown copy without the async clipboard", () => {
     );
     using clipboard = withoutAsyncClipboard();
 
-    await userEvent.click(screen.getByRole("button", { name: "Copy table" }));
-    await userEvent.click(page.getByRole("menuitem", { name: "Copy as Markdown" }));
-    await expect.element(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: tr("Copy table") }));
+    await userEvent.click(page.getByRole("menuitem", { name: tr("Copy as Markdown") }));
+    await expect.element(screen.getByRole("button", { name: tr("Copied") })).toBeInTheDocument();
     expect(clipboard.execCommand).toHaveBeenCalledWith("copy");
   });
 });

@@ -1,4 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 import type {
   DesktopTelemetryRequestDesktopUpdate,
   DesktopTelemetryCommitDesktopUpdate,
@@ -172,7 +173,14 @@ describe("DesktopRemoteUpdates", () => {
 
           assert.deepEqual(
             terminalReports(reports).map((report) => [report.outcome, report.reason]),
-            [["failed", "The desktop app found no build of 1.2.4-nightly.20261027.1."]],
+            [
+              [
+                "failed",
+                tr("The desktop app found no build of {version}.", {
+                  version: "1.2.4-nightly.20261027.1",
+                }),
+              ],
+            ],
           );
           // The saved track is the user's intent; a retry picks it up from here.
           assert.equal((yield* updates.getState).channel, "nightly");
@@ -265,7 +273,12 @@ describe("DesktopRemoteUpdates", () => {
           terminalReports(reports).map((report) => report.outcome),
           ["failed"],
         );
-        assert.include(terminalReports(reports)[0]?.reason ?? "", "Switch it on that machine");
+        assert.include(
+          terminalReports(reports)[0]?.reason ?? "",
+          tr(
+            "This desktop app also runs WSL backends, whose databases a remote switch cannot check. Switch it on that machine.",
+          ),
+        );
         assert.equal((yield* updates.getState).channel, "latest");
       }),
     );
@@ -290,7 +303,7 @@ describe("DesktopRemoteUpdates", () => {
 
         assert.deepEqual(
           terminalReports(reports).map((report) => [report.outcome, report.reason]),
-          [["failed", "The desktop app found no build of 1.2.5."]],
+          [["failed", tr("The desktop app found no build of {version}.", { version: "1.2.5" })]],
         );
       }),
     );
@@ -318,7 +331,7 @@ describe("DesktopRemoteUpdates", () => {
         // Still on Nightly, though the target is numbered below this build.
         assert.deepEqual(
           terminalReports(reports).map((report) => [report.outcome, report.reason]),
-          [["failed", "The desktop app found no build of 1.2.3."]],
+          [["failed", tr("The desktop app found no build of {version}.", { version: "1.2.3" })]],
         );
       }),
     );

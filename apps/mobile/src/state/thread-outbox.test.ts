@@ -93,6 +93,7 @@ import {
   type ThreadOutboxLoadResult,
   type ThreadOutboxStorage,
 } from "./thread-outbox-storage";
+import { tr } from "@t3tools/shared/i18n";
 
 function queuedMessage(input: {
   readonly environmentId?: string;
@@ -1079,7 +1080,7 @@ describe("thread outbox", () => {
         fileAttachments: [{ name: "report.pdf", sizeBytes: 42 }],
         serverConfig: { maxFileUploadBytes: undefined },
       }),
-    ).toEqual({ step: "restore", reason: "This server does not support file attachments." });
+    ).toEqual({ step: "restore", reason: tr("This server does not support file attachments.") });
     expect(
       resolveThreadOutboxDispatchStep({
         deliveryAction: "send",

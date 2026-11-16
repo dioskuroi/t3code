@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 import { render } from "../../../test/render";
 import { DiffFileLoadingBoundary } from "./DiffFileLoadingBoundary";
@@ -40,7 +41,9 @@ describe("DiffFileLoadingBoundary", () => {
     await screen.rerender(<DiffFileLoadingBoundary load={() => load()} count={8} />);
     await screen.rerender(<DiffFileLoadingBoundary load={() => load()} count={8} />);
 
-    await expect.element(screen.getByRole("status", { name: "Loading diff…" })).toBeInTheDocument();
+    await expect
+      .element(screen.getByRole("status", { name: tr("Loading diff\u2026") }))
+      .toBeInTheDocument();
     expect(observer.observeCount).toBe(1);
     expect(load).toHaveBeenCalledTimes(1);
 

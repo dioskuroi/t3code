@@ -4,6 +4,7 @@ import {
   PROVIDER_SEND_TURN_MAX_FILE_BYTES,
 } from "@t3tools/contracts";
 import { describe, expect, it } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 import { isFileAttachment, isImageAttachment } from "../../types";
 import type { ComposerFileAttachment, ComposerImageAttachment } from "../../composerDraftStore";
@@ -143,7 +144,7 @@ describe("composer attachment files", () => {
         supportsAttachmentUploads: false,
         maxFileAttachmentBytes: null,
       }),
-    ).toBe("Waiting for the server before file attachments can send");
+    ).toBe(tr("Waiting for the server before file attachments can send"));
   });
 
   it("keeps draft-persisted file uploads when the upload capability flips off", () => {

@@ -1,4 +1,5 @@
 import type { DesktopSnapShotState } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Option from "effect/Option";
 import { Atom, type AtomRegistry } from "effect/reactivity";
 
@@ -10,7 +11,7 @@ export interface SnapShotSetupError {
 }
 
 export function snapShotSetupError(title: string, error: unknown): SnapShotSetupError {
-  return { title, message: error instanceof Error ? error.message : "Try again." };
+  return { title, message: error instanceof Error ? error.message : tr("Try again.") };
 }
 
 export interface DesktopSnapShotLoad {
@@ -40,7 +41,7 @@ export const desktopSnapShotAtom = Atom.writable(
       void refreshDesktopSnapShotState(get.registry, (error) => {
         get.setSelf({
           ...Option.getOrElse(get.self<DesktopSnapShotLoad>(), () => EMPTY_LOAD),
-          refreshError: snapShotSetupError("Couldn't check capture setup", error),
+          refreshError: snapShotSetupError(tr("Couldn't check capture setup"), error),
         });
       });
     window.addEventListener("focus", refresh);

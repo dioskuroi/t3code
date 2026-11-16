@@ -1,4 +1,5 @@
 import { Button } from "../../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import { View } from "react-native";
 import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 import { AppText as Text } from "../../../components/ui/AppText";
@@ -33,7 +34,7 @@ export function GuideNotice({ state }: { readonly state: ReturnType<typeof useRe
           tintColorClassName={failed ? "accent-danger-foreground" : "accent-icon-muted"}
         />
         <Text className="text-base font-t3-semibold">
-          {compact ? notice.title : "Review guide"}
+          {compact ? notice.title : tr("Review guide")}
         </Text>
       </View>
       <View style={compact ? undefined : { minHeight: 100 }} className="pt-3 pb-4">
@@ -51,13 +52,13 @@ export function GuideNotice({ state }: { readonly state: ReturnType<typeof useRe
         ) : (
           <Text className="text-xs text-foreground-muted">
             {notice.kind === "failed"
-              ? "Reconnect or ask someone with write access to retry."
-              : "Writing a guide requires a connection and write access."}
+              ? tr("Reconnect or ask someone with write access to retry.")
+              : tr("Writing a guide requires a connection and write access.")}
           </Text>
         )}
         {notice.kind === "writing" && state.data?.run?._tag === "Running" ? (
           <Text className="shrink text-xs text-foreground-muted">
-            Started{" "}
+            {tr("Started")}{" "}
             {new Date(state.data.run.startedAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",

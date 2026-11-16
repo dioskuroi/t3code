@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, PastedTextAttachmentSource } from "@t3tools/contracts";
 
 export const DraftComposerImageAttachmentSchema = Schema.Struct({
@@ -17,7 +18,7 @@ export const DraftComposerImageAttachmentSchema = Schema.Struct({
     ({ fileUri, dataUrl }) =>
       fileUri !== undefined ||
       dataUrl !== undefined ||
-      "Image attachment has no file or inline bytes.",
+      tr("Image attachment has no file or inline bytes."),
   ),
 );
 

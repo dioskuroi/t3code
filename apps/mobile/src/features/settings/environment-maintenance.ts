@@ -5,6 +5,7 @@ import {
   type ExecutionEnvironmentCapabilities,
   type ServerProvider,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   CLI_RELEASES_PAGE_URL,
   cliReleaseChannelOf,
@@ -55,7 +56,10 @@ const decodeReleases = Schema.decodeUnknownSync(Schema.Array(Release));
 
 async function fetchReleases(url: string, accept: string, signal: AbortSignal) {
   const response = await fetch(url, { signal, headers: { Accept: accept } });
-  if (!response.ok) throw new Error(`Could not check releases (${response.status}). Try again.`);
+  if (!response.ok)
+    throw new Error(
+      tr("Could not check releases ({status}). Try again.", { status: response.status }),
+    );
   return response;
 }
 
@@ -90,6 +94,16 @@ export async function findEnvironmentUpdate(currentVersion: string, signal: Abor
     if (releases.length < 100) break;
   }
 
-  if (version === undefined) throw new Error(`No ${channel} release was found.`);
+  if (version === undefined)
+    throw new Error(
+      tr("No {channel} release was found.", {
+        channel:
+          channel === "stable"
+            ? tr("Stable")
+            : channel === "preview"
+              ? tr("Preview channel")
+              : ` ${tr("Nightly")} `,
+      }),
+    );
   return compareSemverVersions(version, currentVersion) > 0 ? version : null;
 }

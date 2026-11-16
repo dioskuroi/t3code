@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { AuthOrchestrationOperateScope, EnvironmentId, type EditorId } from "@t3tools/contracts";
 import { DEFAULT_RESOLVED_KEYBINDINGS } from "@t3tools/shared/keybindings";
 import { Cause } from "effect";
@@ -123,7 +124,7 @@ async function setup() {
     return element!;
   }
 
-  const primaryButton = () => byLabel("Open file in preferred editor");
+  const primaryButton = () => byLabel(tr("Open file in preferred editor"));
   const menuItems = () => [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')];
 
   async function click(element: HTMLElement) {
@@ -184,7 +185,7 @@ describe("host editor access", () => {
 
     await renderPicker();
     expect(primaryButton().disabled).toBe(true);
-    expect(byLabel("Choose editor").disabled).toBe(true);
+    expect(byLabel(tr("Choose editor")).disabled).toBe(true);
     expect((await pressOpenFavorite()).defaultPrevented).toBe(false);
   });
 });
@@ -223,7 +224,7 @@ describe("open in editor announcement", () => {
     await pressOpenFavorite();
     expect(await spoken()).toBe("");
     await pressOpenFavorite();
-    expect(await spoken()).toBe("Opened in VS Code");
+    expect(await spoken()).toBe(tr("Opened in {label}", { label: "VS Code" }));
 
     for (const region of regions()) region.textContent = "";
     await act(async () => screen.rerender(<FavoriteEditorFallback />));
@@ -231,6 +232,6 @@ describe("open in editor announcement", () => {
     await pressOpenFavorite();
     expect(await spoken()).toBe("");
     await pressOpenFavorite();
-    expect(await spoken()).toBe("Opened in VS Code");
+    expect(await spoken()).toBe(tr("Opened in {label}", { label: "VS Code" }));
   });
 });

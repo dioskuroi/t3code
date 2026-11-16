@@ -34,7 +34,7 @@ describe("price table edits", () => {
       const environment = target("a", {});
       expect(usagePriceCell([environment], model, "inputCostPerMillionTokens")).toEqual({
         value: "",
-        placeholder: "Automatic",
+        placeholder: "自动",
       });
       const result = usagePriceTableChanges(environment, [
         {
@@ -118,7 +118,7 @@ describe("price table edits", () => {
       usagePriceTableChanges(mapped, [{ ...draft({}), alias: "example" }]).errors.get(
         "model:example",
       ),
-    ).toBe("Map to a different model.");
+    ).toBe("映射到另一个模型。");
   });
 
   it("requires clearing a mapping before a price edit can apply to every environment", () => {
@@ -163,7 +163,7 @@ describe("model mapping validation", () => {
     const cyclic = target("two", {}, { a: "b", b: "c" });
     expect(usagePriceTableChanges(acyclic, edits).errors.size).toBe(0);
     expect(usagePriceTableErrors([acyclic, cyclic], edits).get("model:c")).toBe(
-      "Model mappings cannot form a cycle on two.",
+      "模型映射在 two 上不能形成循环。",
     );
   });
 

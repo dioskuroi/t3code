@@ -71,4 +71,4 @@ export function useSettingsEnvironmentMenu(): AppBarMenu {
 }
 
 const projectMenuLabel = (group: { readonly label: string; readonly archived: boolean }) =>
-  group.archived ? `${group.label} · Archived` : group.label;
+  group.archived ? tr("{label} · Archived", { label: group.label }) : group.label;

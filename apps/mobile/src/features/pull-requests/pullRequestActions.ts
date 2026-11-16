@@ -2,6 +2,7 @@ import {
   sourceControlClients,
   type ChangeRequestTerminology,
 } from "@t3tools/client-runtime/source-control-clients";
+import { tr } from "@t3tools/shared/i18n";
 import type {
   PullRequestAction,
   PullRequestDetail,
@@ -27,12 +28,18 @@ type ActionDetail = Pick<
 };
 
 export const MERGE_METHODS = {
-  squash: { title: "Squash and merge", description: "Combine the commits into one commit." },
-  merge: {
-    title: "Create a merge commit",
-    description: "Keep the commits and add a merge commit.",
+  squash: {
+    title: tr("Squash and merge"),
+    description: tr("Combine the commits into one commit."),
   },
-  rebase: { title: "Rebase and merge", description: "Add the commits without a merge commit." },
+  merge: {
+    title: tr("Create a merge commit"),
+    description: tr("Keep the commits and add a merge commit."),
+  },
+  rebase: {
+    title: tr("Rebase and merge"),
+    description: tr("Add the commits without a merge commit."),
+  },
 } as const satisfies Record<PullRequestMergeMethod, { title: string; description: string }>;
 
 export function pullRequestActionLabel(
@@ -41,27 +48,27 @@ export function pullRequestActionLabel(
 ): string {
   switch (action) {
     case "merge":
-      return `Merge ${terminology.singular}`;
+      return tr("Merge {singular}", { singular: terminology.singular });
     case "ready":
-      return "Mark ready for review";
+      return tr("Mark ready for review");
     case "draft":
-      return "Convert to draft";
+      return tr("Convert to draft");
     case "close":
-      return `Close ${terminology.singular}`;
+      return tr("Close {singular}", { singular: terminology.singular });
     case "reopen":
-      return `Reopen ${terminology.singular}`;
+      return tr("Reopen {singular}", { singular: terminology.singular });
     case "update-branch":
-      return "Update branch";
+      return tr("Update branch");
     case "enable-auto-merge":
-      return "Enable auto-merge";
+      return tr("Enable auto-merge");
     case "disable-auto-merge":
-      return "Disable auto-merge";
+      return tr("Disable auto-merge");
     case "revert":
-      return `Create revert ${terminology.singular}`;
+      return tr("Create revert {singular}", { singular: terminology.singular });
     case "delete-branch":
-      return "Delete branch";
+      return tr("Delete branch");
     case "approve-workflows":
-      return "Approve workflows";
+      return tr("Approve workflows");
   }
 }
 
@@ -122,18 +129,20 @@ export function mergeUnavailableReason(
   connectionAllowsWrites: boolean,
   terminology: ChangeRequestTerminology,
 ) {
-  if (pr.state === "merged") return `This ${terminology.singular} has been merged.`;
-  if (pr.state === "closed") return `Reopen this ${terminology.singular} before merging.`;
-  if (!connectionAllowsWrites) return "This environment connection is read-only.";
+  if (pr.state === "merged")
+    return tr("This {singular} has been merged.", { singular: terminology.singular });
+  if (pr.state === "closed")
+    return tr("Reopen this {singular} before merging.", { singular: terminology.singular });
+  if (!connectionAllowsWrites) return tr("This environment connection is read-only.");
   if (!pr.capabilities.actions.includes("merge"))
-    return "This provider does not support merging here.";
+    return tr("This provider does not support merging here.");
   if (!pr.viewerPermissions.actions.includes("merge"))
-    return `Your account cannot merge this ${terminology.singular}.`;
-  if (pr.isDraft) return "Mark this draft ready for review before merging.";
-  if (pr.mergeability === "conflicting") return "Resolve the branch conflicts before merging.";
-  if (!allowedMergeMethods(pr).length) return "This repository has no available merge methods.";
+    return tr("Your account cannot merge this {singular}.", { singular: terminology.singular });
+  if (pr.isDraft) return tr("Mark this draft ready for review before merging.");
+  if (pr.mergeability === "conflicting") return tr("Resolve the branch conflicts before merging.");
+  if (!allowedMergeMethods(pr).length) return tr("This repository has no available merge methods.");
   return null;
 }
 
 export const openOnProviderLabel = (provider: SourceControlProviderKind) =>
-  `Open on ${sourceControlClients.get(provider).label}`;
+  tr("Open on {provider}", { provider: sourceControlClients.get(provider).label });

@@ -5,6 +5,7 @@ import type {
   SlideDisplayList,
   SlidePrimitive,
 } from "@betteroffice/pptx";
+import { tr } from "@t3tools/shared/i18n";
 import { loadFace, presentationFace, scriptFace } from "./fonts";
 import type { DeckText, FallbackScript, FontStyle } from "./slide-text";
 

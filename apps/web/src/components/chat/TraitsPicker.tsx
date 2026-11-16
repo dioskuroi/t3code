@@ -6,6 +6,7 @@ import {
   selectableProviderOptionChoices,
   isReasoningSelect,
 } from "@t3tools/client-runtime/model-traits";
+import { tr } from "@t3tools/shared/i18n";
 import {
   type ModelSelection,
   type ProviderDriverKind,
@@ -55,10 +56,10 @@ export function readPromptUltrathink(prompt: string): PromptUltrathink {
 }
 
 const SAVED_OPTION_LABELS: Readonly<Record<string, string>> = {
-  agent: "Agent",
-  effort: "Effort",
-  reasoningEffort: "Reasoning effort",
-  variant: "Reasoning",
+  agent: tr("Agent"),
+  effort: tr("Effort"),
+  reasoningEffort: tr("Reasoning effort"),
+  variant: tr("Reasoning"),
 };
 
 function savedOptionLabel(id: string): string {
@@ -103,7 +104,7 @@ type TraitsPersistence =
 function DefaultBadge() {
   return (
     <Badge variant="outline" size="sm" className="min-w-0">
-      Default
+      {tr("Default")}
     </Badge>
   );
 }
@@ -369,8 +370,9 @@ export function useTraitsSelection({
   };
 }
 
-export const ULTRATHINK_IN_BODY_NOTE =
-  'Your prompt contains "ultrathink" in the text. Remove it to change this option.';
+export const ULTRATHINK_IN_BODY_NOTE = tr(
+  'Your prompt contains "ultrathink" in the text. Remove it to change this option.',
+);
 
 const TraitsMenuContent = memo(function TraitsMenuContentImpl(props: TraitsSelectionInput) {
   const traits = useTraitsSelection(props);
@@ -467,7 +469,7 @@ const TraitsMenuContent = memo(function TraitsMenuContentImpl(props: TraitsSelec
               {(["on", "off"] as const).map((value) => (
                 <MenuRadioItem key={value} value={value} hideIndicator closeOnClick>
                   <span className="flex w-full min-w-0 items-center justify-between gap-3">
-                    <span>{value === "on" ? "On" : "Off"}</span>
+                    <span>{value === "on" ? "On" : tr("Off")}</span>
                   </span>
                 </MenuRadioItem>
               ))}

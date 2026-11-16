@@ -1,4 +1,5 @@
 import { DraftInput, type DraftInputProps } from "../ui/draft-input";
+import { tr } from "@t3tools/shared/i18n";
 import { Input, type InputProps } from "../ui/input";
 
 type SecretInputProps = Omit<InputProps, "type" | "autoComplete" | "defaultValue" | "value"> & {
@@ -20,8 +21,8 @@ export function SecretInput({
     autoComplete: "off",
     spellCheck: false,
     placeholder: configured
-      ? "Stored secret, enter a new value to replace"
-      : (placeholder ?? "Not set"),
+      ? tr("Stored secret, enter a new value to replace")
+      : (placeholder ?? tr("Not set")),
   };
   if (onCommit) {
     return (

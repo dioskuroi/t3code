@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import type { ServerConfigStreamEvent } from "@t3tools/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 
@@ -55,8 +56,8 @@ describe("startKeybindingsUpdateToasts", () => {
       });
 
       expect(mocks.addToast.mock.calls.map(([toast]) => toast.title)).toEqual([
-        "Keybindings updated",
-        "Invalid keybindings configuration",
+        tr("Keybindings updated"),
+        tr("Invalid keybindings configuration"),
       ]);
     } finally {
       stop();

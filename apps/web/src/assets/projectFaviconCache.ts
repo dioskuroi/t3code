@@ -4,6 +4,7 @@ import {
   PROJECT_FAVICON_MAX_DATA_URL_LENGTH,
   PROJECT_FAVICON_THUMBNAIL_SIZE,
 } from "@t3tools/client-runtime/project-favicon-cache";
+import { tr } from "@t3tools/shared/i18n";
 
 const DATABASE_NAME = "t3code:project-favicons";
 const DATABASE_VERSION = 2;
@@ -23,7 +24,9 @@ function openDatabase() {
     });
     request.addEventListener("success", () => resolve(request.result));
     request.addEventListener("error", () => reject(request.error));
-    request.addEventListener("blocked", () => reject(new Error("Project icon cache is blocked.")));
+    request.addEventListener("blocked", () =>
+      reject(new Error(tr("Project icon cache is blocked."))),
+    );
   }));
 }
 
@@ -58,13 +61,13 @@ async function downscaleProjectFavicon(
       canvas.width = Math.max(1, Math.round(bitmap.width * scale));
       canvas.height = Math.max(1, Math.round(bitmap.height * scale));
       const context = canvas.getContext("2d");
-      if (!context) throw new Error("Canvas is unavailable.");
+      if (!context) throw new Error(tr("Canvas is unavailable."));
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       const dataUrl = canvas.toDataURL("image/webp", 0.85);
       if (dataUrl.length <= PROJECT_FAVICON_MAX_DATA_URL_LENGTH) return dataUrl;
     }
-    throw new Error("Project icon thumbnail exceeds the cache limit.");
+    throw new Error(tr("Project icon thumbnail exceeds the cache limit."));
   } finally {
     bitmap.close();
   }

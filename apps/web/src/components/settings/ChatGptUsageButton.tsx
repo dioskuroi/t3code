@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { ExternalLinkIcon } from "lucide-react";
 import { CHATGPT_USAGE_URL } from "@t3tools/shared/usageLimits";
 import { ensureLocalApi } from "../../localApi";
@@ -12,7 +13,7 @@ export function ChatGptUsageButton(props: Omit<ComponentProps<typeof Button>, "o
       {...props}
       onClick={() => void ensureLocalApi().shell.openExternal(CHATGPT_USAGE_URL)}
     >
-      Manage usage
+      {tr("Manage usage")}
       <ExternalLinkIcon className="size-3.5" aria-hidden="true" />
     </Button>
   );

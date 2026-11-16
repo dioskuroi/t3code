@@ -2,6 +2,7 @@ import {
   throwIfVoiceTranscriptionAborted,
   type VoiceRecorder,
 } from "@t3tools/client-runtime/voice-input";
+import { tr } from "@t3tools/shared/i18n";
 
 type Subscription = { remove(): void };
 type RecordingDestination = "local" | "environment";

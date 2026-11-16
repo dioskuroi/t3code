@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   combineTerminalSessionState,
   EMPTY_TERMINAL_BUFFER_STATE,
@@ -140,7 +141,7 @@ const attachedTerminalSessionFamily = Atom.family((key: string) => {
   if (Option.isNone(decoded)) {
     return Atom.make<TerminalSessionState>({
       ...EMPTY_TERMINAL_SESSION_STATE,
-      error: "Invalid terminal launch input",
+      error: tr("Invalid terminal launch input"),
       status: "error",
     }).pipe(Atom.withLabel(`web-terminal-session:${key}`));
   }

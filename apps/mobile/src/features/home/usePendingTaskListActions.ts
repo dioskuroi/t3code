@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { useCallback } from "react";
 
 import { removeThreadOutboxMessage } from "../../state/thread-outbox-removal";
@@ -40,33 +41,39 @@ export function usePendingTaskListActions(
 
   const confirmDeletePendingTask = useCallback((pendingTask: PendingNewTask) => {
     if (pendingTask.kind === "draft") {
-      Dialog.alert("Discard draft?", `“${pendingTask.title}” will be removed.`, [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Discard",
-          style: "destructive",
-          onPress: () => {
-            void withThreadDismissal(
-              pendingTask.key,
-              async () =>
-                clearComposerDraftContent(pendingTask.draftKey, {
-                  clearModelSelection: true,
-                  clearWorkspaceSelection: true,
-                }),
-              () => true,
-            );
+      Dialog.alert(
+        tr("Discard draft?"),
+        tr("“{title}” will be removed.", { title: pendingTask.title }),
+        [
+          { text: tr("Cancel"), style: "cancel" },
+          {
+            text: tr("Discard"),
+            style: "destructive",
+            onPress: () => {
+              void withThreadDismissal(
+                pendingTask.key,
+                async () =>
+                  clearComposerDraftContent(pendingTask.draftKey, {
+                    clearModelSelection: true,
+                    clearWorkspaceSelection: true,
+                  }),
+                () => true,
+              );
+            },
           },
-        },
-      ]);
+        ],
+      );
       return;
     }
     Dialog.alert(
-      "Delete pending task?",
-      `“${pendingTask.title}” has not been sent yet and will be removed from the outbox.`,
+      tr("Delete pending task?"),
+      tr("“{title}” has not been sent yet and will be removed from the outbox.", {
+        title: pendingTask.title,
+      }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: tr("Cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: tr("Delete"),
           style: "destructive",
           onPress: () => {
             // Hold delivery from confirmation so reconnects cannot send a task during removal.
@@ -90,8 +97,10 @@ export function usePendingTaskListActions(
               .catch((error) => {
                 releaseUnlessEditing();
                 Dialog.alert(
-                  "Could not delete pending task",
-                  error instanceof Error ? error.message : "The pending task could not be removed.",
+                  tr("Could not delete pending task"),
+                  error instanceof Error
+                    ? error.message
+                    : tr("The pending task could not be removed."),
                 );
               });
           },

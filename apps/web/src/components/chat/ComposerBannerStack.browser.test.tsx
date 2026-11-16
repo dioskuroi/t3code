@@ -2,6 +2,7 @@ import { InfoIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
+import { tr } from "@t3tools/shared/i18n";
 
 import "~/index.css";
 
@@ -137,7 +138,7 @@ it("opens the details of a long notice right above its button", async () => {
   await using screen = await render(noticeRow("40rem", script), { container });
   const details = screen.getByRole("button", { name: "Show details" });
   await userEvent.hover(details);
-  const popup = page.getByLabelText("Notice details");
+  const popup = page.getByLabelText(tr("Notice details"));
   await expect.element(popup).toBeVisible();
 
   // A positioner sized to the unscrolled text flips beside the button and covers it.

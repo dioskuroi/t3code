@@ -62,7 +62,10 @@ export class DesktopBackendPortUnavailableError extends Schema.TaggedError<Deskt
   },
 ) {
   override get message(): string {
-    return `No desktop backend port is available on hosts ${this.hosts.join(", ")} between ${this.startPort} and ${this.maxPort}.`;
+    return tr(
+      "No desktop backend port is available on hosts {hosts} between {startPort} and {maxPort}.",
+      { hosts: this.hosts.join(", "), startPort: this.startPort, maxPort: this.maxPort },
+    );
   }
 }
 
@@ -143,8 +146,8 @@ const handleFatalStartupError = Effect.fn("desktop.startup.handleFatalStartupErr
   const wasQuitting = yield* Ref.getAndSet(state.quitting, true);
   if (!wasQuitting) {
     yield* electronDialog.showErrorBox(
-      "T3 Code failed to start",
-      `Stage: ${stage}\n${message}${detail}`,
+      tr("T3 Code failed to start"),
+      tr("Stage: {stage}\n{message}{detail}", { stage: stage, message: message, detail: detail }),
     );
   }
   yield* shutdown.request;

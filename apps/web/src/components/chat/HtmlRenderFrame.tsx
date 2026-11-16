@@ -1,4 +1,5 @@
 import type { EnvironmentId, ScopedThreadRef } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   HTML_RENDER_COLUMN_WIDTH,
   htmlRenderFileName,
@@ -83,7 +84,7 @@ export function HtmlRenderFrame(props: {
               <TooltipTrigger
                 render={
                   <Button
-                    aria-label="Open full screen"
+                    aria-label={tr("Open full screen")}
                     size="icon-xs"
                     variant="glass"
                     onClick={async () => {
@@ -95,8 +96,8 @@ export function HtmlRenderFrame(props: {
                       else
                         toastManager.add({
                           type: "error",
-                          title: "Page unavailable",
-                          description: "Reconnect to the environment and try again.",
+                          title: tr("Page unavailable"),
+                          description: tr("Reconnect to the environment and try again."),
                         });
                     }}
                   />
@@ -104,7 +105,7 @@ export function HtmlRenderFrame(props: {
               >
                 <Maximize2Icon className="size-3.5" />
               </TooltipTrigger>
-              <TooltipPopup side="left">Open full screen</TooltipPopup>
+              <TooltipPopup side="left">{tr("Open full screen")}</TooltipPopup>
             </Tooltip>
           </div>
           {expandedSrc !== null ? (
@@ -118,7 +119,7 @@ export function HtmlRenderFrame(props: {
         </>
       ) : failed ? (
         <p className="flex size-full items-center justify-center text-muted-foreground text-xs">
-          Unable to load {title}
+          {tr("Unable to load")} {title}
         </p>
       ) : null}
     </div>

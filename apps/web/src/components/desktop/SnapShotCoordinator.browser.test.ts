@@ -1,4 +1,5 @@
 import { scopeProjectRef, scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { tr } from "@t3tools/shared/i18n";
 import { type DesktopBridge, EnvironmentId, ProjectId, ThreadId } from "@t3tools/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
 
@@ -242,7 +243,7 @@ describe("durable snapshot delivery", () => {
           void store.syncPersistedAttachments(target, [capture]);
         }
         await expect(deliverSnapShot(bridge, capture, () => target)).rejects.toThrow(
-          "could not be saved",
+          tr("The captured window could not be saved to the draft."),
         );
         expect(acknowledgeSnapShot).not.toHaveBeenCalled();
         expect(

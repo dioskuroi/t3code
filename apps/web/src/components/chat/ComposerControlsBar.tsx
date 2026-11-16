@@ -1,4 +1,5 @@
 import type { ChatComposerProps } from "./ChatComposer";
+import { tr } from "@t3tools/shared/i18n";
 import type { PromptUltrathink } from "./TraitsPicker";
 import type { ProviderInstanceEntry } from "../../providerInstances";
 import { type AppModelOption } from "../../modelSelection";
@@ -264,7 +265,7 @@ export function ComposerControlsBar(props: {
       className="shrink-0"
     >
       <CircleAlertIcon className="size-4" />
-      {providerSetupInstanceId ? "Open provider settings" : "No provider available"}
+      {providerSetupInstanceId ? tr("Open provider settings") : tr("No provider available")}
     </ComposerControl>
   ) : (
     <>

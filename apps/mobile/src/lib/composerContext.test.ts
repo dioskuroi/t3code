@@ -3,6 +3,7 @@ import {
   type OrchestrationMessageContext,
   type ServerProviderSkill,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { collectComposerInlineTokens } from "@t3tools/shared/composerInlineTokens";
 import {
   ATTACHMENT_ONLY_BOOTSTRAP_PROMPT,
@@ -104,7 +105,9 @@ describe("mobile composer context", () => {
           contextId: ComposerContextId.make(`preview-${index}`),
         })),
       }),
-    ).toContain("too much context");
+    ).toContain(
+      tr("This draft has too much context to send. Remove some context items and try again."),
+    );
   });
 
   it("blocks over-limit recovery drafts until enough context has been removed", () => {
@@ -112,7 +115,11 @@ describe("mobile composer context", () => {
       ...terminal,
       contextId: ComposerContextId.make(`terminal-${index}`),
     }));
-    expect(composerContextSendBlockReason({ version: 1, records })).toContain("at most 200");
+    expect(composerContextSendBlockReason({ version: 1, records })).toContain(
+      tr("Remove context items until there are at most {COMPOSER_CONTEXT_MAX_RECORDS}.", {
+        COMPOSER_CONTEXT_MAX_RECORDS: 200,
+      }),
+    );
     expect(
       composerContextSendBlockReason({ version: 1, records: records.slice(0, 200) }),
     ).toBeNull();

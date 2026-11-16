@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 /** A plain encoded failure crosses IPC and contextBridge without an arbitrary Error or stack. */
 export class PreviewCaptureFailure extends Schema.TaggedError<PreviewCaptureFailure>()(
@@ -17,15 +18,25 @@ export class PreviewCaptureFailure extends Schema.TaggedError<PreviewCaptureFail
   override get message(): string {
     switch (this.reason) {
       case "renderer-unavailable":
-        return "The preview renderer is unavailable. Reopen the preview tab before retrying.";
+        return tr("The preview renderer is unavailable. Reopen the preview tab before retrying.");
       case "capture-unavailable":
-        return "The preview capture surface is unavailable. Present the target tab and check that the preview host is unlocked, its display is on and its window is restored before retrying.";
+        return tr(
+          "The preview capture surface is unavailable. Present the target tab and check that the preview host is unlocked, its display is on and its window is restored before retrying.",
+        );
       case "capture-timeout":
-        return `Preview capture timed out during ${this.stage}. Check the preview host's lock, display and window state before retrying.`;
+        return tr(
+          "Preview capture timed out during {stage}. Check the preview host's lock, display and window state before retrying.",
+          { stage: this.stage },
+        );
       case "recording-conflict":
-        return "A recording capture is already starting, stopping or active. Wait for it to settle, or stop the active recording before retrying.";
+        return tr(
+          "A recording capture is already starting, stopping or active. Wait for it to settle, or stop the active recording before retrying.",
+        );
       case "capture-failed":
-        return `Preview capture failed during ${this.stage}. Check the preview host and target tab before retrying.`;
+        return tr(
+          "Preview capture failed during {stage}. Check the preview host and target tab before retrying.",
+          { stage: this.stage },
+        );
     }
   }
 }

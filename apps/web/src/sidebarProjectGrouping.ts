@@ -3,6 +3,7 @@ import type {
   ScopedProjectRef,
   SidebarProjectGroupingMode,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   buildProjectGroups,
   derivePhysicalProjectKey,
@@ -12,9 +13,9 @@ import {
 import type { Project } from "./types";
 
 export const PROJECT_GROUPING_MODE_LABELS: Record<SidebarProjectGroupingMode, string> = {
-  repository: "Group by repository",
-  repository_path: "Group by repository path",
-  separate: "Keep separate",
+  repository: tr("Group by repository"),
+  repository_path: tr("Group by repository path"),
+  separate: tr("Keep separate"),
 };
 
 export function withProjectGroupingOverride(

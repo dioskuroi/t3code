@@ -1,4 +1,5 @@
 import { uuidv4 } from "../../lib/uuid";
+import { tr } from "@t3tools/shared/i18n";
 import { ThreadUndoNotice } from "./ThreadUndoNotice";
 import { use } from "react";
 import { NativePrimaryColumnContext } from "../../native/v5-workspace-context";

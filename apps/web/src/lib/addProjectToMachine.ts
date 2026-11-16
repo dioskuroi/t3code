@@ -3,6 +3,7 @@ import {
   runAtomCommand,
   squashAtomCommandFailure,
 } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import { scopedProjectKey } from "@t3tools/client-runtime/environment";
 import type {
   EnvironmentId,
@@ -43,7 +44,7 @@ export interface AddProjectToMachineInput {
 
 function failureMessage(result: Parameters<typeof squashAtomCommandFailure>[0]): string {
   const error = squashAtomCommandFailure(result);
-  return error instanceof Error ? error.message : "An error occurred.";
+  return error instanceof Error ? error.message : tr("An error occurred.");
 }
 
 /**
@@ -112,10 +113,10 @@ export async function addProjectToMachine(input: AddProjectToMachineInput): Prom
           environmentId: input.source.environmentId,
           input: { cwd: input.source.cwd, relativePath },
         }),
-        { label: "Read file to copy", reportFailure: false, refresh: true },
+        { label: tr("Read file to copy"), reportFailure: false, refresh: true },
       );
       if (result._tag === "Failure") return { relativePath, error: failureMessage(result) };
-      if (result.value.truncated) return { relativePath, error: "Too large to copy." };
+      if (result.value.truncated) return { relativePath, error: tr("Too large to copy.") };
       return { relativePath, contents: result.value.contents };
     }),
   );
@@ -138,7 +139,7 @@ export async function addProjectToMachine(input: AddProjectToMachineInput): Prom
         destinationPath: input.destinationPath,
       },
     },
-    { label: "Add project to machine", reportFailure: false },
+    { label: tr("Add project to machine"), reportFailure: false },
   );
   if (started._tag === "Failure") {
     setFileCopy(copyKey, null);
@@ -172,7 +173,7 @@ export async function addProjectToMachine(input: AddProjectToMachineInput): Prom
             contents: read.contents,
           },
         },
-        { label: "Copy file to machine", reportFailure: false },
+        { label: tr("Copy file to machine"), reportFailure: false },
       );
       if (written._tag === "Failure")
         failed.push(`${read.relativePath}: ${failureMessage(written)}`);
@@ -183,7 +184,13 @@ export async function addProjectToMachine(input: AddProjectToMachineInput): Prom
         ? null
         : {
             phase: "failed",
-            title: `Could not copy ${failed.length} ${failed.length === 1 ? "file" : "files"} to ${input.target.label}`,
+            title:
+              failed.length === 1
+                ? tr("Could not copy 1 file to {target}", { target: input.target.label })
+                : tr("Could not copy {count} files to {target}", {
+                    count: failed.length,
+                    target: input.target.label,
+                  }),
             failures: failed,
           },
     );

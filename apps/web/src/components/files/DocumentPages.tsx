@@ -1,4 +1,5 @@
 import DOMPurify from "dompurify";
+import { tr } from "@t3tools/shared/i18n";
 import { MinusIcon, PlusIcon, RotateCcwIcon } from "lucide-react";
 import { FileSurfaceAction } from "./fileSurfaceChrome";
 import { useEffect, useRef, useState } from "react";
@@ -100,7 +101,7 @@ export default function DocumentPages(props: {
             {props.details}
           </span>
           <FileSurfaceAction
-            label="Decrease reading size"
+            label={tr("Decrease reading size")}
             disabled={zoom <= 0.5}
             onPress={() => setZoom((value) => Math.max(0.5, value - 0.25))}
           >
@@ -108,14 +109,14 @@ export default function DocumentPages(props: {
           </FileSurfaceAction>
           <span className="min-w-10 text-center tabular-nums">{Math.round(zoom * 100)}%</span>
           <FileSurfaceAction
-            label="Increase reading size"
+            label={tr("Increase reading size")}
             disabled={zoom >= 2}
             onPress={() => setZoom((value) => Math.min(2, value + 0.25))}
           >
             <PlusIcon className="size-3.5" />
           </FileSurfaceAction>
           <FileSurfaceAction
-            label="Reset reading size"
+            label={tr("Reset reading size")}
             disabled={zoom === 1}
             onPress={() => setZoom(1)}
           >

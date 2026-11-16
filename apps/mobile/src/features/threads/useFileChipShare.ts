@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { resolveAssetUrl } from "@t3tools/client-runtime/state/assets";
 import type { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import * as Option from "effect/Option";
@@ -31,12 +32,13 @@ export function useFileChipShare(
     const request = new AbortController();
     requestRef.current = request;
     void (async () => {
-      if (httpBaseUrl === null) throw new Error("Reconnect to the environment and try again.");
+      if (httpBaseUrl === null) throw new Error(tr("Reconnect to the environment and try again."));
       const result = await createUrl({ environmentId, input: { resource: source.resource } });
       if (request.signal.aborted) return;
       const url =
         result._tag === "Success" ? resolveAssetUrl(httpBaseUrl, result.value.relativeUrl) : null;
-      if (url === null) throw new Error("The file could not be loaded. Reconnect and try again.");
+      if (url === null)
+        throw new Error(tr("The file could not be loaded. Reconnect and try again."));
       await downloadAndShareAttachment({
         url,
         attachment: source,
@@ -47,8 +49,8 @@ export function useFileChipShare(
       .catch((error: unknown) => {
         if (!request.signal.aborted) {
           Dialog.alert(
-            "Could not share file",
-            error instanceof Error ? error.message : "Try again.",
+            tr("Could not share file"),
+            error instanceof Error ? error.message : tr("Try again."),
           );
         }
       })

@@ -1,4 +1,5 @@
 import { pipe } from "effect/Function";
+import { tr } from "@t3tools/shared/i18n";
 import {
   SECRET_REQUEST_DEFAULT_PLACEHOLDER,
   secretRequestAnswerInput,
@@ -228,7 +229,7 @@ function PendingSecretRequestForm(props: {
           disabled={submitting}
           onClick={() => void send({ type: "decline" })}
         >
-          Decline
+          {tr("Decline")}
         </Button>
       </div>
     </form>

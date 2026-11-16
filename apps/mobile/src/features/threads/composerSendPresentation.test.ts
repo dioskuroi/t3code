@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 import { resolveComposerSendPresentation } from "./composerSendPresentation";
 
@@ -13,7 +14,7 @@ const idle = {
 describe("resolveComposerSendPresentation", () => {
   it("shows the outbox action when delivery is deferred", () => {
     const presentation = resolveComposerSendPresentation({ ...idle, deliveryDeferred: true });
-    expect(presentation.label).toBe("Queue");
+    expect(presentation.label).toBe(tr("Queue"));
     expect(presentation.icon).toBe("tray.and.arrow.up");
     expect(resolveComposerSendPresentation(idle).icon).toBe("arrow.up");
   });
@@ -26,7 +27,7 @@ describe("resolveComposerSendPresentation", () => {
       followUpBehavior: "steer",
     });
 
-    expect(presentation.label).toBe("Queue");
+    expect(presentation.label).toBe(tr("Queue"));
     expect(presentation.action).toBe("queue");
     expect(presentation.alternate).toBeNull();
     expect(presentation.offersFollowUpChoice).toBe(false);

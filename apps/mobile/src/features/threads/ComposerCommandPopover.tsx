@@ -2,6 +2,7 @@ import {
   resolveProviderSkillSourceKind,
   type ProviderSkillSourceKind,
 } from "@t3tools/client-runtime/providerSkills";
+import { tr } from "@t3tools/shared/i18n";
 import type {
   EnvironmentId,
   EnvironmentMachineKind,
@@ -129,13 +130,13 @@ function itemIcon(item: ComposerCommandItem): AppSymbolName | null {
 function groupLabel(triggerKind: ComposerTriggerKind | null): string | null {
   switch (triggerKind) {
     case "pull-request":
-      return "Pull requests";
+      return tr("Pull requests");
     case "slash-command":
-      return "Commands";
+      return tr("Commands");
     case "skill":
-      return "Skills";
+      return tr("Skills");
     case "path":
-      return "Files";
+      return tr("Files");
     default:
       return null;
   }
@@ -143,19 +144,19 @@ function groupLabel(triggerKind: ComposerTriggerKind | null): string | null {
 
 function emptyText(triggerKind: ComposerTriggerKind | null, isLoading: boolean): string {
   if (isLoading) {
-    return triggerKind === "path" ? "Searching files…" : "Loading…";
+    return triggerKind === "path" ? tr("Searching files\u2026") : tr("Loading\u2026");
   }
   switch (triggerKind) {
     case "pull-request":
-      return "No matching pull requests.";
+      return tr("No matching pull requests.");
     case "path":
-      return "No matching files or folders.";
+      return tr("No matching files or folders.");
     case "skill":
-      return "No skills found.";
+      return tr("No skills found.");
     case "slash-command":
-      return "No matching commands.";
+      return tr("No matching commands.");
     default:
-      return "No results.";
+      return tr("No results.");
   }
 }
 
@@ -191,7 +192,7 @@ const CommandRow = memo(function CommandRow(props: {
       <Text className="shrink-0 text-base font-t3-medium text-foreground" numberOfLines={1}>
         {props.isSlashSkill && props.item.type === "skill" ? (
           <>
-            <Text className="text-foreground-muted">skill:</Text>
+            <Text className="text-foreground-muted">{tr("skill:")}</Text>
             {props.item.skill.name}
           </>
         ) : (

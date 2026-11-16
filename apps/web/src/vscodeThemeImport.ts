@@ -1,4 +1,5 @@
 import { parse, type ParseError } from "jsonc-parser";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   createVividThemeColors,
@@ -138,7 +139,7 @@ export function isVsCodeThemeFile(value: unknown): boolean {
 export function parseThemeImport(source: string): ThemeDefinition {
   const errors: ParseError[] = [];
   const value: unknown = parse(source, errors, { allowTrailingComma: true });
-  if (errors.length > 0) throw new Error("That theme file is not valid JSON.");
+  if (errors.length > 0) throw new Error(tr("That theme file is not valid JSON."));
   return isVsCodeThemeFile(value)
     ? parseVsCodeThemeFile(value)
     : parseThemeFile(JSON.parse(source));
@@ -167,11 +168,11 @@ function resolveName(value: Record<string, unknown>): string {
     const humanized = humanizeThemeName(candidate);
     if (humanized.length > 0) return humanized.slice(0, 48);
   }
-  return "VS Code theme";
+  return tr("VS Code theme");
 }
 
 export function parseVsCodeThemeFile(value: unknown): ThemeDefinition {
-  if (!isRecord(value)) throw new Error("Theme files must contain a JSON object.");
+  if (!isRecord(value)) throw new Error(tr("Theme files must contain a JSON object."));
   const colors = isRecord(value.colors) ? value.colors : {};
 
   const pick = (...keys: ReadonlyArray<string>): VsCodeRgba | null => {
@@ -189,7 +190,9 @@ export function parseVsCodeThemeFile(value: unknown): ThemeDefinition {
   const canvasColor = pick("editor.background", "editorPane.background");
   if (!canvasColor) {
     throw new Error(
-      'That VS Code theme has no "editor.background" color, so there is nothing to build a palette from.',
+      tr(
+        'That VS Code theme has no "editor.background" color, so there is nothing to build a palette from.',
+      ),
     );
   }
   const canvas = { r: canvasColor.r, g: canvasColor.g, b: canvasColor.b };

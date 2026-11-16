@@ -23,7 +23,7 @@ describe("managedInstanceLocks", () => {
     const locks = managedInstanceLocks(policy, codex);
     expect(locks && [...locks.configKeys]).toEqual(["binaryPath"]);
     expect(locks && [...locks.environmentNames]).toEqual(["OPENAI_BASE_URL", "HTTPS_PROXY"]);
-    expect(locks?.reason).toBe("Managed by Example Corp.");
+    expect(locks?.reason).toBe("由 Example Corp 管理。");
   });
 
   it("treats a bare environment path as every variable", () => {

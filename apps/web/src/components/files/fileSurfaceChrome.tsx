@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import { Spinner } from "~/components/ui/spinner";
 import { Button } from "~/components/ui/button";
@@ -117,7 +118,7 @@ export function FileSurfaceLoading(props: { readonly className?: string }) {
   return (
     <div
       role="status"
-      aria-label="Loading file"
+      aria-label={tr("Loading file")}
       className={cn(
         "flex min-h-0 flex-1 items-center justify-center text-muted-foreground",
         props.className,
@@ -144,7 +145,7 @@ export function FileSurfaceFailure(props: {
           onClick={props.onRetry}
           className="rounded-md border border-input px-2.5 py-1 text-xs text-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
-          Try again
+          {tr("Try again")}
         </button>
       ) : null}
     </div>

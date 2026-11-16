@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { TrimmedNonEmptyString } from "./baseSchemas.ts";
 import { ThreadId } from "./baseSchemas.ts";
 import {
@@ -45,6 +46,6 @@ export class ProviderUploadFeedbackError extends Schema.TaggedError<ProviderUplo
   },
 ) {
   override get message(): string {
-    return `Failed to upload feedback for thread ${this.threadId}.`;
+    return tr("Failed to upload feedback for thread {threadId}.", { threadId: this.threadId });
   }
 }

@@ -90,7 +90,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     const message = pendingNativeError.current;
     pendingNativeError.current = null;
     if (nativeViewer === null) {
-      if (message) Dialog.alert("Could not open document", message);
+      if (message) Dialog.alert(tr("Could not open document"), message);
       return;
     }
     if (message) {
@@ -111,7 +111,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     renderedMode
       ? ({
           id: "preview",
-          title: renderedMode === "table" ? "Table" : "Preview",
+          title: renderedMode === "table" ? tr("Table") : tr("Preview"),
           icon: renderedMode === "table" ? "tablecells" : "eye",
           inline: true,
           onPress: () => setRendered(true),
@@ -120,7 +120,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     renderedMode
       ? ({
           id: "source",
-          title: "Source",
+          title: tr("Source"),
           icon: "doc.text",
           inline: true,
           onPress: () => setRendered(false),
@@ -129,7 +129,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     content && activeMode === "source"
       ? ({
           id: "word-wrap",
-          title: appearance.codeWordBreak ? "Disable word wrap" : "Enable word wrap",
+          title: appearance.codeWordBreak ? tr("Disable word wrap") : tr("Enable word wrap"),
           icon: "text.alignleft",
           inline: false,
           onPress: () => setCodeWordBreak(!appearance.codeWordBreak),
@@ -138,7 +138,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     content
       ? ({
           id: "copy",
-          title: content.truncated ? "Copy preview" : "Copy contents",
+          title: content.truncated ? tr("Copy preview") : tr("Copy contents"),
           icon: "doc.on.doc",
           inline: false,
           onPress: () => copyTextWithHaptic(content.text),
@@ -147,7 +147,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     uri
       ? ({
           id: "share",
-          title: sharing ? "Opening share sheet…" : "Save or share",
+          title: sharing ? tr("Opening share sheet\u2026") : tr("Save or share"),
           icon: "square.and.arrow.up",
           inline: false,
           onPress: () => void share(),
@@ -156,7 +156,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     uri
       ? ({
           id: "open-viewer",
-          title: "Open in file viewer",
+          title: tr("Open in file viewer"),
           icon: "arrow.up.left.and.arrow.down.right",
           inline: false,
           onPress: () => {
@@ -168,7 +168,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
     draftKey
       ? ({
           id: "remove",
-          title: "Remove from draft",
+          title: tr("Remove from draft"),
           icon: "trash",
           inline: false,
           destructive: true,
@@ -209,7 +209,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
         })),
     ],
   };
-  const subtitle = `${draftKey ? "Draft attachment" : "Attachment"}${sizeBytes > 0 ? ` · ${formatAttachmentSize(sizeBytes)}` : ""}`;
+  const subtitle = `${draftKey ? tr("Draft attachment") : tr("Attachment")}${sizeBytes > 0 ? ` · ${formatAttachmentSize(sizeBytes)}` : ""}`;
   const refresh = useRefreshAssetUrl(environmentId, resource);
   const capabilities = useEnvironmentServerConfig(environmentId)?.environment.capabilities;
 

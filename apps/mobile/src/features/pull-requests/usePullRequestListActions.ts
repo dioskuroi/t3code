@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import {
   executeAtomQuery,
@@ -89,7 +90,11 @@ export function usePullRequestListActions(
         !registry.get(composerPullRequests.runAction.permissionAtom(environmentId)) ||
         !canPerformPullRequestAction(pr, action)
       )
-        throw new Error(`This action isn't available for this ${terminology.singular}.`);
+        throw new Error(
+          tr("This action isn't available for this {singular}.", {
+            singular: terminology.singular,
+          }),
+        );
       const result = await run({ ...target, input: { ...target.input, action } });
       if (result._tag === "Failure") throw squashAtomCommandFailure(result);
       if (result.value !== undefined) return;
@@ -107,8 +112,8 @@ export function usePullRequestListActions(
     if (AsyncResult.isFailure(result)) {
       const cause = squashAtomCommandFailure(result);
       Dialog.alert(
-        `Couldn't update this ${terminology.singular}`,
-        cause instanceof Error ? cause.message : "Try again.",
+        tr("Couldn't update this {singular}", { singular: terminology.singular }),
+        cause instanceof Error ? cause.message : tr("Try again."),
       );
     }
   };
@@ -142,7 +147,7 @@ export function usePullRequestListActions(
       sourceControlClients.get(entry.provider).changeRequest,
     );
     Dialog.alert(`${label}?`, `#${entry.number} · ${entry.title}`, [
-      { text: "Cancel", style: "cancel" },
+      { text: tr("Cancel"), style: "cancel" },
       {
         text: label,
         style: supported === "close" ? "destructive" : "default",
@@ -162,12 +167,12 @@ export function usePullRequestListActions(
         ? [
             {
               id: "request-review",
-              title: "Request review",
+              title: tr("Request review"),
               image: Platform.OS === "ios" ? "person.badge.plus" : "person_add",
             },
             {
               id: entry.isDraft ? "ready" : "draft",
-              title: entry.isDraft ? "Mark ready for review" : "Convert to draft",
+              title: entry.isDraft ? tr("Mark ready for review") : tr("Convert to draft"),
               image: Platform.OS === "ios" ? "pencil" : "edit",
             },
             {
@@ -188,10 +193,10 @@ export function usePullRequestListActions(
           : []),
       {
         id: "share",
-        title: "Share…",
+        title: tr("Share\u2026"),
         image: Platform.OS === "ios" ? "square.and.arrow.up" : "share",
       },
-      { id: "copy", title: "Copy link", image: Platform.OS === "ios" ? "link" : "link" },
+      { id: "copy", title: tr("Copy link"), image: Platform.OS === "ios" ? "link" : "link" },
       {
         id: "provider",
         title: openOnProviderLabel(entry.provider),

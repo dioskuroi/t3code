@@ -6,6 +6,7 @@ import {
 } from "@t3tools/contracts";
 import { AsyncResult } from "effect/reactivity";
 import { createElement, isValidElement, type ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
 
 function deferred<T>() {
@@ -155,8 +156,12 @@ it.each(["workspace-file", "media-file"] as const)(
       ]),
       { x: 1, y: 1 },
     );
-    await expect(useMediaActions(source).save()).rejects.toThrow("cannot read host files");
-    await expect(useMediaActions(source).copyImage()).rejects.toThrow("cannot read host files");
+    await expect(useMediaActions(source).save()).rejects.toThrow(
+      tr("This connection cannot read host files."),
+    );
+    await expect(useMediaActions(source).copyImage()).rejects.toThrow(
+      tr("This connection cannot read host files."),
+    );
     expect(state.mint).not.toHaveBeenCalled();
     expect(state.download).not.toHaveBeenCalled();
     expect(state.clipboard).not.toHaveBeenCalled();

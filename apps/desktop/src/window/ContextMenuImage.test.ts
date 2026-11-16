@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from "vite-plus/test";
 import type * as Electron from "electron";
 import { copyContextMenuImage } from "./ContextMenuImage.ts";
+import { tr } from "@t3tools/shared/i18n";
 
 const native = vi.hoisted(() => ({
   fetch: vi.fn(),
@@ -55,7 +56,7 @@ beforeEach(() => {
   native.fetch.mockResolvedValue(new Response(Uint8Array.from(sourcePng)));
   native.write.mockResolvedValue(undefined);
   contents.executeJavaScriptInIsolatedWorld.mockRejectedValue(
-    new Error("Image could not be decoded"),
+    new Error(tr("Image could not be decoded")),
   );
 });
 
@@ -120,7 +121,7 @@ it.each([
   "blob:https://example.com/image",
   "https://user:pass@example.com/image.png",
 ])("rejects unsupported or credential-bearing URLs: %s", async (srcURL) => {
-  await expect(copyImage({ srcURL })).rejects.toThrow("Unsupported image URL");
+  await expect(copyImage({ srcURL })).rejects.toThrow(tr("Unsupported image URL"));
   expect(native.fetch).not.toHaveBeenCalled();
   expect(native.write).not.toHaveBeenCalled();
 });
@@ -132,7 +133,7 @@ it("cancels responses whose declared size exceeds the limit", async () => {
       headers: { "content-length": String(32 * 1024 * 1024 + 1) },
     }),
   );
-  await expect(copyImage()).rejects.toThrow("size limit");
+  await expect(copyImage()).rejects.toThrow(tr("Image request failed or exceeded the size limit"));
   expect(cancel).toHaveBeenCalled();
   expect(native.createFromBuffer).not.toHaveBeenCalled();
 });
@@ -150,14 +151,14 @@ it("cancels oversized streams without a content-length", async () => {
       }),
     ),
   );
-  await expect(copyImage()).rejects.toThrow("size limit");
+  await expect(copyImage()).rejects.toThrow(tr("Image exceeded the size limit"));
   expect(cancel).toHaveBeenCalled();
   expect(native.write).not.toHaveBeenCalled();
 });
 
 it("preserves the clipboard when the response is not an image", async () => {
   native.image.isEmpty.mockReturnValue(true);
-  await expect(copyImage()).rejects.toThrow("could not be decoded");
+  await expect(copyImage()).rejects.toThrow(tr("Image could not be decoded"));
   expect(native.write).not.toHaveBeenCalled();
 });
 
@@ -166,7 +167,7 @@ it("rejects large decoded dimensions before image allocation", async () => {
   oversizedPng.writeUInt32BE(4096, 16);
   oversizedPng.writeUInt32BE(4096, 20);
   native.fetch.mockResolvedValue(new Response(Uint8Array.from(oversizedPng)));
-  await expect(copyImage()).rejects.toThrow("size limit");
+  await expect(copyImage()).rejects.toThrow(tr("Image dimensions exceed the size limit"));
   expect(native.createFromBuffer).not.toHaveBeenCalled();
   expect(native.image.toPNG).not.toHaveBeenCalled();
   expect(native.write).not.toHaveBeenCalled();
@@ -174,7 +175,7 @@ it("rejects large decoded dimensions before image allocation", async () => {
 
 it("preserves the clipboard when the encoded PNG exceeds the limit", async () => {
   native.image.toPNG.mockReturnValueOnce(Buffer.alloc(32 * 1024 * 1024 + 1));
-  await expect(copyImage()).rejects.toThrow("size limit");
+  await expect(copyImage()).rejects.toThrow(tr("PNG exceeded the size limit"));
   expect(native.write).not.toHaveBeenCalled();
 });
 

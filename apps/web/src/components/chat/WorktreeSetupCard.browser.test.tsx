@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { ThreadId, type WorktreeSetupSnapshot } from "@t3tools/contracts";
 import { expect, it, vi } from "vite-plus/test";
 
@@ -51,16 +52,16 @@ it("ticks the running stage while finished stages keep their duration", async ()
   vi.setSystemTime(NOW);
   await using screen = await render(card(snapshot({})));
   // Assert synchronously: expect.element polls on timers these tests fake.
-  const section = screen.getByRole("region", { name: "Worktree setup" });
+  const section = screen.getByRole("region", { name: tr("Worktree setup") });
 
-  expect(section.element().textContent).toContain("Fetch base branch3s");
-  expect(section.element().textContent).toContain("Check out files7s");
+  expect(section.element().textContent).toContain("拉取 base 分支3s");
+  expect(section.element().textContent).toContain("签出文件7s");
 
   await act(async () => {
     await vi.advanceTimersByTimeAsync(5_000);
   });
-  expect(section.element().textContent).toContain("Fetch base branch3s");
-  expect(section.element().textContent).toContain("Check out files12s");
+  expect(section.element().textContent).toContain("拉取 base 分支3s");
+  expect(section.element().textContent).toContain("签出文件12s");
 });
 
 it("stops a stage interrupted by the setup ending at the setup's end", async () => {
@@ -68,11 +69,11 @@ it("stops a stage interrupted by the setup ending at the setup's end", async () 
   vi.setSystemTime(NOW);
   const failed = snapshot({ phase: "failed", endedAt: "2026-10-26T12:00:05.000Z" });
   await using screen = await render(card(failed));
-  const section = screen.getByRole("region", { name: "Worktree setup" });
+  const section = screen.getByRole("region", { name: tr("Worktree setup") });
 
-  expect(section.element().textContent).toContain("Check out files2s");
+  expect(section.element().textContent).toContain("签出文件2s");
   await act(async () => {
     await vi.advanceTimersByTimeAsync(5_000);
   });
-  expect(section.element().textContent).toContain("Check out files2s");
+  expect(section.element().textContent).toContain("签出文件2s");
 });

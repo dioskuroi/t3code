@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { tr } from "@t3tools/shared/i18n";
 
 import { projectThreadContentPresentation } from "./threadContentPresentation";
 
@@ -24,8 +25,8 @@ describe("thread content presentation", () => {
       }),
     ).toEqual({
       kind: "unavailable",
-      title: "Messages not cached",
-      detail: "Reconnect this environment to load the conversation.",
+      title: tr("Messages not cached"),
+      detail: tr("Reconnect this environment to load the conversation."),
     });
   });
 });

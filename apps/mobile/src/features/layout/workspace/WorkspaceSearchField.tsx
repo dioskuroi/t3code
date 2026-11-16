@@ -1,4 +1,5 @@
 import type { Ref } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { Keyboard, Pressable, TextInput, View, type TextInputInstance } from "react-native";
 import { useResolveClassNames } from "uniwind";
 
@@ -20,7 +21,7 @@ export function WorkspaceSearchField({
 }) {
   const inputStyle = useResolveClassNames("text-foreground font-sans text-base");
   const placeholderStyle = useResolveClassNames("text-foreground-muted");
-  const label = props.tab === "pullRequests" ? "Search pull requests" : "Search threads";
+  const label = props.tab === "pullRequests" ? tr("Search pull requests") : tr("Search threads");
   return (
     <GlassSurface
       className="min-w-0 flex-1"
@@ -47,7 +48,7 @@ export function WorkspaceSearchField({
         {props.query ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Clear search"
+            accessibilityLabel={tr("Clear search")}
             onPress={props.onClear}
             className="h-11 w-11 items-center justify-center"
           >

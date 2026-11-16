@@ -2,6 +2,7 @@
 // @effect-diagnostics nodeBuiltinImport:off -- This desktop-only helper owns a Node child process for global shortcut capture.
 
 import * as NodeChildProcess from "node:child_process";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { SnapShotModifier } from "@t3tools/contracts";
 
@@ -55,7 +56,13 @@ export function startGlobalShiftShortcutProcess(
       fail(error);
     });
     worker.once("exit", (code) => {
-      fail(new Error(`Snapshot shortcut helper exited with code ${code}`));
+      fail(
+        new Error(
+          tr("Snapshot shortcut helper exited with code {code}", {
+            code: code === null ? "null" : code,
+          }),
+        ),
+      );
     });
   });
 }

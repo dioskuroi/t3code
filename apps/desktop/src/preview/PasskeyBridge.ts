@@ -1,4 +1,5 @@
 import type { CreateCredentialResult, GetCredentialResult } from "electron-webauthn";
+import { tr } from "@t3tools/shared/i18n";
 
 import { PASSKEY_CREATE_CHANNEL, PASSKEY_GET_CHANNEL } from "./GuestProtocol.ts";
 
@@ -14,8 +15,9 @@ type CreationOptions = CredentialCreationOptions & {
 };
 type InvokePasskeyCeremony = (channel: PasskeyChannel, publicKey: unknown) => Promise<unknown>;
 
-const NOT_ALLOWED_MESSAGE =
-  "The operation either timed out or was not allowed. See: https://www.w3.org/TR/webauthn-2/#sctn-privacy-considerations-client.";
+const NOT_ALLOWED_MESSAGE = tr(
+  "The operation either timed out or was not allowed. See: https://www.w3.org/TR/webauthn-2/#sctn-privacy-considerations-client.",
+);
 const DOM_EXCEPTION_NAMES = new Set([
   "AbortError",
   "InvalidStateError",
@@ -38,7 +40,7 @@ const toBase64Url = (buffer: ArrayBuffer) =>
 
 const ceremonyError = (name: string) =>
   name === "TypeError"
-    ? new TypeError("The passkey request options are invalid.")
+    ? new TypeError(tr("The passkey request options are invalid."))
     : new DOMException(
         NOT_ALLOWED_MESSAGE,
         DOM_EXCEPTION_NAMES.has(name) ? name : "NotAllowedError",
@@ -195,7 +197,7 @@ const credentialFromGetResult = (data: Extract<GetCredentialResult, { success: t
 };
 
 const abortReason = (signal: AbortSignal) =>
-  signal.reason ?? new DOMException("The operation was aborted.", "AbortError");
+  signal.reason ?? new DOMException(tr("The operation was aborted."), "AbortError");
 
 /** Keep conditional requests native so autofill and upgrades cannot open a modal sheet unprompted. */
 export function installPasskeyBridge(invoke: InvokePasskeyCeremony) {

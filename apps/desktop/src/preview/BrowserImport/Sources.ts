@@ -1,4 +1,5 @@
 import type { BrowserImportSourceId, BrowserImportSourceProfile } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeSqliteClient from "@t3tools/shared/nodeSqliteClient";
 import * as HostProcess from "@t3tools/shared/HostProcess";
 import * as Effect from "effect/Effect";
@@ -177,7 +178,7 @@ export const BROWSER_IMPORT_SOURCES: ReadonlyArray<BrowserImportSourceDefinition
   },
   {
     id: "zen",
-    name: "Zen",
+    name: tr("Zen"),
     engine: "firefox",
     platforms: ["darwin", "win32", "linux"],
     userDataDirectory: (context) => {
@@ -388,7 +389,7 @@ const listSafariProfiles = Effect.fnUntraced(function* (
   const profiles: Array<BrowserImportSourceProfile> = [
     {
       directory: ".",
-      name: defaultProfile ? defaultProfile.title?.trim() || "Personal" : "Safari",
+      name: defaultProfile ? defaultProfile.title?.trim() || tr("Personal") : "Safari",
     },
   ];
   const stores = context.path.join(library, "WebKit", "WebsiteDataStore");

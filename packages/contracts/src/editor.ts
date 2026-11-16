@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { TrimmedNonEmptyString } from "./baseSchemas.ts";
 
 export const EditorLaunchStyle = Schema.Literals(["direct-path", "goto", "line-column"]);
@@ -17,25 +18,25 @@ type EditorDefinition = {
 export const EDITORS = [
   {
     id: "cursor",
-    label: "Cursor",
+    label: tr("Cursor"),
     commands: ["cursor"],
     // File and workspace opens must target the IDE even when the Agents Window is active.
     baseArgs: ["--classic"],
     launchStyle: "goto",
     remoteScheme: "cursor",
   },
-  { id: "trae", label: "Trae", commands: ["trae"], launchStyle: "goto" },
-  { id: "kiro", label: "Kiro", commands: ["kiro"], baseArgs: ["ide"], launchStyle: "goto" },
+  { id: "trae", label: tr("Trae"), commands: ["trae"], launchStyle: "goto" },
+  { id: "kiro", label: tr("Kiro"), commands: ["kiro"], baseArgs: ["ide"], launchStyle: "goto" },
   {
     id: "vscode",
-    label: "VS Code",
+    label: tr("VS Code"),
     commands: ["code"],
     launchStyle: "goto",
     remoteScheme: "vscode",
   },
   {
     id: "vscode-insiders",
-    label: "VS Code Insiders",
+    label: tr("VS Code Insiders"),
     commands: ["code-insiders"],
     launchStyle: "goto",
     remoteScheme: "vscode-insiders",
@@ -49,28 +50,28 @@ export const EDITORS = [
   },
   {
     id: "zed",
-    label: "Zed",
+    label: tr("Zed"),
     commands: ["zed", "zeditor"],
     launchStyle: "direct-path",
     remoteScheme: "zed",
   },
   {
     id: "antigravity",
-    label: "Antigravity",
+    label: tr("Antigravity"),
     // The IDE ships antigravity-ide; agy is the standalone CLI.
     commands: ["antigravity-ide", "agy-ide"],
     launchStyle: "goto",
   },
   {
     id: "idea",
-    label: "IntelliJ IDEA",
+    label: tr("IntelliJ IDEA"),
     commands: ["idea"],
     launchStyle: "line-column",
     jetbrainsProductCode: "IU",
   },
   {
     id: "aqua",
-    label: "Aqua",
+    label: tr("Aqua"),
     commands: ["aqua"],
     launchStyle: "line-column",
     jetbrainsProductCode: "QA",
@@ -119,7 +120,7 @@ export const EDITORS = [
   },
   {
     id: "rider",
-    label: "Rider",
+    label: tr("Rider"),
     commands: ["rider"],
     launchStyle: "line-column",
     jetbrainsProductCode: "RD",
@@ -145,7 +146,7 @@ export const EDITORS = [
     launchStyle: "line-column",
     jetbrainsProductCode: "WS",
   },
-  { id: "file-manager", label: "File Manager", commands: null, launchStyle: "direct-path" },
+  { id: "file-manager", label: tr("File Manager"), commands: null, launchStyle: "direct-path" },
 ] as const satisfies ReadonlyArray<EditorDefinition>;
 
 export const EditorId = Schema.Literals(EDITORS.map((e) => e.id));
@@ -236,7 +237,7 @@ export class ExternalLauncherUnknownEditorError extends Schema.TaggedError<Exter
   },
 ) {
   override get message(): string {
-    return `Unknown editor: ${this.editor}`;
+    return tr("Unknown editor: {editor}", { editor: this.editor });
   }
 }
 
@@ -247,7 +248,7 @@ export class ExternalLauncherUnsupportedEditorError extends Schema.TaggedError<E
   },
 ) {
   override get message(): string {
-    return `Unsupported editor: ${this.editor}`;
+    return tr("Unsupported editor: {editor}", { editor: this.editor });
   }
 }
 
@@ -259,7 +260,7 @@ export class ExternalLauncherCommandNotFoundError extends Schema.TaggedError<Ext
   },
 ) {
   override get message(): string {
-    return `Editor command not found: ${this.command}`;
+    return tr("Editor command not found: {command}", { command: this.command });
   }
 }
 
@@ -288,7 +289,10 @@ export class ExternalLauncherBrowserSpawnError extends Schema.TaggedError<Extern
   },
 ) {
   override get message(): string {
-    return `Failed to launch browser target '${this.target}' with '${[this.command, ...this.args].join(" ")}'`;
+    return tr("Failed to launch browser target '{target}' with '{command}'", {
+      target: this.target,
+      command: [this.command, ...this.args].join(" "),
+    });
   }
 }
 
@@ -301,7 +305,11 @@ export class ExternalLauncherEditorSpawnError extends Schema.TaggedError<Externa
   },
 ) {
   override get message(): string {
-    return `Failed to launch '${this.target}' in ${this.editor} with '${[this.command, ...this.args].join(" ")}'`;
+    return tr("Failed to launch '{target}' in {editor} with '{command}'", {
+      target: this.target,
+      editor: this.editor,
+      command: [this.command, ...this.args].join(" "),
+    });
   }
 }
 

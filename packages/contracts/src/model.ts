@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { TrimmedNonEmptyString } from "./baseSchemas.ts";
@@ -195,15 +196,15 @@ export const MODEL_SLUG_ALIASES_BY_PROVIDER: Partial<
 };
 
 export const PROVIDER_DISPLAY_NAMES: Partial<Record<ProviderDriverKind, string>> = {
-  [ProviderDriverKind.make("antigravity")]: "Antigravity",
-  [CODEX_DRIVER_KIND]: "Codex",
-  [CLAUDE_DRIVER_KIND]: "Claude",
-  [CURSOR_DRIVER_KIND]: "Cursor",
-  [GROK_DRIVER_KIND]: "Grok",
+  [ProviderDriverKind.make("antigravity")]: tr("Antigravity"),
+  [CODEX_DRIVER_KIND]: tr("Codex"),
+  [CLAUDE_DRIVER_KIND]: tr("Claude"),
+  [CURSOR_DRIVER_KIND]: tr("Cursor"),
+  [GROK_DRIVER_KIND]: tr("Grok"),
   [FX_DRIVER_KIND]: "fx",
-  [KIRO_DRIVER_KIND]: "Kiro",
-  [MUSE_DRIVER_KIND]: "Muse Code",
-  [ACP_REGISTRY_DRIVER_KIND]: "ACP Registry",
+  [KIRO_DRIVER_KIND]: tr("Kiro"),
+  [MUSE_DRIVER_KIND]: tr("Muse Code"),
+  [ACP_REGISTRY_DRIVER_KIND]: tr("ACP Registry"),
   [PI_DRIVER_KIND]: "Pi",
   [OPENCODE_DRIVER_KIND]: "OpenCode",
 };

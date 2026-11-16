@@ -3,6 +3,7 @@ import {
   PlatformConnectionSource,
   Persistence,
 } from "@t3tools/client-runtime/platform";
+import { tr } from "@t3tools/shared/i18n";
 import {
   BearerConnectionCredential,
   BearerConnectionProfile,
@@ -174,7 +175,7 @@ function sshPreparationError(cause: unknown) {
   }
   return new ConnectionTransientError({
     reason: "remote-unavailable",
-    detail: `Could not prepare the SSH environment: ${message}`,
+    detail: tr("Could not prepare the SSH environment: {message}", { message: message }),
   });
 }
 
@@ -220,7 +221,7 @@ export const provisionDesktopSshEnvironment = Effect.fn(
   if (pairingToken === null) {
     return yield* new ConnectionBlockedError({
       reason: "authentication",
-      detail: "The SSH environment did not issue a pairing credential.",
+      detail: tr("The SSH environment did not issue a pairing credential."),
     });
   }
   const descriptor = yield* Effect.tryPromise({
@@ -230,7 +231,10 @@ export const provisionDesktopSshEnvironment = Effect.fn(
   if (expectedEnvironmentId !== undefined && descriptor.environmentId !== expectedEnvironmentId) {
     return yield* new ConnectionBlockedError({
       reason: "configuration",
-      detail: `That host reaches ${descriptor.label}, a different machine. Add it as its own environment instead.`,
+      detail: tr(
+        "That host reaches {label}, a different machine. Add it as its own environment instead.",
+        { label: descriptor.label },
+      ),
     });
   }
   const access = yield* Effect.tryPromise({
@@ -284,7 +288,10 @@ export const prepareDesktopSshEnvironment = Effect.fn("web.connectionPlatform.ss
       if (descriptor.environmentId !== input.expectedEnvironmentId) {
         return yield* new ConnectionBlockedError({
           reason: "configuration",
-          detail: `That host reaches ${descriptor.label}, a different machine. Add it as its own environment instead.`,
+          detail: tr(
+            "That host reaches {label}, a different machine. Add it as its own environment instead.",
+            { label: descriptor.label },
+          ),
         });
       }
       const session = yield* Effect.tryPromise({
@@ -338,7 +345,7 @@ const layerCapabilities = Layer.effectContext(
         if (session === null) {
           return yield* new ConnectionBlockedError({
             reason: "authentication",
-            detail: "Sign in to T3 Connect to connect this environment.",
+            detail: tr("Sign in to T3 Connect to connect this environment."),
           });
         }
         const token = yield* session.readClerkToken().pipe(
@@ -353,7 +360,7 @@ const layerCapabilities = Layer.effectContext(
         if (token === null) {
           return yield* new ConnectionBlockedError({
             reason: "authentication",
-            detail: "The T3 Connect session is unavailable.",
+            detail: tr("The T3 Connect session is unavailable."),
           });
         }
         return token;
@@ -368,7 +375,9 @@ const layerCapabilities = Layer.effectContext(
         catch: (cause) =>
           new ConnectionTransientError({
             reason: "remote-unavailable",
-            detail: `Could not load the desktop primary credential: ${String(cause)}`,
+            detail: tr("Could not load the desktop primary credential: {message}", {
+              message: String(cause),
+            }),
           }),
       }).pipe(Effect.map(Option.fromNullishOr)),
     });
@@ -379,7 +388,7 @@ const layerCapabilities = Layer.effectContext(
           if (bridge === undefined) {
             return yield* new ConnectionBlockedError({
               reason: "unsupported",
-              detail: "SSH environments are only available in the desktop app.",
+              detail: tr("SSH environments are only available in the desktop app."),
             });
           }
           return yield* provisionDesktopSshEnvironment(bridge, target, expectedEnvironmentId);
@@ -390,7 +399,7 @@ const layerCapabilities = Layer.effectContext(
         if (bridge === undefined) {
           return yield* new ConnectionBlockedError({
             reason: "unsupported",
-            detail: "SSH environments are only available in the desktop app.",
+            detail: tr("SSH environments are only available in the desktop app."),
           });
         }
         return yield* prepareDesktopSshEnvironment(bridge, input);
@@ -406,7 +415,9 @@ const layerCapabilities = Layer.effectContext(
           catch: (cause) =>
             new ConnectionTransientError({
               reason: "remote-unavailable",
-              detail: `Could not disconnect the SSH environment: ${String(cause)}`,
+              detail: tr("Could not disconnect the SSH environment: {message}", {
+                message: String(cause),
+              }),
             }),
         });
       }),
@@ -451,7 +462,7 @@ const loadSecondaryConnectionRegistration = Effect.fn(
   ) {
     return yield* new ConnectionTransientError({
       reason: "endpoint-unavailable",
-      detail: `Desktop-local backend ${entry.id} is not ready yet.`,
+      detail: tr("Desktop-local backend {id} is not ready yet.", { id: entry.id }),
     });
   }
   const httpBaseUrl = entry.httpBaseUrl;
@@ -651,7 +662,7 @@ const layerPlatformConnectionSource = Layer.effect(
       }
 
       if (primaryTopologyRead._tag === "Failure") {
-        yield* Effect.logWarning("Could not read the primary environment topology.", {
+        yield* Effect.logWarning(tr("Could not read the primary environment topology."), {
           cause: primaryTopologyRead.cause,
         });
       } else if (primaryTopologyRead.target !== null) {
@@ -667,7 +678,7 @@ const layerPlatformConnectionSource = Layer.effect(
         } else {
           const built = yield* loadPrimaryConnectionRegistration(primaryTarget).pipe(
             Effect.tapError((error) =>
-              Effect.logWarning("Could not discover the primary environment.", { error }),
+              Effect.logWarning(tr("Could not discover the primary environment."), { error }),
             ),
             Effect.option,
           );
@@ -690,7 +701,7 @@ const layerPlatformConnectionSource = Layer.effect(
       }
 
       if (topologyRead._tag === "Failure") {
-        yield* Effect.logWarning("Could not read the desktop-local backend topology.", {
+        yield* Effect.logWarning(tr("Could not read the desktop-local backend topology."), {
           cause: topologyRead.cause,
         });
       } else {
@@ -729,7 +740,7 @@ const layerPlatformConnectionSource = Layer.effect(
           }
           const built = yield* loadSecondaryConnectionRegistration(bootstrap).pipe(
             Effect.tapError((error) =>
-              Effect.logWarning("Could not connect a desktop-local backend.", {
+              Effect.logWarning(tr("Could not connect a desktop-local backend."), {
                 id: bootstrap.id,
                 error,
               }),

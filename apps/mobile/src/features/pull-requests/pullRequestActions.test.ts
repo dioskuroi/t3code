@@ -56,21 +56,21 @@ describe("mobile pull request actions", () => {
         "merge",
       ),
     ).toBe(false);
-    expect(mergeUnavailableReason(detail(), false, GITHUB)).toContain("read-only");
+    expect(mergeUnavailableReason(detail(), false, GITHUB)).toContain("只读");
   });
 
   it("blocks a conflicting PR's immediate merge and explains why", () => {
     const pr = detail({ mergeability: "conflicting" });
     expect(canPerformPullRequestAction(pr, "merge")).toBe(false);
-    expect(mergeUnavailableReason(pr, true, GITHUB)).toContain("conflicts");
+    expect(mergeUnavailableReason(pr, true, GITHUB)).toContain("冲突");
   });
 
   it("names the change request with its host's term", () => {
-    expect(pullRequestActionLabel("close", GITHUB)).toBe("Close pull request");
-    expect(pullRequestActionLabel("close", GITLAB)).toBe("Close merge request");
-    expect(pullRequestActionLabel("revert", GITLAB)).toBe("Create revert merge request");
+    expect(pullRequestActionLabel("close", GITHUB)).toBe("关闭 pull request");
+    expect(pullRequestActionLabel("close", GITLAB)).toBe("关闭 merge request");
+    expect(pullRequestActionLabel("revert", GITLAB)).toBe("创建还原 merge request");
     expect(mergeUnavailableReason(detail({ state: "merged" }), true, GITLAB)).toBe(
-      "This merge request has been merged.",
+      "此 merge request 已合并。",
     );
   });
 });

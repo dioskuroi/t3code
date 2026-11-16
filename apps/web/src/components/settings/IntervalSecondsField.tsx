@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   NumberField,
   NumberFieldDecrement,
@@ -66,11 +67,9 @@ export function IntervalSecondsField({
       }}
     >
       <NumberFieldGroup>
-        <NumberFieldDecrement aria-label={`Decrease ${label}`} />
-        <NumberFieldInput
-          aria-label={`${label.charAt(0).toUpperCase()}${label.slice(1)} in seconds`}
-        />
-        <NumberFieldIncrement aria-label={`Increase ${label}`} />
+        <NumberFieldDecrement aria-label={tr("Decrease {label}", { label: label })} />
+        <NumberFieldInput aria-label={`${label}（秒）`} />
+        <NumberFieldIncrement aria-label={tr("Increase {label}", { label: label })} />
       </NumberFieldGroup>
     </NumberField>
   );

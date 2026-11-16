@@ -1,4 +1,5 @@
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import { tr } from "@t3tools/shared/i18n";
 import { SymbolView } from "../../../components/ui/AppSymbol";
 import type { ComponentProps } from "react";
 import { View } from "react-native";
@@ -38,11 +39,11 @@ export function statusSummary(
   } | null,
 ): string {
   if (!gitStatus) {
-    return "Loading branch status\u2026";
+    return tr("Loading branch status\u2026");
   }
 
   if (!gitStatus.isRepo) {
-    return "Not a git repository";
+    return tr("Not a git repository");
   }
 
   const parts: string[] = [];

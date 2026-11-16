@@ -2,6 +2,7 @@ import {
   DESKTOP_PREVIEW_RECORDING_CAPTURE_TRIGGER,
   PreviewCaptureFailure,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { DesktopPreviewRecordingArtifact, ScopedThreadRef } from "@t3tools/contracts";
 import { useAtomValue } from "@effect/atom-react";
 import * as Schema from "effect/Schema";
@@ -24,7 +25,7 @@ export class BrowserRecordingUnavailableError extends Schema.TaggedError<Browser
   },
 ) {
   override get message(): string {
-    return `Browser recording is unavailable for tab ${this.tabId}.`;
+    return tr("Browser recording is unavailable for tab {tabId}.", { tabId: this.tabId });
   }
 }
 
@@ -36,7 +37,13 @@ export class BrowserRecordingConflictError extends Schema.TaggedError<BrowserRec
   },
 ) {
   override get message(): string {
-    return `Cannot record tab ${this.requestedTabId} while tab ${this.activeTabId} is already being recorded.`;
+    return tr(
+      "Cannot record tab {requestedTabId} while tab {activeTabId} is already being recorded.",
+      {
+        requestedTabId: this.requestedTabId,
+        activeTabId: this.activeTabId,
+      },
+    );
   }
 }
 
@@ -47,7 +54,7 @@ export class BrowserRecordingStartCancelledError extends Schema.TaggedError<Brow
   },
 ) {
   override get message(): string {
-    return `Browser recording start was cancelled for tab ${this.tabId}.`;
+    return tr("Browser recording start was cancelled for tab {tabId}.", { tabId: this.tabId });
   }
 }
 
@@ -56,7 +63,9 @@ export class BrowserRecordingFormatUnavailableError extends Schema.TaggedError<B
   { tabId: Schema.String },
 ) {
   override get message(): string {
-    return `MediaRecorder did not report an output format for tab ${this.tabId}.`;
+    return tr("MediaRecorder did not report an output format for tab {tabId}.", {
+      tabId: this.tabId,
+    });
   }
 }
 
@@ -68,7 +77,13 @@ export class BrowserRecordingCaptureTimeoutError extends Schema.TaggedError<Brow
   },
 ) {
   override get message(): string {
-    return `Browser recording media capture for tab ${this.tabId} did not settle within ${this.timeoutMs}ms.`;
+    return tr(
+      "Browser recording media capture for tab {tabId} did not settle within {timeoutMs}ms.",
+      {
+        tabId: this.tabId,
+        timeoutMs: this.timeoutMs,
+      },
+    );
   }
 }
 
@@ -101,13 +116,15 @@ export class BrowserRecordingOperationError extends Schema.TaggedError<BrowserRe
       captureCause instanceof DOMException &&
       captureCause.name === "NotReadableError"
     ) {
-      return (
-        "Unable to start the preview video source. Make sure the capture host is unlocked " +
-        "and its display is on, then retry. " +
-        `${captureCause.name}: ${captureCause.message}`
+      return tr(
+        "Unable to start the preview video source. Make sure the capture host is unlocked and its display is on, then retry. {cause}",
+        { cause: `${captureCause.name}: ${captureCause.message}` },
       );
     }
-    return `Browser recording operation ${this.operation} failed for tab ${this.tabId}.`;
+    return tr("Browser recording operation {operation} failed for tab {tabId}.", {
+      operation: this.operation,
+      tabId: this.tabId,
+    });
   }
 }
 
@@ -455,14 +472,16 @@ const cleanupFailedRecordingStart = async (
   if (errors.length === 1) return errors[0];
   return new AggregateError(
     errors,
-    `Browser recording startup cleanup failed for tab ${recording.tabId}.`,
+    tr("Browser recording startup cleanup failed for tab {tabId}.", { tabId: recording.tabId }),
     { cause: errors[0] },
   );
 };
 
 const recordingStartupCancelledError = (
   recording: ActiveRecording,
-  cause: unknown = new Error(`Browser recording startup was cancelled for tab ${recording.tabId}.`),
+  cause: unknown = new Error(
+    tr("Browser recording startup was cancelled for tab {tabId}.", { tabId: recording.tabId }),
+  ),
 ): BrowserRecordingOperationError =>
   new BrowserRecordingOperationError({
     operation: "start-screencast",
@@ -480,7 +499,13 @@ const waitForRecordingStartupToSettle = async (recording: ActiveRecording): Prom
       recording.startupSettled,
       new Promise<void>((_, reject) => {
         timeout = setTimeout(() => {
-          reject(new Error(`Browser recording startup did not settle for tab ${recording.tabId}.`));
+          reject(
+            new Error(
+              tr("Browser recording startup did not settle for tab {tabId}.", {
+                tabId: recording.tabId,
+              }),
+            ),
+          );
         }, BROWSER_RECORDING_STARTUP_SETTLE_TIMEOUT_MS);
       }),
     ]);
@@ -562,8 +587,13 @@ export async function startBrowserRecording(
         throw recordingStartupCancelledError(
           recording,
           new AggregateError(
-            [new Error(`Browser recording startup was cancelled for tab ${tabId}.`), cause],
-            `Browser recording startup cancellation failed for tab ${tabId}.`,
+            [
+              new Error(
+                tr("Browser recording startup was cancelled for tab {tabId}.", { tabId: tabId }),
+              ),
+              cause,
+            ],
+            tr("Browser recording startup cancellation failed for tab {tabId}.", { tabId: tabId }),
             { cause },
           ),
         );
@@ -612,7 +642,7 @@ export async function startBrowserRecording(
               ? cause
               : new AggregateError(
                   [cause, cleanupCause],
-                  `Browser media capture and cleanup failed for tab ${tabId}.`,
+                  tr("Browser media capture and cleanup failed for tab {tabId}.", { tabId: tabId }),
                   { cause },
                 ),
         });
@@ -656,7 +686,9 @@ export async function startBrowserRecording(
             ? cause
             : new AggregateError(
                 [cause, cleanupCause],
-                `Browser recording initialization and cleanup failed for tab ${tabId}.`,
+                tr("Browser recording initialization and cleanup failed for tab {tabId}.", {
+                  tabId: tabId,
+                }),
                 { cause },
               ),
       });
@@ -673,7 +705,9 @@ export async function startBrowserRecording(
             ? cause
             : new AggregateError(
                 [cause, cleanupCause],
-                `Browser media recorder start and cleanup failed for tab ${tabId}.`,
+                tr("Browser media recorder start and cleanup failed for tab {tabId}.", {
+                  tabId: tabId,
+                }),
                 { cause },
               ),
       });
@@ -780,7 +814,7 @@ const finalizeBrowserRecording = async (
               ? cleanupErrors[0]
               : new AggregateError(
                   cleanupErrors,
-                  `Browser recording media cleanup failed for tab ${tabId}.`,
+                  tr("Browser recording media cleanup failed for tab {tabId}.", { tabId: tabId }),
                   { cause: cleanupErrors[0] },
                 ),
         });
@@ -792,7 +826,7 @@ const finalizeBrowserRecording = async (
         tabId,
         cause: new AggregateError(
           [result.error, cleanupError],
-          `Browser recording stop and cleanup failed for tab ${tabId}.`,
+          tr("Browser recording stop and cleanup failed for tab {tabId}.", { tabId: tabId }),
           { cause: result.error },
         ),
       });

@@ -2,6 +2,7 @@ import {
   WorkspaceColumnsRendererContext,
   WorkspacePresentationHostContext,
 } from "./workspace-presentation-context";
+import { tr } from "@t3tools/shared/i18n";
 import { useAndroidFloatingTabs } from "../settings/appearance/AppearancePreferencesProvider";
 import { useSoftKeyboardShowing } from "../keyboard/useSoftKeyboardShowing";
 import { SafeAreaInsetsContext, useSafeAreaInsets } from "react-native-safe-area-context";

@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { TrimmedNonEmptyString } from "./baseSchemas.ts";
 
 export const BROWSER_PROFILE_NAME_MAX_LENGTH = 48;
@@ -29,8 +30,8 @@ export const DEFAULT_BROWSER_PROFILE_ID: BrowserProfileId = "default";
 export const INCOGNITO_BROWSER_PROFILE_ID: BrowserProfileId = "incognito";
 
 export const BUILT_IN_BROWSER_PROFILES: ReadonlyArray<BrowserProfile> = [
-  { id: DEFAULT_BROWSER_PROFILE_ID, name: "Default", kind: "persistent" },
-  { id: INCOGNITO_BROWSER_PROFILE_ID, name: "Incognito", kind: "incognito" },
+  { id: DEFAULT_BROWSER_PROFILE_ID, name: tr("Default"), kind: "persistent" },
+  { id: INCOGNITO_BROWSER_PROFILE_ID, name: tr("Incognito"), kind: "incognito" },
 ];
 
 export function isBuiltInBrowserProfileId(id: string): boolean {

@@ -1,4 +1,5 @@
 import { SymbolView } from "../../components/ui/AppSymbol";
+import { tr } from "@t3tools/shared/i18n";
 import { Platform, Pressable, View } from "react-native";
 
 import { AppText as Text } from "../../components/ui/AppText";

@@ -1,4 +1,5 @@
 import type { EnvironmentId, ServerSettingsPatch } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -38,7 +39,7 @@ export function useSettingsWriter() {
     );
     const failures = outcomes.filter((outcome) => outcome !== null);
     if (failures.length > 0) {
-      Dialog.alert("Could not save settings", failures.join("\n\n"));
+      Dialog.alert(tr("Could not save settings"), failures.join("\n\n"));
     }
   };
 }

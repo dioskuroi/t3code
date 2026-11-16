@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off -- This macOS platform boundary spawns the native modifier-key poller with Node.
 
 import * as NodeChildProcess from "node:child_process";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { SnapShotModifier } from "@t3tools/contracts";
 
@@ -86,7 +87,13 @@ export function startMacModifierPairShortcutProcess(
       fail(error);
     });
     poller.once("exit", (code) => {
-      fail(new Error(`Snapshot shortcut helper exited with code ${code}`));
+      fail(
+        new Error(
+          tr("Snapshot shortcut helper exited with code {code}", {
+            code: code === null ? "null" : code,
+          }),
+        ),
+      );
     });
   });
 }

@@ -1,4 +1,5 @@
 import { SourceControlProviderKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ProjectId, type PullRequestDetailView } from "@t3tools/contracts";
 import { expect, it, vi } from "vite-plus/test";
 import { userEvent } from "vite-plus/test/browser";
@@ -129,14 +130,16 @@ it("keeps an unsaved description when collapsed and reopened, and after a failed
   state.update.mockResolvedValue({ _tag: "Failure", cause: new Error("offline") });
   await using screen = await render();
   await act(async () =>
-    screen.container.querySelector<HTMLButtonElement>('[aria-label="Edit description"]')!.click(),
+    screen.container
+      .querySelector<HTMLButtonElement>(`[aria-label="${tr("Edit description")}"]`)!
+      .click(),
   );
   const textarea = screen.container.querySelector("textarea")!;
   await userEvent.clear(textarea);
   await userEvent.type(textarea, "Unsaved description");
-  await screen.click("Description");
-  expect(screen.expanded("Description")).toBe("false");
-  await screen.click("Description");
+  await screen.click(tr("Description"));
+  expect(screen.expanded(tr("Description"))).toBe("false");
+  await screen.click(tr("Description"));
   expect(screen.container.querySelector("textarea")!.value).toBe("Unsaved description");
 
   await userEvent.click(screen.getByRole("button", { name: "Save" }));

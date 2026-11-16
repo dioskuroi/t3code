@@ -348,7 +348,7 @@ describe("DesktopWslServerTree", () => {
         });
         assert.isFalse(result.ok);
         if (!result.ok) {
-          assert.include(result.reason, "could not be extracted");
+          assert.include(result.reason, "WSL 服务器文件无法解压到");
           assert.isFalse(result.fatal);
         }
         const treeRoot = path.join(tempDir, "userdata", "wsl-server-tree");

@@ -1,4 +1,5 @@
 import type { ScopedThreadRef } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { DiscoveryListRow } from "../ui/discovery-list";
 
 import { PreviewFaviconIcon } from "./PreviewFaviconIcon";
@@ -24,5 +25,5 @@ export function PreviewLocalServerCard({ threadRef, server, onOpen }: Props) {
 
 function describeServer(server: PreviewableServer): string {
   if (server.processName) return server.processName;
-  return "Listening";
+  return tr("Listening");
 }

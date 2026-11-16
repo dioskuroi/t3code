@@ -75,7 +75,7 @@ export function UsageLimitRecoveryCard({
   async function toggle(action: "resume" | "snooze") {
     if (!resetAt || !runId || !canSchedule) return;
     if (action === "snooze" && !snoozed && Date.parse(resetAt) <= Date.now()) {
-      setError("The reset time has passed. Retry the thread manually.");
+      setError(tr("The reset time has passed. Retry the thread manually."));
       return;
     }
     setPending(true);
@@ -94,7 +94,7 @@ export function UsageLimitRecoveryCard({
     setPending(false);
     if (AsyncResult.isFailure(result)) {
       const cause = squashAtomCommandFailure(result);
-      setError(cause instanceof Error ? cause.message : "Could not change limit recovery.");
+      setError(cause instanceof Error ? cause.message : tr("Could not change limit recovery."));
     }
   }
   const action = workspaceLimit

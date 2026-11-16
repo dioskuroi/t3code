@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
 import { ProviderInstanceId, type ThreadId } from "@t3tools/contracts";
@@ -45,14 +46,16 @@ export function DevReplayHost() {
   const replay = async (scenario?: string): Promise<ThreadId> => {
     const model = scenario ?? scenarios[0]?.slug;
     if (environmentId === null || project === undefined || model === undefined) {
-      throw new Error("Replay needs a dev server with a project and the Replay (dev) provider.");
+      throw new Error(
+        tr("Replay needs a dev server with a project and the Replay (dev) provider."),
+      );
     }
     if (!scenarios.some((candidate) => candidate.slug === model)) {
-      throw new Error(`Unknown replay scenario "${model}".`);
+      throw new Error(tr('Unknown replay scenario "{model}".', { model: model }));
     }
     const threadId = newThreadId();
     const modelSelection = { instanceId: DEV_REPLAY_INSTANCE_ID, model };
-    const title = `Replay: ${model}`;
+    const title = tr("Replay: {model}", { model: model });
     const createdAt = new Date().toISOString();
     const result = await startTurn({
       environmentId,
@@ -113,7 +116,7 @@ export function DevReplayHost() {
     replay(scenario).catch((error: unknown) =>
       toastManager.add({
         type: "error",
-        title: "Replay failed",
+        title: tr("Replay failed"),
         description: error instanceof Error ? error.message : String(error),
       }),
     );
@@ -124,13 +127,15 @@ export function DevReplayHost() {
       <DialogPopup className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>
-            {project === undefined ? "Replay a recorded turn" : `Replay in ${project.title}`}
+            {project === undefined
+              ? tr("Replay a recorded turn")
+              : tr("Replay in {name}", { name: project.title })}
           </DialogTitle>
         </DialogHeader>
         <DialogPanel>
           {scenarios.length === 0 || project === undefined ? (
             <p className="text-sm text-muted-foreground">
-              Needs a project and the Replay (dev) provider, which dev servers start.
+              {tr("Needs a project and the Replay (dev) provider, which dev servers start.")}
             </p>
           ) : (
             <div className="flex flex-col items-start gap-1">

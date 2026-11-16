@@ -1,4 +1,5 @@
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { scopeThreadRef, scopedThreadKey } from "@t3tools/client-runtime/environment";
 import { AsyncResult } from "effect/reactivity";
 import { expect, it, vi } from "vite-plus/test";
@@ -129,10 +130,10 @@ it.each(["system", "app"] as const)(
     using open = vi.spyOn(window, "open").mockReturnValue(null);
     await screen.getByRole("link", { name: "Commit" }).click();
     await expect
-      .element(page.getByRole("button", { name: "Open link", exact: true }))
+      .element(page.getByRole("button", { name: tr("Open link"), exact: true }))
       .toBeVisible();
     expect(open).not.toHaveBeenCalled();
-    await page.getByRole("button", { name: "Open link", exact: true }).click();
+    await page.getByRole("button", { name: tr("Open link"), exact: true }).click();
     expect(open).toHaveBeenCalledExactlyOnceWith(commitUrl, "_blank", "noopener,noreferrer");
     expect(state.openLink).not.toHaveBeenCalled();
   },

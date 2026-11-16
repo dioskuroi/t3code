@@ -1,4 +1,5 @@
 import { HStack, ProgressView, Spacer, Text, VStack } from "@expo/ui/swift-ui";
+import { tr } from "@t3tools/shared/i18n";
 import {
   accessibilityElement,
   accessibilityLabel,
@@ -56,8 +57,8 @@ function SubscriptionUsage(
   const primary = palette?.foreground ?? "primary";
   const secondary = palette?.secondary ?? "secondary";
   const providers = props.providers ?? [
-    { name: "Codex", detail: "Open T3 to connect", windows: [], expiresAt: 0 },
-    { name: "Claude", detail: "Open T3 to connect", windows: [], expiresAt: 0 },
+    { name: tr("Codex"), detail: tr("Open T3 to connect"), windows: [], expiresAt: 0 },
+    { name: tr("Claude"), detail: tr("Open T3 to connect"), windows: [], expiresAt: 0 },
   ];
   const columns = providers.map((provider) => {
     const stale = provider.windows.length > 0 && now >= provider.expiresAt;
@@ -90,9 +91,9 @@ function SubscriptionUsage(
               ].slice(0, limit)
             : windows.slice(0, limit);
     const detail = stale
-      ? "Open T3 to refresh"
+      ? tr("Open T3 to refresh")
       : period !== "auto" && windows.length === 0 && provider.windows.length > 0
-        ? `No ${period} limit reported`
+        ? tr("No {period} limit reported", { period: period })
         : provider.detail;
     const barModifiers = [
       progressViewStyle("linear"),
@@ -109,8 +110,14 @@ function SubscriptionUsage(
             accessibilityElement("ignore"),
             accessibilityLabel(
               tightest
-                ? `${provider.name}, ${tightest.label}, ${tightest.remaining} percent remaining. ${tightest.reset}. ${provider.detail}.`
-                : `${provider.name}. ${detail}.`,
+                ? tr("{provider}, {period}, {remaining} percent remaining. {reset}. {detail}.", {
+                    provider: provider.name,
+                    period: tightest.label,
+                    remaining: tightest.remaining,
+                    reset: tightest.reset,
+                    detail: provider.detail,
+                  })
+                : tr("{provider}. {detail}.", { provider: provider.name, detail }),
             ),
           ]}
         >
@@ -135,10 +142,10 @@ function SubscriptionUsage(
               ]}
             >
               {tightest
-                ? `${tightest.remaining}% left`
+                ? tr("{remaining}% left", { remaining: tightest.remaining })
                 : period !== "auto" && !stale && provider.windows.length > 0
                   ? "N/A"
-                  : "Open T3"}
+                  : tr("Open T3")}
             </Text>
           </HStack>
           {tightest ? (
@@ -170,7 +177,7 @@ function SubscriptionUsage(
           <Text
             modifiers={[font({ textStyle: "caption2" }), foregroundStyle(secondary), lineLimit(1)]}
           >
-            {detail === "Subscription remaining" ? " " : detail}
+            {detail === tr("Subscription remaining") ? " " : detail}
           </Text>
         ) : null}
         {shown.map((window) => (
@@ -181,7 +188,13 @@ function SubscriptionUsage(
             modifiers={[
               accessibilityElement("ignore"),
               accessibilityLabel(
-                `${provider.name}, ${window.label}, ${window.remaining} percent remaining. ${window.reset}. ${provider.detail}.`,
+                tr("{provider}, {period}, {remaining} percent remaining. {reset}. {detail}.", {
+                  provider: provider.name,
+                  period: window.label,
+                  remaining: window.remaining,
+                  reset: window.reset,
+                  detail: provider.detail,
+                }),
               ),
             ]}
           >
@@ -212,7 +225,8 @@ function SubscriptionUsage(
                   ),
                 ]}
               >
-                {window.remaining}% left
+                {window.remaining}
+                {tr("% left")}
               </Text>
             </HStack>
             <ProgressView value={window.remaining / 100} modifiers={barModifiers} />
@@ -231,7 +245,7 @@ function SubscriptionUsage(
           >
             {(period === "auto" ? (provider.totalWindows ?? windows.length) : windows.length) -
               limit}{" "}
-            more in T3
+            {tr("more in T3")}
           </Text>
         ) : null}
       </VStack>
@@ -253,7 +267,7 @@ function SubscriptionUsage(
     >
       {providers.length === 0 ? (
         <Text modifiers={[font({ textStyle: "caption" }), foregroundStyle(secondary)]}>
-          No subscription limits available.
+          {tr("No subscription limits available.")}
         </Text>
       ) : compact ? (
         <VStack alignment="leading" spacing={accessory || dense ? 4 : 8}>
@@ -270,8 +284,15 @@ function SubscriptionUsage(
           modifiers={[font({ textStyle: "caption2" }), foregroundStyle(secondary), lineLimit(1)]}
         >
           {props.checkedAt
-            ? `As of ${new Date(props.checkedAt).toLocaleString(undefined, { hour: "numeric", minute: "2-digit", month: "short", day: "numeric" })}`
-            : "Tap to connect in T3"}
+            ? tr("As of {time}", {
+                time: new Date(props.checkedAt).toLocaleString(undefined, {
+                  hour: "numeric",
+                  minute: "2-digit",
+                  month: "short",
+                  day: "numeric",
+                }),
+              })
+            : tr("Tap to connect in T3")}
         </Text>
       ) : null}
     </VStack>

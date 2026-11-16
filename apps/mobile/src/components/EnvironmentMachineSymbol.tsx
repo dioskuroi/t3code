@@ -1,4 +1,5 @@
 import type { EnvironmentMachineKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { SymbolView, type AppSymbolName } from "./ui/AppSymbol";
 
 export const ENVIRONMENT_MACHINE_SYMBOLS = {
@@ -12,13 +13,13 @@ export const ENVIRONMENT_MACHINE_SYMBOLS = {
 } as const satisfies Record<EnvironmentMachineKind, AppSymbolName>;
 
 const ENVIRONMENT_MACHINE_KIND_LABELS: Record<EnvironmentMachineKind, string> = {
-  server: "Server",
-  cloud: "Cloud VM",
+  server: tr("Server"),
+  cloud: tr("Cloud VM"),
   linux: "Linux/WSL",
-  desktop: "Desktop",
-  laptop: "Laptop",
-  "mac-mini": "Mini PC",
-  "mac-studio": "Workstation",
+  desktop: tr("Desktop"),
+  laptop: tr("Laptop"),
+  "mac-mini": tr("Mini PC"),
+  "mac-studio": tr("Workstation"),
 };
 
 export function EnvironmentMachineSymbol(props: {

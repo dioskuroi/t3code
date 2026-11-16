@@ -148,7 +148,7 @@ function usePullRequestActivityRows(params: PullRequestParams, filter: ActivityF
         date: "",
         content: (
           <Text className="py-6 text-sm text-foreground-muted">
-            No activity matches these filters.
+            {tr("No activity matches these filters.")}
           </Text>
         ),
       });
@@ -194,16 +194,16 @@ function PullRequestIdentity(props: {
       <View className="flex-row items-center gap-2">
         <PullRequestAvatar actor={pr.author ?? null} size={20} />
         <Text className="min-w-0 flex-1 text-xs font-t3-medium" numberOfLines={1}>
-          {pr.author?.login ?? "Unknown author"}
+          {pr.author?.login ?? tr("Unknown author")}
         </Text>
         <Text className="shrink text-right text-2xs text-foreground-muted" numberOfLines={1}>
-          Updated <RelativeTime timestamp={pr.updatedAt} /> ago
+          {tr("Updated")} <RelativeTime timestamp={pr.updatedAt} /> {tr("ago")}
         </Text>
       </View>
       <View className="flex-row items-start gap-1.5">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Copy base branch ${pr.baseBranch}`}
+          accessibilityLabel={tr("Copy base branch {branch}", { branch: pr.baseBranch })}
           onPress={() => void Clipboard.setStringAsync(pr.baseBranch)}
           className="min-w-0 shrink active:opacity-70"
           hitSlop={8}
@@ -215,7 +215,7 @@ function PullRequestIdentity(props: {
         </View>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Copy head branch ${pr.headBranch}`}
+          accessibilityLabel={tr("Copy head branch {branch}", { branch: pr.headBranch })}
           onPress={() => void Clipboard.setStringAsync(pr.headBranch)}
           className="min-w-0 shrink active:opacity-70"
           hitSlop={8}
@@ -264,10 +264,10 @@ function PullRequestLabels(props: {
       })}
       {editable ? (
         <Chip
-          label={props.pr.labels.length ? "Edit" : "Add labels"}
+          label={props.pr.labels.length ? tr("Edit") : tr("Add labels")}
           icon="tag"
           size="small"
-          accessibilityLabel="Edit labels"
+          accessibilityLabel={tr("Edit labels")}
           onPress={() => navigation.navigate("PullRequestLabels", props.params)}
         />
       ) : null}
@@ -422,7 +422,10 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
     action.confirm(
       "delete-branch",
       pullRequestActionLabel("delete-branch", terminology),
-      `Delete ${pr.headBranch} from ${pr.headRepositoryNameWithOwner ?? pr.repository}? Local branches and worktrees are not changed.`,
+      tr("Delete {branch} from {repo}? Local branches and worktrees are not changed.", {
+        branch: pr.headBranch,
+        repo: pr.headRepositoryNameWithOwner ?? pr.repository,
+      }),
     );
   const stack = usePullRequestStack(params, pr);
   const refreshActivity = useAtomRefresh(composerPullRequests.activity(requestTarget(params)));
@@ -776,11 +779,11 @@ export function PullRequestRouteScreen({ route }: StaticScreenProps<PullRequestP
                           {Platform.OS !== "ios" || section === tab ? (
                             <SegmentedControl
                               options={[
-                                { value: "overview", label: "Overview" },
+                                { value: "overview", label: tr("Overview") },
                                 ...(guidesEnabled
-                                  ? [{ value: "guide" as const, label: "Guide" }]
+                                  ? [{ value: "guide" as const, label: tr("Guide") }]
                                   : []),
-                                { value: "activity", label: "Activity" },
+                                { value: "activity", label: tr("Activity") },
                               ]}
                               selected={section}
                               onSelect={selectSection}
@@ -823,12 +826,12 @@ export function PullRequestFileRouteScreen(props: PullRequestFileRouteProps) {
     useNavigation<NativeStackNavigationProp<ReactNavigation.RootParamList, "PullRequestFile">>();
   const ready = usePullRequestDiffEntry(navigation);
   if (ready) return <PullRequestFileRouteContent {...props} />;
-  const title = props.route.params.commit ? "Commit changes" : "Changes";
+  const title = props.route.params.commit ? tr("Commit changes") : tr("Changes");
   return (
     <View className="flex-1 bg-screen">
       <AppBar title={title} onBack={() => navigation.goBack()} />
       <View className="flex-1 items-center justify-center">
-        <AppActivityIndicator accessibilityLabel="Loading changes" />
+        <AppActivityIndicator accessibilityLabel={tr("Loading changes")} />
       </View>
     </View>
   );
@@ -1009,7 +1012,7 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
     setSelectedRowId(null);
     filter.toggle();
   };
-  const title = commit ? "Commit changes" : "Changes";
+  const title = commit ? tr("Commit changes") : tr("Changes");
   const seekingFile = !targetFile && result.nextCursor !== null;
   const loadingDiff = (result.isPending && !data.rows.length) || (seekingFile && !result.error);
   return (
@@ -1093,7 +1096,9 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
       />
       {route.params.replacingDraftId ? (
         <Text className="px-4 py-2 text-xs text-foreground-muted">
-          Select a current line, then choose “Move draft to this line” from its menu.
+          {tr(
+            "Select a current line, then choose \u201CMove draft to this line\u201D from its menu.",
+          )}
         </Text>
       ) : null}
       {viewed.error ? (
@@ -1105,10 +1110,10 @@ function PullRequestFileRouteContent({ route }: PullRequestFileRouteProps) {
           style={{ paddingTop: contentTopInset + 8 }}
         >
           <Text className="min-w-0 flex-1 text-xs text-foreground-muted">
-            The branch changed. Reload before adding line comments.
+            {tr("The branch changed. Reload before adding line comments.")}
           </Text>
           <Button
-            label="Reload changes"
+            label={tr("Reload changes")}
             onPress={() => {
               result.refresh();
               setDiffHead({ scopeKey, sha: detail.data?.headSha ?? null });

@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { useId, useRef, useState } from "react";
 import * as Cause from "effect/Cause";
 import * as Option from "effect/Option";
@@ -33,7 +34,7 @@ const FROM_THREAD_PROJECT = "thread-project";
 
 const CREDENTIAL_SOURCES: Record<DeviceEasAccount["credentialSource"], string> = {
   settings: "the access token saved here",
-  env: "EXPO_TOKEN on the server",
+  env: tr("EXPO_TOKEN on the server"),
   "eas-login": "the server's eas login",
 };
 
@@ -97,10 +98,10 @@ export function EasDeviceHostEditor(props: {
   const problem = valid
     ? null
     : !tokenValid
-      ? "Enter a valid secret reference."
+      ? tr("Enter a valid secret reference.")
       : draft.maxSessionMinutes > 0 && draft.idleMinutes >= draft.maxSessionMinutes
-        ? "Idle minutes must be smaller than session minutes."
-        : "Give the host a label and limits within the ranges shown.";
+        ? tr("Idle minutes must be smaller than session minutes.")
+        : tr("Give the host a label and limits within the ranges shown.");
   const apps = account.status === "signed-in" ? account.account.apps : [];
 
   // A check answers for the credential it was asked about: a later check or a
@@ -174,15 +175,16 @@ export function EasDeviceHostEditor(props: {
           }}
         >
           <DialogHeader>
-            <DialogTitle>{props.isNew ? "Add EAS host" : "Edit EAS host"}</DialogTitle>
+            <DialogTitle>{props.isNew ? tr("Add EAS host") : tr("Edit EAS host")}</DialogTitle>
             <DialogDescription>
-              The environment's server signs in to Expo and starts the sessions. Without a token
-              here it uses EXPO_TOKEN, then its eas login.
+              {tr(
+                "The environment's server signs in to Expo and starts the sessions. Without a token here it uses EXPO_TOKEN, then its eas login.",
+              )}
             </DialogDescription>
           </DialogHeader>
           <DialogPanel>
             <label className="block space-y-1.5 text-sm">
-              <span>Name</span>
+              <span>{tr("Name")}</span>
               <Input
                 autoFocus
                 required
@@ -196,13 +198,13 @@ export function EasDeviceHostEditor(props: {
             </label>
             <div className="space-y-1.5 text-sm">
               <label htmlFor={tokenId} className="block">
-                Expo access token
+                {tr("Expo access token")}
               </label>
               <div className="flex items-center gap-2">
                 <SecretSourceInput
                   key={tokenInputKey}
                   id={tokenId}
-                  aria-label="Expo access token"
+                  aria-label={tr("Expo access token")}
                   className="min-w-0 flex-1"
                   configured={token.kind === "saved" && typeof props.host.accessToken === "string"}
                   value={
@@ -222,7 +224,7 @@ export function EasDeviceHostEditor(props: {
                     resetAccount();
                   }}
                   disabled={props.busy}
-                  placeholder="Optional"
+                  placeholder={tr("Optional")}
                   onChange={(event) => {
                     const value = event.target.value;
                     // Emptying the field is not clearing the saved token; the
@@ -242,7 +244,7 @@ export function EasDeviceHostEditor(props: {
                     type="button"
                     size="icon-sm"
                     variant="ghost-destructive"
-                    aria-label="Clear access token"
+                    aria-label={tr("Clear access token")}
                     onClick={() => {
                       setToken({ kind: "cleared" });
                       setTokenValid(true);
@@ -258,12 +260,15 @@ export function EasDeviceHostEditor(props: {
             <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2.5">
               <p role="status" className="min-w-0 text-xs text-muted-foreground">
                 {account.status === "signed-in"
-                  ? `Signed in as ${account.account.signedInAs} with ${CREDENTIAL_SOURCES[account.account.credentialSource]}.`
+                  ? tr("Signed in as {account} with {source}.", {
+                      account: account.account.signedInAs,
+                      source: CREDENTIAL_SOURCES[account.account.credentialSource],
+                    })
                   : account.status === "failed"
                     ? account.error
                     : account.status === "checking"
-                      ? "Checking the Expo account…"
-                      : "Check the Expo account before choosing a project."}
+                      ? tr("Checking the Expo account\u2026")
+                      : tr("Check the Expo account before choosing a project.")}
               </p>
               <Button
                 type="button"
@@ -272,11 +277,11 @@ export function EasDeviceHostEditor(props: {
                 disabled={props.busy || !tokenValid || account.status === "checking"}
                 onClick={() => void checkAccount()}
               >
-                {account.status === "checking" ? <Spinner size="xs" /> : null} Check account
+                {account.status === "checking" ? <Spinner size="xs" /> : null} {tr("Check account")}
               </Button>
             </div>
             <div className="space-y-1.5 text-sm">
-              <span>EAS project</span>
+              <span>{tr("EAS project")}</span>
               <Select
                 value={draft.appId ?? FROM_THREAD_PROJECT}
                 disabled={props.busy}
@@ -288,17 +293,19 @@ export function EasDeviceHostEditor(props: {
                   });
                 }}
               >
-                <SelectTrigger size="sm" aria-label="EAS project">
+                <SelectTrigger size="sm" aria-label={tr("EAS project")}>
                   <SelectValue>
                     {(value: string) =>
                       value === FROM_THREAD_PROJECT
-                        ? "From the thread's project"
+                        ? tr("From the thread's project")
                         : (apps.find((app) => app.id === value)?.fullName ?? value)
                     }
                   </SelectValue>
                 </SelectTrigger>
                 <SelectPopup>
-                  <SelectItem value={FROM_THREAD_PROJECT}>From the thread's project</SelectItem>
+                  <SelectItem value={FROM_THREAD_PROJECT}>
+                    {tr("From the thread's project")}
+                  </SelectItem>
                   {draft.appId && !apps.some((app) => app.id === draft.appId) ? (
                     <SelectItem value={draft.appId}>{draft.appId}</SelectItem>
                   ) : null}
@@ -310,20 +317,23 @@ export function EasDeviceHostEditor(props: {
                 </SelectPopup>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Sessions bill the project's Expo account. "From the thread's project" reads
-                extra.eas.projectId from the project's app config.
+                {tr(
+                  "Sessions bill the project's Expo account. \u201cFrom the thread's project\u201d reads extra.eas.projectId from the project's app config.",
+                )}
               </p>
             </div>
             <div className="grid grid-cols-3 gap-3 text-sm">
-              {limit("maxConcurrentSessions", "Sessions at once", 20)}
-              {limit("maxSessionMinutes", "Session minutes", 115)}
-              {limit("idleMinutes", "Idle minutes", 60)}
+              {limit("maxConcurrentSessions", tr("Sessions at once"), 20)}
+              {limit("maxSessionMinutes", tr("Session minutes"), 115)}
+              {limit("idleMinutes", tr("Idle minutes"), 60)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Expo allows sessions of up to 40 minutes on free accounts and 115 on paid ones, and
-              ends one after the idle minutes without activity, so idle minutes must be smaller than
-              session minutes.
-              {props.isNew ? null : " Saving restarts this host, which stops its running sessions."}
+              {tr(
+                "Expo allows sessions of up to 40 minutes on free accounts and 115 on paid ones, and ends one after the idle minutes without activity, so idle minutes must be smaller than session minutes.",
+              )}
+              {props.isNew
+                ? null
+                : tr(" Saving restarts this host, which stops its running sessions.")}
             </p>
             {problem === null ? null : (
               <p className="text-xs text-destructive" role="alert">
@@ -333,10 +343,10 @@ export function EasDeviceHostEditor(props: {
           </DialogPanel>
           <DialogFooter>
             <Button type="button" variant="ghost" disabled={props.busy} onClick={props.onClose}>
-              Cancel
+              {tr("Cancel")}
             </Button>
             <Button type="submit" disabled={props.busy || !valid}>
-              {props.busy ? <Spinner size="xs" /> : null} Save host
+              {props.busy ? <Spinner size="xs" /> : null} {tr("Save host")}
             </Button>
           </DialogFooter>
         </form>

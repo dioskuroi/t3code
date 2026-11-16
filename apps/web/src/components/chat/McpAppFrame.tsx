@@ -1,4 +1,5 @@
 import type { EnvironmentId, ThreadId, TurnItemId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   makeMcpAppHost,
   McpAppHostRefusal,
@@ -410,7 +411,7 @@ export function McpAppFrame(props: {
   if (closed) {
     return (
       <div className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-muted-foreground text-xs">
-        <span>The {app.server} app was closed</span>
+        <span>{tr("The {server} app was closed", { server: app.server })}</span>
         <Button
           size="xs"
           variant="ghost"
@@ -420,7 +421,7 @@ export function McpAppFrame(props: {
             setClosed(false);
           }}
         >
-          Show app
+          {tr("Show app")}
         </Button>
       </div>
     );
@@ -452,7 +453,7 @@ export function McpAppFrame(props: {
           >
             <span className="truncate">{app.server}</span>
             <Button
-              aria-label="Exit full screen"
+              aria-label={tr("Exit full screen")}
               size="icon-sm"
               variant="ghost"
               onClick={() => setDisplayMode("inline")}
@@ -463,7 +464,7 @@ export function McpAppFrame(props: {
         ) : null}
         {navigatedAway ? (
           <p className="flex size-full items-center justify-center text-muted-foreground text-xs">
-            The {app.server} app left its page and was stopped
+            {tr("The {server} app left its page and was stopped", { server: app.server })}
           </p>
         ) : src !== null ? (
           <iframe
@@ -479,7 +480,7 @@ export function McpAppFrame(props: {
           />
         ) : asset._tag === "Failure" ? (
           <p className="flex size-full items-center justify-center text-muted-foreground text-xs">
-            Unable to load the {app.server} app
+            {tr("Unable to load the {server} app", { server: app.server })}
           </p>
         ) : null}
       </div>

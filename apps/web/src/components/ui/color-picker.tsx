@@ -6,6 +6,7 @@ import {
   type PointerEvent,
   type RefObject,
 } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { HsvColor } from "../../lib/color";
 import { cn } from "../../lib/utils";
@@ -109,7 +110,7 @@ export function ColorSaturationValuePlane({
 
   return (
     <div
-      aria-label={`${label} saturation and brightness`}
+      aria-label={tr("{label} saturation and brightness", { label })}
       role="group"
       className={cn(
         "relative cursor-crosshair touch-none overflow-hidden bg-[linear-gradient(to_top,#000,transparent),linear-gradient(to_right,#fff,transparent)] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-inset has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-popover",
@@ -122,13 +123,14 @@ export function ColorSaturationValuePlane({
       {...handlers}
     >
       <span id={instructionsId} className="sr-only">
-        Use arrow keys to adjust the focused value. Hold Shift for larger steps. Use Home and End
-        for the minimum and maximum. Press Tab to move between saturation and brightness.
+        {tr(
+          "Use arrow keys to adjust the focused value. Hold Shift for larger steps. Use Home and End for the minimum and maximum. Press Tab to move between saturation and brightness.",
+        )}
       </span>
       {(
         [
-          ["s", "Saturation"],
-          ["v", "Brightness"],
+          ["s", tr("Saturation")],
+          ["v", tr("Brightness")],
         ] as const
       ).map(([axis, axisLabel]) => (
         <label key={axis} className="contents">
@@ -139,7 +141,7 @@ export function ColorSaturationValuePlane({
             max={100}
             step="any"
             value={value[axis] * 100}
-            aria-label={`${label} ${axisLabel.toLowerCase()}`}
+            aria-label={tr("{label} {axis}", { label, axis: axisLabel })}
             aria-describedby={instructionsId}
             aria-valuetext={`${Math.round(value[axis] * 100)}%`}
             className="peer sr-only"

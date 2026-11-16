@@ -3,6 +3,7 @@ import {
   type ProviderInstanceId,
   type ServerProvider,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomValue } from "@effect/atom-react";
 import { memo, useRef, useState } from "react";
 import { InfoIcon, XIcon } from "lucide-react";
@@ -76,18 +77,20 @@ export function getProviderStatusMessage(status: ServerProvider): string {
   if (status.message) return status.message;
   const providerName = status.displayName?.trim() || formatProviderDriverKindLabel(status.driver);
   if (!status.installed && hasProviderSetup(status)) {
-    return `Open provider setup to install ${formatProviderDriverKindLabel(status.driver)} on this environment.`;
+    return tr("Open provider setup to install {driver} on this environment.", {
+      driver: formatProviderDriverKindLabel(status.driver),
+    });
   }
   if (status.auth.status === "unauthenticated") {
     if (hasProviderSetup(status)) {
       return status.driver === "antigravity"
-        ? "Open provider setup to sign in with Google."
-        : "Open provider setup to sign in.";
+        ? tr("Open provider setup to sign in with Google.")
+        : tr("Open provider setup to sign in.");
     }
-    return "Sign in via the CLI to authenticate again.";
+    return tr("Sign in via the CLI to authenticate again.");
   }
   return status.status === "ready"
-    ? "No models are available for this provider."
+    ? tr("No models are available for this provider.")
     : status.status === "error"
       ? `${providerName} provider is unavailable.`
       : `${providerName} provider has limited availability.`;
@@ -106,7 +109,7 @@ export const ProviderStatusBanner = memo(function ProviderStatusBanner({
 }) {
   const canRefresh = useAtomValue(serverEnvironment.refreshProviders.permissionAtom(environmentId));
   const refreshProviders = useAtomCommand(serverEnvironment.refreshProviders, {
-    label: "Refresh provider status",
+    label: tr("Refresh provider status"),
   });
   const refreshingRef = useRef(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -131,10 +134,18 @@ export const ProviderStatusBanner = memo(function ProviderStatusBanner({
   const isUnauthenticated = status.status === "error" && status.auth.status === "unauthenticated";
   const incompatible = getIncompatibleVersion(status);
   const title = isUnauthenticated
-    ? `${providerName} is unauthenticated`
+    ? tr("{provider} is unauthenticated", { provider: providerName })
     : incompatible
-      ? `${providerName} ${status.version ?? ""} is ${incompatible.status === "broken" ? "known to be broken" : "unsupported"}`
-      : `${providerName} provider status`;
+      ? incompatible.status === "broken"
+        ? tr("{provider} {version} is known to be broken", {
+            provider: providerName,
+            version: status.version ?? "",
+          })
+        : tr("{provider} {version} is unsupported", {
+            provider: providerName,
+            version: status.version ?? "",
+          })
+      : tr("{provider} provider status", { provider: providerName });
   const message = incompatible?.message ?? getProviderStatusMessage(status);
   const isWarning =
     incompatible?.status !== "broken" && (status.status === "warning" || incompatible !== null);
@@ -160,25 +171,30 @@ export const ProviderStatusBanner = memo(function ProviderStatusBanner({
             <div className="flex flex-wrap items-center justify-end gap-3">
               {onOpenProviderSetup && hasProviderSetup(status) ? (
                 <InlineButton onClick={() => onOpenProviderSetup(status.instanceId)}>
-                  Open provider setup
+                  {tr("Open provider setup")}
                 </InlineButton>
               ) : null}
               <Button
-                aria-label={`Refresh ${providerName} provider status`}
+                aria-label={tr("Refresh {providerName} provider status", {
+                  providerName: providerName,
+                })}
                 disabled={!canRefresh || isRefreshing}
                 onClick={() => void refresh()}
                 size="xs"
                 variant="outline"
               >
                 <RefreshIcon />
-                {isRefreshing ? "Refreshing..." : "Refresh"}
+                {isRefreshing ? tr("Refreshing...") : tr("Refresh")}
               </Button>
             </div>
           </div>
         </AlertDescription>
         <AlertAction>
           <Button
-            aria-label={`Dismiss ${providerName} provider ${status.status}`}
+            aria-label={tr("Dismiss {provider} provider {status}", {
+              provider: providerName,
+              status: status.status === "error" ? tr("error") : tr("warning"),
+            })}
             onClick={onDismiss}
             size="icon-xs"
             variant="ghost-muted"

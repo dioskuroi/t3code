@@ -103,7 +103,7 @@ describe("paged mobile pull request diffs", () => {
     expect(parsed.additions).toBe(3000);
     expect(parsed.deletions).toBe(1800);
     expect(parsed.notice).toBe(
-      "Some file contents are unavailable. Open the pull request on its provider to see the full changes.",
+      "部分文件内容不可用。在其 Provider 上打开此 pull request 以查看完整更改。",
     );
     const cached = combinePullRequestDiffPages(pages, cache, "pr", GITHUB);
     if (cached.kind !== "files") throw new Error("Expected structured diff");
@@ -118,7 +118,7 @@ describe("paged mobile pull request diffs", () => {
       sourceControlClients.get("gitlab").changeRequest,
     );
     expect(parsed.kind === "files" ? parsed.notice : null).toBe(
-      "Some file contents are unavailable. Open the merge request on its provider to see the full changes.",
+      "部分文件内容不可用。在其 Provider 上打开此 merge request 以查看完整更改。",
     );
   });
 

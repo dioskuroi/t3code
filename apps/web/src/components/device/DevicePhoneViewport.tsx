@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import type { PhoneViewer } from "@t3tools/client-runtime/device/phone-viewer";
 import type {
   DeviceAccessorySource,
@@ -64,7 +65,7 @@ export function DevicePhoneViewport(props: {
                 canvas,
                 source,
                 onUnavailable,
-                onModelError: (cause) => console.warn("Device 3D asset could not load", cause),
+                onModelError: (cause) => console.warn(tr("Device 3D asset could not load"), cause),
                 profile: profileRef.current,
                 model: modelRef.current,
                 accessory: accessoryRef.current,
@@ -101,7 +102,9 @@ export function DevicePhoneViewport(props: {
         />
         <canvas
           ref={mountViewer}
-          aria-label="Interactive 3D device. Drag the screen to interact. Drag outside it or swipe with two fingers to turn."
+          aria-label={tr(
+            "Interactive 3D device. Drag the screen to interact. Drag outside it or swipe with two fingers to turn.",
+          )}
           className="size-full touch-none"
           onPointerDown={(event) => {
             if (event.button !== 0) return;

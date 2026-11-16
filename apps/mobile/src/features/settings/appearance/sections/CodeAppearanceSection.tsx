@@ -3,6 +3,7 @@ import {
   MAX_CODE_FONT_SIZE,
   MIN_CODE_FONT_SIZE,
 } from "../../../../lib/appearancePreferences";
+import { tr } from "@t3tools/shared/i18n";
 import { SettingsSection } from "../../components/SettingsSection";
 import { SettingsSwitchRow } from "../../components/SettingsSwitchRow";
 import { useAppearancePreferences } from "../AppearancePreferencesProvider";
@@ -21,7 +22,7 @@ export function CodeAppearanceSection() {
   };
 
   return (
-    <SettingsSection title="Code & Diffs">
+    <SettingsSection title={tr("Code & Diffs")}>
       <CodeAppearancePreview
         fontSize={appearance.codeFontSize}
         wordBreak={appearance.codeWordBreak}
@@ -30,7 +31,7 @@ export function CodeAppearanceSection() {
       <SettingsSwitchRow
         disabled={!isReady}
         icon="chevron.left.forwardslash.chevron.right"
-        label="Custom font size"
+        label={tr("Custom font size")}
         onValueChange={handleToggleCustom}
         value={custom}
       />
@@ -38,7 +39,7 @@ export function CodeAppearanceSection() {
         <FontSizeSliderRow
           disabled={!isReady}
           icon="textformat.size"
-          label="Font size"
+          label={tr("Font size")}
           max={MAX_CODE_FONT_SIZE}
           min={MIN_CODE_FONT_SIZE}
           onChange={setCodeFontSize}
@@ -50,7 +51,7 @@ export function CodeAppearanceSection() {
       <SettingsSwitchRow
         disabled={!isReady}
         icon="text.word.spacing"
-        label="Word break"
+        label={tr("Word break")}
         onValueChange={setCodeWordBreak}
         value={appearance.codeWordBreak}
       />

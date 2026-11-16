@@ -1,4 +1,5 @@
 import type { ModelSelection, ProviderDriverKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   buildTraitsTriggerDisplay,
   getPromptControlledTraits,
@@ -37,11 +38,11 @@ export function ComposerModelControl(props: {
       }).label
     : "";
   const badge = props.modelOption?.providerBadge;
-  const label = props.modelOption?.label ?? props.selection?.model ?? "Choose model";
+  const label = props.modelOption?.label ?? props.selection?.model ?? tr("Choose model");
   return (
     <ComposerInlineControl
       accessibilityLabel={[
-        "Model and reasoning settings",
+        tr("Model and reasoning settings"),
         label,
         badge?.showBadge ? badge.displayName : null,
         summary,

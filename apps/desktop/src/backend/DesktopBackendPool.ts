@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -50,7 +51,7 @@ export class DesktopBackendPoolCannotUnregisterPrimaryError extends Schema.Tagge
   {},
 ) {
   override get message() {
-    return "Refusing to unregister the primary backend from the pool.";
+    return tr("Refusing to unregister the primary backend from the pool.");
   }
 }
 
@@ -123,8 +124,11 @@ export const layer = Layer.effect(
             { reason },
           );
           yield* electronDialog.showErrorBox(
-            "WSL backend is still unavailable",
-            `${reason}\n\nT3 Code will use the Windows backend for this launch and retry WSL the next time the app starts.`,
+            tr("WSL backend is still unavailable"),
+            tr(
+              "{reason}\n\nT3 Code will use the Windows backend for this launch and retry WSL the next time the app starts.",
+              { reason: reason },
+            ),
           );
           yield* appSettings.applyWslWindowsFallbackInMemory;
           return true;
@@ -134,8 +138,11 @@ export const layer = Layer.effect(
           reason,
         });
         yield* electronDialog.showErrorBox(
-          "WSL backend couldn't start",
-          `${reason}\n\nFalling back to the Windows backend so T3 Code can open. Re-enable the WSL backend from Settings > Sharing & access once the WSL distro is fixed.`,
+          tr("WSL backend couldn't start"),
+          tr(
+            "{reason}\n\nFalling back to the Windows backend so T3 Code can open. Re-enable the WSL backend from Settings > Sharing & access once the WSL distro is fixed.",
+            { reason: reason },
+          ),
         );
         // Clear wslOnly too so enabling WSL cannot restore a failed mode.
         // Keep the in-memory fallback if persistence fails.
@@ -176,8 +183,10 @@ export const layer = Layer.effect(
       onStateDirOwned: () =>
         electronDialog
           .showErrorBox(
-            "This T3 home is unavailable",
-            "Another T3 Code server, such as the background service, is using this data directory, or an older background service is set up for it. Stop that server or try `t3 update`. If the older launcher cannot update, run `t3 service uninstall` and optionally reinstall with `t3 service install` from a current CLI. Use `npx t3@latest` if `t3` is missing or outdated, and pass `--base-dir` with the service's T3 home to each command. Then reopen T3 Code. You can also set a separate T3CODE_HOME and pair with the running server.",
+            tr("This T3 home is unavailable"),
+            tr(
+              "Another T3 Code server, such as the background service, is using this data directory, or an older background service is set up for it. Stop that server or try `t3 update`. If the older launcher cannot update, run `t3 service uninstall` and optionally reinstall with `t3 service install` from a current CLI. Use `npx t3@latest` if `t3` is missing or outdated, and pass `--base-dir` with the service's T3 home to each command. Then reopen T3 Code. You can also set a separate T3CODE_HOME and pair with the running server.",
+            ),
           )
           .pipe(Effect.andThen(electronApp.quit)),
     });
@@ -327,7 +336,7 @@ export const layerTest = (
     DesktopBackendPool,
     Effect.gen(function* () {
       if (instances.length === 0) {
-        return yield* Effect.die("DesktopBackendPool.layerTest requires at least one instance");
+        return yield* Effect.die(tr("DesktopBackendPool.layerTest requires at least one instance"));
       }
       const byId = new Map<BackendInstanceId, DesktopBackendInstance>(
         instances.map((instance) => [instance.id, instance] as const),
@@ -340,10 +349,10 @@ export const layerTest = (
         list: Effect.succeed(Array.from(byId.values())),
         primary: Effect.succeed(primary),
         register: Effect.fn("DesktopBackendPool.register")(function () {
-          return Effect.die("DesktopBackendPool.layerTest does not support register");
+          return Effect.die(tr("DesktopBackendPool.layerTest does not support register"));
         }),
         unregister: Effect.fn("DesktopBackendPool.unregister")(function () {
-          return Effect.die("DesktopBackendPool.layerTest does not support unregister");
+          return Effect.die(tr("DesktopBackendPool.layerTest does not support unregister"));
         }),
       });
     }),

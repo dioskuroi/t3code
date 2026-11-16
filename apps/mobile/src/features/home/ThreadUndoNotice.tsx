@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useKeyboardState } from "react-native-keyboard-controller";
 import { Platform, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { tr } from "@t3tools/shared/i18n";
 import { Toast } from "../../components/ui/Toast";
 import {
   useDeviceType,
@@ -78,9 +79,16 @@ export function ThreadUndoNotice(props: { readonly visible: boolean }) {
       pointerEvents="box-none"
     >
       <Toast
-        message={`${notice.action} thread`}
+        message={tr("{action} thread", {
+          action:
+            notice.action === "Settled"
+              ? tr("Settled")
+              : notice.action === "Snoozed"
+                ? tr("Snoozed")
+                : tr("Unpinned"),
+        })}
         action={{
-          label: "Undo",
+          label: tr("Undo"),
           onPress: () => {
             void notice.undo();
           },

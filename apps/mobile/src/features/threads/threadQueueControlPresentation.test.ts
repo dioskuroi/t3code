@@ -1,4 +1,5 @@
 import { formatAssistantCitationHref } from "@t3tools/shared/assistantCitations";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import { resolveThreadQueueRowControls } from "./threadQueueControlPresentation";
@@ -16,7 +17,7 @@ describe("threadQueueControlPresentation", () => {
         isEditing,
         canPromoteToSteer: false,
         canSendNow: true,
-        text: "Queued message",
+        text: tr("Queued message"),
       });
 
       expect(controls.canSend).toBe(expected);
@@ -29,7 +30,7 @@ describe("threadQueueControlPresentation", () => {
       environmentId: "environment:test" as never,
       threadId: "thread:test" as never,
       messageId: "message:assistant" as never,
-      text: "Retry the sync after the lock clears.",
+      text: tr("Retry the sync after the lock clears."),
       start: 0,
       end: 37,
       prefix: "",
@@ -43,7 +44,7 @@ describe("threadQueueControlPresentation", () => {
     });
 
     expect(controls.displayText).toBe(
-      "Retry the sync after the lock clears. Can we add a backoff here?",
+      tr("Retry the sync after the lock clears. Can we add a backoff here?"),
     );
   });
 
@@ -53,7 +54,7 @@ describe("threadQueueControlPresentation", () => {
       canPromoteToSteer: true,
       canSendNow: false,
       isEditing: true,
-      text: "Being edited",
+      text: tr("Being edited"),
     });
 
     expect(editing.isEditing).toBe(true);
@@ -68,7 +69,7 @@ describe("threadQueueControlPresentation", () => {
       canPromoteToSteer: true,
       canSendNow: false,
       isGuestMessage: true,
-      text: "Why?",
+      text: tr("Why?"),
     });
 
     expect(guest.canEdit).toBe(false);

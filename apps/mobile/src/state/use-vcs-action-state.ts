@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { secondTick } from "@t3tools/client-runtime/clock";
 import { type VcsActionState, type VcsActionTarget } from "@t3tools/client-runtime/state/vcs";
 import { Atom } from "effect/reactivity";
@@ -81,7 +82,7 @@ function formatElapsedSeconds(ms: number | null, nowMs: number): string | null {
   if (ms === null) return null;
   const elapsed = Math.max(0, Math.floor((nowMs - ms) / 1000));
   if (elapsed < 2) return null;
-  return `Running for ${elapsed}s`;
+  return tr("Running for {elapsed}s", { elapsed: elapsed });
 }
 
 export function useGitActionProgress(target: VcsActionTarget): GitActionProgress {

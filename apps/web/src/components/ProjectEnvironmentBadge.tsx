@@ -1,4 +1,5 @@
 import type { EnvironmentId, EnvironmentMachineKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { SidebarProjectSnapshot } from "~/sidebarProjectGrouping";
 import { EnvironmentMachineIcon } from "./EnvironmentMachineIcon";
@@ -11,7 +12,7 @@ export function ProjectEnvironmentBadge(props: {
 }) {
   const remoteMembers = props.group.memberProjects
     .filter((member) => member.environmentId !== props.primaryEnvironmentId)
-    .map((member) => ({ ...member, environmentLabel: member.environmentLabel ?? "Remote" }))
+    .map((member) => ({ ...member, environmentLabel: member.environmentLabel ?? tr("Remote") }))
     .sort((a, b) => a.environmentLabel.localeCompare(b.environmentLabel));
   const first = remoteMembers[0];
   if (!first) return null;
@@ -20,7 +21,7 @@ export function ProjectEnvironmentBadge(props: {
     .filter((label, index, all) => all.indexOf(label) === index)
     .join(", ");
   const alsoHere = remoteMembers.length < props.group.memberProjects.length;
-  const description = `${alsoHere ? "Also on" : "On"} ${labels}`;
+  const description = alsoHere ? tr("Also on {labels}", { labels }) : tr("On {labels}", { labels });
   return (
     <Tooltip>
       <TooltipTrigger

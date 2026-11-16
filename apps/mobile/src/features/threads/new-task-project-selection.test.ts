@@ -1,4 +1,5 @@
 import { EnvironmentId, ProjectId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import type { EnvironmentProject } from "@t3tools/client-runtime/state/shell";
@@ -45,7 +46,7 @@ function makeProject(
 function makeScope(projects: ReadonlyArray<EnvironmentProject>): HomeProjectScope {
   return {
     key: "github.com/t3tools/t3code",
-    title: "T3 Code",
+    title: tr("T3 Code"),
     representative: projects[0]!,
     projects,
     projectRefs: projects.map((project) => ({

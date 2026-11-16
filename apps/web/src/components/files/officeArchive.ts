@@ -1,4 +1,5 @@
 import JSZip from "jszip";
+import { tr } from "@t3tools/shared/i18n";
 import { checkZipDirectory } from "@t3tools/client-runtime/zip/directory";
 import { SaxesParser } from "saxes";
 import { externalUrl } from "./office/links";
@@ -13,7 +14,7 @@ import {
 function xmlParser() {
   const parser = new SaxesParser({ xmlns: true });
   parser.on("doctype", () => {
-    throw new Error("This document contains unsupported XML declarations.");
+    throw new Error(tr("This document contains unsupported XML declarations."));
   });
   return parser;
 }
@@ -59,7 +60,7 @@ function wordSections() {
   parser.on("opentag", (tag) => {
     names.push(tag.local);
     namespaceScopes.push(tag.ns);
-    if (names.length > 64) throw new Error("This Word document has excessive XML nesting.");
+    if (names.length > 64) throw new Error(tr("This Word document has excessive XML nesting."));
     const body = names.length === 3 && names[1] === "body";
     if (
       tag.local === "sectPr" &&
@@ -74,7 +75,7 @@ function wordSections() {
           namespaces += ` ${name}="${escape(scope[prefix]!)}"`;
       }
       const start = window.lastIndexOf("<", parser.position - offset - 1);
-      if (start < 0) throw new Error("This Word document has too much section markup.");
+      if (start < 0) throw new Error(tr("This Word document has too much section markup."));
       capture = {
         start: start + offset,
         insert: parser.position - (tag.isSelfClosing ? 2 : 1),
@@ -84,7 +85,7 @@ function wordSections() {
       };
     }
     if (capture && ++tags > 2_000)
-      throw new Error("Preview limited: this Word document has too much section markup.");
+      throw new Error(tr("Preview limited: this Word document has too much section markup."));
   });
   parser.on("closetag", (tag) => {
     if (capture && tag.local === "sectPr" && names.length === capture.depth) {
@@ -94,7 +95,7 @@ function wordSections() {
         window.slice(capture.insert - offset, parser.position - offset);
       bytes += xml.length;
       if (bytes > 128 * 1024)
-        throw new Error("Preview limited: this Word document has too much section markup.");
+        throw new Error(tr("Preview limited: this Word document has too much section markup."));
       sections.push({ end: parser.position, xml, body: capture.body });
       paragraphSection = !capture.body;
       if (!capture.body && parser.position > 4 * 1024 * 1024) nextParagraph = true;
@@ -112,7 +113,7 @@ function wordSections() {
       window += chunk;
       parser.write(chunk);
       if (capture && parser.position - capture.start > 128 * 1024)
-        throw new Error("Preview limited: this Word document has too much section markup.");
+        throw new Error(tr("Preview limited: this Word document has too much section markup."));
       const keep = capture?.start ?? Math.max(offset, parser.position - 128 * 1024);
       window = window.slice(keep - offset);
       offset = keep;
@@ -184,7 +185,7 @@ function wordDocuments(
     if (cause !== limit) throw cause;
     truncated = true;
   }
-  if (!prefix) throw new Error("This Word document has no readable body.");
+  if (!prefix) throw new Error(tr("This Word document has no readable body."));
   if (boundary > batchStart || batches.length === 0)
     batches.push({ content: xml.slice(batchStart, boundary), end: boundary });
   const documents: string[] = [];
@@ -201,7 +202,7 @@ function wordDocuments(
     }
     documents.push(document);
   }
-  if (documents.length === 0) throw new Error("This Word document has too much section markup.");
+  if (documents.length === 0) throw new Error(tr("This Word document has too much section markup."));
   return { documents, truncated };
 }
 
@@ -242,23 +243,23 @@ function boundedWorksheet(
   let truncated = false;
   const coordinate = (ref: string) => {
     const match = /^([A-Z]{1,3})([1-9]\d{0,6})$/.exec(ref);
-    if (!match) throw new Error("This workbook contains invalid cell coordinates.");
+    if (!match) throw new Error(tr("This workbook contains invalid cell coordinates."));
     let col = 0;
     for (const letter of match[1]!) col = col * 26 + letter.charCodeAt(0) - 64;
     const line = Number(match[2]);
     if (col > 16384 || line > 1048576)
-      throw new Error("This workbook contains invalid worksheet dimensions.");
+      throw new Error(tr("This workbook contains invalid worksheet dimensions."));
     return { col, line };
   };
   parser.on("opentag", (tag) => {
     depth++;
-    if (depth > 64) throw new Error("This workbook contains excessive XML nesting.");
+    if (depth > 64) throw new Error(tr("This workbook contains excessive XML nesting."));
     if (
       (tag.local === "row" && depth !== 3) ||
       (tag.local === "c" && depth !== 4) ||
       ((tag.local === "dimension" || tag.local === "sheetData") && depth !== 2)
     )
-      throw new Error("This workbook contains invalid worksheet structure.");
+      throw new Error(tr("This workbook contains invalid worksheet structure."));
     const attribute = (name: string) => tag.attributes[name]?.value;
     if (["dimension", "mergeCell", "col"].includes(tag.local))
       metadataAttributes.set(
@@ -282,21 +283,21 @@ function boundedWorksheet(
       explicitRow = attribute("r") !== undefined;
       row = attribute("r") === undefined ? row + 1 : Number(attribute("r"));
       if (!Number.isInteger(row) || row < 1 || row > 1048576)
-        throw new Error("This workbook contains invalid row coordinates.");
+        throw new Error(tr("This workbook contains invalid row coordinates."));
       rowTag = xml
         .slice(xml.lastIndexOf("<", parser.position - 1), parser.position)
         .replace(/\/>$/, ">");
       column = 0;
       cells = rows.get(row) ?? new Map<number, string>();
       if (row > OFFICE_PREVIEW_MAX_ROWS)
-        throw new Error("This workbook exceeds the preview limit: 250,000 rows.");
+        throw new Error(tr("This workbook exceeds the preview limit: 250,000 rows."));
     } else if (depth === 4 && tag.local === "c") {
       const ref = attribute("r");
       const position = ref ? coordinate(ref) : { col: column + 1, line: row };
       if (!explicitRow && column === 0) row = position.line;
       column = position.col;
       if (row < 1 || position.line !== row)
-        throw new Error("This workbook contains inconsistent cell rows.");
+        throw new Error(tr("This workbook contains inconsistent cell rows."));
       if (row > OFFICE_PREVIEW_MAX_ROWS || column > OFFICE_PREVIEW_MAX_COLUMNS) {
         truncated = true;
         return;
@@ -305,7 +306,7 @@ function boundedWorksheet(
       maxColumn = Math.max(maxColumn, column);
       if (++budget.cells > 2_000_000 || maxRow * maxColumn > 8_000_000)
         throw new Error(
-          "This workbook exceeds the preview limit: 2 million cells or 8 million grid positions.",
+          tr("This workbook exceeds the preview limit: 2 million cells or 8 million grid positions."),
         );
       // Explicit coordinates also bound sheets whose rows/cells omit r.
       let letters = "";
@@ -314,7 +315,7 @@ function boundedWorksheet(
       const style = attribute("s");
       const type = attribute("t");
       if ((style && !/^\d{1,6}$/.test(style)) || (type && !/^[a-zA-Z]+$/.test(type)))
-        throw new Error("This workbook contains invalid cell metadata.");
+        throw new Error(tr("This workbook contains invalid cell metadata."));
       cell = {
         start: parser.position,
         opening: xml
@@ -369,7 +370,7 @@ function boundedWorksheet(
     depth--;
   });
   parser.write(xml).close();
-  if (!dataStart) throw new Error("This workbook has no worksheet data.");
+  if (!dataStart) throw new Error(tr("This workbook has no worksheet data."));
   const boundRange = (ref: string) => {
     const [a, b = a] = ref.split(":");
     const first = coordinate(a!);
@@ -418,7 +419,7 @@ function boundedWorksheet(
           .sort(([a], [b]) => a - b)
           .map(
             ([line, values]) =>
-              `${rowTags.get(line) ?? `<row r="${line}">`}${[...values]
+              `${rowTags.get(line) ?? `<row r="">`}${[...values]
                 .sort(([a], [b]) => a - b)
                 .map(([, value]) => value)
                 .join("")}</${/^<([^\s>]+)/.exec(rowTags.get(line) ?? "<row>")![1]}>`,
@@ -452,7 +453,7 @@ async function boundWorkbook(archive: JSZip) {
     const id = Object.values(tag.attributes).find((attribute) => attribute.local === "id")?.value;
     const path = paths.get(id ?? "");
     if (!path || sheetPaths.length === 100)
-      throw new Error("This workbook has invalid or too many sheets.");
+      throw new Error(tr("This workbook has invalid or too many sheets."));
     sheetPaths.push(path);
   });
   workbook.write((await archive.file("xl/workbook.xml")?.async("string")) ?? "").close();
@@ -481,7 +482,7 @@ async function boundWorkbook(archive: JSZip) {
   const limited = new Map<string, boolean>();
   for (const path of new Set(sheetPaths)) {
     const file = archive.file(path);
-    if (!file) throw new Error("This workbook has a missing worksheet.");
+    if (!file) throw new Error(tr("This workbook has a missing worksheet."));
     const sheet = boundedWorksheet(await file.async("string"), strings, budget);
     archive.file(path, sheet.xml);
     limited.set(path, sheet.truncated);
@@ -588,10 +589,10 @@ function wordPartTypes() {
           if (!refs.has(attr("Id"))) refs.set(attr("Id"), target);
           relationships.set(owner, refs);
           if (target === "word/document.xml" && role !== "officeDocument")
-            throw new Error("Preview limited: this Word document has an aliased document part.");
+            throw new Error(tr("Preview limited: this Word document has an aliased document part."));
           if (type === WORD_RELATIONSHIP + "officeDocument" && target !== "word/document.xml")
             throw new Error(
-              "Preview limited: this Word document has an unsupported document relationship.",
+              tr("Preview limited: this Word document has an unsupported document relationship."),
             );
         }
         if (
@@ -642,7 +643,7 @@ function wordXmlCost(xml: string, roles: Set<string> | undefined) {
   let pictures = false;
   parser.on("opentag", (tag) => {
     if (++depth > 64)
-      throw new Error("Preview limited: this Word document has excessive XML nesting.");
+      throw new Error(tr("Preview limited: this Word document has excessive XML nesting."));
     markup++;
     const attr = (name: string) =>
       Object.values(tag.attributes).find((a) => a.local === name)?.value ?? "";
@@ -942,20 +943,20 @@ export async function boundedArchive(input: Extract<OfficeWorkerRequest, { type:
   const { bytes } = input;
   const spreadsheet = input.kind === "xlsx";
   if (bytes.byteLength > OFFICE_PREVIEW_MAX_BYTES)
-    throw new Error("Preview limited to files under 50 MB.");
+    throw new Error(tr("Preview limited to files under 50 MB."));
   checkZipDirectory(bytes);
   const source = await JSZip.loadAsync(bytes).catch(() => {
-    throw new Error("This file is damaged, encrypted, or not a valid Office document.");
+    throw new Error(tr("This file is damaged, encrypted, or not a valid Office document."));
   });
   const allEntries = Object.values(source.files);
   if (allEntries.length > 2048)
-    throw new Error("This file contains too many archive entries to preview.");
+    throw new Error(tr("This file contains too many archive entries to preview."));
   const entries = allEntries.filter((entry) => !entry.dir);
   if (
     input.kind === "docx" &&
     entries.some((entry) => entry.name.includes("\\") || entry.name.startsWith("/"))
   )
-    throw new Error("Preview limited: this Word document has unsupported archive paths.");
+    throw new Error(tr("Preview limited: this Word document has unsupported archive paths."));
   const archive = new JSZip();
   const partTypes = wordPartTypes();
   // Metadata must be bounded and classified before any payload gets a media exemption.
@@ -991,7 +992,7 @@ export async function boundedArchive(input: Extract<OfficeWorkerRequest, { type:
           length += chunk.length;
           if (total > (spreadsheet ? 128 * 1024 * 1024 : OFFICE_PREVIEW_MAX_BYTES)) {
             stream.pause();
-            reject(new Error("The expanded document is too large to preview safely."));
+            reject(new Error(tr("The expanded document is too large to preview safely.")));
             return;
           }
           try {
@@ -1017,7 +1018,7 @@ export async function boundedArchive(input: Extract<OfficeWorkerRequest, { type:
             if (length > 1024 * 1024 || wordAuxiliaryMarkup > 50_000) {
               stream.pause();
               reject(
-                new Error("Preview limited: this Word document has too much auxiliary markup."),
+                new Error(tr("Preview limited: this Word document has too much auxiliary markup.")),
               );
               return;
             }
@@ -1030,7 +1031,7 @@ export async function boundedArchive(input: Extract<OfficeWorkerRequest, { type:
               length > (spreadsheet ? 64 * 1024 * 1024 : 8 * 1024 * 1024))
           ) {
             stream.pause();
-            reject(new Error("The expanded document is too large to preview safely."));
+            reject(new Error(tr("The expanded document is too large to preview safely.")));
           } else chunks.push(chunk);
         })
         .on("error", reject)
@@ -1110,7 +1111,7 @@ export async function boundedArchive(input: Extract<OfficeWorkerRequest, { type:
       documents.push(document);
     }
     if (documents.length === 0)
-      throw new Error("Preview limited: this Word document has too much expanded markup.");
+      throw new Error(tr("Preview limited: this Word document has too much expanded markup."));
     word.truncated ||= wordInputTruncated || documents.length < word.documents.length;
     word.documents = documents;
     for (const path of mediaSizes.keys()) if (!usedImages.has(path)) archive.remove(path);
@@ -1132,7 +1133,7 @@ export async function prepareOffice(
         ? "xl/workbook.xml"
         : "ppt/presentation.xml";
   if (!result.archive.file(root))
-    throw new Error("This is not a valid Office Open XML file. Encrypted files are not supported.");
+    throw new Error(tr("This is not a valid Office Open XML file. Encrypted files are not supported."));
   if (result.word) {
     const references = new Map<string, string>();
     const relationships = xmlParser();

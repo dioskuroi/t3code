@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   completeConfirmDialogClose,
@@ -45,8 +46,8 @@ function resolveConfirmDialogCopy(message: string): ConfirmationCopy {
   }
 
   return {
-    title: "Confirm action",
-    description: normalizedMessage || "This action requires your confirmation.",
+    title: tr("Confirm action"),
+    description: normalizedMessage || tr("This action requires your confirmation."),
   };
 }
 
@@ -82,9 +83,9 @@ export function ConfirmDialogHost() {
           ) : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogClose render={<Button variant="outline" />}>Cancel</AlertDialogClose>
+          <AlertDialogClose render={<Button variant="outline" />}>{tr("Cancel")}</AlertDialogClose>
           <Button variant={confirmVariant} onClick={onConfirm}>
-            Confirm
+            {tr("Confirm")}
           </Button>
         </AlertDialogFooter>
       </AlertDialogPopup>

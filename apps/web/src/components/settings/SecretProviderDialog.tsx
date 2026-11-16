@@ -1,4 +1,5 @@
 import type { EnvironmentId, SecretProviderConfig, SecretProviderId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Result from "effect/Result";
 import { useState } from "react";
 
@@ -67,11 +68,15 @@ export function SecretProviderDialog({
       <DialogPopup className="max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {existing ? `Edit ${existing.config.label}` : "Add a 1Password provider"}
+            {existing
+              ? tr("Edit {label}", { label: existing.config.label })
+              : tr("Add a 1Password provider")}
           </DialogTitle>
           <DialogDescription>
-            Provider variables on {environmentLabel} can read values from it by name. Values are
-            read with the op CLI on that server when a provider starts.
+            {tr(
+              "Provider variables on {label} can read values from it by name. Values are read with the op CLI on that server when a provider starts.",
+              { label: environmentLabel },
+            )}
           </DialogDescription>
         </DialogHeader>
         <DialogPanel>
@@ -84,10 +89,10 @@ export function SecretProviderDialog({
             }}
           >
             <div className="grid gap-1.5">
-              <Label htmlFor="secret-provider-name">Name</Label>
+              <Label htmlFor="secret-provider-name">{tr("Name")}</Label>
               <Input
                 id="secret-provider-name"
-                placeholder="Personal"
+                placeholder={tr("Personal")}
                 value={draft.name}
                 onChange={(event) => update({ name: event.target.value })}
                 maxLength={64}
@@ -108,7 +113,7 @@ export function SecretProviderDialog({
               ) : null}
             </div>
             <div className="grid gap-1.5">
-              <Label htmlFor="secret-provider-account">Account</Label>
+              <Label htmlFor="secret-provider-account">{tr("Account")}</Label>
               <Input
                 id="secret-provider-account"
                 placeholder="my.1password.com"
@@ -131,22 +136,23 @@ export function SecretProviderDialog({
                 </p>
               ) : null}
               <p className="text-xs text-muted-foreground">
-                The account shorthand, sign-in address without https://, or ID that op account list
-                shows.
+                {tr(
+                  "The account shorthand, sign-in address without https://, or ID that op account list shows.",
+                )}
               </p>
             </div>
           </form>
         </DialogPanel>
         <DialogFooter variant="bare">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {tr("Cancel")}
           </Button>
           <Button
             type="submit"
             form="secret-provider-form"
             disabled={submitted && Result.isFailure(result)}
           >
-            {existing ? "Save changes" : "Add provider"}
+            {existing ? tr("Save changes") : tr("Add provider")}
           </Button>
         </DialogFooter>
       </DialogPopup>

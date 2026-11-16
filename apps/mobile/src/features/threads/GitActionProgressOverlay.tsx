@@ -37,7 +37,7 @@ export function GitActionProgressOverlay(props: {
     >
       <Toast
         singleLine
-        message={progress.label ?? "Source control"}
+        message={progress.label ?? tr("Source control")}
         description={progress.description ?? undefined}
         tone={
           progress.phase === "error"
@@ -47,7 +47,7 @@ export function GitActionProgressOverlay(props: {
               : "default"
         }
         busy={progress.phase === "running"}
-        action={progress.prUrl ? { label: "View", onPress: handlePress } : undefined}
+        action={progress.prUrl ? { label: tr("View"), onPress: handlePress } : undefined}
       />
     </Animated.View>
   );

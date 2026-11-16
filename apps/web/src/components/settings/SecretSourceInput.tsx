@@ -5,6 +5,7 @@ import {
   type SecretProviderId,
   type SecretProviderKind,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { builtInSecretProviderDefinitions } from "@t3tools/secret-provider-definitions/registry";
 import { useAtomValue } from "@effect/atom-react";
 import * as Option from "effect/Option";
@@ -202,7 +203,7 @@ export function SecretSourceInput({
         />
         {rejectedReference !== null ? (
           <p className="text-2xs text-destructive">
-            {definition?.invalidReferenceMessage ?? "Enter a valid secret reference."}
+            {definition?.invalidReferenceMessage ?? tr("Enter a valid secret reference.")}
           </p>
         ) : null}
       </div>

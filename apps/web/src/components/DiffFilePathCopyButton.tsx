@@ -1,4 +1,5 @@
 import { Check, Copy } from "lucide";
+import { tr } from "@t3tools/shared/i18n";
 import { useRef } from "react";
 import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
 import { cn } from "../lib/utils";
@@ -27,7 +28,7 @@ export function DiffFilePathCopyButton({ filePath }: { filePath: string }) {
             ref={ref}
             size="icon-micro"
             variant="ghost-muted"
-            aria-label="Copy file path"
+            aria-label={tr("Copy file path")}
             onClick={() => copyToClipboard(filePath, undefined)}
           />
         }
@@ -38,7 +39,7 @@ export function DiffFilePathCopyButton({ filePath }: { filePath: string }) {
         />
       </TooltipTrigger>
       <TooltipPopup>
-        <p>{isCopied ? "Copied" : "Copy path"}</p>
+        <p>{isCopied ? tr("Copied") : tr("Copy path")}</p>
       </TooltipPopup>
     </Tooltip>
   );

@@ -75,14 +75,14 @@ describe("thread undo notice", () => {
     vi.mocked(cancelAnnouncement).mockClear();
     showThreadUndoNotice(options);
     expect(announce).toHaveBeenCalledExactlyOnceWith(
-      expect.stringMatching(/^Unpinned 1 thread, /),
+      expect.stringMatching(/^已取消置顶 1 个 Thread，/),
       "thread-undo-notice",
     );
     ThreadUndo.invalidate("pin", "env/other");
     expect(announce).toHaveBeenCalledOnce();
     showThreadUndoNotice({ ...options, claim: ThreadUndo.begin("pin", "env/second") });
     expect(announce).toHaveBeenLastCalledWith(
-      expect.stringMatching(/^Unpinned 2 threads, /),
+      expect.stringMatching(/^已取消置顶 2 个 Thread，/),
       "thread-undo-notice",
     );
     await notice().undo();

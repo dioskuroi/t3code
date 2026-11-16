@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { Atom } from "effect/reactivity";
 import * as Linking from "expo-linking";
 import { useEffect } from "react";
@@ -40,7 +41,7 @@ export function SubscriptionUsageCoordinator() {
         }),
       )
       .catch((error: unknown) => {
-        console.warn("Could not update subscription usage widget", error);
+        console.warn(tr("Could not update subscription usage widget"), error);
       });
   }, [
     catalog.isReady,

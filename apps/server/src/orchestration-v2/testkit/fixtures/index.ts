@@ -151,6 +151,9 @@ import { assertSimpleClaudeOutput } from "./simple/claude_output.ts";
 import { assertSkillInvocationCursorOutput } from "./skill_invocation/cursor_output.ts";
 import { skillInvocationInput } from "./skill_invocation/input.ts";
 import { assertSimpleOutput } from "./simple/codex_output.ts";
+import { assertOmpSimpleOutput } from "./simple/omp_output.ts";
+import { assertOmpMultiTurnOutput } from "./multi_turn/omp_output.ts";
+import { assertOmpTurnInterruptOutput } from "./turn_interrupt/omp_output.ts";
 import { assertPiSimpleOutput } from "./simple/pi_output.ts";
 import { simpleInput } from "./simple/input.ts";
 import { malformedSessionUpdateInput } from "./malformed_session_update/input.ts";
@@ -251,6 +254,7 @@ import {
   MUSE_MODEL_SELECTION,
   OPENCODE_MODEL_SELECTION,
   OPENCODE2_MODEL_SELECTION,
+  OMP_MODEL_SELECTION,
   PI_MODEL_SELECTION,
   READ_ONLY_NEVER_POLICY,
   READ_ONLY_ON_REQUEST_POLICY,
@@ -869,6 +873,12 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
         transcriptFile: new URL("./simple/muse_transcript.ndjson", import.meta.url),
         modelSelection: MUSE_MODEL_SELECTION,
         assertOutput: assertSimpleOutput,
+      },
+      {
+        driver: ProviderDriverKind.make("omp"),
+        transcriptFile: new URL("./simple/omp_transcript.ndjson", import.meta.url),
+        modelSelection: OMP_MODEL_SELECTION,
+        assertOutput: assertOmpSimpleOutput,
       },
     ],
   },
@@ -1507,6 +1517,12 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
         modelSelection: MUSE_MODEL_SELECTION,
         assertOutput: assertMuseMultiTurnOutput,
       },
+      {
+        driver: ProviderDriverKind.make("omp"),
+        transcriptFile: new URL("./multi_turn/omp_transcript.ndjson", import.meta.url),
+        modelSelection: OMP_MODEL_SELECTION,
+        assertOutput: assertOmpMultiTurnOutput,
+      },
     ],
   },
   {
@@ -1869,6 +1885,13 @@ export const ORCHESTRATOR_REPLAY_FIXTURES: ReadonlyArray<OrchestratorReplayFixtu
         transcriptFile: new URL("./turn_interrupt/muse_transcript.ndjson", import.meta.url),
         modelSelection: MUSE_MODEL_SELECTION,
         assertOutput: assertMuseTurnInterruptOutput,
+      },
+      {
+        driver: ProviderDriverKind.make("omp"),
+        transcriptFile: new URL("./turn_interrupt/omp_transcript.ndjson", import.meta.url),
+        modelSelection: OMP_MODEL_SELECTION,
+        runtimePolicyOverride: WORKSPACE_NEVER_POLICY,
+        assertOutput: assertOmpTurnInterruptOutput,
       },
     ],
   },

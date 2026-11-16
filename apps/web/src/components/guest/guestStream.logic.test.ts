@@ -14,6 +14,8 @@ import {
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
 
+import { tr } from "@t3tools/shared/i18n";
+
 import { makeThreadProjectionFixture } from "../../test-fixtures";
 import {
   applyGuestStreamEvent,
@@ -234,9 +236,13 @@ describe("unplacedGuestMessages", () => {
 describe("formatGuestExpiry", () => {
   const now = Date.parse("2026-10-23T00:00:00.000Z");
   it("shows whole hours, then minutes, then expired", () => {
-    expect(formatGuestExpiry("2026-10-23T23:59:00.000Z", now)).toBe("23h left");
-    expect(formatGuestExpiry("2026-10-23T00:45:30.000Z", now)).toBe("45m left");
-    expect(formatGuestExpiry("2026-10-23T00:00:00.000Z", now)).toBe("Expired");
+    expect(formatGuestExpiry("2026-10-23T23:59:00.000Z", now)).toBe(
+      tr("{hours}h left", { hours: 23 }),
+    );
+    expect(formatGuestExpiry("2026-10-23T00:45:30.000Z", now)).toBe(
+      tr("{minutes}m left", { minutes: 45 }),
+    );
+    expect(formatGuestExpiry("2026-10-23T00:00:00.000Z", now)).toBe(tr("Expired"));
   });
 });
 
@@ -253,9 +259,17 @@ describe("guestFilesProblem", () => {
   const file = (type: string, size = 1) => ({ type, size });
   it("takes up to four files and 10 MB, with images in the types the owner's composer takes", () => {
     expect(guestFilesProblem([file("image/png"), file("application/pdf"), file("")])).toBeNull();
-    expect(guestFilesProblem([1, 2, 3, 4, 5].map(() => file("image/png")))).toMatch(/up to 4/);
-    expect(guestFilesProblem([file("image/png", 10 * 1024 * 1024 + 1)])).toMatch(/10 MB/);
-    expect(guestFilesProblem([file("image/svg+xml")])).toMatch(/PNG, JPEG, GIF, or WebP/);
-    expect(guestFilesProblem([file("text/plain", 0)])).toMatch(/cannot be attached/);
+    expect(guestFilesProblem([1, 2, 3, 4, 5].map(() => file("image/png")))).toBe(
+      tr("Attach up to {max} files to a message.", { max: 4 }),
+    );
+    expect(guestFilesProblem([file("image/png", 10 * 1024 * 1024 + 1)])).toBe(
+      tr("Attached files can total up to 10 MB per message."),
+    );
+    expect(guestFilesProblem([file("image/svg+xml")])).toBe(
+      tr("This file cannot be attached. Images must be PNG, JPEG, GIF, or WebP."),
+    );
+    expect(guestFilesProblem([file("text/plain", 0)])).toBe(
+      tr("This file cannot be attached. Images must be PNG, JPEG, GIF, or WebP."),
+    );
   });
 });

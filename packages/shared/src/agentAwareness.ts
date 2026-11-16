@@ -5,6 +5,7 @@ import {
   type Project,
   type ThreadId,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as DateTime from "effect/DateTime";
 
 import { backgroundWorkHoldsCompletion } from "./orchestrationV2PendingBackgroundWork.ts";
@@ -77,9 +78,9 @@ export function projectThreadAwarenessV2(
   }
   const detail =
     phase === "completed"
-      ? "Review the completed task."
+      ? tr("Review the completed task.")
       : phase === "failed"
-        ? "The agent run failed."
+        ? tr("The agent run failed.")
         : undefined;
   return {
     environmentId,
@@ -130,18 +131,18 @@ function resolveThreadAwarenessPhaseV2(
 function headlineForPhase(phase: AgentAwarenessPhase): string {
   switch (phase) {
     case "starting":
-      return "Starting agent";
+      return tr("Starting agent");
     case "running":
-      return "Agent is working";
+      return tr("Agent is working");
     case "waiting_for_approval":
-      return "Approval needed";
+      return tr("Approval needed");
     case "waiting_for_input":
-      return "Waiting for input";
+      return tr("Waiting for input");
     case "completed":
-      return "Agent finished";
+      return tr("Agent finished");
     case "failed":
-      return "Agent failed";
+      return tr("Agent failed");
     case "stale":
-      return "Update delayed";
+      return tr("Update delayed");
   }
 }

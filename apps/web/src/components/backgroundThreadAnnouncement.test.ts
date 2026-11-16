@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { RunId, RuntimeRequestId } from "@t3tools/contracts";
 import * as DateTime from "effect/DateTime";
 import { describe, expect, it } from "vite-plus/test";
@@ -63,11 +64,11 @@ describe("nextBackgroundThreadAnnouncement", () => {
         { threads: [login({ runId: RunId.make("run-3"), runStatus: "interrupted" })] },
       ]),
     ).toEqual([
-      "Needs approval: Fix login redirect",
-      "Needs your input: Fix login redirect",
-      "Done: Fix login redirect",
-      "Failed: Fix login redirect",
-      "Stopped: Fix login redirect",
+      `${tr("Needs approval")}: Fix login redirect`,
+      `${tr("Needs your input")}: Fix login redirect`,
+      `${tr("Done")}: Fix login redirect`,
+      `${tr("Failed")}: Fix login redirect`,
+      `${tr("Stopped")}: Fix login redirect`,
     ]);
   });
 
@@ -82,7 +83,7 @@ describe("nextBackgroundThreadAnnouncement", () => {
         { threads: [login({ runId: secondRun, runStatus: "completed" })] },
         { threads: [login({ runId: RunId.make("run-3"), runStatus: "rolled_back" })] },
       ]),
-    ).toEqual(["Done: Fix login redirect", "Done: Fix login redirect"]);
+    ).toEqual([`${tr("Done")}: Fix login redirect`, `${tr("Done")}: Fix login redirect`]);
   });
 
   it("announces a second request of the same kind", () => {
@@ -92,7 +93,10 @@ describe("nextBackgroundThreadAnnouncement", () => {
         { threads: [login({ request: "approval", requestId: "request-1" })] },
         { threads: [login({ request: "approval", requestId: "request-2" })] },
       ]),
-    ).toEqual(["Needs approval: Fix login redirect", "Needs approval: Fix login redirect"]);
+    ).toEqual([
+      `${tr("Needs approval")}: Fix login redirect`,
+      `${tr("Needs approval")}: Fix login redirect`,
+    ]);
   });
 
   it("doesn't call a thread stopped when a queued message is cancelled while it works", () => {
@@ -136,7 +140,7 @@ describe("nextBackgroundThreadAnnouncement", () => {
           open: "env:login",
         },
       ]),
-    ).toEqual(["Needs your input: Update docs"]);
+    ).toEqual([`${tr("Needs your input")}: Update docs`]);
   });
 
   it("keeps a snoozed thread quiet, even after it wakes", () => {
@@ -155,7 +159,7 @@ describe("nextBackgroundThreadAnnouncement", () => {
         { threads: [login(), docs()] },
         { threads: [login({ runStatus: "completed" }), docs({ request: "approval" })] },
       ]),
-    ).toEqual(["Done: Fix login redirect. Needs approval: Update docs"]);
+    ).toEqual([`${tr("Done")}: Fix login redirect. ${tr("Needs approval")}: Update docs`]);
   });
 });
 
@@ -184,6 +188,6 @@ describe("resolveBackgroundThreadRequest", () => {
         { threads: [login(childApproval("question-2"))] },
         { threads: [login(childApproval(null))] },
       ]),
-    ).toEqual(["Needs approval: Fix login redirect"]);
+    ).toEqual([`${tr("Needs approval")}: Fix login redirect`]);
   });
 });

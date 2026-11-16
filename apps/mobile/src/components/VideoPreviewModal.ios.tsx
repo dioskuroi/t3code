@@ -1,4 +1,5 @@
 import * as Dialog from "./ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { requireNativeModule } from "expo";
 import { settlePromise, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
 import { AsyncResult } from "effect/reactivity";
@@ -48,15 +49,15 @@ function NativeVideoPreview(props: {
   // Mints a fresh URL for each presentation: AVKit retains the URL and offers no retry,
   // so a cached link that expired while the app was suspended would fail to play.
   const resolvePlaybackUrl = useEffectEvent(async (): Promise<string> => {
-    if (source.type !== "media") throw new Error("Could not load this video.");
+    if (source.type !== "media") throw new Error(tr("Could not load this video."));
     if (!("resource" in source)) return source.uri;
     const url = await refreshAssetUrl(source.environmentId, source.resource);
     const playbackUrl = mediaVideoPreviewUri(source, url);
     if (playbackUrl !== null) return playbackUrl;
     throw new Error(
       preparedConnection._tag === "None"
-        ? "Reconnect to this environment and open the video again."
-        : "Could not load this video. Check the connection and try again.",
+        ? tr("Reconnect to this environment and open the video again.")
+        : tr("Could not load this video. Check the connection and try again."),
     );
   });
   const reauthorize = useEffectEvent(() => {
@@ -126,12 +127,14 @@ function NativeVideoPreview(props: {
       // AVKit gives no retry, so re-mint now; the minted URL may already be unusable.
       if (ready) reauthorize();
       Dialog.alert(
-        "Could not open video",
+        tr("Could not open video"),
         ready
-          ? "This video couldn't be loaded or played. Check the connection, or touch and hold the video to save or share the original."
+          ? tr(
+              "This video couldn't be loaded or played. Check the connection, or touch and hold the video to save or share the original.",
+            )
           : error instanceof Error
             ? error.message
-            : "Could not load this video.",
+            : tr("Could not load this video."),
       );
       onRequestClose();
     });

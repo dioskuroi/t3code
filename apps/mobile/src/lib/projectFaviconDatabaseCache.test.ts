@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { beforeEach, describe, expect, it, vi } from "vite-plus/test";
 import { PROJECT_FAVICON_MAX_DATA_URL_LENGTH } from "@t3tools/client-runtime/project-favicon-cache";
 
@@ -71,7 +72,7 @@ describe("mobile project icon thumbnails", () => {
     const release = vi.fn();
     native.load.mockResolvedValueOnce({ width: 4000, height: 3000, release });
     await expect(downscaleProjectFavicon(image, new AbortController().signal)).rejects.toThrow(
-      "not resized",
+      tr("Project icon was not resized."),
     );
     expect(native.write).not.toHaveBeenCalled();
     expect(release).toHaveBeenCalledOnce();

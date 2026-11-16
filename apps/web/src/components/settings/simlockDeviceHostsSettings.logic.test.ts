@@ -18,13 +18,13 @@ const host = {
 describe("Simlock device host settings", () => {
   it("names what keeps a draft from saving", () => {
     expect(simlockDeviceHostProblem(host)).toBeNull();
-    expect(simlockDeviceHostProblem({ ...host, label: " " })).toBe("Give the host a label.");
+    expect(simlockDeviceHostProblem({ ...host, label: " " })).toBe("请为主机添加一个标签。");
     expect(simlockDeviceHostProblem({ ...host, gatewayUrl: "gateway:4700" })).toMatch(/origin/);
     expect(
       simlockDeviceHostProblem({ ...host, gatewayUrl: "https://gateway.example/api" }),
     ).toMatch(/origin/);
-    expect(simlockDeviceHostProblem({ ...host, maxLeases: 21 })).toMatch(/ranges/);
-    expect(simlockDeviceHostProblem({ ...host, maxLeaseMinutes: 4 })).toMatch(/ranges/);
+    expect(simlockDeviceHostProblem({ ...host, maxLeases: 21 })).toMatch(/限额/);
+    expect(simlockDeviceHostProblem({ ...host, maxLeaseMinutes: 4 })).toMatch(/限额/);
   });
 
   it("adds, replaces, and removes one host", () => {

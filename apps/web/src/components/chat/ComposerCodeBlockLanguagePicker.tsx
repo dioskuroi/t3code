@@ -1,4 +1,5 @@
 import { CheckIcon, ChevronDownIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 import { useState } from "react";
 
 import {
@@ -70,7 +71,9 @@ export function ComposerCodeBlockLanguagePicker(props: {
               variant="ghost-muted"
               size="xs"
               disabled={props.disabled}
-              aria-label={`Code language: ${codeLanguageLabel(props.language)}`}
+              aria-label={tr("Code language: {label}", {
+                label: codeLanguageLabel(props.language),
+              })}
             />
           }
         >
@@ -80,12 +83,12 @@ export function ComposerCodeBlockLanguagePicker(props: {
         </ComboboxTrigger>
         <ComboboxPopup align="start" className="w-56">
           <ComboboxSearchInput
-            aria-label="Search languages"
-            placeholder="Search languages"
+            aria-label={tr("Search languages")}
+            placeholder={tr("Search languages")}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
-          <ComboboxEmpty>No matching languages.</ComboboxEmpty>
+          <ComboboxEmpty>{tr("No matching languages.")}</ComboboxEmpty>
           <ComboboxList>
             {(entry: CodeBlockLanguage) => (
               <ComboboxItem key={entry.id || "plain"} value={entry}>

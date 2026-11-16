@@ -1,10 +1,11 @@
 import * as DateTime from "effect/DateTime";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 import { subagentCardDetail, subagentCardElapsed } from "./subagent-card-presentation";
 
 describe("subagent card", () => {
   it.each([
-    ["![screenshot](screenshots/shot.png) Verified", "screenshot Verified"],
+    [tr("![screenshot](screenshots/shot.png) Verified"), "screenshot Verified"],
     ["[docs](https://en.wikipedia.org/wiki/T3_(protocol))", "docs"],
     ["[report](outputs/report%20(final).md)", "report"],
     ["[report](outputs/report\\(final.md)", "report"],

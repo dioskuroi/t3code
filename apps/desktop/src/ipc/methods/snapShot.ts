@@ -11,6 +11,7 @@ import {
   DesktopCaptureConfigPreview,
   DesktopCaptureConfigApplied,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
@@ -27,7 +28,7 @@ class SnapShotIpcUnauthorizedSenderError extends Schema.TaggedError<SnapShotIpcU
   {},
 ) {
   override get message(): string {
-    return "Snapshot request was rejected.";
+    return tr("Snapshot request was rejected.");
   }
 }
 
@@ -118,7 +119,7 @@ export const previewSnapShotConfig = DesktopIpc.makeIpcMethod({
         defaultPath: Option.fromUndefinedOr(state.shortcutConfigPath),
         filters: [
           {
-            name: "Desktop config",
+            name: tr("Desktop config"),
             extensions: state.linuxBackend === "niri" ? ["kdl"] : ["conf", "lua"],
           },
         ],

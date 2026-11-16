@@ -1,4 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { SettingsRow } from "./components/SettingsRow";
 import { AuthSettingsWriteScope } from "@t3tools/contracts";
 import { readEnvironmentScope, useEnvironmentsWithScope } from "../../state/session";
@@ -47,10 +48,10 @@ import { supportsSharedSettingsSync } from "@t3tools/client-runtime/state/shared
 type SettingsPage = "threads" | "source-control" | "worktrees" | "maintenance";
 
 const PAGE_TITLES: Record<SettingsPage, string> = {
-  threads: "Threads",
-  "source-control": "Source control",
-  worktrees: "Worktrees",
-  maintenance: "Maintenance",
+  threads: tr("Threads"),
+  "source-control": tr("Source control"),
+  worktrees: tr("Worktrees"),
+  maintenance: tr("Maintenance"),
 };
 
 const PAGE_PROJECT_KEYS: Record<SettingsPage, readonly ProjectScopedServerSettingKey[]> = {
@@ -80,16 +81,24 @@ const SUBMODULE_CHOICES: ReadonlyArray<{
 }> = [
   {
     mode: null,
-    label: "Inherit",
-    description: "Use the repository's t3.json, or initialize recursively.",
+    label: tr("Inherit"),
+    description: tr("Use the repository's t3.json, or initialize recursively."),
   },
-  { mode: "recursive", label: "Recursive", description: "Initialize nested submodules too." },
+  {
+    mode: "recursive",
+    label: tr("Recursive"),
+    description: tr("Initialize nested submodules too."),
+  },
   {
     mode: "top-level",
-    label: "Top level only",
-    description: "Skip submodules declared inside other submodules.",
+    label: tr("Top level only"),
+    description: tr("Skip submodules declared inside other submodules."),
   },
-  { mode: "none", label: "Skip", description: "Leave submodules empty for a setup script." },
+  {
+    mode: "none",
+    label: tr("Skip"),
+    description: tr("Leave submodules empty for a setup script."),
+  },
 ];
 
 const WORKSPACE_CHOICES: ReadonlyArray<{
@@ -99,18 +108,18 @@ const WORKSPACE_CHOICES: ReadonlyArray<{
 }> = [
   {
     mode: null,
-    label: "Inherit",
-    description: "Use the repository's t3.json, or the current checkout.",
+    label: tr("Inherit"),
+    description: tr("Use the repository's t3.json, or the current checkout."),
   },
   {
     mode: "local",
-    label: "Current checkout",
-    description: "Start new threads in the existing workspace.",
+    label: tr("Current checkout"),
+    description: tr("Start new threads in the existing workspace."),
   },
   {
     mode: "worktree",
-    label: "New worktree",
-    description: "Give each new thread a separate checkout.",
+    label: tr("New worktree"),
+    description: tr("Give each new thread a separate checkout."),
   },
 ];
 
@@ -121,13 +130,13 @@ const STREAMING_CHOICES: ReadonlyArray<{
 }> = [
   {
     mode: "turn",
-    label: "After the turn",
-    description: "Show the answer when the agent finishes.",
+    label: tr("After the turn"),
+    description: tr("Show the answer when the agent finishes."),
   },
   {
     mode: "paragraph",
-    label: "Finished paragraphs",
-    description: "Show each paragraph or code block as it completes.",
+    label: tr("Finished paragraphs"),
+    description: tr("Show each paragraph or code block as it completes."),
   },
 ];
 
@@ -570,12 +579,12 @@ function MixedValuesLabel(props: { readonly projectSelected: boolean }) {
     <Text
       accessibilityLabel={
         props.projectSelected
-          ? "Selected project checkouts use different values"
-          : "Selected environments use different values"
+          ? tr("Selected project checkouts use different values")
+          : tr("Selected environments use different values")
       }
       className="px-2 text-sm text-foreground-muted android:px-4"
     >
-      Mixed
+      {tr("Mixed")}
     </Text>
   );
 }
@@ -595,7 +604,8 @@ function ManagedPolicyNotice(props: { readonly targets: readonly ScopedMobileSet
   if (organizations.length === 0) return null;
   return (
     <Text className="px-2 text-sm text-foreground-muted android:px-4">
-      Some settings are managed by {organizations.join(", ")} and cannot be changed here.
+      {tr("Some settings are managed by")} {organizations.join(", ")}{" "}
+      {tr("and cannot be changed here.")}
     </Text>
   );
 }

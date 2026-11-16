@@ -1,4 +1,5 @@
 import { Button } from "../../components/ui/Button";
+import { tr } from "@t3tools/shared/i18n";
 import * as Dialog from "../../components/ui/Dialog";
 import { useAtomValue } from "@effect/atom-react";
 import {
@@ -112,12 +113,12 @@ export function EnvironmentRoutesSection({
   };
   const confirmRemove = (route: ConnectionRoute) =>
     Dialog.alert(
-      `Remove ${connectionRouteLabel(route)}?`,
+      tr("Remove {label}?", { label: connectionRouteLabel(route) }),
       connectionRouteAddress(route) ?? undefined,
       [
-        { text: "Cancel", style: "cancel" },
+        { text: tr("Cancel"), style: "cancel" },
         {
-          text: "Remove",
+          text: tr("Remove"),
           style: "destructive",
           onPress: () =>
             void removeRoute({ environmentId, routeId: connectionRouteId(route.target) }),
@@ -130,11 +131,11 @@ export function EnvironmentRoutesSection({
 
   return (
     <SettingsSection
-      title="Routes"
+      title={tr("Routes")}
       trailing={
         routes.length > 1 ? (
           <Button
-            label={editing ? "Done" : "Edit"}
+            label={editing ? tr("Done") : tr("Edit")}
             tone="text"
             onPress={() => setEditing((value) => !value)}
           />
@@ -143,7 +144,7 @@ export function EnvironmentRoutesSection({
     >
       <SettingsActionRow
         icon="checkmark.circle"
-        label="Your permissions"
+        label={tr("Your permissions")}
         onPress={() => setPermissionsOpen((open) => !open)}
       />
       {permissionsOpen ? (
@@ -154,12 +155,13 @@ export function EnvironmentRoutesSection({
           session?.authenticated ? (
             <>
               <Text className="text-sm text-foreground-muted">
-                Applies to the route marked In use. Other routes may have different permissions and
-                have not been checked.
+                {tr(
+                  "Applies to the route marked In use. Other routes may have different permissions and\n                have not been checked.",
+                )}
               </Text>
               {AUTH_SCOPE_OPTIONS.map(({ scope, title }) => (
                 <Text key={scope} className="text-sm text-foreground">
-                  {title}: {sessionGrantsScope(session, scope) ? "Allowed" : "Not granted"}
+                  {title}: {sessionGrantsScope(session, scope) ? tr("Allowed") : tr("Not granted")}
                 </Text>
               ))}
             </>
@@ -218,7 +220,7 @@ export function EnvironmentRoutesSection({
           />
         );
       })}
-      <SettingsActionRow icon="plus" label="Add route" onPress={onAddRoute} />
+      <SettingsActionRow icon="plus" label={tr("Add route")} onPress={onAddRoute} />
     </SettingsSection>
   );
 }
@@ -260,7 +262,7 @@ function RouteRow(props: {
       {props.editing && props.onRemove ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Remove ${label} route`}
+          accessibilityLabel={tr("Remove {label} route", { label: label })}
           hitSlop={8}
           onPress={props.onRemove}
           className="active:opacity-70"
@@ -280,9 +282,9 @@ function RouteRow(props: {
         accessibilityLabel={[
           label,
           address,
-          isLearned(route) ? "Found automatically" : null,
-          props.inUse ? "In use" : null,
-          `Route ${props.position} of ${props.count}`,
+          isLearned(route) ? tr("Found automatically") : null,
+          props.inUse ? tr("In use") : null,
+          tr("Route {position} of {count}", { position: props.position, count: props.count }),
         ]
           .filter((part) => part !== null)
           .join(", ")}
@@ -305,12 +307,14 @@ function RouteRow(props: {
               {label}
             </Text>
             {props.inUse ? (
-              <StatusPill {...connectionTone("connected")} label="In use" size="compact" />
+              <StatusPill {...connectionTone("connected")} label={tr("In use")} size="compact" />
             ) : null}
           </View>
           {address !== null ? (
             <Text numberOfLines={1} className="text-sm text-foreground-muted">
-              {isLearned(route) ? `${address} · found automatically` : address}
+              {isLearned(route)
+                ? tr("{address} \u00B7 found automatically", { address: address })
+                : address}
             </Text>
           ) : null}
         </View>

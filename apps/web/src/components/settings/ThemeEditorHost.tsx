@@ -1,4 +1,5 @@
 import { lazy, Suspense, useSyncExternalStore } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import { useTheme } from "../../hooks/useTheme";
 import {
@@ -38,8 +39,8 @@ export function ThemeEditorHost() {
         toastManager.add(
           stackedThreadToast({
             type: "error",
-            title: "Could not save your theme",
-            description: "Browser storage is unavailable, so the change was not kept.",
+            title: tr("Could not save your theme"),
+            description: tr("Browser storage is unavailable, so the change was not kept."),
           }),
         );
         return false;
@@ -48,7 +49,9 @@ export function ThemeEditorHost() {
         stackedThreadToast({
           type: "success",
           title: `${savedTheme.label} updated`,
-          description: `Its ${mergedAppearance} palette was added.`,
+          description: tr("Its {mergedAppearance} palette was added.", {
+            mergedAppearance: mergedAppearance,
+          }),
         }),
       );
       return true;
@@ -64,7 +67,9 @@ export function ThemeEditorHost() {
         stackedThreadToast({
           type: "success",
           title: `${savedTheme.label} saved`,
-          description: wasActive ? "Your changes are now active." : "Your changes are saved.",
+          description: wasActive
+            ? tr("Your changes are now active.")
+            : tr("Your changes are saved."),
         }),
       );
       return true;
@@ -74,8 +79,8 @@ export function ThemeEditorHost() {
       toastManager.add(
         stackedThreadToast({
           type: "error",
-          title: "Could not save your theme",
-          description: "Browser storage is unavailable, so the change was not kept.",
+          title: tr("Could not save your theme"),
+          description: tr("Browser storage is unavailable, so the change was not kept."),
         }),
       );
       return false;
@@ -84,7 +89,7 @@ export function ThemeEditorHost() {
       stackedThreadToast({
         type: "success",
         title: `${savedTheme.label} created`,
-        description: "It’s now active.",
+        description: tr("It\u2019s now active."),
       }),
     );
     return true;

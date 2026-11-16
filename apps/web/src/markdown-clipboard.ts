@@ -1,4 +1,5 @@
-const SKIPPED_TAGS = new Set(["BUTTON", "INPUT", "SCRIPT", "STYLE", "TEMPLATE"]);
+
+import { tr } from "@t3tools/shared/i18n";const SKIPPED_TAGS = new Set(["BUTTON", "INPUT", "SCRIPT", "STYLE", "TEMPLATE"]);
 const SKIPPED_CLASS_NAMES = ["select-none", "sr-only"];
 const SANITIZED_HTML_SELECTOR = [
   "button",
@@ -165,7 +166,7 @@ function serializeBlockquote(quote: Element, inTableCell: boolean): string {
 function serializeDetails(details: Element): string {
   const summary =
     details.querySelector(":scope > [data-markdown-details-summary]")?.textContent?.trim() ??
-    "Details";
+    tr("Details");
   const contentNode = details.querySelector(":scope > * [data-markdown-details-content]");
   const content = contentNode ? serializeChildren(contentNode).trim() : "";
   const open = details.getAttribute("data-markdown-details-open") === "true" ? " open" : "";

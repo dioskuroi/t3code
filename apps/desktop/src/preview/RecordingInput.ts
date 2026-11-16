@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 export interface RecordingInputOptions {
   readonly showKeyPresses: boolean;
   readonly showMousePresses: boolean;
@@ -19,23 +20,23 @@ export interface RecordingKeyPress {
 export function recordingKeyLabel(input: RecordingKeyPress, isMac: boolean): string | null {
   if (["Dead", "Process", "Unidentified", ""].includes(input.key)) return null;
   const modifiers = [
-    input.ctrlKey || input.key === "Control" ? (isMac ? "⌃" : "Ctrl") : null,
-    input.altKey || input.key === "Alt" ? (isMac ? "⌥" : "Alt") : null,
-    input.shiftKey || input.key === "Shift" ? (isMac ? "⇧" : "Shift") : null,
-    input.metaKey || input.key === "Meta" ? (isMac ? "⌘" : "Win") : null,
+    input.ctrlKey || input.key === "Control" ? (isMac ? "⌃" : tr("Ctrl")) : null,
+    input.altKey || input.key === "Alt" ? (isMac ? "⌥" : tr("Alt")) : null,
+    input.shiftKey || input.key === "Shift" ? (isMac ? "⇧" : tr("Shift")) : null,
+    input.metaKey || input.key === "Meta" ? (isMac ? "⌘" : tr("Win")) : null,
   ].filter((value) => value !== null);
   const labels: Record<string, string> = {
     Enter: "↵",
     Tab: "⇥",
     Backspace: "⌫",
     Delete: "⌦",
-    Escape: "Esc",
+    Escape: tr("Esc"),
     ArrowUp: "↑",
     ArrowDown: "↓",
     ArrowLeft: "←",
     ArrowRight: "→",
-    " ": "Space",
-    Space: "Space",
+    " ": tr("Space"),
+    Space: tr("Space"),
   };
   if (!["Control", "Alt", "Shift", "Meta"].includes(input.key)) {
     modifiers.push(

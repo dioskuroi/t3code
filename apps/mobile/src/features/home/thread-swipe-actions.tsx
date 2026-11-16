@@ -1,4 +1,5 @@
 import { SymbolView } from "../../components/ui/AppSymbol";
+import { tr } from "@t3tools/shared/i18n";
 import { Menu } from "../../components/ui/Menu";
 import type { MenuAction } from "@react-native-menu/menu";
 import * as Haptics from "expo-haptics";
@@ -88,10 +89,10 @@ function resolveSecondaryAction(input: {
   if (input.secondaryAction === null) return null;
   if (input.secondaryAction === undefined) {
     return {
-      accessibilityLabel: `Delete ${input.threadTitle}`,
+      accessibilityLabel: tr("Delete {title}", { title: input.threadTitle }),
       tone: "danger",
       icon: "trash",
-      label: "Delete",
+      label: tr("Delete"),
       onPress: () => {
         input.close();
         input.onDelete();

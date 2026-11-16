@@ -11,6 +11,7 @@ import {
   type DpopPublicJwk,
   verifyDpopProof,
 } from "./dpop.ts";
+import { tr } from "./i18n.ts";
 
 function signDpopProof(input: {
   readonly method: string;
@@ -114,7 +115,7 @@ describe("verifyDpopProof", () => {
     if (malformedHeader.ok) {
       assert.fail("Expected malformed DPoP header JSON to fail.");
     }
-    assert.equal(malformedHeader.reason, "Invalid DPoP JWT header.");
+    assert.equal(malformedHeader.reason, tr("Invalid DPoP JWT header."));
 
     const malformedPayload = verifyDpopProof({
       proof: `${header}.${malformedJson}.${signature}`,
@@ -125,7 +126,7 @@ describe("verifyDpopProof", () => {
     if (malformedPayload.ok) {
       assert.fail("Expected malformed DPoP payload JSON to fail.");
     }
-    assert.equal(malformedPayload.reason, "Invalid DPoP JWT payload.");
+    assert.equal(malformedPayload.reason, tr("Invalid DPoP JWT payload."));
   });
 
   it("rejects method, URL, thumbprint, and time-window mismatches", () => {
@@ -264,7 +265,7 @@ describe("verifyDpopProof", () => {
     if (missingHash.ok) {
       assert.fail("Expected DPoP proof without an access token hash to fail.");
     }
-    assert.equal(missingHash.reason, "DPoP access token hash mismatch.");
+    assert.equal(missingHash.reason, tr("DPoP access token hash mismatch."));
 
     const mismatchedHash = verifyDpopProof({
       proof: accessTokenProof,
@@ -277,7 +278,7 @@ describe("verifyDpopProof", () => {
     if (mismatchedHash.ok) {
       assert.fail("Expected DPoP proof with a mismatched access token hash to fail.");
     }
-    assert.equal(mismatchedHash.reason, "DPoP access token hash mismatch.");
+    assert.equal(mismatchedHash.reason, tr("DPoP access token hash mismatch."));
   });
 
   it("normalizes htu by excluding query and fragment components per RFC 9449", () => {
@@ -331,6 +332,6 @@ describe("verifyDpopProof", () => {
     if (result.ok) {
       assert.fail("Expected DPoP proof with private JWK material to fail.");
     }
-    assert.equal(result.reason, "Invalid DPoP JWT header.");
+    assert.equal(result.reason, tr("Invalid DPoP JWT header."));
   });
 });

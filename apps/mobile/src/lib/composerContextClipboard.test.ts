@@ -5,6 +5,7 @@ import {
   EnvironmentId,
   ThreadId,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { encodeComposerContextFragment } from "@t3tools/shared/composerContextClipboard";
 import {
   collectComposerContextReferences,
@@ -172,7 +173,7 @@ describe("mobile context clipboard imports", () => {
       return "file:///owned.png";
     });
     await expect(importComposerContextClipboard(clipboard, 0, controller.signal)).rejects.toThrow(
-      "cancelled",
+      tr("Context import cancelled"),
     );
     expect(mocks.remove).toHaveBeenCalledWith("file:///owned.png");
     expect(mocks.dispose).toHaveBeenCalledOnce();
@@ -191,7 +192,7 @@ describe("mobile context clipboard imports", () => {
       html: "",
     };
     await expect(importComposerContextClipboard(imageOnly, 0, controller.signal)).rejects.toThrow(
-      "cancelled",
+      tr("Context import cancelled"),
     );
     expect(mocks.remove).toHaveBeenCalledWith("file:///owned.png");
   });
@@ -267,7 +268,7 @@ describe("mobile context clipboard imports", () => {
         COMPOSER_CONTEXT_MAX_RECORDS - 2,
         EnvironmentId.make("destination"),
       ),
-    ).rejects.toThrow("Remove some context");
+    ).rejects.toThrow(tr("Remove some context items from the draft before pasting more."));
     expect(mocks.download).not.toHaveBeenCalled();
   });
 

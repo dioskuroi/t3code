@@ -3,6 +3,7 @@ import type {
   EnvironmentId,
   PreviewUrlResolution,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { isLoopbackHost, normalizePreviewUrl } from "@t3tools/shared/preview";
 import { isLocalLoopbackHost, isPrivateNetworkHost } from "@t3tools/shared/hostClassification";
 
@@ -16,7 +17,10 @@ export { normalizeHostname, isLocalLoopbackHost } from "@t3tools/shared/hostClas
 
 const readEnvironmentUrl = (environmentId: EnvironmentId): URL => {
   const connection = readPreparedConnection(environmentId);
-  if (!connection) throw new Error(`Environment ${environmentId} is not connected.`);
+  if (!connection)
+    throw new Error(
+      tr("Environment {environmentId} is not connected.", { environmentId: environmentId }),
+    );
   return new URL(connection.httpBaseUrl);
 };
 
@@ -29,7 +33,9 @@ const resolveEnvironmentPortTarget = (
 ): PreviewUrlResolution => {
   if (!isPrivateNetworkHost(environmentUrl.hostname)) {
     throw new Error(
-      "This environment port needs the planned authenticated preview gateway; its server address is not directly private-network reachable.",
+      tr(
+        "This environment port needs the planned authenticated preview gateway; its server address is not directly private-network reachable.",
+      ),
     );
   }
   const protocol = target.protocol ?? "http";

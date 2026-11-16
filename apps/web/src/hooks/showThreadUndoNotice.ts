@@ -3,6 +3,7 @@ import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
 } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import { create } from "zustand";
 
 import { stackedThreadToast, toastManager } from "../components/ui/toast";
@@ -28,14 +29,35 @@ type UndoNotice = {
 
 export const useThreadUndoNotice = create<{ notice: UndoNotice | null }>(() => ({ notice: null }));
 
+const ACTION_LABELS: Record<UndoOptions["action"], string> = {
+  Settled: tr("Settled"),
+  Snoozed: tr("Snoozed"),
+  Unpinned: tr("Unpinned"),
+  Archived: tr("Archived"),
+  Discarded: tr("Discarded"),
+};
+
+/** Translated display label for a thread undo action sentinel. */
+export function threadUndoActionLabel(action: UndoOptions["action"]): string {
+  return ACTION_LABELS[action];
+}
+
 function threadUndoNoticeSummary(notice: Pick<UndoNotice, "action" | "count">): string {
-  const noun = notice.action === "Discarded" ? "draft" : "thread";
-  return `${notice.action} ${notice.count} ${noun}${notice.count === 1 ? "" : "s"}`;
+  const label = ACTION_LABELS[notice.action];
+  const noun =
+    notice.action === "Discarded"
+      ? notice.count === 1
+        ? tr("{action} {count} draft", { action: label, count: notice.count })
+        : tr("{action} {count} drafts", { action: label, count: notice.count })
+      : notice.count === 1
+        ? tr("{action} {count} thread", { action: label, count: notice.count })
+        : tr("{action} {count} threads", { action: label, count: notice.count });
+  return noun;
 }
 
 export function threadUndoLabel(keybindings: Parameters<typeof shortcutLabelForCommand>[0]) {
   const shortcut = shortcutLabelForCommand(keybindings, "thread.undo");
-  return shortcut ? `${shortcut} to undo` : "Undo";
+  return shortcut ? tr("{shortcut} to undo", { shortcut }) : tr("Undo");
 }
 
 let announcedSummary: string | null = null;
@@ -50,7 +72,7 @@ function setNotice(notice: UndoNotice | null) {
   announcedSummary = summary;
   if (summary) {
     const label = threadUndoLabel(appAtomRegistry.get(primaryServerKeybindingsAtom));
-    announce(`${summary}, ${label}`, "thread-undo-notice");
+    announce(tr("{summary}, {label}", { summary, label }), "thread-undo-notice");
   } else {
     cancelAnnouncement("thread-undo-notice");
   }
@@ -94,7 +116,7 @@ function refreshNotice() {
               stackedThreadToast({
                 type: "error",
                 title: failureTitle,
-                description: error instanceof Error ? error.message : "An error occurred.",
+                description: error instanceof Error ? error.message : tr("An error occurred."),
               }),
             );
           };

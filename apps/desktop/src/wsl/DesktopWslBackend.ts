@@ -1,4 +1,5 @@
 import * as Cause from "effect/Cause";
+import { tr } from "@t3tools/shared/i18n";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -39,7 +40,7 @@ const isWslInstanceId = (id: DesktopBackendPool.BackendInstanceId): boolean =>
   id.startsWith(WSL_INSTANCE_ID_PREFIX);
 
 const buildLabel = (distro: string | null): string =>
-  distro === null ? "WSL (default distro)" : `WSL (${distro})`;
+  distro === null ? tr("WSL (default distro)") : tr("WSL ({distro})", { distro: distro });
 
 // WSL auto-forwards loopback ports, so only IPv4 loopback availability matters.
 const scanForWslPort = Effect.fn("desktop.wslBackend.scanForWslPort")(function* (
@@ -52,7 +53,10 @@ const scanForWslPort = Effect.fn("desktop.wslBackend.scanForWslPort")(function* 
     }
   }
   return yield* new NetService.NetError({
-    message: `No loopback port available for WSL backend between ${startPort} and ${MAX_TCP_PORT}.`,
+    message: tr(
+      "No loopback port available for WSL backend between {startPort} and {MAX_TCP_PORT}.",
+      { startPort: startPort, MAX_TCP_PORT: MAX_TCP_PORT },
+    ),
   });
 });
 
@@ -128,7 +132,9 @@ export const layer = Layer.effect(
                 Ref.set(
                   preflightErrorRef,
                   Option.some(
-                    "Another T3 Code server is using this distro's T3 home, or an older background service is set up for it. Stop that server or pair with it, or try `t3 update` in the distro. If the older launcher cannot update, run `t3 service uninstall` and optionally reinstall with `t3 service install` from a current CLI in the distro. Use `npx t3@latest` if `t3` is missing or outdated, and pass `--base-dir` with the service's T3 home to each command.",
+                    tr(
+                      "Another T3 Code server is using this distro's T3 home, or an older background service is set up for it. Stop that server or pair with it, or try `t3 update` in the distro. If the older launcher cannot update, run `t3 service uninstall` and optionally reinstall with `t3 service install` from a current CLI in the distro. Use `npx t3@latest` if `t3` is missing or outdated, and pass `--base-dir` with the service's T3 home to each command.",
+                    ),
                   ),
                 ),
               ),

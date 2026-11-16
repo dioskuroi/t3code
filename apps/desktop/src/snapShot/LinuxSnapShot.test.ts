@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Real temporary files exercise the native portal URI boundary.
 import * as NodeEvents from "node:events";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeFSP from "node:fs/promises";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
@@ -288,7 +289,7 @@ it.each([1, 2])(
     bus.extensionVersion = 1;
     bus.status = status;
     await expect(captureLinuxWindow(appId)).rejects.toThrow(
-      status === 1 ? "cancelled" : "did not allow",
+      status === 1 ? tr("Snapshot was cancelled.") : tr("Your desktop did not allow the snapshot."),
     );
     expect(bus.calls.some((call) => call.member === "Capture")).toBe(false);
     expect(bus.disconnect).toHaveBeenCalledOnce();
@@ -314,5 +315,7 @@ it("reads only local PNG files without removing the portal file", async () => {
   await expect(readPortalPng("https://example.com/image.png")).rejects.toThrow();
   await expect(readPortalPng("file://remote/image.png")).rejects.toThrow();
   await NodeFSP.writeFile(NodePath.join(directory, "image.png"), "not a PNG");
-  await expect(readPortalPng(bus.uri)).rejects.toThrow("Invalid");
+  await expect(readPortalPng(bus.uri)).rejects.toThrow(
+    tr("Invalid or oversized window screenshot."),
+  );
 });

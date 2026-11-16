@@ -9,13 +9,13 @@ describe("timestamps in an explicit time zone", () => {
 
   it("picks relative days from the calendar in that zone", () => {
     expect(formatUpcomingTimestamp("2026-07-02T00:30:00.000Z", "12-hour", now, zone)).not.toMatch(
-      /tomorrow/,
+      /明天/,
     );
     expect(formatUpcomingTimestamp("2026-07-02T05:30:00.000Z", "12-hour", now, zone)).toMatch(
-      /^tomorrow at /,
+      /^明天 /,
     );
     expect(formatDayAwareTimestamp("2026-07-01T03:30:00.000Z", "12-hour", now, zone)).toMatch(
-      /^yesterday at /,
+      /^昨天 /,
     );
   });
 });

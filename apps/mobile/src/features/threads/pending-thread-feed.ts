@@ -3,6 +3,7 @@ import {
   type ThreadGuestMessage,
   type ThreadGuestShare,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { ThreadFeedEntry } from "../../lib/threadActivity";
 import { scopedThreadKey } from "../../lib/scopedEntities";
 import { threadHasCaughtUpTo } from "@t3tools/client-runtime/state/threads";
@@ -105,7 +106,7 @@ export function appendGuestPendingMessages(
 ): ReadonlyArray<ThreadFeedRow> {
   const pending = share?.messages.filter((message) => message.status === "pending") ?? [];
   if (share === null || pending.length === 0) return presentedFeed;
-  const guestName = share.guestName ?? "Guest";
+  const guestName = share.guestName ?? tr("Guest");
   return [
     ...presentedFeed,
     ...pending.map((message): GuestPendingFeedEntry => ({

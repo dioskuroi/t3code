@@ -1,4 +1,5 @@
-export async function readBoundedDocument(
+
+import { tr } from "@t3tools/shared/i18n";export async function readBoundedDocument(
   src: string,
   signal: AbortSignal,
   limit: number,
@@ -6,9 +7,9 @@ export async function readBoundedDocument(
 ) {
   const response = await fetch(src, { signal, cache });
   if (!response.ok || Number(response.headers.get("content-length")) > limit)
-    throw new Error("This file is unavailable or too large to preview.");
+    throw new Error(tr("This file is unavailable or too large to preview."));
   const reader = response.body?.getReader();
-  if (!reader) throw new Error("This file is unavailable.");
+  if (!reader) throw new Error(tr("This file is unavailable."));
   const chunks: Uint8Array<ArrayBuffer>[] = [];
   let size = 0;
   try {
@@ -16,7 +17,7 @@ export async function readBoundedDocument(
       const { done, value } = await reader.read();
       if (done) break;
       size += value.length;
-      if (size > limit) throw new Error("This file is too large to preview.");
+      if (size > limit) throw new Error(tr("This file is too large to preview."));
       chunks.push(value);
     }
   } finally {

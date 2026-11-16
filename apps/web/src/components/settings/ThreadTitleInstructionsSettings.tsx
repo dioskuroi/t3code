@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { tr } from "@t3tools/shared/i18n";
 
 import { Textarea } from "../ui/textarea";
 import { SettingsRow, SettingResetButton } from "./settingsLayout";
@@ -23,7 +24,7 @@ export function ThreadTitleInstructionsSettings() {
       serverScoped
       settingKeys={["threadTitleInstructions"]}
       {...searchableSetting("thread-title-instructions")}
-      description="Appended to the prompt for new and regenerated thread titles."
+      description={tr("Appended to the prompt for new and regenerated thread titles.")}
       resetAction={
         mixed || settings.threadTitleInstructions !== "" ? (
           <SettingResetButton
@@ -36,7 +37,7 @@ export function ThreadTitleInstructionsSettings() {
       <div className="mt-3 max-w-2xl pb-3.5">
         <Textarea
           key={`${scopeKey}:${mixed}:${settings.threadTitleInstructions}`}
-          aria-label="Thread title instructions"
+          aria-label={tr("Thread title instructions")}
           onChange={() => {
             edited.current = true;
           }}
@@ -44,8 +45,8 @@ export function ThreadTitleInstructionsSettings() {
           defaultValue={mixed ? "" : settings.threadTitleInstructions}
           placeholder={
             mixed
-              ? "Mixed. Enter instructions to apply to all selected targets."
-              : "Keep titles to a few words. Lead with the main subject."
+              ? tr("Mixed. Enter instructions to apply to all selected targets.")
+              : tr("Keep titles to a few words. Lead with the main subject.")
           }
           onBlur={(event) => {
             const value = event.target.value.trim();

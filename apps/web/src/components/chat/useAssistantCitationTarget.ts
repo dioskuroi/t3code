@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import type { AssistantCitationRequest, AssistantCitationTarget } from "./AssistantCitationSource";
 import type { CitationPhase } from "./citationProcedure";
 
@@ -7,8 +8,8 @@ const CITATION_SCROLL_KEYS = new Set([
   "ArrowDown",
   "PageUp",
   "PageDown",
-  "Home",
-  "End",
+  tr("Home"),
+  tr("End"),
   " ",
 ]);
 

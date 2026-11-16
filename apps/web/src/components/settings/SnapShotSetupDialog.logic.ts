@@ -1,4 +1,5 @@
 import type { DesktopSnapShotState } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 export type CaptureSetupStep = "access" | "shortcut";
 
@@ -9,11 +10,11 @@ export function captureSetupDesktopName(state: DesktopSnapShotState): string | u
     case "gnome":
       return "GNOME";
     case "kde":
-      return "KDE Plasma";
+      return tr("KDE Plasma");
     case "niri":
-      return "Niri";
+      return tr("Niri");
     case "hyprland":
-      return "Hyprland";
+      return tr("Hyprland");
     default:
       return undefined;
   }
@@ -58,13 +59,14 @@ export function captureSetupCheckMessage(state: DesktopSnapShotState): string {
     (backend === "kde" && state.kdeHelper?.status === "error") ||
     (backend === "hyprland" && state.hyprlandHelper?.status === "error")
   )
-    return "Still unable to check access. See Advanced for help.";
-  if (captureSetupBackend(state) === "picker") return "Ready. You'll choose a window each time.";
+    return tr("Still unable to check access. See Advanced for help.");
+  if (captureSetupBackend(state) === "picker")
+    return tr("Ready. You'll choose a window each time.");
   if (gnome && state.gnomeExtension?.status === "restart-required")
-    return "Still waiting for you to sign out and back in.";
+    return tr("Still waiting for you to sign out and back in.");
   return captureSetupAccessReady(state)
-    ? "Ready. Continue to choose your shortcut."
-    : "Not ready yet. Finish the step above.";
+    ? tr("Ready. Continue to choose your shortcut.")
+    : tr("Not ready yet. Finish the step above.");
 }
 
 export function captureSetupShortcutReady(state: DesktopSnapShotState, unsaved: boolean): boolean {

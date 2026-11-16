@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { NonNegativeInt, PositiveInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
 import { HostPowerSnapshot } from "./background.ts";
@@ -228,15 +229,15 @@ export const ResourceMonitorEvent = Schema.Union([
 export type ResourceMonitorEvent = typeof ResourceMonitorEvent.Type;
 
 export const DesktopElectronProcessType = Schema.Literals([
-  "Browser",
-  "Tab",
-  "Utility",
-  "Zygote",
-  "Sandbox helper",
+  tr("Browser"),
+  tr("Tab"),
+  tr("Utility"),
+  tr("Zygote"),
+  tr("Sandbox helper"),
   "GPU",
-  "Pepper Plugin",
-  "Pepper Plugin Broker",
-  "Unknown",
+  tr("Pepper Plugin"),
+  tr("Pepper Plugin Broker"),
+  tr("Unknown"),
 ]);
 export type DesktopElectronProcessType = typeof DesktopElectronProcessType.Type;
 

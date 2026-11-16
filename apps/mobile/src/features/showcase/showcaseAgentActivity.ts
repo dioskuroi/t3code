@@ -2,6 +2,7 @@ import type {
   EnvironmentProject,
   EnvironmentThreadShell,
 } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 
 import type {
   AgentActivityPhase,
@@ -21,13 +22,13 @@ const SHOWCASE_AGENT_ACTIVITY_ROWS = [
 }>;
 
 const STATUS_BY_PHASE: Record<AgentActivityPhase, string> = {
-  starting: "Connecting",
-  running: "Working",
-  waiting_for_approval: "Approval",
-  waiting_for_input: "Input",
-  stale: "Waiting",
-  completed: "Done",
-  failed: "Failed",
+  starting: tr("Connecting"),
+  running: tr("Working"),
+  waiting_for_approval: tr("Approval"),
+  waiting_for_input: tr("Input"),
+  stale: tr("Waiting"),
+  completed: tr("Done"),
+  failed: tr("Failed"),
 };
 
 const ACTIVE_PHASES: ReadonlySet<AgentActivityPhase> = new Set([
@@ -67,8 +68,8 @@ export function buildShowcaseAgentActivity(
     });
   }
   return {
-    title: "T3 Code",
-    subtitle: "Agent work in progress",
+    title: tr("T3 Code"),
+    subtitle: tr("Agent work in progress"),
     activeCount: rows.filter((row) => ACTIVE_PHASES.has(row.phase)).length,
     updatedAt: new Date(now).toISOString(),
     activities: rows,
@@ -101,7 +102,7 @@ export function showcaseAndroidActivityData(
     t3_kind: "agent_activity",
     updated_at: String(now),
     active: String(activity.activeCount > 0),
-    activity_chip: attentionCount > 0 ? "Review" : "Active",
+    activity_chip: attentionCount > 0 ? tr("Review") : tr("Active"),
     activity_title: `${activity.activeCount} active agents · ${attentionCount} need attention`,
     activity_phase: hero?.phase ?? "",
     activity_active_count: String(activity.activeCount),

@@ -1,4 +1,5 @@
 import { useEffect, useImperativeHandle, useRef, useState, type RefObject } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { parseDelimitedPreview } from "@t3tools/shared/delimitedPreview";
 import { formatAttachmentSize } from "@t3tools/client-runtime/state/attachments";
 import { useClientSettings } from "~/hooks/useSettings";
@@ -126,9 +127,9 @@ export default function LargeTextViewer(props: {
         }
       });
       engine.addEventListener("error", () => {
-        copyPending.current?.reject(new Error("The text viewer stopped."));
+        copyPending.current?.reject(new Error(tr("The text viewer stopped.")));
         copyPending.current = null;
-        setError("Could not load the text viewer. Close the file and try again.");
+        setError(tr("Could not load the text viewer. Close the file and try again."));
       });
       engine.postMessage(
         {
@@ -180,7 +181,7 @@ export default function LargeTextViewer(props: {
     } else startWorker();
     return () => {
       controller.abort();
-      copyPending.current?.reject(new Error("Preview closed."));
+      copyPending.current?.reject(new Error(tr("Preview closed.")));
       copyPending.current = null;
       worker.current?.terminate();
       worker.current = null;
@@ -192,11 +193,11 @@ export default function LargeTextViewer(props: {
     () => () =>
       new Promise<string>((resolve, reject) => {
         if (!worker.current) {
-          reject(new Error("The file is unavailable."));
+          reject(new Error(tr("The file is unavailable.")));
           return;
         }
         if (copyPending.current) {
-          reject(new Error("Another copy is in progress."));
+          reject(new Error(tr("Another copy is in progress.")));
           return;
         }
         copyPending.current = { resolve, reject };
@@ -210,27 +211,37 @@ export default function LargeTextViewer(props: {
     );
   if (!meta || (meta.count > 0 && !pages.has(0))) return <FileSurfaceLoading />;
   const header = props.delimiter ? pages.get(0)?.[0] : undefined;
+  const rowCount = Math.max(0, meta.count - (props.delimiter && meta.count ? 1 : 0)).toLocaleString();
+  const columnCount = meta.count ? meta.columns.toLocaleString() : 0;
+  const hasSize = meta.complete && meta.sizeBytes !== undefined;
+  const sizeLabel = meta.sizeBytes === 0 ? tr("0 bytes") : formatAttachmentSize(meta.sizeBytes ?? 0);
+  const statusLabel = props.delimiter
+    ? hasSize
+      ? tr("{count} rows · {columns} columns · {size}", {
+          count: rowCount,
+          columns: columnCount,
+          size: sizeLabel,
+        })
+      : tr("{count} rows · Indexing…", { count: rowCount })
+    : hasSize
+      ? tr("{count} lines · {size}", { count: rowCount, size: sizeLabel })
+      : tr("{count} lines · Indexing…", { count: rowCount });
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div
         className="flex min-h-10 shrink-0 flex-wrap items-center gap-x-1 border-b border-border/60 px-3 py-2 text-xs text-muted-foreground tabular-nums"
         role="status"
       >
-        {Math.max(0, meta.count - (props.delimiter && meta.count ? 1 : 0)).toLocaleString()}{" "}
-        {props.delimiter ? "rows" : "lines"}
-        {props.delimiter ? ` · ${meta.count ? meta.columns.toLocaleString() : 0} columns` : ""}
-        {meta.complete && meta.sizeBytes !== undefined
-          ? ` · ${meta.sizeBytes === 0 ? "0 bytes" : formatAttachmentSize(meta.sizeBytes)}`
-          : " · Indexing…"}
+        {statusLabel}
       </div>
       {!meta.complete ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20">
-          <FileSurfaceNotice>Loading the rest of the file…</FileSurfaceNotice>
+          <FileSurfaceNotice>{tr("Loading the rest of the file\u2026")}</FileSurfaceNotice>
         </div>
       ) : null}
       {meta.columns === 1024 ? (
         <FileSurfaceNotice>
-          Showing the first 1,024 columns. Source and Save retain every column.
+          {tr("Showing the first 1,024 columns. Source and Save retain every column.")}
         </FileSurfaceNotice>
       ) : null}
       {meta.count > 0 ? (
@@ -252,7 +263,7 @@ export default function LargeTextViewer(props: {
         />
       ) : (
         <div className="flex flex-1 items-center justify-center p-6 text-xs text-muted-foreground">
-          This file is empty.
+          {tr("This file is empty.")}
         </div>
       )}
     </div>

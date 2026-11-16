@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
@@ -71,7 +72,7 @@ describe("queued message file edits", () => {
         uploadFiles: async () => [],
         readImage: async () => "image",
       }),
-    ).rejects.toThrow("Retry or remove");
+    ).rejects.toThrow(tr("Retry or remove failed uploads before saving."));
   });
 
   it("keeps file-only edits when another client starts the queued run", () => {

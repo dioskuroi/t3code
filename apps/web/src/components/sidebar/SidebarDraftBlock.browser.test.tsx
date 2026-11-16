@@ -1,4 +1,5 @@
 import { scopeProjectRef, scopeThreadRef } from "@t3tools/client-runtime/environment";
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ProjectId, ThreadId } from "@t3tools/contracts";
 import { Profiler } from "react";
 import { expect, it, vi } from "vite-plus/test";
@@ -43,7 +44,7 @@ it("keeps draft previews current through edits, promotion and removal", async ()
     initial.setProjectDraftThreadId(projectRef, draftId, { threadId });
     initial.setPrompt(draftId, "First draft preview");
   });
-  await expect.element(row).toHaveAccessibleName("First draft preview, Unsent draft");
+  await expect.element(row).toHaveAccessibleName(`First draft preview, ${tr("Unsent draft")}`);
 
   const rendersBeforeOtherComposer = onRender.mock.calls.length;
   await act(() =>
@@ -51,7 +52,7 @@ it("keeps draft previews current through edits, promotion and removal", async ()
   );
   expect(onRender).toHaveBeenCalledTimes(rendersBeforeOtherComposer);
   await act(() => initial.setPrompt(draftId, "Updated draft preview"));
-  await expect.element(row).toHaveAccessibleName("Updated draft preview, Unsent draft");
+  await expect.element(row).toHaveAccessibleName(`Updated draft preview, ${tr("Unsent draft")}`);
 
   await act(() => initial.markDraftThreadPromoting(draftId));
   await expect.element(row).not.toBeInTheDocument();
@@ -62,7 +63,7 @@ it("keeps draft previews current through edits, promotion and removal", async ()
     initial.setProjectDraftThreadId(projectRef, nextDraftId, { threadId: ThreadId.make("next") });
     initial.setPrompt(nextDraftId, "Next draft preview");
   });
-  await expect.element(row).toHaveAccessibleName("Next draft preview, Unsent draft");
+  await expect.element(row).toHaveAccessibleName(`Next draft preview, ${tr("Unsent draft")}`);
   await act(() => initial.clearDraftThread(nextDraftId));
   await expect.element(row).not.toBeInTheDocument();
 });

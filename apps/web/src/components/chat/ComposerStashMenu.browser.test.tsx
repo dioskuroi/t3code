@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { expect, it } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
+import { tr } from "@t3tools/shared/i18n";
 
 import { act, render } from "../../../test/render";
 import { Dialog, DialogPopup } from "../ui/dialog";
@@ -63,7 +64,7 @@ function Composer({ dialog = false }: { dialog?: boolean }) {
 }
 
 const editor = () => page.getByRole("textbox", { name: "Message" });
-const stash = () => page.getByRole("list", { name: "Stashed prompts" });
+const stash = () => page.getByRole("list", { name: tr("Stashed prompts") });
 const press = (keys: string) => userEvent.keyboard(keys);
 const focus = (element: Element) => act(async () => (element as HTMLElement).focus());
 

@@ -1,4 +1,5 @@
 import { type ServerConfig, ServerNpmReleaseError } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
@@ -13,12 +14,14 @@ const isServerNpmReleaseError = Schema.is(ServerNpmReleaseError);
 
 function unsupportedLookup(config: ServerConfig | null): ServerNpmReleaseError | null {
   if (config === null) {
-    return new ServerNpmReleaseError({ reason: "Connect to this server to check releases." });
+    return new ServerNpmReleaseError({ reason: tr("Connect to this server to check releases.") });
   }
   return config.environment.capabilities.npmReleaseLookup === true
     ? null
     : new ServerNpmReleaseError({
-        reason: "This server does not support registry lookups. Update it before switching tracks.",
+        reason: tr(
+          "This server does not support registry lookups. Update it before switching tracks.",
+        ),
       });
 }
 
@@ -26,7 +29,9 @@ export function npmReleaseFailureMessage(cause: Cause.Cause<unknown>): string {
   const error = Option.getOrUndefined(Cause.findErrorOption(cause));
   return isServerNpmReleaseError(error)
     ? error.message
-    : "Could not check this environment's npm registry. Check the connection and registry settings.";
+    : tr(
+        "Could not check this environment's npm registry. Check the connection and registry settings.",
+      );
 }
 
 export const npmReleaseAtom = Atom.family((spec: string) =>
@@ -41,7 +46,7 @@ export const npmReleaseAtom = Atom.family((spec: string) =>
       ) ?? candidates[0];
     if (environmentId === undefined) {
       return Effect.fail(
-        new ServerNpmReleaseError({ reason: "Connect to a server to check releases." }),
+        new ServerNpmReleaseError({ reason: tr("Connect to a server to check releases.") }),
       );
     }
     const unsupported = unsupportedLookup(get(serverEnvironment.configValueAtom(environmentId)));

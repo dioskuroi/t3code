@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import type {
   AdvertisedEndpoint,
   AdvertisedEndpointHostedHttpsCompatibility,
@@ -29,7 +30,9 @@ export function normalizeHttpBaseUrl(rawValue: string): string {
   }
 
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new Error(`Endpoint must use HTTP or HTTPS. Received ${url.protocol}`);
+    throw new Error(
+      tr("Endpoint must use HTTP or HTTPS. Received {protocol}", { protocol: url.protocol }),
+    );
   }
 
   url.pathname = "/";

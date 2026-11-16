@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import type { NativeSyntheticEvent } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import * as Arr from "effect/Array";
@@ -72,11 +73,13 @@ export function useReviewCommentSelectionController(input: {
 
   const selectionAction = hasRangeTarget
     ? {
-        title: `Comment on ${formatReviewSelectedRangeLabel(activeCommentTarget)}`,
+        title: tr("Comment on {target}", {
+          target: formatReviewSelectedRangeLabel(activeCommentTarget),
+        }),
         onOpenComment: openReviewCommentSheet,
       }
     : pendingRange
-      ? { title: "Select range end", onOpenComment: null }
+      ? { title: tr("Select range end"), onOpenComment: null }
       : null;
 
   const onPressLine = (

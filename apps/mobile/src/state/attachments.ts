@@ -1,4 +1,5 @@
 import { createAttachmentEnvironmentAtoms } from "@t3tools/client-runtime/state/attachments";
+import { tr } from "@t3tools/shared/i18n";
 import type { AtomCommand } from "@t3tools/client-runtime/state/runtime";
 import {
   AuthOrchestrationOperateScope,
@@ -21,7 +22,7 @@ function requireAttachmentWriteAccess<W extends { readonly environmentId: Enviro
         return AsyncResult.failure(
           Cause.fail(
             new EnvironmentAuthorizationError({
-              message: "This connection cannot change attachments.",
+              message: tr("This connection cannot change attachments."),
               requiredScope: AuthOrchestrationOperateScope,
             }),
           ),

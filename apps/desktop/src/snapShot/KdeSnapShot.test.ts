@@ -3,6 +3,7 @@ import * as NodeFSP from "node:fs/promises";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import { afterEach, beforeEach, expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 const execute = vi.hoisted(() => vi.fn());
 const startEffects = vi.hoisted(() => vi.fn());
@@ -72,9 +73,15 @@ it("does not mistake installed files for KDE authorization, or fall back to a pi
   denial = true;
   expect(await setup.state()).toMatchObject({
     status: "error",
-    message: expect.stringContaining("Reinstall"),
+    message: expect.stringContaining(
+      tr(
+        "KDE hasn't granted capture access. Reinstall the capture helper in setup, then try again.",
+      ),
+    ),
   });
-  await expect(captureKdeWindow(paths)).rejects.toThrow("Settings → SnapShots");
+  await expect(captureKdeWindow(paths)).rejects.toThrow(
+    tr("{state} Open Settings \u2192 SnapShots to continue setup.", { state: "" }),
+  );
   expect(execute.mock.calls.some(([, args]) => args[0] === "capture")).toBe(false);
 });
 
@@ -123,18 +130,28 @@ it("does not report a successful install when the registry cannot be refreshed",
   execute.mockImplementation((_file, _args, _options, callback) =>
     callback(new Error("Failed"), "", "Failed to rebuild registry"),
   );
-  await expect(setup.perform("install-kde-helper")).rejects.toThrow("KDE couldn't register");
+  await expect(setup.perform("install-kde-helper")).rejects.toThrow(
+    tr(
+      "KDE couldn't register the capture helper. Make sure KDE's service tools (kbuildsycoca6) are installed, then reinstall the helper.",
+    ),
+  );
 });
 
 it("refuses symlink destinations and unrelated desktop entries", async () => {
   const { desktop, executable } = kdeCapturePaths(paths);
   await NodeFSP.mkdir(NodePath.dirname(desktop), { recursive: true });
   await NodeFSP.writeFile(desktop, "[Desktop Entry]\nName=Unrelated");
-  await expect(setup.perform("install-kde-helper")).rejects.toThrow("Another desktop entry");
+  await expect(setup.perform("install-kde-helper")).rejects.toThrow(
+    tr("Another desktop entry uses the capture helper's name. Rename it before continuing."),
+  );
   await NodeFSP.unlink(desktop);
   await NodeFSP.mkdir(NodePath.dirname(executable), { recursive: true });
   await NodeFSP.symlink(paths.bundle, executable);
-  await expect(setup.perform("install-kde-helper")).rejects.toThrow("regular files");
+  await expect(setup.perform("install-kde-helper")).rejects.toThrow(
+    tr(
+      "Capture helper files must be regular files. Remove the conflicting link before trying again.",
+    ),
+  );
   expect(await NodeFSP.readFile(paths.bundle, "utf8")).toBe("bundled executable");
 });
 

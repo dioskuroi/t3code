@@ -1,4 +1,5 @@
 import type { ToolLifecycleItemType } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -30,7 +31,7 @@ export function isJavaScriptReplTool(toolName: string | null | undefined): boole
 
 export const COMPUTER_USE_TOOL_SOURCE = {
   key: "computer-use",
-  name: "Computer Use",
+  name: tr("Computer Use"),
   kind: "computer",
 } as const;
 
@@ -58,11 +59,13 @@ export function dynamicToolTitle(
     return (
       asTrimmedString(asRecord(input)?.title) ??
       meaningfulTitle ??
-      (dynamicToolSurface(toolName, input) === "computer" ? "Computer use" : "Run JavaScript")
+      (dynamicToolSurface(toolName, input) === "computer"
+        ? tr("Computer use")
+        : tr("Run JavaScript"))
     );
   }
   const skill = claudeSkillInvocation(toolName, input);
-  return skill === undefined ? undefined : `Skill: ${skill.name}`;
+  return skill === undefined ? undefined : tr("Skill: {skill}", { skill: skill.name });
 }
 
 function recordHasKeys(
@@ -366,30 +369,30 @@ export function formatSearchToolLabel(
   const glob = firstInputString(input, SEARCH_GLOB_KEYS);
   const target = searchTargetName(firstInputString(input, SEARCH_TARGET_KEYS));
   if (query && target) {
-    return `Searched ${query} in ${target}`;
+    return tr("Searched {query} in {target}", { query: query, target: target });
   }
   if (glob && target) {
-    return `Searched files ${glob} in ${target}`;
+    return tr("Searched files {glob} in {target}", { glob: glob, target: target });
   }
   if (glob) {
-    return `Searched files ${glob}`;
+    return tr("Searched files {glob}", { glob: glob });
   }
   if (query) {
-    return `Searched ${query}`;
+    return tr("Searched {query}", { query: query });
   }
   if (target) {
-    return `Searched in ${target}`;
+    return tr("Searched in {target}", { target: target });
   }
   return undefined;
 }
 
 export function formatReadToolLabel(path: string, extraCount = 0): string {
   const trimmed = path.trim();
-  const suffix = extraCount > 0 ? ` +${extraCount} more` : "";
+  const suffix = extraCount > 0 ? tr(" +{extraCount} more", { extraCount: extraCount }) : "";
   if (!trimmed) {
-    return `Read file${suffix}`;
+    return tr("Read file{suffix}", { suffix: suffix });
   }
-  return `Read ${trimmed}${suffix}`;
+  return tr("Read {trimmed}{suffix}", { trimmed: trimmed, suffix: suffix });
 }
 
 export interface ToolActivityPresentationInput {
@@ -410,7 +413,7 @@ export function deriveToolActivityPresentation(
 ): ToolActivityPresentation {
   const title = asTrimmedString(input.title);
   const detail = stripTrailingExitCode(asTrimmedString(input.detail));
-  const fallbackSummary = asTrimmedString(input.fallbackSummary) ?? "Tool";
+  const fallbackSummary = asTrimmedString(input.fallbackSummary) ?? tr("Tool");
   const data = asRecord(input.data);
   const command = extractToolCommand(data, title);
   const primaryPath = extractPrimaryPath(data);
@@ -422,7 +425,7 @@ export function deriveToolActivityPresentation(
 
   if (action === "command") {
     return {
-      summary: "Ran command",
+      summary: tr("Ran command"),
       ...(command ? { detail: command } : {}),
     };
   }
@@ -434,13 +437,13 @@ export function deriveToolActivityPresentation(
       };
     }
     return {
-      summary: "Read file",
+      summary: tr("Read file"),
     };
   }
 
   if (action === "file_change") {
     return {
-      summary: "Changed files",
+      summary: tr("Changed files"),
       ...(primaryPath ? { detail: primaryPath } : {}),
     };
   }
@@ -451,7 +454,7 @@ export function deriveToolActivityPresentation(
       return { summary: searchLabel };
     }
     return {
-      summary: "Searched files",
+      summary: tr("Searched files"),
     };
   }
 

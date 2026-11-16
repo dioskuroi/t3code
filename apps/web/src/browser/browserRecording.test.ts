@@ -4,6 +4,7 @@ import {
   ThreadId,
   type DesktopPreviewBridge,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 const {
@@ -185,7 +186,10 @@ describe("browser recording", () => {
     await expect(stopBrowserRecording("recording-tab")).rejects.toMatchObject({
       operation: "cleanup",
       tabId: "recording-tab",
-      message: "Browser recording operation cleanup failed for tab recording-tab.",
+      message: tr("Browser recording operation {operation} failed for tab {tabId}.", {
+        operation: "cleanup",
+        tabId: "recording-tab",
+      }),
     });
     expect(stopTrack).toHaveBeenCalledOnce();
   });
@@ -199,7 +203,10 @@ describe("browser recording", () => {
       operation: "capture-media-stream",
       tabId: "recording-tab",
       cause,
-      message: "Browser recording operation capture-media-stream failed for tab recording-tab.",
+      message: tr("Browser recording operation {operation} failed for tab {tabId}.", {
+        operation: "capture-media-stream",
+        tabId: "recording-tab",
+      }),
     });
 
     expect(stopScreencast).toHaveBeenCalledWith("recording-tab");

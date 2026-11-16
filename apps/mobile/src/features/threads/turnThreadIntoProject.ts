@@ -3,6 +3,7 @@ import {
   runAtomCommand,
   squashAtomCommandFailure,
 } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
 import { AuthOrchestrationOperateScope } from "@t3tools/contracts";
 import * as Haptics from "expo-haptics";
@@ -28,9 +29,9 @@ export function canTurnThreadIntoProject(thread: EnvironmentThreadShell): boolea
 }
 
 export async function turnThreadIntoProject(thread: EnvironmentThreadShell): Promise<void> {
-  const title = "Could not turn thread into a project";
+  const title = tr("Could not turn thread into a project");
   if (!readEnvironmentScope(thread.environmentId, AuthOrchestrationOperateScope)) {
-    Dialog.alert(title, "This connection cannot change threads.");
+    Dialog.alert(title, tr("This connection cannot change threads."));
     return;
   }
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -42,6 +43,6 @@ export async function turnThreadIntoProject(thread: EnvironmentThreadShell): Pro
   );
   if (result._tag === "Failure" && !isAtomCommandInterrupted(result)) {
     const error = squashAtomCommandFailure(result);
-    Dialog.alert(title, error instanceof Error ? error.message : "Try again.");
+    Dialog.alert(title, error instanceof Error ? error.message : tr("Try again."));
   }
 }

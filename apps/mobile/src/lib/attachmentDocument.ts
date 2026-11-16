@@ -1,4 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { Atom, AsyncResult } from "effect/reactivity";
 import { settlePromise, squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
 import * as Dialog from "../components/ui/Dialog";
@@ -45,7 +46,7 @@ async function readAttachmentText(key: AttachmentTextKey, signal: AbortSignal) {
       key.environmentId === null
         ? null
         : await refreshAssetUrl(key.environmentId, key.resource, signal);
-    if (!refreshed) throw new Error("Reconnect to this environment and try again.");
+    if (!refreshed) throw new Error(tr("Reconnect to this environment and try again."));
     target = refreshed;
   }
   const response = await fetch(target, {
@@ -133,7 +134,7 @@ export function useAttachmentDocument(input: {
   );
   const content = AsyncResult.isSuccess(text) ? text.value : null;
   const contentError = AsyncResult.isFailure(text)
-    ? (Option.getOrNull(AsyncResult.error(text))?.message ?? "Could not read this file.")
+    ? (Option.getOrNull(AsyncResult.error(text))?.message ?? tr("Could not read this file."))
     : null;
   const table = content && delimiter ? parseDelimitedPreview(content.text, delimiter) : null;
   const presentation = attachmentDocumentPresentation({
@@ -143,9 +144,10 @@ export function useAttachmentDocument(input: {
     rendered,
   });
   const error = attachment
-    ? localPreview.error && (localPreview.error.message || "The local file is unavailable.")
+    ? localPreview.error && (localPreview.error.message || tr("The local file is unavailable."))
     : AsyncResult.isFailure(remote)
-      ? (Option.getOrNull(AsyncResult.error(remote))?.message ?? "The attachment is unavailable.")
+      ? (Option.getOrNull(AsyncResult.error(remote))?.message ??
+        tr("The attachment is unavailable."))
       : null;
   const share = async () => {
     if (!uri || sharing) return;
@@ -166,8 +168,8 @@ export function useAttachmentDocument(input: {
     if (AsyncResult.isFailure(result)) {
       const cause = squashAtomCommandFailure(result);
       Dialog.alert(
-        "Could not share file",
-        cause instanceof Error ? cause.message : "Please try again.",
+        tr("Could not share file"),
+        cause instanceof Error ? cause.message : tr("Please try again."),
       );
     }
   };

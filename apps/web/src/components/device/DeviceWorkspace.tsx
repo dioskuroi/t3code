@@ -1,5 +1,6 @@
 import * as Schema from "effect/Schema";
 import type { DeviceHostSummary, DeviceSummary, EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { useRef, useState } from "react";
 import {
   captureDeviceScreenshot,
@@ -65,7 +66,7 @@ export function DeviceWorkspace(props: {
         if (isDeviceScreenshotError(cause) && cause.status === 401)
           refreshDeviceHubAccess(props.environmentId);
         setScreenshotError(
-          cause instanceof Error ? cause.message : "Screenshot capture failed. Try again.",
+          cause instanceof Error ? cause.message : tr("Screenshot capture failed. Try again."),
         );
       })
       .finally(() => {

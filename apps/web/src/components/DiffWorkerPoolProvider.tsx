@@ -1,4 +1,5 @@
 import { WorkerPoolContext, useWorkerPool } from "@pierre/diffs/react";
+import { tr } from "@t3tools/shared/i18n";
 import { WorkerPoolManager } from "@pierre/diffs/worker";
 import DiffsWorker from "@pierre/diffs/worker/worker.js?worker";
 import * as Schema from "effect/Schema";
@@ -115,7 +116,7 @@ function DiffWorkerReady({ children }: { children?: ReactNode }) {
       role="status"
       className="flex min-h-0 flex-1 items-center justify-center p-4 text-xs text-muted-foreground"
     >
-      Loading code...
+      {tr("Loading code...")}
     </div>
   );
 }

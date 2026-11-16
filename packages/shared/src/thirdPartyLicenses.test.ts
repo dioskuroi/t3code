@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 
+import { tr } from "./i18n.ts";
 import {
   decodeThirdPartyLicenseManifest,
   thirdPartyLicenseEntryKey,
@@ -34,7 +35,7 @@ describe("third-party license manifests", () => {
         schemaVersion: 1,
         entries: [{ ...ENTRIES[0]!, sourceUrl: "javascript:alert(1)" }],
       }),
-    ).toThrow("invalid shape");
+    ).toThrow(tr("License entry {index} has an invalid shape.", { index: 1 }));
   });
 
   it("uses distinct navigation keys when names and versions contain delimiters", () => {

@@ -150,11 +150,9 @@ describe("resolveSearchUrlTemplate", () => {
 
 describe("normalizePreviewUrl", () => {
   it("tells agents how to open a blank tab and which URLs are accepted", () => {
-    expect(() => normalizePreviewUrl("about:blank")).toThrow(
-      /preview_open, omit url when creating a new tab[^.]*blank tab/i,
-    );
-    expect(() => normalizePreviewUrl("about:blank")).toThrow(/http\(s\)/i);
-    expect(() => normalizePreviewUrl("about:blank")).toThrow(/schemeless host/i);
+    expect(() => normalizePreviewUrl("about:blank")).toThrow(/preview_open[^。]*空白页/);
+    expect(() => normalizePreviewUrl("about:blank")).toThrow(/http 或 https/);
+    expect(() => normalizePreviewUrl("about:blank")).toThrow(/不带协议的主机/);
   });
 
   it("rejects unparseable input without retaining credentials or tokens", () => {

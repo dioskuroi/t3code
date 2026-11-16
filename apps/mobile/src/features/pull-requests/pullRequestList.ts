@@ -1,4 +1,5 @@
 import { pullRequestFilterProjects } from "@t3tools/client-runtime/pull-request-project-filter";
+import { tr } from "@t3tools/shared/i18n";
 import { parsePullRequestQuery } from "@t3tools/client-runtime/pull-request-query";
 import {
   ProjectId,
@@ -467,29 +468,29 @@ export function pullRequestListReviewStatus(
 ) {
   if (entry.reviewDecision === "changes-requested")
     return {
-      label: "Changes",
-      accessibleLabel: "Changes requested",
+      label: tr("Changes"),
+      accessibleLabel: tr("Changes requested"),
       icon: "person.fill.xmark",
       tint: "accent-danger-foreground",
     } as const;
   if (entry.reviewDecision === "approved")
     return {
-      label: "Approved",
-      accessibleLabel: "Reviews approved",
+      label: tr("Approved"),
+      accessibleLabel: tr("Reviews approved"),
       icon: "person.fill.checkmark",
       tint: "accent-adaptive-emerald-600-400",
     } as const;
   if (entry.viewerReviewRequested)
     return {
-      label: "Your review",
-      accessibleLabel: "Your review requested",
+      label: tr("Your review"),
+      accessibleLabel: tr("Your review requested"),
       icon: "person.badge.clock",
       tint: "accent-warning-foreground",
     } as const;
   if (entry.reviewDecision === "review-required")
     return {
-      label: "Review",
-      accessibleLabel: "Review required",
+      label: tr("Review"),
+      accessibleLabel: tr("Review required"),
       icon: "person.badge.clock",
       tint: "accent-icon-muted",
     } as const;

@@ -1,4 +1,5 @@
 import type { ThreadReferenceCopyTarget } from "@t3tools/client-runtime/thread-reference";
+import { tr } from "@t3tools/shared/i18n";
 import {
   COMPOSER_CONTEXT_CLIPBOARD_MIME,
   encodeComposerContextFragment,
@@ -27,7 +28,7 @@ export async function copyThreadReference(target: ThreadReferenceCopyTarget): Pr
       stackedThreadToast({
         type: "error",
         title: target.failureTitle,
-        description: error instanceof Error ? error.message : "An error occurred.",
+        description: error instanceof Error ? error.message : tr("An error occurred."),
       }),
     );
   }

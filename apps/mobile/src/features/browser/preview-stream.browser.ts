@@ -8,6 +8,7 @@ import {
   type PreviewStreamPointer,
   type PreviewStreamViewport,
 } from "@t3tools/client-runtime/preview/server-browser-stream";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { PreviewStreamConfiguration, PreviewStreamMessage } from "./preview-stream-document";
 
@@ -74,14 +75,14 @@ export function start(configuration: PreviewStreamConfiguration) {
   const container = document.createElement("div");
   const canvas = document.createElement("canvas");
   canvas.setAttribute("role", "img");
-  canvas.setAttribute("aria-label", "Browser page");
+  canvas.setAttribute("aria-label", tr("Browser page"));
   const agentCursor = document.createElement("div");
   agentCursor.className = "agent-cursor";
   agentCursor.setAttribute("aria-hidden", "true");
   agentCursor.innerHTML = AGENT_CURSOR_SVG;
   container.append(canvas, agentCursor);
   const input = document.createElement("textarea");
-  input.setAttribute("aria-label", "Browser page input");
+  input.setAttribute("aria-label", tr("Browser page input"));
   input.autocapitalize = "off";
   input.autocomplete = "off";
   input.spellcheck = false;
@@ -650,7 +651,7 @@ export function start(configuration: PreviewStreamConfiguration) {
       return;
     }
     if (element.readyState === HTMLMediaElement.HAVE_NOTHING) {
-      reportPictureInPicture("The page has not shown yet. Try again in a moment.");
+      reportPictureInPicture(tr("The page has not shown yet. Try again in a moment."));
       return;
     }
     // The page may have changed since the video's last frame. WebKit captures only on a draw.
@@ -659,7 +660,7 @@ export function start(configuration: PreviewStreamConfiguration) {
     const fail = (error: unknown) => {
       element.pause();
       reportPictureInPicture(
-        error instanceof Error ? error.message : "Picture in picture is unavailable.",
+        error instanceof Error ? error.message : tr("Picture in picture is unavailable."),
       );
     };
     if (document.pictureInPictureEnabled) {

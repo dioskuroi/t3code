@@ -1,4 +1,5 @@
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
+import { tr } from "@t3tools/shared/i18n";
 import {
   generateSpreadPinOrderKeys,
   pinOrderKeyBetween,
@@ -227,7 +228,7 @@ export function createPendingThreadOrder(input: {
   readonly assignments: readonly { readonly id: string; readonly orderKey: string }[];
 }): PendingThreadOrder {
   const orderedIds = threadOrderAfterMove(input.ordered.map(rowId), input.movedId, input.direction);
-  if (orderedIds === null) throw new Error("Cannot begin an invalid thread move");
+  if (orderedIds === null) throw new Error(tr("Cannot begin an invalid thread move"));
   return {
     section: input.section,
     orderedIds,
@@ -289,10 +290,10 @@ export type ThreadDragSection = "pinned" | "active" | "snoozed" | "settled";
 
 export function threadDragAction(source: ThreadDragSection, destination: ThreadDragSection) {
   if (destination === "snoozed") return null;
-  if (destination === "settled") return source === "settled" ? null : "Settle";
-  if (source === destination) return "Reorder";
-  if (destination === "pinned") return "Pin";
-  if (source === "pinned") return "Unpin";
-  if (source === "settled") return "Unsettle";
-  return "Unsnooze";
+  if (destination === "settled") return source === "settled" ? null : tr("Settle");
+  if (source === destination) return tr("Reorder");
+  if (destination === "pinned") return tr("Pin");
+  if (source === "pinned") return tr("Unpin");
+  if (source === "settled") return tr("Unsettle");
+  return tr("Unsnooze");
 }

@@ -1,4 +1,5 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { AsyncResult } from "effect/reactivity";
 import { useAdaptiveWorkspaceLayout } from "../layout/adaptive-workspace-context";
 import { Platform, View } from "react-native";
@@ -37,7 +38,7 @@ export function SettingsNavigationRouteScreen() {
   const ready = customizable && AsyncResult.isSuccess(preferences) && !preferences.waiting;
   const save = useAtomSet(updateMobilePreferencesAtom);
   return (
-    <SettingsScreen title="Navigation tabs">
+    <SettingsScreen title={tr("Navigation tabs")}>
       <ScreenScrollView
         contentInsetAdjustmentBehavior="automatic"
         contentContainerClassName="gap-4 px-5 pt-4"
@@ -45,10 +46,14 @@ export function SettingsNavigationRouteScreen() {
       >
         <Text className="px-2 text-sm text-foreground-muted">
           {customizable
-            ? "Phones show the first four enabled sections; Android tablet rails show all enabled sections. Remaining sections appear at the top of Settings. Hidden sections appear only here. Settings always stays last. Saved on this device."
-            : "Tab customization becomes available when there are six sections, including Settings."}
+            ? tr(
+                "Phones show the first four enabled sections; Android tablet rails show all enabled sections. Remaining sections appear at the top of Settings. Hidden sections appear only here. Settings always stays last. Saved on this device.",
+              )
+            : tr(
+                "Tab customization becomes available when there are six sections, including Settings.",
+              )}
         </Text>
-        <SettingsSection title="Tab order">
+        <SettingsSection title={tr("Tab order")}>
           {order.map((tab, index) => (
             <View key={tab} className="flex-row items-center gap-3 px-4 py-3">
               <SymbolView
@@ -60,15 +65,15 @@ export function SettingsNavigationRouteScreen() {
                 <Text>{WORKSPACE_TAB_LABELS[tab]}</Text>
                 <Text className="text-xs text-foreground-muted">
                   {hidden.includes(tab)
-                    ? "Hidden"
+                    ? tr("Hidden")
                     : enabled.indexOf(tab) < capacity
                       ? `Tab ${enabled.indexOf(tab) + 1}`
-                      : "In Settings"}
+                      : tr("In Settings")}
                 </Text>
               </View>
               <IconButton
                 icon={hidden.includes(tab) ? "eye.slash" : "eye"}
-                accessibilityLabel={`${hidden.includes(tab) ? "Show" : "Hide"} ${WORKSPACE_TAB_LABELS[tab]}`}
+                accessibilityLabel={`${hidden.includes(tab) ? tr("Show") : tr("Hide")} ${WORKSPACE_TAB_LABELS[tab]}`}
                 disabled={!ready}
                 onPress={() =>
                   save({
@@ -83,7 +88,7 @@ export function SettingsNavigationRouteScreen() {
               />
               <IconButton
                 icon="arrow.up"
-                accessibilityLabel={`Move ${WORKSPACE_TAB_LABELS[tab]} up`}
+                accessibilityLabel={tr("Move {label} up", { label: WORKSPACE_TAB_LABELS[tab] })}
                 disabled={!ready || index === 0}
                 onPress={() =>
                   save({
@@ -99,7 +104,7 @@ export function SettingsNavigationRouteScreen() {
               />
               <IconButton
                 icon="arrow.down"
-                accessibilityLabel={`Move ${WORKSPACE_TAB_LABELS[tab]} down`}
+                accessibilityLabel={tr("Move {label} down", { label: WORKSPACE_TAB_LABELS[tab] })}
                 disabled={!ready || index === order.length - 1}
                 onPress={() =>
                   save({
@@ -117,7 +122,7 @@ export function SettingsNavigationRouteScreen() {
           ))}
         </SettingsSection>
         <Button
-          label="Reset tabs"
+          label={tr("Reset tabs")}
           tone="text"
           disabled={!ready}
           onPress={() => save({ navigationTabOrder: [], hiddenNavigationTabs: [] })}

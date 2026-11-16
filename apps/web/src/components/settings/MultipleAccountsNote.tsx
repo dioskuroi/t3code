@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentId, ProviderDriverKind } from "@t3tools/contracts";
 import { InfoIcon } from "lucide-react";
 
@@ -9,8 +10,8 @@ const MULTIPLE_ACCOUNTS_FAQ_URL =
   "https://github.com/pingdotgg/t3code/blob/main/docs/user/faq.md#can-i-add-a-bunch-of-accounts-for-one-provider";
 
 const PROVIDER_NAMES = new Map<string, string>([
-  ["codex", "Codex"],
-  ["claudeAgent", "Claude"],
+  ["codex", tr("Codex")],
+  ["claudeAgent", tr("Claude")],
 ]);
 
 /** Shown while adding a Claude or Codex account when the environment already has one signed in. */
@@ -34,14 +35,16 @@ export function MultipleAccountsNote({
       <InfoIcon aria-hidden />
       <AlertDescription>
         <p>
-          We do not recommend managing multiple {providerName} accounts in T3 Code.{" "}
+          {tr("We do not recommend managing multiple {provider} accounts in T3 Code.", {
+            provider: providerName,
+          })}{" "}
           <a
             href={MULTIPLE_ACCOUNTS_FAQ_URL}
             target="_blank"
             rel="noreferrer"
             className="underline underline-offset-2 hover:text-foreground"
           >
-            More info
+            {tr("More info")}
           </a>
         </p>
       </AlertDescription>

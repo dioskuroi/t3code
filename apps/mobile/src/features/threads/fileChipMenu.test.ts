@@ -1,4 +1,5 @@
 import { ThreadId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import {
@@ -9,8 +10,8 @@ import {
 } from "./fileChipMenu";
 
 it("copies native paths from a relative file chip in a Windows workspace", () => {
-  const target = resolveFileChipTarget("reports/Device Users.csv", "C:/repo");
-  if (!target) throw new Error("File-chip target unavailable");
+  const target = resolveFileChipTarget("reports/Device Users.csv", tr("C:/repo"));
+  if (!target) throw new Error(tr("File-chip target unavailable"));
   expect(fileChipClipboardPath(target, "copy-full-path")).toBe(
     String.raw`C:\repo\reports\Device Users.csv`,
   );
@@ -71,7 +72,7 @@ describe("file chip downloads", () => {
     const target = resolveFileChipTarget(href, "/repo")!;
     expect(fileChipMenu(target).actions).toContainEqual({
       id: "save",
-      title: "Save or share",
+      title: tr("Save or share"),
     });
     expect(fileChipShareSource(target, threadId)).toEqual({
       name: path.split("/").at(-1),

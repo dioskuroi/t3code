@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { useAuth } from "@clerk/react";
 import { findErrorTraceId } from "@t3tools/client-runtime/errors";
 import {
@@ -85,18 +86,23 @@ export function useCloudLinkController(environmentId: EnvironmentId | null) {
   const [tunnelLimit, setTunnelLimit] = useState<number | null>(null);
 
   const reportUpdateFailure = (cause: unknown) => {
-    const message = cause instanceof Error ? cause.message : "Could not update T3 Connect access.";
+    const message =
+      cause instanceof Error ? cause.message : tr("Could not update T3 Connect access.");
     const traceId = findErrorTraceId(cause);
     console.error("[t3-connect] Could not update T3 Connect", { message, traceId, cause });
-    setOperationError(traceId ? `${message} Trace ID: ${traceId}` : message);
+    setOperationError(
+      traceId
+        ? tr("{message} Trace ID: {traceId}", { message: message, traceId: traceId })
+        : message,
+    );
     toastManager.add({
       type: "error",
-      title: "Could not update T3 Connect",
+      title: tr("Could not update T3 Connect"),
       description: message,
       data: traceId
         ? {
             secondaryActionProps: {
-              children: "Copy trace ID",
+              children: tr("Copy trace ID"),
               onClick: () => void navigator.clipboard?.writeText(traceId),
             },
           }
@@ -128,7 +134,7 @@ export function useCloudLinkController(environmentId: EnvironmentId | null) {
         !readEnvironmentScope(environmentId, AuthRelayWriteScope)
       ) {
         reportUpdateFailure(
-          new Error("This connection needs permission to view and manage T3 Connect settings."),
+          new Error(tr("This connection needs permission to view and manage T3 Connect settings.")),
         );
         return false;
       }
@@ -137,7 +143,9 @@ export function useCloudLinkController(environmentId: EnvironmentId | null) {
     const readLinkState = () => {
       const state = readCachedCloudLinkState(target);
       if (state === null) {
-        reportUpdateFailure(new Error("Wait until the current T3 Connect settings can be read."));
+        reportUpdateFailure(
+          new Error(tr("Wait until the current T3 Connect settings can be read.")),
+        );
       }
       return state;
     };
@@ -171,7 +179,7 @@ export function useCloudLinkController(environmentId: EnvironmentId | null) {
       }
       const clerkToken = tokenResult.value;
       if (!clerkToken) {
-        reportUpdateFailure(new Error("Sign in to T3 Connect before enabling this."));
+        reportUpdateFailure(new Error(tr("Sign in to T3 Connect before enabling this.")));
         return false;
       }
       const currentManagedTunnel = isManagedTunnelActive(currentLinkState, relayProviderKind);

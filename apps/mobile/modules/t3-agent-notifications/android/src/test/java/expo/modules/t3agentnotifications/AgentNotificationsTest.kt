@@ -314,8 +314,8 @@ class AgentNotificationsTest : AgentNotificationsFixture() {
     )
     AgentNotifications.receive(context, data)
     val card = manager.activeNotifications.single().notification
-    assertEquals("1 needs you", card.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-    assertEquals("8 active", card.extras.getString(Notification.EXTRA_SUB_TEXT))
+    assertEquals("1 项需要你处理", card.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+    assertEquals("8 个活跃", card.extras.getString(Notification.EXTRA_SUB_TEXT))
     assertEquals(
       "Approval $title · Project\nWorking Another thread · Other project",
       card.extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString()
@@ -324,12 +324,12 @@ class AgentNotificationsTest : AgentNotificationsFixture() {
       "Approval $title · Project",
       card.extras.getCharSequence(Notification.EXTRA_TEXT).toString()
     )
-    assertEquals(listOf("Approve", "Dismiss"), card.actions.map { it.title.toString() })
+    assertEquals(listOf("批准", "忽略"), card.actions.map { it.title.toString() })
     assertEquals(
       "t3code-dev://threads/environment/thread",
       shadowOf(card.actions[0].actionIntent).savedIntent.dataString
     )
-    assertEquals("Approve", card.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
+    assertEquals("批准", card.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
 
     AgentNotifications.receive(
       context,
@@ -340,13 +340,13 @@ class AgentNotificationsTest : AgentNotificationsFixture() {
       )
     )
     val next = manager.activeNotifications.single().notification
-    assertEquals("2 need you", next.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-    assertEquals("Answer", next.actions[0].title.toString())
+    assertEquals("2 项需要你处理", next.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+    assertEquals("回答", next.actions[0].title.toString())
     assertEquals(
       "t3code-dev://threads/another-environment/another-thread",
       shadowOf(next.actions[0].actionIntent).savedIntent.dataString
     )
-    assertEquals("Answer", next.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
+    assertEquals("回答", next.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
   }
 
   @Test
@@ -390,7 +390,7 @@ class AgentNotificationsTest : AgentNotificationsFixture() {
       working.extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString()
     )
     assertEquals(null, working.extras.getString(Notification.EXTRA_SUB_TEXT))
-    assertEquals("Working", working.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
+    assertEquals("工作中", working.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
     assertFalse(working.extras.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER))
     for (phase in listOf(
       "waiting_for_approval",
@@ -432,7 +432,7 @@ class AgentNotificationsTest : AgentNotificationsFixture() {
     )
     val card = manager.activeNotifications.single().notification
     assertEquals("Choose an icon", card.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-    assertEquals("Answer", card.actions.first().title.toString())
+    assertEquals("回答", card.actions.first().title.toString())
     assertEquals(2, card.actions.size)
     assertFalse(card.extras.getBoolean(Notification.EXTRA_SHOW_CHRONOMETER))
   }
@@ -448,16 +448,16 @@ class AgentNotificationsTest : AgentNotificationsFixture() {
     )
     AgentNotifications.receive(context, data)
     val card = manager.activeNotifications.single().notification
-    assertEquals("2 live", card.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
-    assertEquals("2 working", card.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
-    assertEquals("Project · 2 active", card.extras.getString(Notification.EXTRA_SUB_TEXT))
+    assertEquals("2 个活跃", card.extras.getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT))
+    assertEquals("2 个进行中", card.extras.getCharSequence(Notification.EXTRA_TITLE).toString())
+    assertEquals("Project · 2 个活跃", card.extras.getString(Notification.EXTRA_SUB_TEXT))
     assertEquals(
       "Working Build feature\nDone Write tests",
       card.extras.getCharSequence(Notification.EXTRA_BIG_TEXT).toString()
     )
     AgentNotifications.receive(context, data + ("activity_active_count" to "15"))
     assertEquals(
-      "9+ live",
+      "9+ 个活跃",
       manager.activeNotifications.single().notification.extras
         .getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT)
     )
@@ -473,10 +473,10 @@ class AgentNotificationsTest : AgentNotificationsFixture() {
     )
     val finished = manager.activeNotifications.single().notification
     assertEquals(
-      "Finished, 1 failed",
+      "已结束，1 个失败",
       finished.extras.getCharSequence(Notification.EXTRA_TITLE).toString()
     )
-    assertEquals("Project · 2 threads", finished.extras.getString(Notification.EXTRA_SUB_TEXT))
+    assertEquals("Project · 2 个 Thread", finished.extras.getString(Notification.EXTRA_SUB_TEXT))
   }
 
   private fun assertTimeout(card: Notification, expected: LongRange) {
@@ -570,7 +570,7 @@ class AgentNotificationsTest : AgentNotificationsFixture() {
     lifecycle.currentState = Lifecycle.State.RESUMED
     AgentNotifications.receive(context, update("work", true))
     assertEquals(
-      "Active",
+      "活跃",
       manager.activeNotifications.single().notification.extras
         .getString(NotificationCompat.EXTRA_SHORT_CRITICAL_TEXT)
     )

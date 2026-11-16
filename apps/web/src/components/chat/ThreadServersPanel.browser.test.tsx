@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ThreadId, type DiscoveredLocalServer } from "@t3tools/contracts";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";
@@ -34,15 +35,15 @@ it("pages servers four at a time, collapses back, and resets on thread switch", 
   const expectRows = (rows: number) => vi.waitFor(() => expect(count("li")).toBe(rows));
 
   await expectRows(4);
-  await page.getByRole("button", { name: "Show 4 more" }).click();
+  await page.getByRole("button", { name: tr("Show {count} more", { count: 4 }) }).click();
   await expectRows(8);
   expect(count("[data-thread-details-server-overflow]")).toBe(4);
-  await page.getByRole("button", { name: "Show 2 more" }).click();
+  await page.getByRole("button", { name: tr("Show {count} more", { count: 2 }) }).click();
   await expectRows(10);
-  await page.getByRole("button", { name: "Show less" }).click();
+  await page.getByRole("button", { name: tr("Show less") }).click();
   await expectRows(4);
 
-  await page.getByRole("button", { name: "Show 4 more" }).click();
+  await page.getByRole("button", { name: tr("Show {count} more", { count: 4 }) }).click();
   await expectRows(8);
   await screen.rerender(panel("b"));
   await expectRows(4);

@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 export interface ThirdPartyLicenseEntry {
   readonly bundles: ReadonlyArray<string>;
   readonly kind: "custom" | "package";
@@ -33,7 +34,7 @@ function isHttpUrl(value: unknown): value is string {
 
 function decodeEntry(value: unknown, index: number): ThirdPartyLicenseEntry {
   if (!isRecord(value)) {
-    throw new Error(`License entry ${String(index + 1)} is not an object.`);
+    throw new Error(tr("License entry {index} is not an object.", { index: String(index + 1) }));
   }
   if (
     !isStringArray(value.bundles) ||
@@ -45,7 +46,9 @@ function decodeEntry(value: unknown, index: number): ThirdPartyLicenseEntry {
     (value.sourceUrl !== null && !isHttpUrl(value.sourceUrl)) ||
     (value.version !== null && typeof value.version !== "string")
   ) {
-    throw new Error(`License entry ${String(index + 1)} has an invalid shape.`);
+    throw new Error(
+      tr("License entry {index} has an invalid shape.", { index: String(index + 1) }),
+    );
   }
   return {
     bundles: value.bundles,
@@ -60,14 +63,16 @@ function decodeEntry(value: unknown, index: number): ThirdPartyLicenseEntry {
 
 export function decodeThirdPartyLicenseManifest(value: unknown): ThirdPartyLicenseManifest {
   if (!isRecord(value) || value.schemaVersion !== 1 || !Array.isArray(value.entries)) {
-    throw new Error("The open-source license manifest has an unsupported format.");
+    throw new Error(tr("The open-source license manifest has an unsupported format."));
   }
   const entries = value.entries.map(decodeEntry);
   const entryKeys = new Set<string>();
   for (const entry of entries) {
     const key = thirdPartyLicenseEntryKey(entry);
     if (entryKeys.has(key)) {
-      throw new Error(`The open-source license manifest contains a duplicate entry: ${key}`);
+      throw new Error(
+        tr("The open-source license manifest contains a duplicate entry: {key}", { key: key }),
+      );
     }
     entryKeys.add(key);
   }
@@ -97,14 +102,14 @@ export function filterThirdPartyLicenseEntries(
 }
 
 const BUNDLE_LABELS: Readonly<Record<string, string>> = {
-  android: "Android",
-  assets: "Assets",
-  desktop: "Desktop",
-  "device-tools": "Device tools",
+  android: tr("Android"),
+  assets: tr("Assets"),
+  desktop: tr("Desktop"),
+  "device-tools": tr("Device tools"),
   ios: "iOS",
-  mobile: "Mobile",
-  server: "Server",
-  web: "Web",
+  mobile: tr("Mobile"),
+  server: tr("Server"),
+  web: tr("Web"),
 };
 
 export function formatLicenseBundles(bundles: ReadonlyArray<string>): string {

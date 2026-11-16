@@ -9,6 +9,7 @@ import { useResolveClassNames } from "uniwind";
 import { AppText as Text } from "../../components/ui/AppText";
 import { cn } from "../../lib/cn";
 import { EmptyState } from "../../components/ui/EmptyState";
+import { tr } from "@t3tools/shared/i18n";
 
 export function PullRequestReadStatus(props: {
   readonly pending: boolean;
@@ -19,7 +20,7 @@ export function PullRequestReadStatus(props: {
     <AppActivityIndicator className="my-12" colorClassName="accent-icon" />
   ) : props.error ? (
     <EmptyState
-      title={`Couldn't load this ${props.terminology.singular}`}
+      title={tr("Couldn't load this {singular}", { singular: props.terminology.singular })}
       detail={props.error}
       variant="plain"
     />

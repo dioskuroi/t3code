@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import {
   CommonActions,
   useRoute,
@@ -67,8 +68,8 @@ const branchCheckouts = makeNewTaskBranchCheckouts({
     if (!isAtomCommandInterrupted(result)) {
       const error = squashAtomCommandFailure(result);
       Dialog.alert(
-        "Could not switch branch",
-        error instanceof Error ? error.message : "The branch could not be checked out.",
+        tr("Could not switch branch"),
+        error instanceof Error ? error.message : tr("The branch could not be checked out."),
       );
     }
     rootNavigationRef.dispatch({
@@ -201,7 +202,7 @@ export function NewTaskDraftRouteScreen({ route }: StaticScreenProps<NewTaskDraf
       {preparingBranch ? (
         <ThreadScreenFallback header={<AppBar title="New thread" onBack={goBack} />}>
           <View className="flex-1 items-center justify-center bg-screen">
-            <Text className="text-foreground">Switching branch...</Text>
+            <Text className="text-foreground">{tr("Switching branch...")}</Text>
           </View>
         </ThreadScreenFallback>
       ) : (

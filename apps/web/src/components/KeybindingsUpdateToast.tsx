@@ -1,4 +1,5 @@
 import { appAtomRegistry, subscribeAtomChanges } from "../rpc/atomRegistry";
+import { tr } from "@t3tools/shared/i18n";
 import { primaryEnvironmentIdAtom } from "../state/primaryEnvironment";
 import { primaryServerConfigAtom, primaryServerConfigEventAtom } from "../state/server";
 import { KeybindingsConfigWarning } from "./KeybindingsConfigWarning";
@@ -15,8 +16,8 @@ export function startKeybindingsUpdateToasts(): () => void {
     if (decision._tag === "Success") {
       toastManager.add({
         type: "success",
-        title: "Keybindings updated",
-        description: "Keybindings configuration reloaded successfully.",
+        title: tr("Keybindings updated"),
+        description: tr("Keybindings configuration reloaded successfully."),
       });
       return;
     }
@@ -25,7 +26,7 @@ export function startKeybindingsUpdateToasts(): () => void {
     toastManager.add(
       stackedThreadToast({
         type: "warning",
-        title: "Invalid keybindings configuration",
+        title: tr("Invalid keybindings configuration"),
         description: (
           <KeybindingsConfigWarning
             message={decision.message}

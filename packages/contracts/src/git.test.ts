@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import {
   GitCommandError,
@@ -26,7 +27,12 @@ describe("GitCommandError", () => {
 
     expect(error.reason).toBeUndefined();
     expect(error.message).toBe(
-      "Git command failed in GitVcsDriver.createWorktree (/repo): git worktree add failed",
+      tr("Git command failed in {operation} ({cwd}): {detail}{reason}", {
+        operation: "GitVcsDriver.createWorktree",
+        cwd: "/repo",
+        detail: "git worktree add failed",
+        reason: "",
+      }),
     );
   });
 });

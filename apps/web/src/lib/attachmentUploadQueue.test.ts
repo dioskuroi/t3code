@@ -261,7 +261,7 @@ describe("attachmentUploadQueue", () => {
     expect(TestXmlHttpRequest.requests).toHaveLength(0);
     expect(readAttachmentUpload(image.id)).toMatchObject({
       status: "failed",
-      reason: "This connection cannot upload attachments.",
+      reason: "此连接无法上传附件。",
       attachmentId: "pending-revoked",
     });
     retryAttachmentUpload({ environmentId: firstEnvironment, image });
@@ -530,7 +530,7 @@ describe("attachmentUploadQueue", () => {
       await awaitAttachmentUploads([file.id]);
       expect(readAttachmentUpload(file.id)).toMatchObject({
         status: "failed",
-        reason: "Uploaded file could not be verified. Retry when the server reconnects.",
+        reason: "无法验证已上传的文件。请在服务器重新连接后重试。",
       });
       expect(useComposerDraftStore.getState().getComposerDraft(draftId)?.files).toMatchObject([
         {

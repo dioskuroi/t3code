@@ -1,4 +1,5 @@
 import type { RelayEnvironmentStatusResponse } from "@t3tools/contracts/relay";
+import { tr } from "@t3tools/shared/i18n";
 import {
   orchestrationProtocolCompatibilityError,
   type EnvironmentConnectionPhase,
@@ -35,13 +36,13 @@ export function availableCloudEnvironmentPresentation(input: {
       connectionError: null,
       connectionErrorTraceId: null,
       connectionState: "available",
-      statusText: "Available · Relay online",
+      statusText: tr("Available \u00B7 Relay online"),
     };
   }
 
   if (input.status?.status === "offline") {
     const connectionError =
-      relayOfflineReasonMessage(input.status) ?? input.status.error ?? "Relay is offline.";
+      relayOfflineReasonMessage(input.status) ?? input.status.error ?? tr("Relay is offline.");
     return {
       connectionError,
       connectionErrorTraceId: input.status.traceId ?? null,
@@ -64,7 +65,7 @@ export function availableCloudEnvironmentPresentation(input: {
     connectionErrorTraceId: null,
     connectionState: "available",
     statusText: input.isStatusPending
-      ? "Available · Checking relay status..."
-      : "Available · Relay status unknown",
+      ? tr("Available \u00B7 Checking relay status...")
+      : tr("Available \u00B7 Relay status unknown"),
   };
 }

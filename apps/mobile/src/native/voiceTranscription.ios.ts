@@ -1,5 +1,6 @@
 import * as Schema from "effect/Schema";
 import AppleTranscription from "@react-native-ai/apple/src/NativeAppleTranscription";
+import { tr } from "@t3tools/shared/i18n";
 import { File } from "expo-file-system";
 import { Settings } from "react-native";
 
@@ -127,7 +128,7 @@ async function prepareLocale(locale: string, signal: AbortSignal): Promise<strin
 
     throw wrapError(
       "preparation-failed",
-      "Voice transcription could not prepare this language.",
+      tr("Voice transcription could not prepare this language."),
       error,
     );
   }
@@ -150,6 +151,6 @@ async function transcribeVoiceRecording(
       .trim();
   } catch (error) {
     throwIfVoiceTranscriptionAborted(signal);
-    throw wrapError("transcription-failed", "Voice transcription failed.", error);
+    throw wrapError("transcription-failed", tr("Voice transcription failed."), error);
   }
 }

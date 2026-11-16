@@ -4,6 +4,7 @@ import {
   type ManagedPolicySummary,
   type RuntimeMode,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { View } from "react-native";
 
 import { AppText } from "../../components/ui/AppText";
@@ -38,11 +39,11 @@ export function ManagedRuntimeModeNotice(props: {
   return (
     <View className="gap-2 px-4 pb-3">
       <AppText textRole="footnote" className="text-foreground-muted">
-        {`${denial} Switch this thread's mode to continue.`}
+        {tr("{denial} Switch this thread's mode to continue.", { denial: denial })}
       </AppText>
       {target === undefined || targetLabel === undefined ? null : (
         <Button
-          label={`Switch to ${targetLabel}`}
+          label={tr("Switch to {targetLabel}", { targetLabel: targetLabel })}
           onPress={() => updateComposerDraftSettings(props.threadKey, { runtimeMode: target })}
         />
       )}

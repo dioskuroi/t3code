@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 import type { DesktopUpdateState } from "@t3tools/contracts";
 
@@ -39,7 +40,9 @@ describe("desktop update button state", () => {
       canRetry: true,
     };
     expect(resolveDesktopUpdateButtonAction(state)).toBe("download");
-    expect(getDesktopUpdateButtonTooltip(state)).toContain("Click to retry");
+    expect(getDesktopUpdateButtonTooltip(state)).toBe(
+      tr("Download failed for {version}. Click to retry.", { version: "1.1.0" }),
+    );
   });
 
   it("prefers a newly available release over a stale downloaded version", () => {

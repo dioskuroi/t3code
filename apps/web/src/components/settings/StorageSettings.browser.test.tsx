@@ -74,7 +74,7 @@ vi.mock(import("./settingsLayout"), async (original) => ({
       {description}
       {status && (
         <div
-          data-testid={`${title === "Delete old browser artifacts" ? "artifact" : "logs"}-retention-status`}
+          data-testid={`${title === "删除旧的浏览器产物" ? "artifact" : "logs"}-retention-status`}
         >
           {status}
         </div>
@@ -141,7 +141,7 @@ const panel = () => (
 );
 const deleteButton = (container: HTMLElement) =>
   Array.from(container.querySelectorAll("button")).find(
-    (button) => button.textContent === "Delete now",
+    (button) => button.textContent === "立即删除",
   )!;
 
 it("keeps cleanup disabled when settled retention and all other rules are off", async () => {
@@ -183,7 +183,7 @@ it("settles mixed retention statuses independently across selected machines", as
   await advance(300);
   await expect
     .element(screen.getByTestId("artifact-retention-status"))
-    .toHaveTextContent("Mixed across selected machines");
+    .toHaveTextContent("各所选机器设置不一");
   await expect.element(screen.getByTestId("logs-retention-status")).not.toBeInTheDocument();
 
   setRetentionValues([null, null]);
@@ -191,29 +191,29 @@ it("settles mixed retention statuses independently across selected machines", as
   await advance(75);
   await expect
     .element(screen.getByTestId("artifact-retention-status"))
-    .toHaveTextContent("Mixed across selected machines");
+    .toHaveTextContent("各所选机器设置不一");
   setRetentionValues([8, null]);
   await screen.rerender(panel());
   await advance(133);
   await expect
     .element(screen.getByTestId("artifact-retention-status"))
-    .toHaveTextContent("Mixed across selected machines");
+    .toHaveTextContent("各所选机器设置不一");
   setRetentionValues([null, null]);
   await screen.rerender(panel());
   await advance(133);
   await expect
     .element(screen.getByTestId("artifact-retention-status"))
-    .toHaveTextContent("Mixed across selected machines");
+    .toHaveTextContent("各所选机器设置不一");
   await advance(117);
   await expect
     .element(screen.getByTestId("artifact-retention-status"))
-    .toHaveTextContent("Mixed across selected machines");
+    .toHaveTextContent("各所选机器设置不一");
   setRetentionValues([8, null]);
   await screen.rerender(panel());
   await advance(300);
   await expect
     .element(screen.getByTestId("artifact-retention-status"))
-    .toHaveTextContent("Mixed across selected machines");
+    .toHaveTextContent("各所选机器设置不一");
 
   setRetentionValues([8], [null], ["env-c"]);
   await screen.rerender(panel());
@@ -229,7 +229,7 @@ it("settles mixed retention statuses independently across selected machines", as
   await expect.element(screen.getByTestId("artifact-retention-status")).not.toBeInTheDocument();
   await expect
     .element(screen.getByTestId("logs-retention-status"))
-    .toHaveTextContent("Mixed across selected machines");
+    .toHaveTextContent("各所选机器设置不一");
   setRetentionValues([null, null]);
   await screen.rerender(panel());
   await advance(300);

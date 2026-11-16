@@ -1,4 +1,5 @@
 import { EnvironmentId, type ProjectEntry } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
@@ -68,7 +69,7 @@ describe("FileBrowserPanel", () => {
         button: 2,
       }),
     );
-    const action = page.getByRole("menuitem", { name: "Copy mention", exact: true });
+    const action = page.getByRole("menuitem", { name: tr("Copy mention"), exact: true });
     await expect.element(action).toBeVisible();
     await userEvent.click(action);
     await vi.waitFor(() => expect(clipboard).toHaveBeenCalledWith("[README.md](README.md)"));

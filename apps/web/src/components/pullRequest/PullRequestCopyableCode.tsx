@@ -1,4 +1,5 @@
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import { tr } from "@t3tools/shared/i18n";
 import { cn } from "~/lib/utils";
 
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
@@ -55,11 +56,11 @@ export function PullRequestCopyableCode({
             isCopied ? "opacity-100" : "opacity-0",
           )}
         >
-          Copied
+          {tr("Copied")}
         </span>
       </TooltipTrigger>
       <TooltipPopup variant="code" side={tooltipSide}>
-        {`${isCopied ? "Copied" : copyLabel}: ${value}`}
+        {`${isCopied ? tr("Copied") : copyLabel}: ${value}`}
       </TooltipPopup>
     </Tooltip>
   );

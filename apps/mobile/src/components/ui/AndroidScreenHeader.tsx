@@ -1,4 +1,5 @@
 import { AppActivityIndicator } from "./AppActivityIndicator";
+import { tr } from "@t3tools/shared/i18n";
 import { Column, Row, Text as NativeText, RNHostView } from "@expo/ui/jetpack-compose";
 import { weight } from "@expo/ui/jetpack-compose/modifiers";
 import { use, useState, type ReactNode } from "react";
@@ -83,7 +84,7 @@ export function AndroidScreenHeader(props: {
             <View collapsable={false} className="flex-row items-center">
               {props.onBack ? (
                 <IconButton
-                  accessibilityLabel="Navigate up"
+                  accessibilityLabel={tr("Navigate up")}
                   icon="arrow.left"
                   tintColorClassName="accent-header-foreground"
                   onPress={props.onBack}
@@ -192,7 +193,7 @@ export function AndroidScreenHeader(props: {
                 >
                   {(open) => (
                     <IconButton
-                      accessibilityLabel="More actions"
+                      accessibilityLabel={tr("More actions")}
                       icon="ellipsis"
                       tintColorClassName="accent-header-foreground"
                       onPress={open}

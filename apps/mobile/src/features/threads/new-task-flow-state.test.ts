@@ -1,4 +1,5 @@
 import { EnvironmentId, ProjectId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { describe, expect, it } from "vite-plus/test";
 
 import { appAtomRegistry } from "../../state/atom-registry";
@@ -14,7 +15,7 @@ import {
 } from "./new-task-flow-state";
 
 function draftRoute(key: string, draftId: string) {
-  return { key, name: "Thread", params: { draft: { draftId } } };
+  return { key, name: tr("Thread"), params: { draft: { draftId } } };
 }
 
 describe("new task flow state", () => {
@@ -29,7 +30,7 @@ describe("new task flow state", () => {
     updateNewTaskFlowState(flowA, { projectKey: "env:project-a", draftKey: "draft-a" });
     unmountA();
     const unmountB = appAtomRegistry.mount(newTaskFlowStateAtom(flowB));
-    pruneNewTaskFlowStates({ routes: [{ key: "home", name: "Home" }, routeA, routeB] });
+    pruneNewTaskFlowStates({ routes: [{ key: "home", name: tr("Home") }, routeA, routeB] });
 
     expect(readNewTaskFlowState(flowB)).toBe(INITIAL_NEW_TASK_FLOW_STATE);
     expect(appAtomRegistry.get(newTaskFlowStateAtom(flowA))).toMatchObject({
@@ -39,7 +40,7 @@ describe("new task flow state", () => {
 
     // Popping B returns to A with its state intact.
     unmountB();
-    pruneNewTaskFlowStates({ routes: [{ key: "home", name: "Home" }, routeA] });
+    pruneNewTaskFlowStates({ routes: [{ key: "home", name: tr("Home") }, routeA] });
     expect(readNewTaskFlowState(flowA).projectKey).toBe("env:project-a");
   });
 
@@ -50,7 +51,9 @@ describe("new task flow state", () => {
     updateNewTaskFlowState(newTaskFlowKey(routeB)!, { projectKey: "env:project-b" });
 
     pruneNewTaskFlowStates({
-      routes: [{ key: "route-a", name: "Thread", params: { environmentId: "env", threadId: "t" } }],
+      routes: [
+        { key: "route-a", name: tr("Thread"), params: { environmentId: "env", threadId: "t" } },
+      ],
     });
 
     expect(readNewTaskFlowState(newTaskFlowKey(routeA)!)).toBe(INITIAL_NEW_TASK_FLOW_STATE);

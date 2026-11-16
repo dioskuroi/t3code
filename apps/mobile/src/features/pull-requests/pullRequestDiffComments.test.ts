@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vite-plus/test";
 import type { PullRequestReviewThread } from "@t3tools/contracts";
 import type { NativeReviewDiffData } from "../review/nativeReviewDiffAdapter";
+import { tr } from "@t3tools/shared/i18n";
 import { annotatePullRequestDiff, reviewPositionLabel } from "./pullRequestDiffComments";
 const data: NativeReviewDiffData = {
   rows: [
@@ -110,7 +111,7 @@ describe("PR comments in continuous native diffs", () => {
       annotated.rows
         .filter((row) => row.kind === "comment")
         .map((row) => row.commentText?.split("\n").at(-1)),
-    ).toEqual(["1 comment · Tap to open", "2 comments · Tap to open"]);
+    ).toEqual(["1 comment" + tr(" · Tap to open"), "2 comments" + tr(" · Tap to open")]);
   });
   it("uses the old line number for left-side context when the line numbers differ", () => {
     const position = { kind: "context" as const, side: "left" as const, oldLine: 7, newLine: 8 };
@@ -127,6 +128,6 @@ describe("PR comments in continuous native diffs", () => {
       "abc",
     );
     expect(annotated.rows.at(-1)?.id).toBe("draft:left");
-    expect(reviewPositionLabel(position)).toBe("Old line 7");
+    expect(reviewPositionLabel(position)).toBe(tr("Old line {line}", { line: 7 }));
   });
 });

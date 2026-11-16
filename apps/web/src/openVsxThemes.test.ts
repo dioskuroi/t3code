@@ -194,9 +194,7 @@ describe("Open VSX themes", () => {
       }),
     );
 
-    await expect(searchOpenVsxThemes("dracula")).rejects.toThrow(
-      "Open VSX theme details are unavailable",
-    );
+    await expect(searchOpenVsxThemes("dracula")).rejects.toThrow("Open VSX 主题详情当前不可用。");
   });
 
   it("downloads a verified VSIX, reads JSONC includes, and pairs contributed variants", async () => {
@@ -360,22 +358,16 @@ describe("Open VSX themes", () => {
 
     packagedManifest.contributes.themes[2]!.path = "./themes/missing.json";
     await rebuildPackage();
-    await expect(importOpenVsxThemeExtension(extension)).rejects.toThrow(
-      "could not be imported safely",
-    );
+    await expect(importOpenVsxThemeExtension(extension)).rejects.toThrow("无法安全导入");
     packagedManifest.contributes.themes[2]!.path = "./themes/demo.json";
 
     packagedManifest.license = "Proprietary";
     await rebuildPackage();
-    await expect(importOpenVsxThemeExtension(extension)).rejects.toThrow(
-      "does not match its advertised license",
-    );
+    await expect(importOpenVsxThemeExtension(extension)).rejects.toThrow("与其声明的许可证不符");
 
     Reflect.deleteProperty(packagedManifest, "license");
     await rebuildPackage();
-    await expect(importOpenVsxThemeExtension(extension)).rejects.toThrow(
-      "does not match its advertised license",
-    );
+    await expect(importOpenVsxThemeExtension(extension)).rejects.toThrow("与其声明的许可证不符");
   });
 
   it("stops import work when the request is cancelled", async () => {
@@ -451,6 +443,6 @@ describe("Open VSX themes", () => {
       }),
     );
 
-    await expect(importOpenVsxThemeExtension(extension)).rejects.toThrow("integrity check");
+    await expect(importOpenVsxThemeExtension(extension)).rejects.toThrow("完整性检查");
   });
 });

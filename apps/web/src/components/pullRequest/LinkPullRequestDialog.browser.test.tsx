@@ -1,4 +1,5 @@
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { expect, it, vi } from "vite-plus/test";
 import { page } from "vite-plus/test/browser";
 
@@ -35,5 +36,5 @@ it("focuses the reference input when the dialog opens", async () => {
     }),
   );
 
-  await expect.element(page.getByPlaceholder("Pull request URL or #42")).toHaveFocus();
+  await expect.element(page.getByPlaceholder(tr("Pull request URL or #42"))).toHaveFocus();
 });

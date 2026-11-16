@@ -1,4 +1,5 @@
 import type { EnvironmentId, ScopedThreadRef, ThreadPullRequestLink } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -56,7 +57,7 @@ export function usePullRequestLinking(environmentId: EnvironmentId | null | unde
       threadRef.environmentId !== environmentId ||
       (linked && !canLink(url))
     )
-      throw new Error("The pull request is not available in this environment.");
+      throw new Error(tr("The pull request is not available in this environment."));
     const mutation = planThreadPullRequestMutation({
       capabilities: appAtomRegistry.get(environmentServerConfigsAtom).get(threadRef.environmentId)
         ?.environment.capabilities,
@@ -65,12 +66,12 @@ export function usePullRequestLinking(environmentId: EnvironmentId | null | unde
       linked,
     });
     if (mutation === null)
-      throw new Error("This environment does not support linking this pull request.");
+      throw new Error(tr("This environment does not support linking this pull request."));
     const result = await (mutation.type === "thread.pull-request.link"
       ? link({ environmentId: threadRef.environmentId, input: mutation.input })
       : unlink({ environmentId: threadRef.environmentId, input: mutation.input }));
     if (result._tag === "Failure") {
-      if (isAtomCommandInterrupted(result)) throw new Error("Link update interrupted.");
+      if (isAtomCommandInterrupted(result)) throw new Error(tr("Link update interrupted."));
       throw squashAtomCommandFailure(result);
     }
   };

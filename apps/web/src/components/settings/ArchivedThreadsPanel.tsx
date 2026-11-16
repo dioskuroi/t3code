@@ -1,4 +1,5 @@
 import { settingsScopeEnvironmentLabels } from "./settingsScopeAxis";
+import { threadDisplayTitle, tr } from "@t3tools/shared/i18n";
 import { Spinner } from "~/components/ui/spinner";
 import { ArchiveIcon, ArchiveX, Trash2Icon } from "lucide-react";
 import { scopeThreadRef, scopedThreadKey } from "@t3tools/client-runtime/environment";
@@ -202,16 +203,16 @@ export function ArchivedThreadsPanel() {
                   <ArchiveIcon className="size-3.5 text-muted-foreground" />
                 )}
                 {isLoadingArchive
-                  ? "Loading archived threads"
+                  ? tr("Loading archived threads")
                   : archiveError
-                    ? "Could not load archived threads"
-                    : "No archived threads"}
+                    ? tr("Could not load archived threads")
+                    : tr("No archived threads")}
               </span>
             }
             description={
               isLoadingArchive
-                ? "Checking connected environments."
-                : (archiveError ?? "Archived threads will appear here.")
+                ? tr("Checking connected environments.")
+                : (archiveError ?? tr("Archived threads will appear here."))
             }
           />
         </SettingsSection>

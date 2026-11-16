@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -180,9 +181,10 @@ export const make = Effect.gen(function* () {
           Effect.catch((error) =>
             Effect.succeed({
               ok: false,
-              reason: `WSL server files could not be extracted to ${versionDir}: ${
-                error.cause instanceof Error ? error.cause.message : String(error.cause)
-              }`,
+              reason: tr("WSL server files could not be extracted to {dir}: {cause}", {
+                dir: versionDir,
+                cause: error.cause instanceof Error ? error.cause.message : String(error.cause),
+              }),
               fatal: false,
             } as const),
           ),

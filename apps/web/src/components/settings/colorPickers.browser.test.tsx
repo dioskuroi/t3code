@@ -7,8 +7,9 @@ import { act, render } from "../../../test/render";
 import { ProviderAccentColorPicker } from "./ProviderAccentColorPicker";
 import { ThemeColorField } from "./ThemeColorPicker";
 
-const HUE = "Accent color hue";
-const PLANE = "Accent color saturation and brightness";
+const HUE = "强调色色相";
+const THEME_HUE = "强调色 色相";
+const THEME_PLANE = "强调色 饱和度与亮度";
 
 async function renderPicker(ui: ReactNode) {
   await using stack = new AsyncDisposableStack();
@@ -29,9 +30,9 @@ function byLabel<T extends HTMLElement = HTMLElement>(label: string) {
 
 const slider = (label: string) => byLabel<HTMLInputElement>(label);
 
-async function open(triggerLabel: string) {
+async function open(triggerLabel: string, hue = HUE) {
   await userEvent.click(byLabel(triggerLabel));
-  await vi.waitFor(() => byLabel(HUE));
+  await vi.waitFor(() => byLabel(hue));
 }
 
 async function press(label: string, key: string, shift = false) {
@@ -61,7 +62,7 @@ async function renderThemeField(value: string) {
   );
   await using stack = new AsyncDisposableStack();
   const screen = stack.use(await renderPicker(field(value)));
-  await open("Choose Accent color color");
+  await open("选择 强调色 颜色", THEME_HUE);
   stack.move();
   return Object.assign(screen, {
     onChange,
@@ -77,41 +78,41 @@ function ControlledThemeField() {
 describe("theme color field", () => {
   it("jumps hue to both endpoints without changing saturation or brightness", async () => {
     await using _screen = await render(<ControlledThemeField />);
-    await open("Choose Accent color color");
+    await open("选择 强调色 颜色", THEME_HUE);
 
-    await press(HUE, "Home");
-    expect(slider(HUE).getAttribute("aria-valuenow")).toBe("0");
-    expect(byLabel<HTMLInputElement>("Accent color picker hex value").value).toBe("#804040");
+    await press(THEME_HUE, "Home");
+    expect(slider(THEME_HUE).getAttribute("aria-valuenow")).toBe("0");
+    expect(byLabel<HTMLInputElement>("强调色 picker hex value").value).toBe("#804040");
 
-    await press(HUE, "End");
-    expect(slider(HUE).getAttribute("aria-valuenow")).toBe("360");
-    expect(byLabel<HTMLInputElement>("Accent color picker hex value").value).toBe("#804040");
+    await press(THEME_HUE, "End");
+    expect(slider(THEME_HUE).getAttribute("aria-valuenow")).toBe("360");
+    expect(byLabel<HTMLInputElement>("强调色 picker hex value").value).toBe("#804040");
 
-    await press(HUE, "ArrowRight", true);
-    expect(slider(HUE).getAttribute("aria-valuenow")).toBe("10");
-    expect(byLabel<HTMLInputElement>("Accent color picker hex value").value).toBe("#804b40");
+    await press(THEME_HUE, "ArrowRight", true);
+    expect(slider(THEME_HUE).getAttribute("aria-valuenow")).toBe("10");
+    expect(byLabel<HTMLInputElement>("强调色 picker hex value").value).toBe("#804b40");
   });
 
   it("keeps the selected hue when a grey color is echoed back from theme settings", async () => {
     await using screen = await renderThemeField("#ff0000");
     const { onChange, echo } = screen;
 
-    await press(HUE, "ArrowRight", true);
+    await press(THEME_HUE, "ArrowRight", true);
     await act(async () => {
-      pointer(PLANE, "pointerdown", 0, 0);
-      pointer(PLANE, "pointerup", 0, 0);
+      pointer(THEME_PLANE, "pointerdown", 0, 0);
+      pointer(THEME_PLANE, "pointerup", 0, 0);
     });
     expect(onChange).toHaveBeenLastCalledWith("accent", "#ffffff");
 
     await echo("#ffffff");
-    expect(slider(HUE).getAttribute("aria-valuenow")).toBe("10");
+    expect(slider(THEME_HUE).getAttribute("aria-valuenow")).toBe("10");
   });
 
   it("keeps a translucent color's alpha when a hex value is typed", async () => {
     await using screen = await renderThemeField("#22ccff80");
     const { onChange } = screen;
 
-    await userEvent.fill(byLabel("Accent color picker hex value"), "#ff0000");
+    await userEvent.fill(byLabel("强调色 picker hex value"), "#ff0000");
     expect(onChange).toHaveBeenLastCalledWith("accent", "#ff000080");
   });
 });
@@ -123,7 +124,7 @@ async function renderAccentPicker(value: string) {
   );
   await using stack = new AsyncDisposableStack();
   const screen = stack.use(await renderPicker(picker(value)));
-  await open("Change accent color for Codex");
+  await open("更改 Codex 的强调色");
   stack.move();
   return Object.assign(screen, {
     onCommit,
@@ -142,8 +143,8 @@ describe("provider accent color picker", () => {
       />,
     );
 
-    await open("Add accent color for Example provider");
-    expect(byLabel<HTMLInputElement>("Custom hex accent color").value).toBe("#2563eb");
+    await open("为 Example provider 添加强调色");
+    expect(byLabel<HTMLInputElement>("自定义十六进制强调色").value).toBe("#2563eb");
     expect(onCommit).not.toHaveBeenCalled();
     await userEvent.keyboard("{Escape}");
     expect(onCommit).not.toHaveBeenCalled();
@@ -159,15 +160,15 @@ describe("provider accent color picker", () => {
       />,
     );
 
-    await open("Add accent color for Example provider");
-    await userEvent.click(page.getByRole("button", { name: "Add color", exact: true }));
+    await open("为 Example provider 添加强调色");
+    await userEvent.click(page.getByRole("button", { name: "添加颜色", exact: true }));
 
     expect(onCommit).toHaveBeenCalledExactlyOnceWith("#2563eb");
     await expect
-      .element(screen.getByRole("button", { name: "Change accent color for Example provider" }))
+      .element(screen.getByRole("button", { name: "更改 Example provider 的强调色" }))
       .toBeVisible();
     await vi.waitFor(() =>
-      expect(document.querySelector('[aria-label="Custom hex accent color"]')).toBeNull(),
+      expect(document.querySelector('[aria-label="自定义十六进制强调色"]')).toBeNull(),
     );
   });
 
@@ -181,17 +182,16 @@ describe("provider accent color picker", () => {
       />,
     );
 
-    await open("Add accent color for Example provider");
-    await act(async () => byLabel("Accent color saturation").focus());
+    await open("为 Example provider 添加强调色");
+    await act(async () => byLabel("强调色 饱和度").focus());
     await userEvent.tab();
     await userEvent.tab();
     await userEvent.tab();
     await userEvent.tab();
     await userEvent.keyboard("{Enter}");
-
     expect(onCommit).toHaveBeenCalledExactlyOnceWith("#2563eb");
     await expect
-      .element(screen.getByRole("button", { name: "Change accent color for Example provider" }))
+      .element(screen.getByRole("button", { name: "更改 Example provider 的强调色" }))
       .toBeVisible();
   });
 
@@ -205,13 +205,13 @@ describe("provider accent color picker", () => {
       />,
     );
 
-    await open("Change accent color for Example provider");
+    await open("更改 Example provider 的强调色");
     await press(HUE, "ArrowRight", true);
     expect(onCommit).toHaveBeenLastCalledWith("#ff2a00");
-    await userEvent.click(page.getByRole("button", { name: "Clear color", exact: true }));
+    await userEvent.click(page.getByRole("button", { name: "清除颜色", exact: true }));
     expect(onCommit).toHaveBeenLastCalledWith("");
     await expect
-      .element(screen.getByRole("button", { name: "Add accent color for Example provider" }))
+      .element(screen.getByRole("button", { name: "为 Example provider 添加强调色" }))
       .toBeVisible();
   });
 
@@ -232,29 +232,29 @@ describe("provider accent color picker", () => {
   it("saves a change back to the saved color while the first change is still saving", async () => {
     await using screen = await renderAccentPicker("#ff0000");
 
-    await userEvent.fill(byLabel("Custom hex accent color"), "#00ff00");
-    await userEvent.fill(byLabel("Custom hex accent color"), "#ff0000");
+    await userEvent.fill(byLabel("自定义十六进制强调色"), "#00ff00");
+    await userEvent.fill(byLabel("自定义十六进制强调色"), "#ff0000");
 
     expect(screen.onCommit).toHaveBeenLastCalledWith("#ff0000");
-    await userEvent.fill(byLabel("Custom hex accent color"), "#00FF00");
+    await userEvent.fill(byLabel("自定义十六进制强调色"), "#00FF00");
     await screen.echo("#00FF00");
-    expect(byLabel<HTMLInputElement>("Custom hex accent color").value).toBe("#00FF00");
+    expect(byLabel<HTMLInputElement>("自定义十六进制强调色").value).toBe("#00FF00");
   });
 
   it("shows the saved color again when it is reverted outside the picker", async () => {
     await using screen = await renderAccentPicker("#ff0000");
 
-    await userEvent.fill(byLabel("Custom hex accent color"), "#00ff00");
+    await userEvent.fill(byLabel("自定义十六进制强调色"), "#00ff00");
     expect(screen.onCommit).toHaveBeenLastCalledWith("#00ff00");
     await screen.echo("#00ff00");
     await screen.echo("#ff0000");
 
-    expect(byLabel<HTMLInputElement>("Custom hex accent color").value).toBe("#ff0000");
+    expect(byLabel<HTMLInputElement>("自定义十六进制强调色").value).toBe("#ff0000");
     await screen.echo("");
-    expect(byLabel<HTMLInputElement>("Custom hex accent color").value).toBe("#2563eb");
-    await userEvent.click(page.getByRole("button", { name: "Add color", exact: true }));
+    expect(byLabel<HTMLInputElement>("自定义十六进制强调色").value).toBe("#2563eb");
+    await userEvent.click(page.getByRole("button", { name: "添加颜色", exact: true }));
     expect(screen.onCommit).toHaveBeenLastCalledWith("#2563eb");
 
-    expect(byLabel("Change accent color for Codex").style.backgroundColor).toBe("rgb(37, 99, 235)");
+    expect(byLabel("更改 Codex 的强调色").style.backgroundColor).toBe("rgb(37, 99, 235)");
   });
 });

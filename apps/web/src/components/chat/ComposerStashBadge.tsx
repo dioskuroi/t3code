@@ -1,4 +1,5 @@
 import { BookmarkIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 import { memo } from "react";
 
 import { cn } from "~/lib/utils";
@@ -37,7 +38,7 @@ export const ComposerStashBadge = memo(function ComposerStashBadge(props: {
       <ComposerBanner.Row
         render={<button type="button" />}
         data-prompt-stash-badge="true"
-        aria-label={`Stashed prompts: ${props.count}. Open stash.`}
+        aria-label={tr("Stashed prompts: {count}. Open stash.", { count: props.count })}
         aria-expanded={props.menuOpen}
         className={cn(
           "transition-colors duration-200",
@@ -54,7 +55,7 @@ export const ComposerStashBadge = memo(function ComposerStashBadge(props: {
         <ComposerBanner.Icon>
           <BookmarkIcon />
         </ComposerBanner.Icon>
-        <ComposerBanner.Content>Stash</ComposerBanner.Content>
+        <ComposerBanner.Content>{tr("Stash")}</ComposerBanner.Content>
         <ComposerBanner.Actions>{count}</ComposerBanner.Actions>
       </ComposerBanner.Row>
     </ComposerBanner.Root>

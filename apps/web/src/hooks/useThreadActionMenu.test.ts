@@ -188,7 +188,7 @@ describe("thread menu permissions", () => {
     createMenu({ onFind }).openMenu(position);
     await state.completed.promise;
     const items = state.show.mock.calls[1]![0];
-    expect(items[0]).toMatchObject({ id: "find", label: "Find in thread" });
+    expect(items[0]).toMatchObject({ id: "find", label: "在 Thread 中查找" });
     expect(items[0]?.disabled).not.toBe(true);
     expect(state.effects).toEqual(["find"]);
     expect(onFind).toHaveBeenCalledExactlyOnceWith(target);

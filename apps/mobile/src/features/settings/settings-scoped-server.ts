@@ -12,6 +12,7 @@ import {
   clearProjectSettingsOverrides,
   resolveProjectSettings,
 } from "@t3tools/shared/projectSettings";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { SettingsTarget } from "./settings-environment-filter";
 
@@ -33,7 +34,9 @@ export function managedSettingReason(
   const policy = targets
     .map((target) => target.environment.serverConfig.managedPolicy)
     .find((candidate) => paths.some((path) => isManagedSettingPath(candidate, path)));
-  return policy === undefined ? undefined : `Managed by ${policy.organization}.`;
+  return policy === undefined
+    ? undefined
+    : tr("Managed by {organization}.", { organization: policy.organization });
 }
 
 export function resolveMobileSettingsTargets(

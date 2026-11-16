@@ -1,4 +1,5 @@
 import { View } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { AppBar } from "./AppBar";
 import { NativeStackScreenOptions } from "../../native/StackHeader";
@@ -10,7 +11,7 @@ export function SheetCloseButton(props: SheetCloseButtonProps) {
   return (
     <IconButton
       icon="xmark"
-      accessibilityLabel={props.accessibilityLabel ?? (props.onCancel ? "Cancel" : "Close")}
+      accessibilityLabel={props.accessibilityLabel ?? (props.onCancel ? tr("Cancel") : tr("Close"))}
       disabled={props.disabled}
       tintColorClassName="accent-header-foreground"
       onPress={props.onCancel ?? props.onClose}

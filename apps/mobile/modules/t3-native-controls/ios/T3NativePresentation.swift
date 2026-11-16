@@ -95,7 +95,7 @@ func presentFileShare(
     throw NSError(
       domain: "T3NativePresentation",
       code: 1,
-      userInfo: [NSLocalizedDescriptionKey: "The file is no longer available."]
+      userInfo: [NSLocalizedDescriptionKey: "文件已不可用。"]
     )
   }
 
@@ -103,7 +103,7 @@ func presentFileShare(
     throw NSError(
       domain: "T3NativePresentation",
       code: 2,
-      userInfo: [NSLocalizedDescriptionKey: "The presenting screen is no longer open."]
+      userInfo: [NSLocalizedDescriptionKey: "展示屏幕已关闭。"]
     )
   }
 

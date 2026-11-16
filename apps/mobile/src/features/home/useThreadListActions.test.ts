@@ -159,6 +159,7 @@ vi.mock("../../state/threads", () => ({
 
 import { dismissThreadUndoNotice, readThreadUndoNotice } from "./thread-undo-notice";
 import { useThreadListActions } from "./useThreadListActions";
+import { tr } from "@t3tools/shared/i18n";
 
 const primaryEnvironmentId = EnvironmentId.make("primary");
 const otherEnvironmentId = EnvironmentId.make("other");
@@ -512,7 +513,7 @@ describe("thread action undo", () => {
     state.failedAction = "unsettle";
     await readThreadUndoNotice()!.undo();
     expect(state.requests.map(({ action }) => action)).toEqual(["settle", "unsettle"]);
-    expect(state.alerts.at(-1)?.title).toBe("Could not un-settle thread");
+    expect(state.alerts.at(-1)?.title).toBe(tr("Could not un-settle thread"));
   });
 
   it("rechecks the destination permission before undoing", async () => {
@@ -556,6 +557,6 @@ describe("thread archive guard", () => {
     expect(await useThreadListActions().archiveThread(thread)).toBe(false);
     expect(state.requests).toEqual([]);
     expect(state.archivedRefreshes).toEqual([]);
-    expect(state.alerts.at(-1)?.title).toBe("Could not archive thread");
+    expect(state.alerts.at(-1)?.title).toBe(tr("Could not archive thread"));
   });
 });

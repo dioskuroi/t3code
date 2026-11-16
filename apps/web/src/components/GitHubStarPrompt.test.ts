@@ -1,5 +1,6 @@
 import { EnvironmentId } from "@t3tools/contracts";
 import { describe, expect, it, vi } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { toastManager } from "./ui/toast";
 
@@ -169,7 +170,7 @@ describe("recordPromptSent", () => {
     await (await startSession()).send();
     click(add.mock.lastCall?.[0].actionProps);
     await vi.advanceTimersByTimeAsync(0);
-    expect(update.mock.lastCall?.[1]).toMatchObject({ title: "Thanks for the star!" });
+    expect(update.mock.lastCall?.[1]).toMatchObject({ title: tr("Thanks for the star!") });
     expect(store.get("t3code:github-star-prompt:dismissed")).toBe("true");
     expect(openExternal).not.toHaveBeenCalled();
 
@@ -180,7 +181,7 @@ describe("recordPromptSent", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(openExternal).toHaveBeenCalledWith("https://github.com/pingdotgg/t3code");
     expect(update.mock.lastCall?.[1]).not.toMatchObject({
-      actionProps: { children: "Open GitHub" },
+      actionProps: { children: tr("Open GitHub") },
     });
 
     setup({ sent: 5 });
@@ -190,7 +191,7 @@ describe("recordPromptSent", () => {
     click(add.mock.lastCall?.[0].actionProps);
     await vi.advanceTimersByTimeAsync(0);
     const fallback = update.mock.lastCall?.[1];
-    expect(fallback).toMatchObject({ actionProps: { children: "Open GitHub" } });
+    expect(fallback).toMatchObject({ actionProps: { children: tr("Open GitHub") } });
     expect(openExternal).not.toHaveBeenCalled();
     click(typeof fallback === "object" ? fallback.actionProps : undefined);
     expect(openExternal).toHaveBeenCalledOnce();

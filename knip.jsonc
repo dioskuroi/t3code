@@ -36,6 +36,9 @@
         "prepare-server-compile-cache.cjs",
         "smoke-desktop-app.ts",
         "verify-windows-desktop-artifact.ts",
+        // Run directly by the fork's rebase flow (docs/fork/seed-pinned-runtime.md),
+        // never through an npm script, so knip cannot trace an entry.
+        "seed-pinned-runtime.mjs",
       ],
       "ignoreDependencies": ["agent-device", "esbuild"],
       // The `t3` npm package's files: copied into the package, never imported.

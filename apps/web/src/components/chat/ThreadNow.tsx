@@ -1,4 +1,5 @@
 import { RefreshCwIcon } from "lucide-react";
+import { tr } from "@t3tools/shared/i18n";
 import type { ReactNode } from "react";
 
 import { threadSyncLabel, type ThreadSyncPhase } from "../../threadSync";
@@ -46,7 +47,9 @@ function ThreadNowLine({
           reachable; when it is cut, its details button shows all of it. */}
       <NoticeText
         detailsLabel={
-          typeof item.title === "string" ? `Show details: ${item.title}` : "Show details"
+          typeof item.title === "string"
+            ? tr("Show details: {title}", { title: item.title })
+            : tr("Show details")
         }
         className="min-w-0 truncate"
       >

@@ -1,4 +1,5 @@
 import type { EnvironmentId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import type { TimestampFormat } from "@t3tools/contracts/settings";
 import {
   pickSnoozePreset as pickSharedSnoozePreset,
@@ -39,8 +40,8 @@ export function pickSnoozePreset(
   if (!picked) {
     toastManager.add({
       type: "warning",
-      title: "Could not snooze thread",
-      description: "That snooze time has passed. Choose another time.",
+      title: tr("Could not snooze thread"),
+      description: tr("That snooze time has passed. Choose another time."),
     });
   }
   return picked;

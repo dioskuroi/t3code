@@ -1,4 +1,5 @@
 import { AuthOrchestrationOperateScope, type ProjectIconOverride } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isAtomCommandInterrupted,
   mapAtomCommandResult,
@@ -53,7 +54,11 @@ export function useProjectGroupUpdate() {
     if (unavailable) {
       return failWith(
         failureTitle,
-        `Connect ${unavailable.environmentLabel ?? "the selected environment"} and try again.`,
+        unavailable.environmentLabel !== null
+          ? tr("Connect {environment} and try again.", {
+              environment: unavailable.environmentLabel,
+            })
+          : tr("Connect the selected environment and try again."),
       );
     }
     for (const member of members) {
@@ -73,7 +78,12 @@ export function useProjectGroupUpdate() {
       if (result._tag === "Failure") {
         reportProjectFailure(
           members.length > 1
-            ? `${failureTitle} on ${member.environmentLabel ?? "the current environment"}`
+            ? member.environmentLabel !== null
+              ? tr("{title} on {environment}", {
+                  title: failureTitle,
+                  environment: member.environmentLabel,
+                })
+              : failureTitle
             : failureTitle,
           result,
         );
@@ -115,7 +125,7 @@ export function useProjectPin() {
     void updateProjectGroup(
       group.memberProjects,
       { pinned },
-      pinned ? "Failed to pin project" : "Failed to unpin project",
+      pinned ? tr("Failed to pin project") : tr("Failed to unpin project"),
     );
   };
   return {
@@ -136,7 +146,11 @@ export function checkProjectAccess(
   return denied
     ? failWith(
         failureTitle,
-        `This connection cannot change projects in ${denied.environmentLabel ?? "this environment"}.`,
+        denied.environmentLabel !== null
+          ? tr("This connection cannot change projects in {environment}.", {
+              environment: denied.environmentLabel,
+            })
+          : tr("This connection cannot change projects in this environment."),
       )
     : null;
 }
@@ -148,7 +162,7 @@ export function reportProjectFailure(title: string, result: AtomCommandResult<un
     stackedThreadToast({
       type: "error",
       title,
-      description: error instanceof Error ? error.message : "An error occurred.",
+      description: error instanceof Error ? error.message : tr("An error occurred."),
     }),
   );
 }

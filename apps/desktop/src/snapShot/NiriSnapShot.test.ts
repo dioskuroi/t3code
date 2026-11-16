@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Private Unix sockets exercise the real compositor transport.
 import * as NodeFSP from "node:fs/promises";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
@@ -156,7 +157,9 @@ it("waits for the restored T3 window to map instead of polling", async () => {
 it("rejects ambiguous activation targets", async () => {
   const snapshot = await captureNiriWindow(socketPath);
   windows = [1, 2].map((id) => ({ ...window, id, pid: process.pid, title: "T3 Code" }));
-  await expect(snapshot.feedback!.activate("T3 Code")).rejects.toThrow("More than one");
+  await expect(snapshot.feedback!.activate("T3 Code")).rejects.toThrow(
+    tr("More than one T3 Code window matches the capture destination."),
+  );
 });
 
 it("cancels pending activation when capture feedback is closed", async () => {
@@ -167,7 +170,9 @@ it("cancels pending activation when capture feedback is closed", async () => {
     await original(request, socket);
     if (request === "EventStream") started.resolve();
   };
-  const activation = expect(snapshot.feedback!.activate("T3 Code")).rejects.toThrow("cancelled");
+  const activation = expect(snapshot.feedback!.activate("T3 Code")).rejects.toThrow(
+    tr("Niri activation cancelled."),
+  );
   await started.promise;
   snapshot.feedback!.close();
   await activation;
@@ -183,7 +188,9 @@ it("does not attach accessibility identity if the captured window changed", asyn
 
 it("fails without a focused window rather than taking the screen", async () => {
   focused = null;
-  await expect(captureNiriWindow(socketPath)).rejects.toThrow("no focused window");
+  await expect(captureNiriWindow(socketPath)).rejects.toThrow(
+    tr("Niri has no focused window to capture."),
+  );
   expect(capturePath).toBeUndefined();
 });
 
@@ -201,7 +208,9 @@ it("rejects compositor errors and cleans up its temporary image", async () => {
 
 it.each(["24.11", "25.05", "unknown"])("rejects unsupported Niri version %s", async (value) => {
   version = value;
-  await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow("25.11 or newer");
+  await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow(
+    tr("SnapShots require Niri 25.11 or newer."),
+  );
 });
 
 it.each(["25.11", "26.04", "niri 26.04 (abc)"])("accepts Niri version %s", async (value) => {
@@ -215,7 +224,11 @@ it.each(["garbage\n", "x".repeat(4 * 1024 * 1024 + 1)])(
     handler = async (_request, socket) => {
       socket.write(reply);
     };
-    await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow(/invalid|oversized/);
+    await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow(
+      new RegExp(
+        `(${tr("Niri returned an invalid message.")}|${tr("Niri returned an oversized message.")})`,
+      ),
+    );
   },
 );
 
@@ -223,7 +236,7 @@ it("fails promptly when Niri disconnects", async () => {
   handler = async (_request, socket) => {
     socket.end();
   };
-  await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow("disconnected");
+  await expect(checkNiriCaptureSupport(socketPath)).rejects.toThrow(tr("Niri disconnected."));
 });
 
 it("does not use stale, relative, or sandboxed Niri sockets", () => {

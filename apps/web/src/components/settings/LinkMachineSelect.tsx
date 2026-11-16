@@ -1,4 +1,5 @@
 import type { LinkableMachine } from "@t3tools/client-runtime/link-request";
+import { tr } from "@t3tools/shared/i18n";
 import { useId } from "react";
 
 import { EnvironmentMachineIcon } from "../EnvironmentMachineIcon";
@@ -13,14 +14,14 @@ export function LinkMachineBadge({ machine }: { readonly machine: LinkableMachin
   if (machine.linked) {
     return (
       <Badge variant="success" size="sm">
-        Linked
+        {tr("Linked")}
       </Badge>
     );
   }
   if (machine.connected) return null;
   return (
     <Badge variant="outline" size="sm">
-      {machine.connectOnly ? "T3 Connect" : "Not connected"}
+      {machine.connectOnly ? tr("T3 Connect") : tr("Not connected")}
     </Badge>
   );
 }
@@ -50,7 +51,7 @@ export function LinkMachineSelect({
   return (
     <div className="space-y-1.5">
       <span id={labelId} className="block text-xs font-medium text-foreground">
-        Machine
+        {tr("Machine")}
       </span>
       <Select
         value={value}
@@ -62,9 +63,13 @@ export function LinkMachineSelect({
         <SelectTrigger aria-labelledby={labelId}>
           <SelectValue>
             {(selected: string | null) => {
-              if (selected === ANOTHER_ADDRESS) return "Another address…";
+              if (selected === ANOTHER_ADDRESS) return tr("Another address\u2026");
               const machine = machines.find((candidate) => candidate.environmentId === selected);
-              return machine === undefined ? "Choose a machine" : <MachineName machine={machine} />;
+              return machine === undefined ? (
+                tr("Choose a machine")
+              ) : (
+                <MachineName machine={machine} />
+              );
             }}
           </SelectValue>
         </SelectTrigger>
@@ -78,7 +83,7 @@ export function LinkMachineSelect({
             </SelectItem>
           ))}
           <SelectItem value={ANOTHER_ADDRESS} hideIndicator>
-            Another address…
+            {tr("Another address\u2026")}
           </SelectItem>
         </SelectPopup>
       </Select>

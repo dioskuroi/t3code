@@ -1,4 +1,5 @@
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 import { PositiveInt, TrimmedNonEmptyString } from "./baseSchemas.ts";
 import { VcsDriverKind } from "./vcs.ts";
 
@@ -180,7 +181,11 @@ export class SourceControlProviderError extends Schema.TaggedError<SourceControl
   },
 ) {
   override get message(): string {
-    return `Source control provider ${this.provider} failed in ${this.operation}: ${this.detail}`;
+    return tr("Source control provider {provider} failed in {operation}: {detail}", {
+      provider: this.provider,
+      operation: this.operation,
+      detail: this.detail,
+    });
   }
 }
 
@@ -258,6 +263,10 @@ export class SourceControlRepositoryError extends Schema.TaggedError<SourceContr
   },
 ) {
   override get message(): string {
-    return `Source control repository operation ${this.operation} failed for ${this.provider}: ${this.detail}`;
+    return tr("Source control repository operation {operation} failed for {provider}: {detail}", {
+      operation: this.operation,
+      provider: this.provider,
+      detail: this.detail,
+    });
   }
 }

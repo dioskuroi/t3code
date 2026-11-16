@@ -1,6 +1,7 @@
 // @effect-diagnostics nodeBuiltinImport:off globalFetch:off - Tests exercise the real native loopback listener without an OpenAI account.
 import * as NodeHttp from "node:http";
 import { describe, expect, it } from "vite-plus/test";
+import { tr } from "@t3tools/shared/i18n";
 import { codexAuthDeliveryUrl, readCodexAuthDelivery } from "@t3tools/shared/codexAuthHandoff";
 import { EnvironmentId, ProviderInstanceId } from "@t3tools/contracts";
 import { receiveCodexAuthCallback, cancelCodexAuthCallback } from "./CodexAuthCallback.ts";
@@ -82,7 +83,7 @@ describe("desktop Codex callback helper", () => {
         cancelCodexAuthCallback(authorizationUrl);
         return true;
       }),
-    ).rejects.toThrow("cancelled");
+    ).rejects.toThrow(tr("Sign-in cancelled on this computer."));
     expect(
       await receiveCodexAuthCallback(authorizationUrl, async () => {
         await fetch(callback(authorizationUrl));

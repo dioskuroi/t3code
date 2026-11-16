@@ -1,4 +1,5 @@
 import { HStack, Image, Spacer, Text, VStack, ZStack } from "@expo/ui/swift-ui";
+import { tr } from "@t3tools/shared/i18n";
 import type { ComponentProps } from "react";
 import {
   accessibilityElement,
@@ -103,7 +104,7 @@ function AgentActivity(
     ? props.activities.map((row) =>
         row.phase === "completed" || row.phase === "failed"
           ? row
-          : { ...row, phase: "stale", status: "Out of date" },
+          : { ...row, phase: "stale", status: tr("Out of date") },
       )
     : props.activities;
   const ordered = [...activities].sort((a, b) => phasePriority(a.phase) - phasePriority(b.phase));
@@ -127,14 +128,14 @@ function AgentActivity(
       : tint;
 
   const allDone = props.activeCount === 0;
-  const doneLabel = failedRow ? "Failed" : "Done";
-  const outcomeLabel = failedRow ? "Agent work failed" : "Agent work completed";
+  const doneLabel = failedRow ? tr("Failed") : tr("Done");
+  const outcomeLabel = failedRow ? tr("Agent work failed") : tr("Agent work completed");
 
   const agentWord = props.activeCount === 1 ? "agent" : "agents";
   const agentsLabel = allDone
     ? outcomeLabel
     : environment.isStale
-      ? "Agent status out of date"
+      ? tr("Agent status out of date")
       : `${props.activeCount} active ${agentWord}`;
   const attentionSuffix =
     attentionRows.length > 0
@@ -143,7 +144,7 @@ function AgentActivity(
   const activeLabel = allDone
     ? doneLabel
     : environment.isStale
-      ? "Out of date"
+      ? tr("Out of date")
       : `${props.activeCount} active`;
   const showCompactGlyph = !attentionRow && !failedRow && !allDone && !environment.isStale;
   const summary = attentionSuffix || activeLabel;
@@ -346,10 +347,10 @@ function AgentActivity(
       >
         {attentionRow
           ? attentionRow.phase === "waiting_for_approval"
-            ? "Approval"
-            : "Input"
+            ? tr("Approval")
+            : tr("Input")
           : failedRow
-            ? "Failed"
+            ? tr("Failed")
             : activeLabel}
       </Text>
     ),

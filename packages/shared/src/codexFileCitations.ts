@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 export interface CodexFileCitationLink {
   readonly path: string;
   readonly href: string;
@@ -15,7 +16,7 @@ function positiveInteger(value: string | null | undefined): number | undefined {
 
 function citationLabel(path: string): string {
   const normalized = path.replaceAll("\\", "/").replace(/\/+$/, "");
-  return normalized.slice(normalized.lastIndexOf("/") + 1) || normalized || "File";
+  return normalized.slice(normalized.lastIndexOf("/") + 1) || normalized || tr("File");
 }
 
 function markdownDestinationPath(path: string): string {

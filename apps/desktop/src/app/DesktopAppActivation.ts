@@ -1,5 +1,6 @@
 // @effect-diagnostics nodeBuiltinImport:off -- Local socket ownership checks need lstat, an atomic rename, and a directory watch at the Node adapter boundary.
 import { pipe } from "effect/Function";
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodeFSP from "node:fs/promises";
@@ -134,7 +135,7 @@ export async function startDesktopAppControlServer(input: {
       buffer += chunk;
       if (Buffer.byteLength(buffer, "utf8") > MAX_REQUEST_BYTES) {
         handled = true;
-        finish(invalidResponse("invalid-request", "The desktop app request is too large."));
+        finish(invalidResponse("invalid-request", tr("The desktop app request is too large.")));
         return;
       }
 
@@ -147,14 +148,16 @@ export async function startDesktopAppControlServer(input: {
       try {
         parsed = JSON.parse(line);
       } catch {
-        finish(invalidResponse("invalid-request", "The desktop app request is not valid JSON."));
+        finish(
+          invalidResponse("invalid-request", tr("The desktop app request is not valid JSON.")),
+        );
         return;
       }
 
       if (!isDesktopAppActivationRequest(parsed)) {
         pipe(
           requestIdFromUnknown(parsed),
-          (requestId) => invalidResponse(requestId, "The desktop app request is invalid."),
+          (requestId) => invalidResponse(requestId, tr("The desktop app request is invalid.")),
           finish,
         );
         return;
@@ -162,7 +165,10 @@ export async function startDesktopAppControlServer(input: {
       activeRequestId = parsed.requestId;
       void input.handle(parsed).then(finish, () => {
         finish(
-          invalidResponse(parsed.requestId, "T3 Code could not process the desktop app request."),
+          invalidResponse(
+            parsed.requestId,
+            tr("T3 Code could not process the desktop app request."),
+          ),
         );
       });
     });

@@ -1,4 +1,5 @@
 import type { DesktopBridge, DesktopUpdateState } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { ExternalLinkIcon } from "lucide-react";
 
 import {
@@ -77,7 +78,7 @@ export function SidebarUpdateReleaseNotes({
         {state.status === "available" ? (
           <div>
             <div className="whitespace-nowrap text-sm leading-5 font-medium">
-              Update ready to download
+              {tr("Update ready to download")}
             </div>
             {state.availableVersion ? (
               <div className="mt-0.5 text-xs leading-4 text-muted-foreground">
@@ -98,7 +99,7 @@ export function SidebarUpdateReleaseNotes({
           const linkLabel =
             releaseNote.stats ??
             (omittedItemCount === 0
-              ? "View release on GitHub"
+              ? tr("View release on GitHub")
               : `${omittedItemCount} more ${omittedItemCount === 1 ? "change" : "changes"} on GitHub`);
 
           const generated = releaseNote.stats !== undefined || releaseNote.intro !== undefined;
@@ -114,7 +115,9 @@ export function SidebarUpdateReleaseNotes({
                 )
               ) : (
                 <h3 className="mb-2 text-foreground text-xs leading-4 font-semibold">
-                  {index === 0 ? "What's changed" : `Changes in ${releaseNote.version}`}
+                  {index === 0
+                    ? tr("What's changed")
+                    : tr("Changes in {version}", { version: releaseNote.version })}
                 </h3>
               )}
               {releaseNote.intro ? (

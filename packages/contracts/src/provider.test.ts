@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vite-plus/test";
 import * as Schema from "effect/Schema";
+import { tr } from "@t3tools/shared/i18n";
 
 import { ThreadId } from "./baseSchemas.ts";
 import { ProviderSendTurnInput, ProviderUploadFeedbackError } from "./provider.ts";
@@ -50,7 +51,9 @@ describe("provider feedback", () => {
 
     expect(error.threadId).toBe("thread-1");
     expect(error.cause).toBe(cause);
-    expect(error.message).toBe("Failed to upload feedback for thread thread-1.");
+    expect(error.message).toBe(
+      tr("Failed to upload feedback for thread {threadId}.", { threadId: "thread-1" }),
+    );
     expect(error.message).not.toContain("provider request secret");
   });
 });

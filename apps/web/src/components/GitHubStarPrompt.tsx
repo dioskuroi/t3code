@@ -1,4 +1,5 @@
 import { type EnvironmentId, SourceControlProviderKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { runAtomCommand } from "@t3tools/client-runtime/state/runtime";
 import * as Schema from "effect/Schema";
 import { StarIcon } from "lucide-react";
@@ -36,14 +37,14 @@ function showStarPrompt(environmentId: EnvironmentId) {
       .catch(() => undefined);
   };
   const starInPlace = async () => {
-    toastManager.update(id, { actionProps: { children: "Starring…", disabled: true } });
+    toastManager.update(id, { actionProps: { children: tr("Starring\u2026"), disabled: true } });
     if (await starRepository(environmentId)) {
       // Thank them in place: a closing and opening toast would slide under the confetti.
       dismiss();
       toastManager.update(id, {
         type: "success",
-        title: "Thanks for the star!",
-        description: "It really helps T3 Code grow.",
+        title: tr("Thanks for the star!"),
+        description: tr("It really helps T3 Code grow."),
         timeout: 5_000,
         actionProps: undefined,
         data: {},
@@ -54,18 +55,20 @@ function showStarPrompt(environmentId: EnvironmentId) {
     // Browsers block new tabs once the click's activation expires; desktop opens through its bridge.
     if (window.desktopBridge || navigator.userActivation?.isActive !== false)
       return openInBrowser();
-    toastManager.update(id, { actionProps: { children: "Open GitHub", onClick: openInBrowser } });
+    toastManager.update(id, {
+      actionProps: { children: tr("Open GitHub"), onClick: openInBrowser },
+    });
   };
   const id = toastManager.add({
-    title: "Enjoying T3 Code?",
-    description: "Give us a star on GitHub to let us know!",
+    title: tr("Enjoying T3 Code?"),
+    description: tr("Give us a star on GitHub to let us know!"),
     timeout: 0,
     onClose: dismiss,
-    actionProps: { children: "Star on GitHub", onClick: () => void starInPlace() },
+    actionProps: { children: tr("Star on GitHub"), onClick: () => void starInPlace() },
     data: {
       actionLayout: "stacked-end",
       leadingIcon: <StarIcon aria-hidden className="size-4 text-warning-foreground" />,
-      secondaryActionProps: { children: "Dismiss", onClick: close },
+      secondaryActionProps: { children: tr("Dismiss"), onClick: close },
       secondaryActionVariant: "ghost",
     },
   });

@@ -1,4 +1,5 @@
 import type * as Electron from "electron";
+import { tr } from "@t3tools/shared/i18n";
 import { assert, beforeEach, expect, it, vi } from "vite-plus/test";
 
 import type { RegionSnapShotChild, RegionSnapShotProcess } from "./RegionSnapShot.ts";
@@ -52,7 +53,7 @@ it("rejects when the child exits before replying", async () => {
   fake.emit("ready");
   fake.exit();
 
-  await expect(capture).rejects.toThrow(/helper exited/);
+  await expect(capture).rejects.toThrow(tr("Windows window capture helper exited."));
 });
 
 it("cancels a pending capture on close and kills the child", async () => {
@@ -61,7 +62,7 @@ it("cancels a pending capture on close and kills the child", async () => {
   const capture = child.capture(region);
   child.close();
 
-  await expect(capture).rejects.toThrow(/cancelled/);
+  await expect(capture).rejects.toThrow(tr("Windows window capture cancelled."));
   assert.lengthOf(fake.kill.mock.calls, 1);
   assert.isFalse(child.alive);
   fake.emit("ready");
@@ -74,7 +75,7 @@ function fakeProcess() {
   let alive = true;
   const close = vi.fn(() => {
     alive = false;
-    result.reject(new Error("Windows window capture cancelled."));
+    result.reject(new Error(tr("Windows window capture cancelled.")));
   });
   const capture = vi.fn((_region: Electron.Rectangle) => result.promise);
   const process: RegionSnapShotProcess = {
@@ -109,7 +110,9 @@ it("rejects a second capture while one is in flight", async () => {
   const { pool, processes } = fakePool();
   const first = pool.capture(region);
 
-  await expect(pool.capture(region)).rejects.toThrow(/still in progress/);
+  await expect(pool.capture(region)).rejects.toThrow(
+    tr("Windows window capture is still in progress. Try again."),
+  );
   assert.lengthOf(processes, 1);
 
   processes[0]!.resolve({ width: 1, height: 1, png: Buffer.from([1]) });
@@ -125,9 +128,9 @@ it("closes the standby and the in-flight child", async () => {
 
   pool.close();
 
-  await expect(capture).rejects.toThrow(/cancelled/);
+  await expect(capture).rejects.toThrow(tr("Windows window capture cancelled."));
   assert.lengthOf(processes[0]!.close.mock.calls, 1);
   assert.lengthOf(processes[1]!.close.mock.calls, 1);
-  await expect(pool.capture(region)).rejects.toThrow(/unavailable/);
+  await expect(pool.capture(region)).rejects.toThrow(tr("Windows window capture is unavailable."));
   assert.lengthOf(processes, 2);
 });

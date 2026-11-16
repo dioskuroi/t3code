@@ -170,7 +170,7 @@ describe("mobile cloud link environment client", () => {
         ).pipe(Effect.flip);
         expect(error).toMatchObject({
           _tag: "CloudEnvironmentLinkError",
-          message: "Relay returned credentials for a different environment.",
+          message: "中继返回的凭证属于另一环境。",
         });
         expect(fetchMock).toHaveBeenCalledTimes(3);
       }),
@@ -206,7 +206,7 @@ describe("mobile cloud link environment client", () => {
       ).pipe(Effect.flip);
       expect(error).toMatchObject({
         _tag: "CloudEnvironmentLinkError",
-        message: "Relay returned credentials for a different endpoint provider.",
+        message: "中继返回的凭证属于另一端点 Provider。",
       });
       expect(fetchMock).toHaveBeenCalledTimes(3);
     }),

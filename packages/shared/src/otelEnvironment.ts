@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Data from "effect/Data";
@@ -137,7 +138,13 @@ const parseHttpUrl = (raw: string) =>
 const NOT_EXPORTED = "so the signals it configures are not exported";
 
 const endpoint = (name: string) =>
-  readOrWarn(name, parseHttpUrl, `${name} is not an http or https URL, ${NOT_EXPORTED}`);
+  readOrWarn(
+    name,
+    parseHttpUrl,
+    tr("{name} is not an http or https URL, so the signals it configures are not exported", {
+      name,
+    }),
+  );
 const decodeOtlpProtocol = Schema.decodeUnknownOption(OtlpProtocol);
 
 // The specification reads enum values case-insensitively.
@@ -176,7 +183,10 @@ const exporter = (name: string): Config.Config<Setting<Exporter>> =>
         ? { value }
         : {
             value,
-            warning: `${name} names ${ignored.join(", ")}, which T3 Code does not export to, so ${ignored.length === 1 ? "it was" : "they were"} ignored`,
+            warning: tr(
+              "{name} names {ignored}, which T3 Code does not export to, so they were ignored",
+              { name, ignored: ignored.join(", ") },
+            ),
           };
     }),
   );
@@ -252,19 +262,15 @@ const endpointSignal = (name: OtlpSignalName, own: Settings, generic: Settings):
 };
 
 const sdkFlags = {
-  t3: flag(
-    "T3CODE_OTEL_SDK_DISABLED",
-    T3CODE_TRUE,
-    T3CODE_FALSE,
-    (value) => `T3CODE_OTEL_SDK_DISABLED=${value} is not a yes or a no and was ignored`,
+  t3: flag("T3CODE_OTEL_SDK_DISABLED", T3CODE_TRUE, T3CODE_FALSE, (value) =>
+    tr("T3CODE_OTEL_SDK_DISABLED={value} is not a yes or a no and was ignored", { value }),
   ),
   // OTEL booleans are true only for case-insensitive true; warn on unrecognized values.
-  spec: flag(
-    "OTEL_SDK_DISABLED",
-    ["true"],
-    ["false"],
-    (value) =>
-      `OTEL_SDK_DISABLED=${value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or T3CODE_OTEL_SDK_DISABLED to say it any other way`,
+  spec: flag("OTEL_SDK_DISABLED", ["true"], ["false"], (value) =>
+    tr(
+      "OTEL_SDK_DISABLED={value} was read as false; the OpenTelemetry specification recognizes only the string true, so use OTEL_SDK_DISABLED=true or T3CODE_OTEL_SDK_DISABLED to say it any other way",
+      { value },
+    ),
   ),
 };
 
@@ -302,8 +308,12 @@ export const load: Effect.Effect<OtelEnvironment> = Config.all({
     if (disabled) {
       warnings.push(
         t3.value
-          ? "T3CODE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it"
-          : "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set T3CODE_OTEL_SDK_DISABLED=false to export anyway",
+          ? tr(
+              "T3CODE_OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it",
+            )
+          : tr(
+              "OTEL_SDK_DISABLED is set, so no telemetry is exported, whatever configured it; set T3CODE_OTEL_SDK_DISABLED=false to export anyway",
+            ),
       );
     }
     return {

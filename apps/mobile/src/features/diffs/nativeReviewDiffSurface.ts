@@ -8,6 +8,7 @@ import {
   type ComponentType,
   type Ref,
 } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { View, type NativeSyntheticEvent, type ViewProps } from "react-native";
 import { requireNativeView } from "expo";
 
@@ -239,7 +240,7 @@ function useNativeReviewDiffPayload(
           if (cancelled) return;
           // This promise resolves after native decode, reset validation, and merge.
           if (method === "setTokensPatchJson" && accepted !== true) {
-            throw new Error("Native token patch was not accepted");
+            throw new Error(tr("Native token patch was not accepted"));
           }
           onDelivered?.(payload);
         })
@@ -295,10 +296,10 @@ function NativeReviewDiffView(props: NativeReviewDiffViewProps) {
         ],
       },
       createElement(EmptyState, {
-        title: "Could not display diff",
-        detail: "Try loading the diff view again.",
+        title: tr("Could not display diff"),
+        detail: tr("Try loading the diff view again."),
         variant: "plain",
-        actionLabel: "Retry diff",
+        actionLabel: tr("Retry diff"),
         onAction: () => {
           props.onDebug?.({
             nativeEvent: { message: "surface-retry" },

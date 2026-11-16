@@ -1,4 +1,5 @@
 import { NativeScrollView } from "../../native/NativeScrollViewMarker";
+import { tr } from "@t3tools/shared/i18n";
 import { Button } from "../../components/ui/Button";
 import { LegendList } from "@legendapp/list/react-native";
 import type { ProjectEntry } from "@t3tools/contracts";
@@ -241,7 +242,7 @@ export function FileTreeBrowser(props: {
           ) : null}
           {props.searchTruncated ? (
             <Text className="mx-4 my-2 text-xs text-foreground-muted">
-              More search results available. Refine your search to see them.
+              {tr("More search results available. Refine your search to see them.")}
             </Text>
           ) : null}
         </>
@@ -250,7 +251,9 @@ export function FileTreeBrowser(props: {
         <View className="px-4 py-5">
           {props.error && props.entries.length === 0 ? (
             <>
-              <Text className="text-sm font-t3-bold text-foreground">Files unavailable</Text>
+              <Text className="text-sm font-t3-bold text-foreground">
+                {tr("Files unavailable")}
+              </Text>
               <Text
                 accessibilityRole="alert"
                 className="mt-1 text-xs leading-normal text-foreground-muted"
@@ -259,7 +262,7 @@ export function FileTreeBrowser(props: {
               </Text>
               <View className="mt-3">
                 <Button
-                  label="Try again"
+                  label={tr("Try again")}
                   tone="secondary"
                   onPress={props.onRefresh}
                   disabled={props.isPending}
@@ -270,11 +273,11 @@ export function FileTreeBrowser(props: {
             <AppActivityIndicator size="small" />
           ) : (
             <>
-              <Text className="text-sm font-t3-bold text-foreground">No files found</Text>
+              <Text className="text-sm font-t3-bold text-foreground">{tr("No files found")}</Text>
               <Text className="mt-1 text-xs leading-normal text-foreground-muted">
                 {props.searchQuery.trim().length > 0
-                  ? "Try a different search."
-                  : "The workspace is empty."}
+                  ? tr("Try a different search.")
+                  : tr("The workspace is empty.")}
               </Text>
             </>
           )}
