@@ -1,4 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { useEffect } from "react";
 import { BackHandler, Keyboard } from "react-native";
 import { AppBar } from "../../../components/ui/AppBar";
@@ -54,17 +55,17 @@ export function PullRequestToolbar(props: {
   }, [searching, closeSearch, navigation, isTabActive]);
   return (
     <AppBar
-      title="T3 Code"
+      title={tr("T3 Code")}
       titleContent={
         <WorkspaceBrandTitle
-          accessibilityLabel="T3 Code, Pull requests"
+          accessibilityLabel={tr("T3 Code, Pull requests")}
           onOpenEnvironments={() => openSettings(navigation, "SettingsEnvironments")}
         />
       }
       search={{
         value: tab.query,
         onChangeText: (query) => dispatch({ type: "query", tab: "pullRequests", query }),
-        placeholder: "Search pull requests",
+        placeholder: tr("Search pull requests"),
         active: searching,
         onOpen: openSearch,
         onClose: closeSearch,
@@ -73,7 +74,7 @@ export function PullRequestToolbar(props: {
         filters
           ? [
               {
-                title: "Filter pull requests",
+                title: tr("Filter pull requests"),
                 icon: filters.customized
                   ? "line.3.horizontal.decrease.circle.fill"
                   : "line.3.horizontal.decrease.circle",

@@ -48,7 +48,7 @@ async function resolvePreviewUri(
     return loadLocalAttachmentPreview(item.attachment, signal).catch((error: unknown) => {
       throw new PreviewResolutionError({
         cause: error,
-        fallbackMessage: "Attach the file again and retry.",
+        fallbackMessage: tr("Attach the file again and retry."),
       });
     });
   }
@@ -62,7 +62,7 @@ async function resolvePreviewUri(
       throw new PreviewResolutionError({
         cause: error,
         fallbackMessage:
-          "Reconnect to this environment and try again. The file may have been moved or deleted.",
+          tr("Reconnect to this environment and try again. The file may have been moved or deleted."),
       });
     });
   return { uri: url + (item.srcFragment ?? "") };
@@ -109,7 +109,7 @@ function ResolvedFilePreview(props: {
           onResolutionError(
             isPreviewResolutionError(error)
               ? error
-              : new PreviewResolutionError({ cause: error, fallbackMessage: "Try again." }),
+              : new PreviewResolutionError({ cause: error, fallbackMessage: tr("Try again.") }),
           );
         },
       );
@@ -160,7 +160,7 @@ function ResolvedFilePreview(props: {
                 const sharing = /^(file|content):/.test(uri)
                   ? shareLocalAttachment({ ...input, uri })
                   : downloadAndShareAttachment({ ...input, url: uri });
-                void sharing.catch(() => Dialog.alert("Could not share file", "Please try again."));
+                void sharing.catch(() => Dialog.alert(tr("Could not share file"), tr("Please try again.")));
               },
             },
           ]

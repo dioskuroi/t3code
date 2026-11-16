@@ -20,11 +20,11 @@ export type SecretRequestAnswerInput = typeof SecretRequestAnswerInput.Type;
 /** What the agent reads when its card ends without a secret. */
 export const SECRET_REQUEST_UNSAVED_NOTE = {
   declined:
-    "The user declined. Don't ask for it in chat or another way; say what's blocked and go on without it.",
+    tr("The user declined. Don't ask for it in chat or another way; say what's blocked and go on without it."),
   cancelled:
-    "The card closed with the run. Ask again with a new clientRequestId only if the secret is still needed.",
+    tr("The card closed with the run. Ask again with a new clientRequestId only if the secret is still needed."),
   timed_out:
-    "No answer in time. Don't ask in chat; ask again with a new clientRequestId only if it is still needed.",
+    tr("No answer in time. Don't ask in chat; ask again with a new clientRequestId only if it is still needed."),
 } as const;
 
 const SECRET_REQUEST_FAILURE_MESSAGES = {
@@ -65,7 +65,10 @@ export class SecretRequestError extends Schema.TaggedError<SecretRequestError>()
 ) {
   override get message(): string {
     if (this.reason === "reference_unreadable" && this.provider !== undefined) {
-      return `Could not read the secret from the secret provider "${this.provider}". Unlock it and try again, or enter the value.`;
+      return tr(
+        "Could not read the secret from the secret provider \"{provider}\". Unlock it and try again, or enter the value.",
+        { provider: this.provider },
+      );
     }
     return SECRET_REQUEST_FAILURE_MESSAGES[this.reason];
   }

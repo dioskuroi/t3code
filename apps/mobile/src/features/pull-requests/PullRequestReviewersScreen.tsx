@@ -1,4 +1,5 @@
 import { AppBar, type AppBarSearch } from "../../components/ui/AppBar";
+import { tr } from "@t3tools/shared/i18n";
 import { AsyncResult } from "effect/reactivity";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
 import { usePullRequestConnected } from "./usePullRequestConnected";
@@ -29,12 +30,14 @@ import { pullRequestTarget, type PullRequestParams } from "./usePullRequestDiff"
 
 const TRUNCATED_LABELS: Record<ReviewerTruncation, (error: string | null) => string> = {
   unsearchable: () =>
-    "The provider has more reviewers than it returned. Find additional reviewers on the provider.",
-  searchable: () => "The provider has more reviewers than are listed here. Search to find them.",
+    tr("The provider has more reviewers than it returned. Find additional reviewers on the provider."),
+  searchable: () => tr("The provider has more reviewers than are listed here. Search to find them."),
   "search-failed": (error) =>
-    `Only listed reviewers are matched: the provider search failed. ${error ?? ""}`,
+    tr("Only listed reviewers are matched: the provider search failed. {error}", {
+      error: error ?? "",
+    }),
   "search-truncated": () =>
-    "More reviewers match than the provider returned. Keep typing to narrow it down.",
+    tr("More reviewers match than the provider returned. Keep typing to narrow it down."),
 };
 
 export function PullRequestReviewersScreen({ route }: StaticScreenProps<PullRequestParams>) {
@@ -138,17 +141,17 @@ export function PullRequestReviewersScreen({ route }: StaticScreenProps<PullRequ
         compactToolbar: true,
         value: query,
         onChangeText: search,
-        placeholder: "Search reviewers",
+        placeholder: tr("Search reviewers"),
       }
     : undefined;
   const searchToolbarInset = useSearchToolbarInset(reviewerSearch);
   return (
     <View className="flex-1 bg-sheet">
       <AppBar
-        title="Request review"
+        title={tr("Request review")}
         subtitle={`#${route.params.number} · ${route.params.repository}`}
         onClose={() => navigation.goBack()}
-        closeAccessibilityLabel="Close request review"
+        closeAccessibilityLabel={tr("Close request review")}
         search={reviewerSearch}
       />
       {listCandidates ? (
@@ -225,20 +228,19 @@ export function PullRequestReviewersScreen({ route }: StaticScreenProps<PullRequ
                 <EmptyState
                   title={
                     queryError
-                      ? "Couldn't load reviewers"
+                      ? tr("Couldn't load reviewers")
                       : query.trim()
                         ? tr("No matching reviewers")
                         : tr("No reviewers available")
                   }
                   detail={
-                    result.error ?? tr("Search people and teams with access to this repository.")
+                    queryError ?? tr("Search people and teams with access to this repository.")
                   }
-                  detail={queryError ?? "Search people and teams with access to this repository."}
                   variant="plain"
                 />
                 {queryError ? (
                   <Button
-                    label="Retry"
+                    label={tr("Retry")}
                     onPress={result.error ? result.refresh : searchResult.refresh}
                   />
                 ) : null}

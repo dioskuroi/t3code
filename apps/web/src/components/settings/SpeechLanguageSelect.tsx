@@ -1,4 +1,5 @@
 import type { EnvironmentSpeechStatus } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { effectiveSpeechLanguage } from "@t3tools/shared/speech";
 import { updateClientSettings, useClientSettings } from "../../hooks/useSettings";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "../ui/select";
@@ -28,7 +29,7 @@ export function SpeechLanguageSelect({ model }: { readonly model: ModelLanguages
   const label = unavailable
     ? `${effectiveLabel} (${unavailable})`
     : preference === "auto" && resolved !== "auto"
-      ? `Auto (${effectiveLabel})`
+      ? tr("Auto ({effectiveLabel})", { effectiveLabel: effectiveLabel })
       : effectiveLabel;
   return (
     <Select
@@ -38,11 +39,11 @@ export function SpeechLanguageSelect({ model }: { readonly model: ModelLanguages
         if (value) void updateClientSettings({ speechLanguage: value });
       }}
     >
-      <SelectTrigger size="sm" aria-label="Transcription language" className="max-w-64">
+      <SelectTrigger size="sm" aria-label={tr("Transcription language")} className="max-w-64">
         <SelectValue>{label}</SelectValue>
       </SelectTrigger>
       <SelectPopup align="end" alignItemWithTrigger={false}>
-        <SelectItem value="auto">Auto</SelectItem>
+        <SelectItem value="auto">{tr("Auto")}</SelectItem>
         {unavailable ? (
           <SelectItem value={preference} disabled>
             {unavailable}

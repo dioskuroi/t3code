@@ -25,13 +25,15 @@ import { readableFailure } from "./pullRequestDetail.logic";
 
 const TRUNCATED_LABELS: Record<ReviewerTruncation, (error: string | null) => string> = {
   unsearchable: () =>
-    "This repository has more people with access than are listed here. Ask for the rest on the host.",
+    tr("This repository has more people with access than are listed here. Ask for the rest on the host."),
   searchable: () =>
-    "This repository has more people with access than are listed here. Search to find them.",
+    tr("This repository has more people with access than are listed here. Search to find them."),
   "search-failed": (error) =>
-    `Only the people already listed are matched: the host search failed. ${error ?? ""}`,
+    tr("Only the people already listed are matched: the host search failed. {error}", {
+      error: error ?? "",
+    }),
   "search-truncated": () =>
-    "More people match than the host returned. Keep typing to narrow it down.",
+    tr("More people match than the host returned. Keep typing to narrow it down."),
 };
 
 export function PullRequestReviewerPicker({
@@ -121,7 +123,7 @@ export function PullRequestReviewerPicker({
       onOpenChange={setOpen}
       query={query}
       onQueryChange={setQuery}
-      searchLabel="Search people with access"
+      searchLabel={tr("Search people with access")}
       isPending={(candidatesQuery.isPending && candidatesQuery.data === null) || searchPending}
       error={
         candidatesQuery.data === null
@@ -131,9 +133,9 @@ export function PullRequestReviewerPicker({
             : null
       }
       candidates={candidates}
-      emptyLabel="Nobody else has access to this repository."
-      noMatchLabel="Nobody with access matches that."
-      errorLabel="The people with access could not be read."
+      emptyLabel={tr("Nobody else has access to this repository.")}
+      noMatchLabel={tr("Nobody with access matches that.")}
+      errorLabel={tr("The people with access could not be read.")}
       truncated={truncation !== null}
       truncatedLabel={truncation === null ? "" : TRUNCATED_LABELS[truncation](searchError)}
       candidateKey={(candidate) => `${candidate.kind}:${candidate.id}`}

@@ -366,7 +366,7 @@ export function ThreadQueueSheet({ route }: StaticScreenProps<QueueTarget>) {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View collapsable={false} className="flex-1 bg-sheet">
-        <SheetHeader title="Queued" onClose={() => navigation.goBack()} />
+        <SheetHeader title={tr("Queued")} onClose={() => navigation.goBack()} />
         <ScreenContent>{content}</ScreenContent>
       </View>
     </GestureHandlerRootView>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { View } from "react-native";
 import { useOpenWorkspaceDetail } from "../layout/useOpenWorkspaceDetail";
 import { AppText as Text } from "../../components/ui/AppText";

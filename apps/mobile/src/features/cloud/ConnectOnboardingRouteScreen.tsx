@@ -1,4 +1,5 @@
 import { AppBar } from "../../components/ui/AppBar";
+import { tr } from "@t3tools/shared/i18n";
 import { Button } from "../../components/ui/Button";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 
@@ -59,10 +60,10 @@ function ConfiguredConnectOnboardingRouteScreen() {
   return (
     <View collapsable={false} className="flex-1 bg-sheet">
       <AppBar
-        title="Set up T3 Connect"
+        title={tr("Set up T3 Connect")}
         onClose={handleClose}
         refresh={{
-          accessibilityLabel: "Refresh environments",
+          accessibilityLabel: tr("Refresh environments"),
           disabled: isRefreshing,
           onPress: handleRefresh,
         }}

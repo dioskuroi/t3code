@@ -70,7 +70,7 @@ export function GitCommitSheet(_props: GitCommitSheetProps) {
   const android = Platform.OS === "android";
   const header = (
     <SheetHeader
-      title="Commit changes"
+      title={tr("Commit changes")}
       subtitle={gitStatus.data?.refName ?? "(detached HEAD)"}
       onCancel={() => navigation.goBack()}
       accessibilityLabel={tr("Cancel commit")}

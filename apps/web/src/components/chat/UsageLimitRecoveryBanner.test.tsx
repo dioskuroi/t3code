@@ -23,8 +23,8 @@ function bannerDescription(resetAt: Date, timestampFormat: TimestampFormat) {
 
 describe("usageLimitRecoveryBannerItem", () => {
   it.each([
-    ["12-hour", "将于 5:30 PM 重置"],
-    ["24-hour", "将于 17:30 重置"],
+    ["12-hour", "重置时间 5:30 PM"],
+    ["24-hour", "重置时间 17:30"],
   ] as const)("formats a same-day reset with the %s setting", (timestampFormat, expected) => {
     using _now = vi.spyOn(Date, "now").mockReturnValue(stoppedAt.getTime());
     expect(bannerDescription(new Date(2026, 9, 20, 17, 30), timestampFormat)).toBe(expected);
@@ -33,7 +33,7 @@ describe("usageLimitRecoveryBannerItem", () => {
   it("names the day when the reset is tomorrow", () => {
     using _now = vi.spyOn(Date, "now").mockReturnValue(stoppedAt.getTime());
     expect(bannerDescription(new Date(2026, 9, 21, 17, 30), "24-hour")).toBe(
-      "将于 明天 17:30 重置",
+      "重置时间 明天 17:30",
     );
   });
 });

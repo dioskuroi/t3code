@@ -67,14 +67,14 @@ describe("AuthorizedClientsHeaderAction", () => {
     await using screen = await renderHeader(serviceId);
 
     await expect.element(screen.getByRole("group", { name: denial })).toBeVisible();
-    await expect.element(screen.getByRole("button", { name: "Create link" })).toBeDisabled();
+    await expect.element(screen.getByRole("button", { name: "创建链接" })).toBeDisabled();
   });
 
   it("leaves pairing open on an unmanaged service when the primary is managed", async () => {
     setup([[localId, remoteClientsOff]]);
     await using screen = await renderHeader(serviceId);
 
-    await expect.element(screen.getByRole("button", { name: "Create link" })).toBeEnabled();
+    await expect.element(screen.getByRole("button", { name: "创建链接" })).toBeEnabled();
     expect(screen.getByRole("group", { name: denial }).query()).toBeNull();
   });
 });

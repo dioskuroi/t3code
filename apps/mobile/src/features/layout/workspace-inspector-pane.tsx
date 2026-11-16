@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import Animated, {
   cubicBezier,
   runOnJS,

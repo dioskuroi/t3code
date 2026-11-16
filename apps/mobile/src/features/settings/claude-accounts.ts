@@ -2,6 +2,7 @@ import {
   deriveAvailableInstanceId,
   deriveInstanceId,
 } from "@t3tools/client-runtime/provider-instance-ids";
+import { tr } from "@t3tools/shared/i18n";
 import {
   defaultInstanceIdForDriver,
   isManagedSettingPath,
@@ -41,9 +42,9 @@ export function planClaudeAccountSave(input: {
   const name = input.draft.name.trim();
   const configDir = input.draft.configDir.trim();
   const adding = input.instanceId === null;
-  if (adding && name.length === 0) return { error: "Enter a name for this account." };
+  if (adding && name.length === 0) return { error: tr("Enter a name for this account.") };
   if (adding && configDir.length === 0) {
-    return { error: "Enter the Claude config folder this account is signed in with." };
+    return { error: tr("Enter the Claude config folder this account is signed in with.") };
   }
   const instanceId =
     input.instanceId ??
@@ -55,7 +56,7 @@ export function planClaudeAccountSave(input: {
       ),
     );
   if (input.policy && isManagedSettingPath(input.policy, `providerInstances.${instanceId}`)) {
-    return { error: `Managed by ${input.policy.organization}.` };
+    return { error: tr("Managed by {organization}.", { organization: input.policy.organization }) };
   }
   const current: ProviderInstanceConfig = Object.hasOwn(input.providerInstances, instanceId)
     ? input.providerInstances[instanceId]!

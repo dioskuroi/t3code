@@ -1,4 +1,5 @@
 import { useAndroidFloatingTabs } from "../../settings/appearance/AppearancePreferencesProvider";
+import { tr } from "@t3tools/shared/i18n";
 import { WorkspaceNoTabs } from "./WorkspaceNoTabs";
 import { useEnabledNavigationTabs } from "./navigation-tabs";
 import { NAVIGATION_TAB_ORDER } from "./navigation-tab-order";
@@ -88,7 +89,7 @@ function WorkspaceRoot() {
                   ) : layout.usesSplitView ? (
                     <>
                       <NativeStackScreenOptions options={{ headerShown: false }} />
-                      <AppBar embedded title="Pull requests" />
+                      <AppBar embedded title={tr("Pull requests")} />
                       <WorkspaceEmptyDetail tab="pullRequests" />
                     </>
                   ) : (

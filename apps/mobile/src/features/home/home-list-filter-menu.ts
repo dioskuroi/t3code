@@ -24,12 +24,12 @@ export function buildHomeListFilterMenuItems(props: {
   const items: AppBarMenuItem[] = [
     {
       id: "environment",
-      title: "Environment",
+      title: tr("Environment"),
       items: [
         {
           id: "environment:all",
-          title: "All environments",
-          subtitle: "Show threads from every environment",
+          title: tr("All environments"),
+          subtitle: tr("Show threads from every environment"),
           selected: props.selectedEnvironmentId === null,
           onPress: () => props.onEnvironmentChange(null),
         },
@@ -46,12 +46,12 @@ export function buildHomeListFilterMenuItems(props: {
   if (props.projects.length > 0) {
     items.push({
       id: "project",
-      title: "Project",
+      title: tr("Project"),
       items: [
         {
           id: "project:all",
-          title: "All projects",
-          subtitle: "Show threads from every project",
+          title: tr("All projects"),
+          subtitle: tr("Show threads from every project"),
           selected: props.selectedProjectKey === null,
           onPress: () => props.onProjectChange(null),
         },

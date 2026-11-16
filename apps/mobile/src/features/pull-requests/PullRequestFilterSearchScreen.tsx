@@ -116,8 +116,8 @@ export function PullRequestFilterSearchScreen({
     <PullRequestSearchSheet
       title={kind === "labels" ? tr("Filter by label") : tr("Filter by author")}
       placeholder={placeholder}
-      closeAccessibilityLabel={kind === "labels" ? "Close label filter" : "Close author filter"}
-      clearAccessibilityLabel={kind === "labels" ? "Clear label search" : "Clear author search"}
+      closeAccessibilityLabel={kind === "labels" ? tr("Close label filter") : tr("Close author filter")}
+      clearAccessibilityLabel={kind === "labels" ? tr("Clear label search") : tr("Clear author search")}
       query={query}
       onQueryChange={setQuery}
     >

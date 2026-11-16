@@ -2,6 +2,7 @@ import {
   getPromptControlledTraits,
   getTraitSelectChange,
 } from "@t3tools/client-runtime/model-traits";
+import { tr } from "@t3tools/shared/i18n";
 import * as Dialog from "../../components/ui/Dialog";
 import { createV5StackNavigator as createNativeStackNavigator } from "../../native/createV5StackNavigator";
 import { useSheetStackOptions } from "../layout/nested-stacks";
@@ -1168,8 +1169,8 @@ function ThreadSettingsModelsScreen() {
   const search: AppBarSearch = {
     value: session.searchQuery,
     onChangeText: session.setSearchQuery,
-    placeholder: "Find a model",
-    clearAccessibilityLabel: "Clear model search",
+    placeholder: tr("Find a model"),
+    clearAccessibilityLabel: tr("Clear model search"),
     mode: "inline",
     compactToolbar: true,
   };
@@ -1187,20 +1188,20 @@ function ThreadSettingsModelsScreen() {
   return (
     <>
       <AppBar
-        title="Thread settings"
+        title={tr("Thread settings")}
         onClose={presentation.onClose}
-        closeAccessibilityLabel="Cancel thread settings"
+        closeAccessibilityLabel={tr("Cancel thread settings")}
         search={search}
         menus={[
           {
-            title: "Model filters",
+            title: tr("Model filters"),
             icon: hasCustomCatalogFilter
               ? "line.3.horizontal.decrease.circle.fill"
               : "line.3.horizontal.decrease",
             items: [
               {
                 id: "provider",
-                title: "Provider",
+                title: tr("Provider"),
                 items: providerFilters.map((filter) => ({
                   id: filter.id,
                   title: filter.title,
@@ -1212,7 +1213,7 @@ function ThreadSettingsModelsScreen() {
                 ? [
                     {
                       id: "show-legacy",
-                      title: "Show legacy models",
+                      title: tr("Show legacy models"),
                       selected: session.showLegacy,
                       onPress: () => session.setShowLegacy(!session.showLegacy),
                     },
@@ -1228,7 +1229,7 @@ function ThreadSettingsModelsScreen() {
           session.hasLegacyModels,
         ]}
         confirm={{
-          label: session.pendingModel ? "Save thread settings" : "Done",
+          label: session.pendingModel ? tr("Save thread settings") : tr("Done"),
           onPress: commitAndClose,
         }}
         hideBottomBorder

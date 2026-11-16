@@ -93,9 +93,9 @@ function BrowserPreviewScreen({
   return (
     <View className="flex-1 bg-sheet" style={{ paddingBottom: insets.bottom }}>
       <SheetHeader
-        title={tab ? browserTabTitle(tab) : "Browser"}
+        title={tab ? browserTabTitle(tab) : tr("Browser")}
         onClose={onClose}
-        accessibilityLabel="Close browser"
+        accessibilityLabel={tr("Close browser")}
         actions={
           // Android WebView cannot play video in picture in picture.
           Platform.OS === "ios" &&

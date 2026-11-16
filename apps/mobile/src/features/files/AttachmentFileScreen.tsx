@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import {
@@ -178,7 +179,7 @@ export function AttachmentFileScreen(props: AttachmentFileScreenProps) {
   ].filter((action) => action !== null);
   const selectedAction = activeMode === "source" ? "source" : "preview";
   const fileMenu: AppBarMenu = {
-    title: "File actions",
+    title: tr("File actions"),
     icon: "ellipsis",
     items: [
       ...(renderedMode

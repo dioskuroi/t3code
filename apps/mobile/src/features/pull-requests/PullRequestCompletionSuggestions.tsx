@@ -1,4 +1,5 @@
 import { Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { AppText as Text } from "../../components/ui/AppText";
 import { GlassSurface } from "../../components/ui/GlassSurface";
@@ -8,20 +9,20 @@ import type { usePullRequestCompletions } from "./usePullRequestCompletions";
 
 const COPY = {
   mention: {
-    label: "Mention a user",
-    pending: "Searching users...",
-    failed: "Couldn't search users on the host",
-    none: "No matching users",
+    label: tr("Mention a user"),
+    pending: tr("Searching users..."),
+    failed: tr("Couldn't search users on the host"),
+    none: tr("No matching users"),
   },
   reference: {
-    label: "Reference an issue or change request",
+    label: tr("Reference an issue or change request"),
     pending: "Searching...",
-    failed: "Couldn't search the host",
-    none: "No matching issues or change requests",
+    failed: tr("Couldn't search the host"),
+    none: tr("No matching issues or change requests"),
   },
 } as const;
 
-const STATE_LABEL = { open: "Open", closed: "Closed", merged: "Merged" } as const;
+const STATE_LABEL = { open: tr("Open"), closed: tr("Closed"), merged: tr("Merged") } as const;
 
 function CompletionRow({ completion }: { readonly completion: PullRequestCompletion }) {
   if (completion.kind === "mention") {

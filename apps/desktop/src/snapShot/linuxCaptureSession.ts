@@ -15,7 +15,7 @@ export class CaptureSetupRequiredError extends Schema.TaggedError<CaptureSetupRe
   { state: Schema.String, cause: Schema.optional(Schema.Defect()) },
 ) {
   override get message(): string {
-    return `${this.state} Open Settings → SnapShots to continue setup.`;
+    return tr("{state} Open Settings → SnapShots to continue setup.", { state: this.state });
   }
 }
 export const NIRI_CAPTURE_PATH = "/com/t3tools/SnapShot";
@@ -47,15 +47,15 @@ export function niriCaptureBinding(appId: string): string {
 
 const KEY_NAMES: Readonly<Record<string, string>> = {
   " ": "space",
-  escape: "Escape",
-  esc: "Escape",
-  enter: "Return",
-  tab: "Tab",
+  escape: tr("Escape"),
+  esc: tr("Escape"),
+  enter: tr("Return"),
+  tab: tr("Tab"),
   backspace: "BackSpace",
-  delete: "Delete",
-  insert: "Insert",
-  home: "Home",
-  end: "End",
+  delete: tr("Delete"),
+  insert: tr("Insert"),
+  home: tr("Home"),
+  end: tr("End"),
   pageup: "Page_Up",
   pagedown: "Page_Down",
   arrowup: "Up",

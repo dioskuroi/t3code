@@ -87,7 +87,7 @@ function FilesBrowserHeader(props: {
         closeAccessibilityLabel: tr("Close file search"),
         clearAccessibilityLabel: tr("Clear file search"),
       }}
-      refresh={{ accessibilityLabel: "Refresh files", onPress: props.onRefresh }}
+      refresh={{ accessibilityLabel: tr("Refresh files"), onPress: props.onRefresh }}
     />
   );
 }
@@ -371,8 +371,8 @@ function useThreadFilesWorkspace(params: {
 }
 
 function FilesUnavailable({
-  title = "Files unavailable",
-  detail = "This thread does not have an active workspace path.",
+  title = tr("Files unavailable"),
+  detail = tr("This thread does not have an active workspace path."),
   onBack,
 }: {
   title?: string;
@@ -381,7 +381,7 @@ function FilesUnavailable({
 }) {
   return (
     <View className="flex-1 bg-sheet">
-      <AppBar title="Files" onBack={onBack} onBackToList={onBack} hideBottomBorder />
+      <AppBar title={tr("Files")} onBack={onBack} onBackToList={onBack} hideBottomBorder />
       <ScreenContent>
         <View className="flex-1 items-center justify-center px-6">
           <EmptyState title={title} detail={detail} />
@@ -520,7 +520,7 @@ export function ThreadFilesTreeScreen(props: ThreadFilesRouteScreenProps) {
     }
     return (
       <FilesUnavailable
-        detail={fileAccess.error ?? "This connection cannot read host files."}
+        detail={fileAccess.error ?? tr("This connection cannot read host files.")}
         onBack={handleReturnToThread}
       />
     );
@@ -896,19 +896,19 @@ export function ThreadFileScreen(props: ThreadFileRouteScreenProps) {
 
   if (environmentId === null || (threadId !== null && selectedThread === null)) {
     return withInspector(
-      <LoadingScreen message="Opening file..." messagePlacement="above-spinner" />,
+      <LoadingScreen message={tr("Opening file...")} messagePlacement="above-spinner" />,
     );
   }
 
   if (!canReadFiles) {
     if (fileAccess.isPending) {
       return withInspector(
-        <LoadingScreen message="Checking file access..." messagePlacement="above-spinner" />,
+        <LoadingScreen message={tr("Checking file access...")} messagePlacement="above-spinner" />,
       );
     }
     return withInspector(
       <FilesUnavailable
-        detail={fileAccess.error ?? "This connection cannot read host files."}
+        detail={fileAccess.error ?? tr("This connection cannot read host files.")}
         onBack={handleBack}
       />,
     );
@@ -920,8 +920,8 @@ export function ThreadFileScreen(props: ThreadFileRouteScreenProps) {
   if (relativePath === null) {
     return withInspector(
       <FilesUnavailable
-        title="File unavailable"
-        detail="This file path is invalid."
+        title={tr("File unavailable")}
+        detail={tr("This file path is invalid.")}
         onBack={handleBack}
       />,
     );
@@ -929,7 +929,7 @@ export function ThreadFileScreen(props: ThreadFileRouteScreenProps) {
 
   if (metadataPending) {
     return withInspector(
-      <LoadingScreen message="Opening file..." messagePlacement="above-spinner" />,
+      <LoadingScreen message={tr("Opening file...")} messagePlacement="above-spinner" />,
     );
   }
   if (directoryPath !== null) {

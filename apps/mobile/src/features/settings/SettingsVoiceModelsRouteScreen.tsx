@@ -1,4 +1,5 @@
 import { useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import type { StaticScreenProps } from "@react-navigation/native";
 import type { EnvironmentId } from "@t3tools/contracts";
 import { AsyncResult } from "effect/reactivity";
@@ -20,7 +21,7 @@ export function SettingsVoiceModelsRouteScreen({
   const { environments } = useEnvironments();
   const label =
     environments.find((environment) => environment.environmentId === route.params.environmentId)
-      ?.label ?? "This environment";
+      ?.label ?? tr("This environment");
   const voice = useVoiceModels(route.params.environmentId, label);
   const benchmarks = new Map(
     (
@@ -46,10 +47,10 @@ export function SettingsVoiceModelsRouteScreen({
     );
   return (
     <PullRequestSearchSheet
-      title="Transcription models"
-      placeholder="Search models or languages"
-      closeAccessibilityLabel="Close transcription models"
-      clearAccessibilityLabel="Clear model search"
+      title={tr("Transcription models")}
+      placeholder={tr("Search models or languages")}
+      closeAccessibilityLabel={tr("Close transcription models")}
+      clearAccessibilityLabel={tr("Clear model search")}
       query={query}
       onQueryChange={setQuery}
     >
@@ -67,7 +68,7 @@ export function SettingsVoiceModelsRouteScreen({
           ListHeaderComponent={
             voice.canManage ? undefined : (
               <Text className="pb-3 text-xs text-foreground-muted">
-                This connection can’t change settings on {label}.
+                {tr("This connection can\u2019t change settings on")} {label}.
               </Text>
             )
           }
@@ -87,9 +88,9 @@ export function SettingsVoiceModelsRouteScreen({
               <AppActivityIndicator className="my-8" />
             ) : (
               <EmptyState
-                title={needle ? "No models match" : "No transcription models"}
+                title={needle ? tr("No models match") : tr("No transcription models")}
                 detail={
-                  needle ? "Try another name or language." : `${label} has no models to list.`
+                  needle ? tr("Try another name or language.") : `${label} has no models to list.`
                 }
                 variant="plain"
               />

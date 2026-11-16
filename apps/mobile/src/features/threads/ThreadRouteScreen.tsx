@@ -137,7 +137,7 @@ function ThreadRouteFallbackLayout(props: { readonly children: ReactNode }) {
     <ThreadScreenFallback
       header={
         inspectorHeaderShown ? undefined : (
-          <AppBar title="Thread" onBackToList={goBack} hideBottomBorder />
+          <AppBar title={tr("Thread")} onBackToList={goBack} hideBottomBorder />
         )
       }
     >
@@ -149,7 +149,7 @@ function ThreadRouteFallbackLayout(props: { readonly children: ReactNode }) {
 function OpeningThreadLoadingScreen() {
   return (
     <ThreadRouteFallbackLayout>
-      <LoadingScreen message="Opening thread…" messagePlacement="above-spinner" embedded />
+      <LoadingScreen message={tr("Opening thread\u2026")} messagePlacement="above-spinner" embedded />
     </ThreadRouteFallbackLayout>
   );
 }
@@ -590,7 +590,7 @@ function ThreadRouteContent(
           <ThreadFileNavigatorPane
             cwd={selectedThreadCwd}
             environmentId={selectedThread.environmentId}
-            projectName={selectedThreadProject?.title ?? "Files"}
+            projectName={selectedThreadProject?.title ?? tr("Files")}
             selectedPath={null}
             onSelectFile={(path) =>
               closeInspectorSheet

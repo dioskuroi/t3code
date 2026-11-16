@@ -407,7 +407,7 @@ function saveQueryOnConnection(
       const transaction = database.transaction(QUERY_STORE_NAME, "readwrite");
       transaction.addEventListener("abort", () => {
         resume(
-          Effect.fail(catalogError("write", transaction.error ?? "Unknown IndexedDB write error")),
+          Effect.fail(catalogError("write", transaction.error ?? tr("Unknown IndexedDB write error"))),
         );
       });
       transaction.addEventListener("complete", () => {
@@ -498,7 +498,7 @@ function threadCacheKey(environmentId: EnvironmentId, threadId: ThreadId) {
 }
 
 function queryCacheKey(environmentId: EnvironmentId, key: string) {
-  return `${environmentId}:v1:${key}`;
+  return tr("{environmentId}:v1:{key}", { environmentId: environmentId, key: key });
 }
 
 function queryBatchKey(environmentId: EnvironmentId) {
@@ -1137,7 +1137,7 @@ export const layer = Layer.effectContext(
               saveQueryOnConnection(opened, environmentId, key, payload, now),
             ),
           ),
-          Effect.catch(() => Effect.logWarning("Offline query database save failed")),
+          Effect.catch(() => Effect.logWarning(tr("Offline query database save failed"))),
         ),
     };
 

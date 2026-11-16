@@ -120,7 +120,7 @@ function hostStatus(
     case "ready": {
       const incomplete = incompleteListings(status);
       if (incomplete.length === 0) return undefined;
-      const list = incomplete.length > 1 ? "Device" : incomplete[0] === "ios" ? "iOS" : "Android";
+      const list = incomplete.length > 1 ? tr("Device") : incomplete[0] === "ios" ? "iOS" : tr("Android");
       return { tone: "warning", label: `${list} list may be incomplete`, detail: status.detail };
     }
     case "installing":
@@ -512,7 +512,7 @@ export function DeviceSourcesSettings(props: {
         key: `simlock:${host.id}`,
         shared: true,
         title: host.label,
-        kind: "Simlock",
+        kind: tr("Simlock"),
         description: `${host.gatewayUrl.replace(/^https?:\/\//, "")} · ${simlockLeaseLimits(host)}`,
         environments: active.map((member) => {
           const held = (member.settings?.simlockDeviceHosts ?? []).find(
@@ -624,7 +624,7 @@ export function DeviceSourcesSettings(props: {
 
 const PLATFORMS = [
   { platform: "ios", label: "iOS", Icon: AppleIcon },
-  { platform: "android", label: "Android", Icon: AndroidIcon },
+  { platform: "android", label: tr("Android"), Icon: AndroidIcon },
 ] as const satisfies ReadonlyArray<{ platform: DevicePlatform; label: string; Icon: unknown }>;
 
 /** The platforms a source offers: one icon each, solid where available, muted where not. */
@@ -802,7 +802,7 @@ function DeviceSourceRow(props: { row: SourceRow }) {
             </span>
             {environment.status.tone === "warning" && environment.status.detail ? (
               <Popover>
-                <PopoverTrigger render={<InlineButton />}>Details</PopoverTrigger>
+                <PopoverTrigger render={<InlineButton />}>{tr("Details")}</PopoverTrigger>
                 <PopoverPopup side="bottom" align="start" width="lg" padding="compact">
                   <p className="whitespace-pre-wrap break-words font-mono text-xs text-muted-foreground">
                     {environment.status.detail}

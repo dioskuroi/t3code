@@ -1,4 +1,5 @@
 import type { VoiceInputState } from "@t3tools/client-runtime/voice-input";
+import { tr } from "@t3tools/shared/i18n";
 import { CheckIcon, MicIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -32,7 +33,7 @@ export function resolveSpeechPresentation(
       };
     case "error":
       return {
-        status: state.error ?? "Voice input failed",
+        status: state.error ?? tr("Voice input failed"),
         showsCancel: false,
         showsConfirm: false,
         confirmEnabled: false,
@@ -41,8 +42,10 @@ export function resolveSpeechPresentation(
     case "preparing":
       return {
         status: progress
-          ? `Downloading speech model ${Math.round((progress.downloaded / Math.max(1, progress.total)) * 100)}%`
-          : "Preparing",
+          ? tr("Downloading speech model {percent}%", {
+              percent: Math.round((progress.downloaded / Math.max(1, progress.total)) * 100),
+            })
+          : tr("Preparing"),
         showsCancel: true,
         showsConfirm: true,
         confirmEnabled: false,
@@ -50,7 +53,7 @@ export function resolveSpeechPresentation(
       };
     case "recording":
       return {
-        status: "Recording",
+        status: tr("Recording"),
         showsCancel: true,
         showsConfirm: true,
         confirmEnabled: true,
@@ -58,7 +61,7 @@ export function resolveSpeechPresentation(
       };
     case "transcribing":
       return {
-        status: "Transcribing",
+        status: tr("Transcribing"),
         showsCancel: true,
         showsConfirm: true,
         confirmEnabled: false,
@@ -147,7 +150,7 @@ function ComposerSpeechCancelButton(props: {
   onCancel(): void;
 }) {
   if (props.state.phase === "idle") return null;
-  const label = props.state.phase === "error" ? "Dismiss voice input error" : "Cancel voice input";
+  const label = props.state.phase === "error" ? tr("Dismiss voice input error") : tr("Cancel voice input");
 
   return (
     <Tooltip>
@@ -183,7 +186,7 @@ export function ComposerSpeechButton(props: {
   onCancel(): void;
 }) {
   const presentation = resolveSpeechPresentation(props.state, props.progress);
-  const label = "Start voice input";
+  const label = tr("Start voice input");
 
   if (presentation.showsConfirm || props.state.phase === "error") return null;
 
@@ -245,8 +248,8 @@ export function ComposerSpeechRecordingPill(props: {
   if (!presentation.showsConfirm) return null;
 
   const label = presentation.confirmEnabled
-    ? "Finish voice input"
-    : (presentation.status ?? "Voice input is busy");
+    ? tr("Finish voice input")
+    : (presentation.status ?? tr("Voice input is busy"));
 
   return (
     <VoiceInputPill>
@@ -270,7 +273,7 @@ export function ComposerSpeechRecordingPill(props: {
           onClick={props.onSkipPostProcessing}
           className="shrink-0"
         >
-          Skip
+          {tr("Skip")}
         </Button>
       ) : (
         <Tooltip>

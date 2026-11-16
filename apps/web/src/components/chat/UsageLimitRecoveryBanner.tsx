@@ -62,15 +62,15 @@ export function usageLimitRecoveryBannerItem(props: RecoveryProps): ComposerBann
       ? snoozedUntil
       : resetAt;
   const resetDescription = displayAt
-    ? `${resumes ? "Resumes" : "Resets"} ${formatUpcomingTimestamp(displayAt, timestampFormat)}`
-    : "Reset time unavailable; retry manually";
+    ? `${resumes ? tr("Resumes") : tr("Resets")} ${formatUpcomingTimestamp(displayAt, timestampFormat)}`
+    : tr("Reset time unavailable; retry manually");
   if (!chatGptLimit) {
     return {
       id: `usage-limit-recovery:${runId}`,
       variant: "warning",
       group: "environment",
       icon: <GaugeIcon />,
-      title: "Usage limit reached",
+      title: tr("Usage limit reached"),
       description: resetDescription,
       actions: recoveryActions,
     };
@@ -81,16 +81,16 @@ export function usageLimitRecoveryBannerItem(props: RecoveryProps): ComposerBann
     variant: "warning",
     group: "environment",
     icon: <OpenAI aria-hidden="true" />,
-    title: "ChatGPT usage limit reached",
+    title: tr("ChatGPT usage limit reached"),
     description: workspaceLimit
-      ? "You've reached your workspace's limit for using your ChatGPT plan in other apps."
+      ? tr("You've reached your workspace's limit for using your ChatGPT plan in other apps.")
       : resetDescription,
     actions: (
       <>
         {recoveryActions}
         {workspaceLimit ? (
           <Button size="xs" variant="ghost" onClick={copyAdminRequest}>
-            Copy request for admin
+            {tr("Copy request for admin")}
           </Button>
         ) : (
           <ChatGptUsageButton size="xs" variant="ghost" />
@@ -143,14 +143,14 @@ function RecoveryActions({ runId, resetAt, recovery, snoozedUntil, onChange }: R
   return (
     <span className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
       <InlineButton touchTarget="padded" disabled={pending} onClick={() => void toggle("resume")}>
-        {pending ? "Saving..." : scheduled ? "Cancel auto-resume" : "Resume at reset"}
+        {pending ? "Saving..." : scheduled ? tr("Cancel auto-resume") : tr("Resume at reset")}
       </InlineButton>
       <InlineButton
         touchTarget="padded"
         disabled={pending || (!snoozed && resetPassed)}
         onClick={() => void toggle("snooze")}
       >
-        {pending ? "Saving..." : snoozed ? "Wake now" : "Snooze until reset"}
+        {pending ? "Saving..." : snoozed ? tr("Wake now") : tr("Snooze until reset")}
       </InlineButton>
     </span>
   );

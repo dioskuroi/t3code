@@ -62,7 +62,7 @@ const foldRequest = async (
     const payload: unknown = await response.json().catch(() => null);
     const error = isRecord(payload) ? payload.error : null;
     throw new AndroidFoldError({
-      message: typeof error === "string" ? error : `Fold command failed (${response.status}).`,
+      message: typeof error === "string" ? error : tr("Fold command failed ({status}).", { status: response.status }),
       status: response.status,
     });
   }

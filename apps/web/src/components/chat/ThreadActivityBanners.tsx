@@ -41,7 +41,11 @@ export function extensionStatusBannerItem(
     id: "pi-extension-status",
     variant: "default",
     icon: <span>▸</span>,
-    title: <output>{`Pi · ${statuses.map((status) => status.text).join(" · ")}`}</output>,
+    title: (
+      <output>
+        {tr("Pi · {statuses}", { statuses: statuses.map((status) => status.text).join(" · ") })}
+      </output>
+    ),
   };
 }
 

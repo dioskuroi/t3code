@@ -44,7 +44,7 @@ export function managedPolicyPath(platform: NodeJS.Platform): string {
     case "win32":
       // Not ProgramData, where a user can create the folder first and own it; and not
       // %ProgramFiles%, which a user can point somewhere they write.
-      return "C:\\Program Files\\T3Code\\policy.json";
+      return tr("C:\\Program Files\\T3Code\\policy.json");
     default:
       return "/etc/t3code/policy.json";
   }
@@ -196,7 +196,7 @@ class Win32Failure extends Schema.TaggedError<Win32Failure>()("Win32Failure", {
   code: Schema.Number,
 }) {
   override get message(): string {
-    return `Windows error ${this.code}`;
+    return tr("Windows error {code}", { code: this.code });
   }
 }
 

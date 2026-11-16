@@ -120,8 +120,10 @@ export function PullRequestCommentForm({
         readOnly={speech.freezesEditor}
         value={body}
         rows={3}
-        placeholder="Leave a comment"
-        aria-label={`Comment on this ${sourceControlClients.get(detail.provider).changeRequest.singular}`}
+        placeholder={tr("Leave a comment")}
+        aria-label={tr("Comment on this {type}", {
+          type: sourceControlClients.get(detail.provider).changeRequest.singular,
+        })}
         onValueChange={setBody}
         onKeyDown={(event) => {
           if (event.nativeEvent.isComposing || event.keyCode === 229) return;

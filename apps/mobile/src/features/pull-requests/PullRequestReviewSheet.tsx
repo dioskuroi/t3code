@@ -185,7 +185,7 @@ export function PullRequestReviewSheet({
         selection={completions.selection}
         onSelectionChange={completions.onSelectionChange}
         onBlur={completions.onBlur}
-        accessibilityLabel={reviewing ? "Review summary" : "Comment"}
+        accessibilityLabel={reviewing ? tr("Review summary") : tr("Comment")}
         placeholder={
           reviewing
             ? summaryRequired

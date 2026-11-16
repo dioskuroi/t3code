@@ -99,11 +99,11 @@ describe("mixed source control instructions", () => {
       customInstructions,
     }));
 
-    await userEvent.click(page.getByRole("button", { name: "Advanced" }));
+    await userEvent.click(page.getByRole("button", { name: "高级" }));
     // Mid-open, Playwright scrolls the clipped panel to reach the button, then the growing panel
     // shifts it between press and release and the click misses. Wait until the panel shows it.
-    await expect.element(resetButton("change request templates")).toBeInViewport({ ratio: 1 });
-    await userEvent.click(resetButton("change request templates"));
+    await expect.element(resetButton("变更请求模板")).toBeInViewport({ ratio: 1 });
+    await userEvent.click(resetButton("变更请求模板"));
 
     expect(state.updateSettings).toHaveBeenCalledTimes(1);
     expect(state.styles.map((style) => style.followChangeRequestTemplates)).toEqual([

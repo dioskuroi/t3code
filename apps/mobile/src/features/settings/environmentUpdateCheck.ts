@@ -22,7 +22,7 @@ export class EnvironmentUpdateCheckError extends Schema.TaggedError<EnvironmentU
 
 const asError = (cause: unknown) =>
   new EnvironmentUpdateCheckError({
-    message: cause instanceof Error ? cause.message : "Could not check for updates.",
+    message: cause instanceof Error ? cause.message : tr("Could not check for updates."),
     cause,
   });
 
@@ -45,7 +45,7 @@ export const environmentReleaseCheckAtom = Atom.family((environmentId: Environme
           orElse: () =>
             Effect.fail(
               new EnvironmentUpdateCheckError({
-                message: "Checking for updates timed out. Try again.",
+                message: tr("Checking for updates timed out. Try again."),
               }),
             ),
         }),

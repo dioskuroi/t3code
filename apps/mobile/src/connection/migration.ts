@@ -97,7 +97,9 @@ export const migrateLegacyConnectionCatalog = Effect.fn(
     Effect.mapError(
       (cause) =>
         new LegacyConnectionMigrationError({
-          message: `Could not parse the legacy mobile connection catalog: ${String(cause)}`,
+          message: tr("Could not parse the legacy mobile connection catalog: {cause}", {
+            cause: String(cause),
+          }),
         }),
     ),
   );

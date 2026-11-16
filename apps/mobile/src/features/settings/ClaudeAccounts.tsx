@@ -1,4 +1,5 @@
 import type { MenuAction } from "@react-native-menu/menu";
+import { tr } from "@t3tools/shared/i18n";
 import {
   isAtomCommandInterrupted,
   squashAtomCommandFailure,
@@ -49,7 +50,7 @@ function useProviderInstanceMutation(environment: SettingsTarget) {
     if (result._tag === "Success") return true;
     if (!isAtomCommandInterrupted(result)) {
       const failure = squashAtomCommandFailure(result);
-      setError(failure instanceof Error ? failure.message : "Could not save the Claude account.");
+      setError(failure instanceof Error ? failure.message : tr("Could not save the Claude account."));
     }
     return false;
   }
@@ -67,15 +68,15 @@ export function ClaudeAccount({
   const { run, pending, error } = useProviderInstanceMutation(environment);
   const instance = environment.serverConfig.settings.providerInstances[provider.instanceId];
   const configDir = claudeConfigDir(instance);
-  const name = provider.displayName ?? "Claude";
+  const name = provider.displayName ?? tr("Claude");
   const status = !provider.enabled
-    ? "Turned off"
+    ? tr("Turned off")
     : provider.auth.status === "authenticated"
-      ? "Signed in"
+      ? tr("Signed in")
       : provider.auth.status === "unauthenticated"
-        ? "Not signed in"
+        ? tr("Not signed in")
         : !provider.installed
-          ? "Not installed"
+          ? tr("Not installed")
           : null;
   const removable =
     provider.instanceId !== DEFAULT_CLAUDE_INSTANCE_ID &&
@@ -84,12 +85,12 @@ export function ClaudeAccount({
       `providerInstances.${provider.instanceId}`,
     );
   const actions: MenuAction[] = [
-    { id: "edit", title: "Edit", image: "pencil" },
+    { id: "edit", title: tr("Edit"), image: "pencil" },
     ...(removable
       ? [
           {
             id: "remove",
-            title: "Remove",
+            title: tr("Remove"),
             image: "trash",
             attributes: { destructive: true },
           } satisfies MenuAction,
@@ -98,12 +99,14 @@ export function ClaudeAccount({
   ];
   function remove() {
     Dialog.alert(
-      `Remove ${name}?`,
-      `It leaves the model picker on ${environment.label}. The config folder and its sign-in stay on the server.`,
+      tr("Remove {name}?", { name: name }),
+      tr("It leaves the model picker on {environment}. The config folder and its sign-in stay on the server.", {
+        environment: environment.label,
+      }),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: tr("Cancel"), style: "cancel" },
         {
-          text: "Remove",
+          text: tr("Remove"),
           style: "destructive",
           onPress: () => {
             void run({ operation: "remove", instanceId: provider.instanceId });
@@ -120,7 +123,7 @@ export function ClaudeAccount({
             {name}
           </Text>
           <Text textRole="footnote" className="text-foreground-muted" numberOfLines={2}>
-            {[status, configDir || "Default config folder"].filter(Boolean).join(" · ")}
+            {[status, configDir || tr("Default config folder")].filter(Boolean).join(" · ")}
           </Text>
         </View>
         {editing ? null : (
@@ -174,8 +177,8 @@ export function AddClaudeAccount({ environment }: { readonly environment: Settin
       ) : (
         <ListActionRow
           icon="plus"
-          label="Add Claude account"
-          description="Use a Claude config folder that is already signed in on this server."
+          label={tr("Add Claude account")}
+          description={tr("Use a Claude config folder that is already signed in on this server.")}
           onPress={() => setAdding(true)}
         />
       )}
@@ -231,18 +234,18 @@ function ClaudeAccountForm({
       <Text textRole="footnote" className="text-foreground-muted">
         {`Point at a CLAUDE_CONFIG_DIR folder on ${environment.label} where Claude Code is already signed in. Sign in there with the Claude CLI first.`}
       </Text>
-      {field("name", "Account name", "Name, e.g. Work")}
-      {field("configDir", "Claude config folder", "Config folder, e.g. ~/.claude-work")}
+      {field("name", tr("Account name"), tr("Name, e.g. Work"))}
+      {field("configDir", tr("Claude config folder"), tr("Config folder, e.g. ~/.claude-work"))}
       {error ? (
         <Text accessibilityRole="alert" className="text-danger-foreground">
           {error}
         </Text>
       ) : null}
       <View className="flex-row justify-end gap-2">
-        <ControlPill variant="pill" label="Cancel" disabled={pending} onPress={onDone} />
+        <ControlPill variant="pill" label={tr("Cancel")} disabled={pending} onPress={onDone} />
         <ControlPill
           variant="primary"
-          label={instanceId === null ? "Add" : "Save"}
+          label={instanceId === null ? tr("Add") : tr("Save")}
           disabled={pending}
           onPress={save}
         />

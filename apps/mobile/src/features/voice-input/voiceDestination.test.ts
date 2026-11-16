@@ -142,7 +142,7 @@ it("keeps local as the default and never reuses consent for an offline or resele
     chooseVoiceDestination(host);
     const current = appAtomRegistry.get(voiceRouteAtom)?.transcriber;
     await expect(first!.prepare({ signal: new AbortController().signal })).rejects.toThrow(
-      "Your transcription choice changed.",
+      "你的转录选择已更改。",
     );
     expect(mocks.fetch).not.toHaveBeenCalled();
     mocks.fetch
@@ -173,13 +173,13 @@ it("keeps local as the default and never reuses consent for an offline or resele
     mocks.fetch.mockResolvedValueOnce(Response.json({ openai: false, xai: true }));
     await expect(cloud.prepare(options)).rejects.toMatchObject({
       code: "unavailable",
-      message: expect.stringContaining("Add your OpenAI API key"),
+      message: expect.stringContaining("在设置 → 语音中添加你的 OpenAI API key。"),
     });
     mocks.fetch.mockResolvedValueOnce(Response.json({ openai: true, xai: true }));
     const recorded = await cloud.prepare(options);
     chooseVoiceDestination(host, "xai");
     await expect(recorded.transcribe("file:///voice.m4a", options)).rejects.toThrow(
-      "Your transcription choice changed.",
+      "你的转录选择已更改。",
     );
     mocks.fetch
       .mockResolvedValueOnce(Response.json({ openai: true, xai: true }))
@@ -199,7 +199,7 @@ it("keeps local as the default and never reuses consent for an offline or resele
     await expect(next.transcribe("file:///voice.m4a", options)).rejects.toMatchObject({
       _tag: "VoiceTranscriptionError",
       code: "transcription-failed",
-      message: expect.stringContaining("rejected this API key"),
+      message: expect.stringContaining("拒绝了此 API key"),
     });
     expect(mocks.fetch.mock.calls.slice(2).map(([url]) => new URL(String(url)).pathname)).toEqual([
       "/api/voice/cloud/keys",
@@ -227,7 +227,7 @@ it("keeps local as the default and never reuses consent for an offline or resele
     mocks.write.mockImplementationOnce(failWrite);
     expect(() => chooseVoiceDestination(null)).toThrow("Device storage is unavailable");
     expect(appAtomRegistry.get(voiceGrantAtom)).toBeNull();
-    await expect(current!.prepare(options)).rejects.toThrow("Your transcription choice changed.");
+    await expect(current!.prepare(options)).rejects.toThrow("你的转录选择已更改。");
   } finally {
     unmount();
     appAtomRegistry.reset();

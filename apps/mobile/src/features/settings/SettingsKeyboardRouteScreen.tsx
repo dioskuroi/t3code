@@ -41,7 +41,7 @@ export function SettingsKeyboardRouteScreen() {
     : null;
 
   return (
-    <SettingsScreen title="Keyboard">
+    <SettingsScreen title={tr("Keyboard")}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}

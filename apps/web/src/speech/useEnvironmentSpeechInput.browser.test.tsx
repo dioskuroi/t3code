@@ -484,7 +484,7 @@ it.each(["cancel", "failed restart"] as const)(
     await act(() => {
       firstStart = mocks.voice.start();
     });
-    await expect.element(page.getByText("Loading transcription models…")).toBeVisible();
+    await expect.element(page.getByText("正在加载转录模型…")).toBeVisible();
     if (action === "cancel") {
       await act(() => mocks.voice.cancel());
     } else {
@@ -516,9 +516,9 @@ it.each([true, false])(
     mocks.catalogOffline = offline;
     await using _screen = await render(<Probe showWizard />);
     await act(() => mocks.voice.start());
-    const wizard = page.getByRole("dialog", { name: "Set up voice input" });
-    const retry = wizard.getByRole("button", { name: "Retry loading models" });
-    const download = wizard.getByRole("button", { name: "Download model" });
+    const wizard = page.getByRole("dialog", { name: "设置语音输入" });
+    const retry = wizard.getByRole("button", { name: "重试加载模型" });
+    const download = wizard.getByRole("button", { name: "下载模型" });
     await expect.element(wizard.getByRole("alert")).toBeVisible();
     await expect.element(download).not.toBeInTheDocument();
     if (offline) {
@@ -542,13 +542,13 @@ it.each([
     "does not advance a cancelled download when another model is ready",
     "downloadable",
     [],
-    "The model is not ready. Try downloading it again.",
+    "模型尚未就绪。请重新下载。",
   ],
   [
     "reports a failed selection apart from the download",
     "installed",
     ["german"],
-    "The model downloaded, but this environment could not select it. Try again.",
+    "模型已下载，但此环境无法选择它。请重试。",
   ],
 ] as const)("%s", async (_, landedState, selected, error) => {
   setup({ destination: "env-a" });

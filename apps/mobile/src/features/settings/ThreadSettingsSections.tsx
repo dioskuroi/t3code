@@ -280,8 +280,7 @@ function BetaSettingsSection() {
         })}
       </SettingsSection>
       <Text className="px-2 text-sm text-foreground-muted">
-        Let agents on a machine work on your other machines, and theirs on it. Turn it on for each
-        machine. While off, nothing new starts over a link; running tasks finish.
+        {tr("Let agents on a machine work on your other machines, and theirs on it. Turn it on for each\n        machine. While off, nothing new starts over a link; running tasks finish.")}
       </Text>
     </View>
   );
@@ -291,10 +290,10 @@ const TOOL_CALL_VISIBILITY_OPTIONS: ReadonlyArray<{
   readonly value: ToolCallVisibility;
   readonly label: string;
 }> = [
-  { value: "showAll", label: "Show all" },
-  { value: "hideSuccessful", label: "Hide successful" },
-  { value: "hideAll", label: "Hide all" },
-  { value: "zen", label: "Zen" },
+  { value: "showAll", label: tr("Show all") },
+  { value: "hideSuccessful", label: tr("Hide successful") },
+  { value: "hideAll", label: tr("Hide all") },
+  { value: "zen", label: tr("Zen") },
 ];
 
 function ToolCallVisibilitySection() {
@@ -306,7 +305,7 @@ function ToolCallVisibilitySection() {
 
   return (
     <View className="gap-3">
-      <SettingsSection title="Beta: Tool calls in chat">
+      <SettingsSection title={tr("Beta: Tool calls in chat")}>
         {TOOL_CALL_VISIBILITY_OPTIONS.map((option, index) => (
           <ListChoiceRow
             key={option.value}
@@ -319,8 +318,7 @@ function ToolCallVisibilitySection() {
         ))}
       </SettingsSection>
       <Text className="px-2 text-sm text-foreground-muted">
-        Hide the commands, edits, and searches agents run. Hide successful keeps failures. Zen shows
-        only final answers. Approvals, questions, and errors always show.
+        {tr("Hide the commands, edits, and searches agents run. Hide successful keeps failures. Zen shows\n        only final answers. Approvals, questions, and errors always show.")}
       </Text>
     </View>
   );

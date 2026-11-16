@@ -235,7 +235,7 @@ describe("getLocalVoiceTranscriber", () => {
       expect(dictation.controller.currentState).toMatchObject(
         cancelled
           ? { phase: "idle" }
-          : { phase: "error", error: "Voice transcription could not prepare this language." },
+          : { phase: "error", error: "语音转写无法准备此语言。" },
       );
     },
   );

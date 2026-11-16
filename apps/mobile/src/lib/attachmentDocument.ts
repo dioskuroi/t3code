@@ -75,7 +75,7 @@ const attachmentTextAtom = Atom.family((key: AttachmentTextKey) =>
       try: (signal) => readAttachmentText(key, signal),
       catch: (cause) =>
         new AttachmentTextReadError({
-          message: cause instanceof Error ? cause.message : "Could not read this file.",
+          message: cause instanceof Error ? cause.message : tr("Could not read this file."),
           cause,
         }),
     }),

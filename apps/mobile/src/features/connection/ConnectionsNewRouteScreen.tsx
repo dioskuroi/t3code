@@ -177,7 +177,7 @@ function PairingForm({
 
   return (
     <SettingsScreen
-      title="Add environment"
+      title={tr("Add environment")}
       actions={[
         {
           accessibilityLabel: connecting ? tr("Connecting") : tr("Add environment"),

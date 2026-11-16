@@ -1,4 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   descriptionDraftInForce,
   settleDescriptionSave,
@@ -42,8 +43,8 @@ export function usePullRequestDescription(
     if (AsyncResult.isFailure(response)) {
       const cause = squashAtomCommandFailure(response);
       Dialog.alert(
-        "Could not save the description",
-        cause instanceof Error ? cause.message : "Try again.",
+        tr("Could not save the description"),
+        cause instanceof Error ? cause.message : tr("Try again."),
       );
     }
     if (savesRunning.current === 0) refreshDetail();

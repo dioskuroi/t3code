@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -222,12 +223,12 @@ const preparedEndpoint = (target: CloudLinkTarget) =>
       ),
     ),
   ).pipe(
-    Effect.mapError(environmentApiError("Could not reach the environment.")),
+    Effect.mapError(environmentApiError(tr("Could not reach the environment."))),
     Effect.flatMap(
       Option.match({
         onNone: () =>
           Effect.fail(
-            new CloudEnvironmentLinkError({ message: "The environment is not connected." }),
+            new CloudEnvironmentLinkError({ message: tr("The environment is not connected.") }),
           ),
         onSome: ({ httpBaseUrl, target }) =>
           Effect.succeed({
@@ -256,7 +257,7 @@ export const readCloudLinkState: (input: {
         url: (urls) => urls.linkState(),
         request: ({ client, headers }) => client.linkState({ headers }),
       },
-      "Could not read environment cloud link state.",
+      tr("Could not read environment cloud link state."),
     );
   });
 
@@ -279,7 +280,7 @@ export const updateCloudPreferences: (input: {
       url: (urls) => urls.preferences(),
       request: ({ client, headers }) => client.preferences({ headers, payload }),
     },
-    "Could not update environment cloud preferences.",
+    tr("Could not update environment cloud preferences."),
   );
 });
 
@@ -301,7 +302,7 @@ export const unlinkEnvironmentFromCloud: (input: {
       url: (urls) => urls.unlink(),
       request: ({ client, headers }) => client.unlink({ headers }),
     },
-    "Could not unlink the environment from cloud.",
+    tr("Could not unlink the environment from cloud."),
   );
 
   const configuredRelayUrl = relayUrl();
@@ -388,7 +389,7 @@ export const linkEnvironmentToCloud: (input: {
           },
         }),
     },
-    "Could not obtain environment link proof.",
+    tr("Could not obtain environment link proof."),
   );
   const link = yield* relayClient
     .linkEnvironment({
@@ -429,6 +430,6 @@ export const linkEnvironmentToCloud: (input: {
           },
         }),
     },
-    "Could not configure environment relay access.",
+    tr("Could not configure environment relay access."),
   );
 });

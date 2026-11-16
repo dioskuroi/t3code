@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import type { EnvironmentId, UnifiedSettings } from "@t3tools/contracts";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";

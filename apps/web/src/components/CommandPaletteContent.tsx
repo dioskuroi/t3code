@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react";
 import { type ComponentProps, type ReactNode, type RefObject } from "react";
 

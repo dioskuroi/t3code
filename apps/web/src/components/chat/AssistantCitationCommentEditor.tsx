@@ -1,4 +1,5 @@
 import { ASSISTANT_CITATION_MAX_COMMENT_LENGTH, type AssistantCitation } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { use, useEffect, useRef, useState, type RefObject } from "react";
 
 import { TextFieldSpeechControls, useTextFieldSpeech } from "~/speech/useTextFieldSpeech";
@@ -81,8 +82,8 @@ export function AssistantCitationCommentEditor({
       <textarea
         ref={textareaRef}
         readOnly={speech.freezesEditor}
-        aria-label="Comment on selected text"
-        aria-description="Enter to save the citation comment; Command/Ctrl+Enter to save and send; Shift+Enter for a new line."
+        aria-label={tr("Comment on selected text")}
+        aria-description={tr("Enter to save the citation comment; Command/Ctrl+Enter to save and send; Shift+Enter for a new line.")}
         aria-invalid={commentTooLong || undefined}
         placeholder={tr("Add an optional comment...")}
         rows={2}

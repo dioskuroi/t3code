@@ -74,10 +74,10 @@ export function PullRequestLabelsScreen({ route }: StaticScreenProps<PullRequest
   };
   return (
     <PullRequestSearchSheet
-      title="Labels"
-      placeholder="Search labels"
-      closeAccessibilityLabel="Close labels"
-      clearAccessibilityLabel="Clear label search"
+      title={tr("Labels")}
+      placeholder={tr("Search labels")}
+      closeAccessibilityLabel={tr("Close labels")}
+      clearAccessibilityLabel={tr("Clear label search")}
       query={query}
       onQueryChange={setQuery}
     >

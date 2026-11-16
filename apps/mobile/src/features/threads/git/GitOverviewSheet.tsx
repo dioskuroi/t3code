@@ -1,4 +1,5 @@
 import * as Dialog from "../../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { cn } from "../../../lib/cn";
 import { useOpenPullRequest } from "../../../native/useOpenPullRequest";
 import {
@@ -347,7 +348,7 @@ function GitOverviewSheetContent(props: GitOverviewSheetProps) {
   );
 
   const refresh = {
-    accessibilityLabel: "Refresh repository status",
+    accessibilityLabel: tr("Refresh repository status"),
     disabled: busy || isRefreshing,
     onPress: () => void handleRefresh(),
   };

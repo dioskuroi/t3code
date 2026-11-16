@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as HostProcess from "@t3tools/shared/HostProcess";

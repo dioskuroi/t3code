@@ -1,4 +1,5 @@
 import { createContext, use, useEffect, useState, type ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { Animated, Platform, Pressable, View } from "react-native";
 
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";

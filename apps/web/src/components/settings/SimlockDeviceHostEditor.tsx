@@ -98,7 +98,7 @@ export function SimlockDeviceHostEditor(props: {
     "problem" in plan
       ? plan.problem
       : invalidTokens.size > 0
-        ? "Enter a valid secret reference."
+        ? tr("Enter a valid secret reference.")
         : null;
   const several = props.environments.length > 1;
 
@@ -323,7 +323,7 @@ function SimlockTokenField(props: {
         <SecretSourceInput
           key={inputKey}
           id={id}
-          aria-label="Agent token"
+          aria-label={tr("Agent token")}
           className="min-w-0 flex-1"
           configured={props.token.kind === "saved" && typeof props.saved === "string"}
           value={

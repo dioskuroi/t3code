@@ -121,7 +121,7 @@ export function createLazyVoiceRecorder<TStatus, TRecorderState>(input: {
       );
     },
     record(options) {
-      if (!recorder) throw new Error("The voice recorder isn’t ready. Try again.");
+      if (!recorder) throw new Error(tr("The voice recorder isn\u2019t ready. Try again."));
       recorder.record(options);
     },
     stop() {

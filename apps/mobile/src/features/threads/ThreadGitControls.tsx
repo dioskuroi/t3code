@@ -1,4 +1,5 @@
 import * as Dialog from "../../components/ui/Dialog";
+import { tr } from "@t3tools/shared/i18n";
 import { useOpenPullRequest } from "../../native/useOpenPullRequest";
 import type { AppBarMenu } from "../../components/ui/AppBar.types";
 import {
@@ -257,7 +258,7 @@ function useThreadGitControlModel(props: ThreadGitMenuProps) {
 export function threadTerminalMenu(props: ThreadGitControlsProps): AppBarMenu | null {
   if (!props.canOpenTerminal) return null;
   return {
-    title: "Terminal",
+    title: tr("Terminal"),
     icon: "terminal",
     separateBackground: false,
     items: [
@@ -273,9 +274,9 @@ export function threadTerminalMenu(props: ThreadGitControlsProps): AppBarMenu | 
         : [
             {
               id: "script-none",
-              title: "No project scripts",
+              title: tr("No project scripts"),
               icon: "play",
-              subtitle: "This project has no saved scripts yet",
+              subtitle: tr("This project has no saved scripts yet"),
               disabled: true,
               onPress: () => {},
             },
@@ -297,9 +298,9 @@ export function threadTerminalMenu(props: ThreadGitControlsProps): AppBarMenu | 
       })),
       {
         id: "terminal-new",
-        title: "Open new terminal",
+        title: tr("Open new terminal"),
         icon: "plus",
-        subtitle: "Start another shell for this thread",
+        subtitle: tr("Start another shell for this thread"),
         disabled: !props.canOperateTerminal,
         onPress: props.onOpenNewTerminal,
       },
@@ -348,9 +349,9 @@ export function useThreadGitMenuDefinition(props: ThreadGitMenuProps): AppBarMen
         ? [
             {
               id: "git-merge-back",
-              title: "Merge back to source",
+              title: tr("Merge back to source"),
               icon: PullRequestGlyph.merged,
-              subtitle: "Bring this thread's latest turn into its source",
+              subtitle: tr("Bring this thread's latest turn into its source"),
               onPress: props.onMergeBack,
             },
           ]

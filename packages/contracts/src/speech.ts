@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 import { TrimmedNonEmptyString } from "./baseSchemas.ts";
 
@@ -11,7 +12,7 @@ export const CloudSpeechProvider = Schema.Literals(["openai", "xai", "openrouter
 export type CloudSpeechProvider = typeof CloudSpeechProvider.Type;
 export const CLOUD_SPEECH_LABELS = {
   openai: "OpenAI",
-  xai: "Grok Voice Transcribe",
+  xai: tr("Grok Voice Transcribe"),
   openrouter: "OpenRouter",
 } as const;
 export const CLOUD_SPEECH_PROVIDER_NAMES = {
@@ -59,19 +60,19 @@ export class CloudSpeechError extends Schema.TaggedError<CloudSpeechError>()(
     const name = CLOUD_SPEECH_PROVIDER_NAMES[this.provider];
     switch (this.reason) {
       case "missing-key":
-        return `Add your ${name} API key in Settings → Voice.`;
+        return tr("Add your {name} API key in Settings \u2192 Voice.", { name: name });
       case "key-changed":
-        return `The ${name} key changed before your recording was sent. Try again.`;
+        return tr("The {name} key changed before your recording was sent. Try again.", { name: name });
       case "unreadable-key":
-        return `Couldn’t read the ${name} API key. Unlock the vault on the selected environment or update the key in Settings → Voice. No audio was sent to ${name}.`;
+        return tr("Couldn\u2019t read the {name} API key. Unlock the vault on the selected environment or update the key in Settings \u2192 Voice. No audio was sent to {name}.", { name: name });
       case "rejected-key":
-        return `${name} rejected this API key. Check its permissions and billing in Settings → Voice.`;
+        return tr("{name} rejected this API key. Check its permissions and billing in Settings → Voice.", { name: name });
       case "rate-limit":
-        return `${name} reached a usage limit. Check the account's quota or try again later.`;
+        return tr("{name} reached a usage limit. Check the account's quota or try again later.", { name: name });
       case "model-unavailable":
-        return `The chosen model isn’t available on ${name}. Choose another model in Settings → Voice.`;
+        return tr("The chosen model isn\u2019t available on {name}. Choose another model in Settings \u2192 Voice.", { name: name });
       case "unavailable":
-        return `${name} couldn’t transcribe this recording. Try again later.`;
+        return tr("{name} couldn’t transcribe this recording. Try again later.", { name: name });
     }
   }
 }
@@ -92,7 +93,7 @@ export const SpeechCustomWords = Schema.Array(
     const keys = spellings.map((spelling) => spelling.trim().normalize("NFC").toLocaleLowerCase());
     return keys.every(Boolean) && new Set(keys).size === keys.length
       ? true
-      : "Dictionary terms and aliases must be unique and nonempty.";
+      : tr("Dictionary terms and aliases must be unique and nonempty.");
   }),
 );
 export type SpeechCustomWords = typeof SpeechCustomWords.Type;

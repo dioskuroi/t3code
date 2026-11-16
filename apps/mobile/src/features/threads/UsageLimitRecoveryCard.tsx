@@ -1,4 +1,5 @@
 import { squashAtomCommandFailure } from "@t3tools/client-runtime/state/runtime";
+import { tr } from "@t3tools/shared/i18n";
 import { AsyncResult } from "effect/reactivity";
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/shell";
 import { limitRecoveryOwnsSnooze } from "@t3tools/client-runtime/state/thread-execution";
@@ -60,7 +61,7 @@ export function UsageLimitRecoveryCard({
   )
     return null;
   const resetText = displayAt
-    ? `${canSchedule && scheduled ? "Resumes" : "Resets"} ${new Date(displayAt).toLocaleString(
+    ? `${canSchedule && scheduled ? tr("Resumes") : tr("Resets")} ${new Date(displayAt).toLocaleString(
         undefined,
         { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" },
       )}.`
@@ -99,7 +100,7 @@ export function UsageLimitRecoveryCard({
   }
   const action = workspaceLimit
     ? {
-        label: "Copy request for admin",
+        label: tr("Copy request for admin"),
         role: "button" as const,
         run: () => {
           setError(null);
@@ -108,19 +109,19 @@ export function UsageLimitRecoveryCard({
           void Clipboard.setStringAsync(CHATGPT_WORKSPACE_ADMIN_REQUEST)
             .then(
               () => setCopied(true),
-              () => setError("Could not copy the request. Try again."),
+              () => setError(tr("Could not copy the request. Try again.")),
             )
             .finally(() => setActionPending(false));
         },
       }
     : {
-        label: "Manage usage",
+        label: tr("Manage usage"),
         role: "link" as const,
         run: () => {
           setError(null);
           setActionPending(true);
           void Linking.openURL(CHATGPT_USAGE_URL)
-            .catch(() => setError("Could not open ChatGPT. Go to chatgpt.com → Settings → Usage."))
+            .catch(() => setError(tr("Could not open ChatGPT. Go to chatgpt.com \u2192 Settings \u2192 Usage.")))
             .finally(() => setActionPending(false));
         },
       };
@@ -137,7 +138,7 @@ export function UsageLimitRecoveryCard({
       <View className="min-w-0 flex-1 gap-1">
         {chatGptLimit ? (
           <Text className="text-sm font-t3-medium text-foreground">
-            ChatGPT usage limit reached
+            {tr("ChatGPT usage limit reached")}
           </Text>
         ) : null}
         <Text
@@ -147,13 +148,13 @@ export function UsageLimitRecoveryCard({
         >
           {workspaceLimit
             ? copied
-              ? "Request copied. Send it to your workspace admin."
-              : "You've reached your workspace's limit for using your ChatGPT plan in other apps. Copy a request to ask your workspace admin for increased usage limits."
+              ? tr("Request copied. Send it to your workspace admin.")
+              : tr("You've reached your workspace's limit for using your ChatGPT plan in other apps. Copy a request to ask your workspace admin for increased usage limits.")
             : chatGptLimit
-              ? (resetText ?? "Review your usage settings in ChatGPT.")
+              ? (resetText ?? tr("Review your usage settings in ChatGPT."))
               : resetText
-                ? `Usage limit reached. ${resetText}`
-                : "Usage limit reached. The provider did not report a reset time. Retry manually when your limit is available."}
+                ? tr("Usage limit reached. {resetText}", { resetText: resetText })
+                : tr("Usage limit reached. The provider did not report a reset time. Retry manually when your limit is available.")}
         </Text>
         {chatGptLimit || canSchedule ? (
           // The margins cancel the 44pt touch height so the links sit 8pt under the text.
@@ -169,12 +170,12 @@ export function UsageLimitRecoveryCard({
             {canSchedule ? (
               <>
                 <RecoveryAction
-                  label={scheduled ? "Cancel auto-resume" : "Resume at reset"}
+                  label={scheduled ? tr("Cancel auto-resume") : tr("Resume at reset")}
                   disabled={pending}
                   onPress={() => void toggle("resume")}
                 />
                 <RecoveryAction
-                  label={snoozed ? "Wake now" : "Snooze until reset"}
+                  label={snoozed ? tr("Wake now") : tr("Snooze until reset")}
                   disabled={pending || (!snoozed && resetPassed)}
                   onPress={() => void toggle("snooze")}
                 />

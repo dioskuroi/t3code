@@ -1,4 +1,5 @@
 import { View } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { Notice } from "../../components/ui/Notice";
 import { setFreshSessionPending, useComposerDraftSettings } from "../../state/use-composer-drafts";
@@ -9,11 +10,11 @@ export function FreshSessionNotice(props: { readonly threadKey: string }) {
   return (
     <View className="px-4 pb-3">
       <Notice
-        message="Your next message starts a fresh session. The agent won't see earlier messages in this thread."
+        message={tr("Your next message starts a fresh session. The agent won't see earlier messages in this thread.")}
         icon="arrow.clockwise"
         floating
         onDismiss={() => setFreshSessionPending(props.threadKey, false)}
-        dismissLabel="Keep the current session"
+        dismissLabel={tr("Keep the current session")}
       />
     </View>
   );

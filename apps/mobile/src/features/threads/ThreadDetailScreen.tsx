@@ -743,7 +743,9 @@ function ThreadDetailBody(
   );
   const extensionStatus = props.extensionStatuses?.length
     ? {
-        label: `Pi · ${props.extensionStatuses.map((status) => status.text).join(" · ")}`,
+        label: tr("Pi · {statuses}", {
+          statuses: props.extensionStatuses.map((status) => status.text).join(" · "),
+        }),
         onPress: () =>
           Dialog.alert("Pi", props.extensionStatuses?.map((status) => status.text).join("\n\n")),
       }
@@ -854,11 +856,13 @@ function ThreadDetailBody(
       const state = lifecycleSnoozed ? "snoozed" : settled ? "settled" : "woke";
       const label =
         lifecycleSnoozed && snoozedUntil !== null
-          ? `Snoozed, wakes in ${snoozeWakeLabel(snoozedUntil, { now: lifecycleNow })}`
+          ? tr("Snoozed, wakes in {time}", {
+              time: snoozeWakeLabel(snoozedUntil, { now: lifecycleNow }),
+            })
           : settled
-            ? "Settled"
-            : "Woke from snooze";
-      const actionLabel = lifecycleSnoozed ? "Wake now" : settled ? "Un-settle" : "Dismiss";
+            ? tr("Settled")
+            : tr("Woke from snooze");
+      const actionLabel = lifecycleSnoozed ? tr("Wake now") : settled ? "Un-settle" : tr("Dismiss");
       return {
         kind: "lifecycle",
         state,

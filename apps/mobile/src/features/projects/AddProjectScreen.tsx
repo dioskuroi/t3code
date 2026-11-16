@@ -1,4 +1,5 @@
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { tr } from "@t3tools/shared/i18n";
 import { useSelectWorkspaceDetail } from "../layout/workspace/useSelectWorkspaceDetail";
 import * as Dialog from "../../components/ui/Dialog";
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
@@ -128,9 +129,9 @@ const environmentOptionOrder = Order.mapInput(
 );
 
 function platformFromOs(os: string | null | undefined): string {
-  if (os === "windows") return "Win32";
+  if (os === "windows") return tr("Win32");
   if (os === "darwin") return "MacIntel";
-  if (os === "linux") return "Linux";
+  if (os === "linux") return tr("Linux");
   return "";
 }
 
@@ -983,7 +984,7 @@ function FolderBrowser(props: {
           failure: browseState.failure,
         }) ? (
         <Text className="text-sm text-foreground-muted">
-          This folder does not exist yet. Cloning creates it.
+          {tr("This folder does not exist yet. Cloning creates it.")}
         </Text>
       ) : (
         <ErrorBanner message={browseState.error} />

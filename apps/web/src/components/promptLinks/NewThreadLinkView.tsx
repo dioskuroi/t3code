@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { scopeProjectRef, scopeThreadRef } from "@t3tools/client-runtime/environment";
 import {
   getAddProjectInitialQuery,

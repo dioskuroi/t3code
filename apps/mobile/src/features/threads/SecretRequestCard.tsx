@@ -134,7 +134,7 @@ function PendingSecretRequestForm(props: {
       {sources.length > 0 ? (
         <View className="flex-row flex-wrap gap-2">
           <Chip
-            label="Value"
+            label={tr("Value")}
             size="small"
             selected={source === null}
             disabled={submitting}

@@ -92,11 +92,11 @@ export function SettingsEnvironmentsRouteScreen() {
 
   return (
     <SettingsScreen
-      title="Environments"
+      title={tr("Environments")}
       refresh={
         relaySession
           ? {
-              accessibilityLabel: "Refresh cloud environments",
+              accessibilityLabel: tr("Refresh cloud environments"),
               disabled: isRefreshingCloud,
               onPress: () => void refreshCloudEnvironments(),
             }

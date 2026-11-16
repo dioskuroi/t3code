@@ -272,10 +272,10 @@ export function DevicePreviewScreen({
       {embedded ? (
         <>
           <AppBar
-            title={preview?.name ?? "Devices"}
+            title={preview?.name ?? tr("Devices")}
             actions={[
               {
-                accessibilityLabel: "Maximize device",
+                accessibilityLabel: tr("Maximize device"),
                 icon: "arrow.up.left.and.arrow.down.right",
                 onPress: () => onMaximize(preview?.key ?? null),
               },
@@ -361,9 +361,9 @@ export function DevicePreviewScreen({
           }}
         >
           <GlassSurface className="flex-row items-center gap-1 p-1">
-            <SheetCloseButton accessibilityLabel="Close device preview" onClose={onClose} />
+            <SheetCloseButton accessibilityLabel={tr("Close device preview")} onClose={onClose} />
             <ControlPill
-              accessibilityLabel="Show device controls"
+              accessibilityLabel={tr("Show device controls")}
               icon="chevron.down"
               onPress={() => setControlsVisible(true)}
             />

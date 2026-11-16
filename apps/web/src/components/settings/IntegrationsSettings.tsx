@@ -181,7 +181,7 @@ class ProfileLimitReachedError extends Schema.TaggedError<ProfileLimitReachedErr
   {},
 ) {
   override get message(): string {
-    return "Browser profile limit reached.";
+    return tr("Browser profile limit reached.");
   }
 }
 

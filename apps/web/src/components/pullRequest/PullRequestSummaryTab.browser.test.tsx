@@ -142,9 +142,9 @@ it("keeps an unsaved description when collapsed and reopened, and after a failed
   await screen.click(tr("Description"));
   expect(screen.container.querySelector("textarea")!.value).toBe("Unsaved description");
 
-  await userEvent.click(screen.getByRole("button", { name: "Save" }));
+  await userEvent.click(screen.getByRole("button", { name: "保存" }));
   expect(state.update).toHaveBeenCalledTimes(1);
-  await expect.element(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  await expect.element(screen.getByRole("button", { name: "保存" })).toBeEnabled();
   expect(screen.container.querySelector("textarea")!.value).toBe("Unsaved description");
 });
 
@@ -168,7 +168,7 @@ it("ticks a description checkbox placed after an attachment and edits from the t
 
   // The host has not been read since the save, so the editor starts from the ticked body.
   await act(async () =>
-    screen.container.querySelector<HTMLButtonElement>('[aria-label="Edit description"]')!.click(),
+    screen.container.querySelector<HTMLButtonElement>('[aria-label="编辑描述"]')!.click(),
   );
   expect(screen.container.querySelector("textarea")!.value).toBe(ticked);
 });

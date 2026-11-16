@@ -66,5 +66,5 @@ export function SettingsFollowUpRouteScreen() {
     </ScrollView>
   );
 
-  return <SettingsScreen title="Chat">{content}</SettingsScreen>;
+  return <SettingsScreen title={tr("Chat")}>{content}</SettingsScreen>;
 }

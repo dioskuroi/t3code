@@ -78,7 +78,7 @@ const svgDocumentAtom = Atom.family((uri: string) =>
         const xml = await readSvgXml(uri, signal);
         signal.throwIfAborted();
         const ast = parse(xml);
-        if (!ast) throw new Error("SVG has no root element");
+        if (!ast) throw new Error(tr("SVG has no root element"));
         return { ast, size: resolveSvgImageSize(ast.props) };
       },
       catch: (cause) => new SvgLoadError({ cause }),

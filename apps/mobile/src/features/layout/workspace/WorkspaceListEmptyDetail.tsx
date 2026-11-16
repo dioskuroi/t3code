@@ -1,4 +1,5 @@
 import { Platform } from "react-native";
+import { tr } from "@t3tools/shared/i18n";
 
 import { AppBar } from "../../../components/ui/AppBar";
 import { Toolbar } from "../../../components/ui/Toolbar";
@@ -30,12 +31,12 @@ export function WorkspaceListEmptyDetail(props: {
       />
       <Toolbar placement="left">
         <Toolbar.Button
-          accessibilityLabel="New task"
+          accessibilityLabel={tr("New task")}
           icon="square.and.pencil"
           onPress={props.onStartNewTask}
         />
       </Toolbar>
-      <AppBar embedded title="Threads" />
+      <AppBar embedded title={tr("Threads")} />
       <WorkspaceEmptyDetail
         onAddConnection={
           Platform.OS === "android" && !props.hasConnections ? props.onAddConnection : undefined

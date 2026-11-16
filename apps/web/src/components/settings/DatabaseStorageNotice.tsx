@@ -35,8 +35,8 @@ export function DatabaseStorageNotice({
   return (
     <SettingsSection id="storage-database" title={tr("Database")}>
       <SettingsRow
-        title="Reclaim freed database space"
-        description="These databases still hold space freed by history cleanup. Run the command on each machine to reclaim it. It restarts the background service. Quit the desktop app first if it hosts the environment."
+        title={tr("Reclaim freed database space")}
+        description={tr("These databases still hold space freed by history cleanup. Run the command on each machine to reclaim it. It restarts the background service. Quit the desktop app first if it hosts the environment.")}
       />
       {visible.map(({ environmentId, status }) => (
         <SettingsRow

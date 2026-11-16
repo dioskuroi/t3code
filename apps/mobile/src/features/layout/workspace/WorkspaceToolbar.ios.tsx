@@ -1,4 +1,5 @@
 import { useActiveNewTask } from "../../../state/active-new-task";
+import { tr } from "@t3tools/shared/i18n";
 import { Toolbar } from "../../../components/ui/Toolbar";
 import { useFocusEffect, useIsFocused } from "@react-navigation/native";
 import { use, useCallback, useEffect, useRef } from "react";

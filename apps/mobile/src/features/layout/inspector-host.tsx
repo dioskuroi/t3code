@@ -1,4 +1,5 @@
 import { useSyncExternalStore, type ReactNode } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { Split, Stack } from "react-native-screens";
 
 import { RenderErrorBoundary, RenderFailureView } from "../../components/RenderErrorBoundary";
@@ -37,7 +38,7 @@ function PaneScreenContent(props: {
       <RenderErrorBoundary
         resetKeys={props.resetKeys}
         renderFallback={(fallback) => (
-          <RenderFailureView {...fallback} title="The inspector couldn't be displayed" />
+          <RenderFailureView {...fallback} title={tr("The inspector couldn't be displayed")} />
         )}
       >
         {props.pane.render()}

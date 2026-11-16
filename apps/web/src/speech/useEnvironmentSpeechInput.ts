@@ -11,6 +11,7 @@ import {
   type VoiceInputControllerDependencies,
   type VoiceInputState,
 } from "@t3tools/client-runtime/voice-input";
+import { tr } from "@t3tools/shared/i18n";
 import type { PreparedConnection } from "@t3tools/client-runtime/connection";
 import { AuthOrchestrationOperateScope, CLOUD_SPEECH_LABELS } from "@t3tools/contracts";
 import type {
@@ -323,7 +324,7 @@ export function useEnvironmentSpeechInput(input: HookInput) {
         return null;
       if (!target)
         return Promise.reject(
-          new Error("The draft's environment is unavailable for transcript cleanup."),
+          new Error(tr("The draft's environment is unavailable for transcript cleanup.")),
         );
       return runEnvironmentSpeech(
         postProcessEnvironmentTranscript(
@@ -348,8 +349,8 @@ export function useEnvironmentSpeechInput(input: HookInput) {
       onPostProcessingError: () =>
         toastManager.add({
           type: "warning",
-          title: "Transcript cleanup failed",
-          description: "The original transcript was added.",
+          title: tr("Transcript cleanup failed"),
+          description: tr("The original transcript was added."),
         }),
       readDraft,
       commitDraft: (text, selection) => {
@@ -469,8 +470,8 @@ export function useEnvironmentSpeechInput(input: HookInput) {
         error: choice
           ? null
           : catalog
-            ? "No model matches your language. Choose a model or change the language in Voice settings."
-            : "Could not load transcription models. Check the connection and try again.",
+            ? tr("No model matches your language. Choose a model or change the language in Voice settings.")
+            : tr("Could not load transcription models. Check the connection and try again."),
       }));
     },
   );
@@ -506,7 +507,7 @@ export function useEnvironmentSpeechInput(input: HookInput) {
       setQueuedStart(null);
       toastManager.add({
         type: "error",
-        title: "Could not start voice input",
+        title: tr("Could not start voice input"),
         description: error instanceof Error ? error.message : String(error),
       });
       return;
@@ -520,7 +521,7 @@ export function useEnvironmentSpeechInput(input: HookInput) {
     if (!latestStatus.supported) {
       toastManager.add({
         type: "error",
-        title: "Voice input is not available",
+        title: tr("Voice input is not available"),
         description: latestStatus.reason,
       });
       return;
@@ -549,7 +550,7 @@ export function useEnvironmentSpeechInput(input: HookInput) {
           setSetup((current) => ({
             ...current,
             downloading: false,
-            error: "The model downloaded, but this environment could not select it. Try again.",
+            error: tr("The model downloaded, but this environment could not select it. Try again."),
           }));
           return;
         }
@@ -564,14 +565,14 @@ export function useEnvironmentSpeechInput(input: HookInput) {
         ...current,
         downloading: false,
         step: ready ? 1 : current.step,
-        error: ready ? null : "The model is not ready. Try downloading it again.",
+        error: ready ? null : tr("The model is not ready. Try downloading it again."),
       }));
     } catch {
       if (request !== startRequestRef.current) return;
       setSetup((current) => ({
         ...current,
         downloading: false,
-        error: "Could not download the model. Check this environment's connection and try again.",
+        error: tr("Could not download the model. Check this environment's connection and try again."),
       }));
     }
   });

@@ -2,6 +2,7 @@ import {
   navigationCustomizationAvailable,
   overflowNavigationTabs,
 } from "../layout/workspace/navigation-tab-order";
+import { tr } from "@t3tools/shared/i18n";
 import {
   NAVIGATION_TAB_ICONS,
   WORKSPACE_TAB_LABELS,
@@ -79,7 +80,7 @@ export function SettingsListScreen(props: {
     <SettingsSidebarContext value={props.sidebar ? { selected: props.selected } : null}>
       <View className="flex-1 bg-screen">
         <SettingsScreen
-          title="Settings"
+          title={tr("Settings")}
           workspaceRoot={props.sidebar}
           menus={[environmentMenu]}
           search={
@@ -88,7 +89,7 @@ export function SettingsListScreen(props: {
                   value: workspace.state.tabs.settings.query,
                   onChangeText: (query) =>
                     workspace.dispatch({ type: "query", tab: "settings", query }),
-                  placeholder: "Search settings",
+                  placeholder: tr("Search settings"),
                 }
               : undefined
           }
@@ -250,8 +251,8 @@ function useSettingsIndexSections(): SettingsListSection[] {
         ...(navigationCustomizationAvailable()
           ? [page("SettingsNavigation", "line.3.horizontal", tr("Navigation tabs"))]
           : []),
-        ...(Platform.OS === "ios" ? [page("SettingsKeyboard", "keyboard", "Keyboard")] : []),
-        page("SettingsVoice", "mic", "Voice"),
+        ...(Platform.OS === "ios" ? [page("SettingsKeyboard", "keyboard", tr("Keyboard"))] : []),
+        page("SettingsVoice", "mic", tr("Voice")),
       ],
     },
     {

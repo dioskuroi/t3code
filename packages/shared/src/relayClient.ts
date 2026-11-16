@@ -34,7 +34,7 @@ export const CLOUDFLARED_VERSION = "2026.10.4";
 export const CLOUDFLARED_MIN_VERSION = "2025.6.1";
 const CLOUDFLARED_PATH_ENV_NAME = "T3CODE_CLOUDFLARED_PATH";
 
-const CLOUDFLARED_DOWNLOAD_TIMEOUT = "10 minutes";
+const CLOUDFLARED_DOWNLOAD_TIMEOUT = tr("10 minutes");
 
 export type RelayClientExecutableSource = "override" | "managed" | "path";
 
@@ -63,7 +63,7 @@ class RelayClientLockRemoveError extends Schema.TaggedError<RelayClientLockRemov
   { lockPath: Schema.String, cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return `Could not remove the relay client lock ${this.lockPath}.`;
+    return tr("Could not remove the relay client lock {lockPath}.", { lockPath: this.lockPath });
   }
 }
 
@@ -138,13 +138,13 @@ const CLOUDFLARED_RELEASE_ASSETS: Readonly<
 };
 
 const INSTALL_LOCK_RETRY_COUNT = 100;
-const INSTALL_LOCK_RETRY_DELAY = "100 millis";
+const INSTALL_LOCK_RETRY_DELAY = tr("100 millis");
 // Legacy locks have no owner; allow both ten-minute download stages and the install tail.
 const INSTALL_LOCK_LEGACY_STALE_MS = 30 * 60 * 1_000;
-const VERSION_PROBE_TIMEOUT = "10 seconds";
+const VERSION_PROBE_TIMEOUT = tr("10 seconds");
 
 const ACTIVATE_RETRY_COUNT = 40;
-const ACTIVATE_RETRY_DELAY = "250 millis";
+const ACTIVATE_RETRY_DELAY = tr("250 millis");
 
 const trimmedString = (name: string) =>
   Config.String(name).pipe(
@@ -343,7 +343,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
       return null;
     }
     if (expectedVersion !== undefined && version !== expectedVersion) {
-      yield* Effect.logWarning("Ignoring a managed relay client that reports another version", {
+      yield* Effect.logWarning(tr("Ignoring a managed relay client that reports another version"), {
         executablePath,
         expectedVersion,
         version,
@@ -379,7 +379,7 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
       if (!(yield* isExecutableFile(candidate))) continue;
       const available = yield* compatibleCandidate(candidate, "path");
       if (available) return available;
-      yield* Effect.logWarning("Skipping an incompatible relay client on PATH", {
+      yield* Effect.logWarning(tr("Skipping an incompatible relay client on PATH"), {
         executablePath: candidate,
         minimumVersion: CLOUDFLARED_MIN_VERSION,
       });
@@ -421,9 +421,9 @@ export const makeCloudflaredRelayClient = Effect.fn("cloudflared.make")(function
     for (const version of (yield* olderManagedVersions).slice(1)) {
       // Windows cannot delete another server's running connector; retry next prune.
       yield* fileSystem.remove(path.join(managedRoot, version), { recursive: true }).pipe(
-        Effect.tap(() => Effect.logInfo("Removed an older managed relay client", { version })),
+        Effect.tap(() => Effect.logInfo(tr("Removed an older managed relay client"), { version })),
         Effect.catch((cause) =>
-          Effect.logDebug("Could not remove an older managed relay client", { version, cause }),
+          Effect.logDebug(tr("Could not remove an older managed relay client"), { version, cause }),
         ),
       );
     }

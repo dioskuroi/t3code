@@ -22,7 +22,7 @@ class BrowserViewportCommitTimeoutError extends Schema.TaggedError<BrowserViewpo
   { tabId: Schema.String },
 ) {
   override get message(): string {
-    return `Timed out committing the browser viewport for tab ${this.tabId}`;
+    return tr("Timed out committing the browser viewport for tab {tabId}", { tabId: this.tabId });
   }
 }
 

@@ -3757,7 +3757,7 @@ export const ThreadFeed = memo(function ThreadFeed({
           info.item.message.projectedItem?.item.type === "user_message" &&
           info.item.message.projectedItem.item.freshContext ? (
             <ThreadContextDivider
-              label="New session"
+              label={tr("New session")}
               icon="arrow.clockwise"
               iconColor={iconSubtleColor}
             />

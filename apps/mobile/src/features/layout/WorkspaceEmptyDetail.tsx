@@ -29,12 +29,12 @@ export function WorkspaceEmptyDetail(props: {
         {props.onAddConnection ? (
           <View className="w-full max-w-[430px]">
             <EmptyState
-              title="No environments connected"
-              detail="Add an environment to load projects and start coding sessions."
+              title={tr("No environments connected")}
+              detail={tr("Add an environment to load projects and start coding sessions.")}
               variant="plain"
               action={
                 <FloatingActionButton
-                  label="Add environment"
+                  label={tr("Add environment")}
                   icon="plus"
                   variant="extended"
                   tone="primary"
@@ -53,19 +53,19 @@ export function WorkspaceEmptyDetail(props: {
             />
             <Text className="text-center text-xl font-t3-bold">
               {settings
-                ? "Select a setting"
+                ? tr("Select a setting")
                 : pullRequests
-                  ? "Select a pull request"
-                  : "Select a thread"}
+                  ? tr("Select a pull request")
+                  : tr("Select a thread")}
             </Text>
             <Text className="text-center text-base text-foreground-muted">
               {settings
-                ? "Choose a page from the sidebar."
+                ? tr("Choose a page from the sidebar.")
                 : pullRequests
-                  ? "Choose a pull request from the sidebar to review it."
+                  ? tr("Choose a pull request from the sidebar to review it.")
                   : Platform.OS === "android"
-                    ? "Choose a thread from the sidebar or start a new thread."
-                    : "Choose a thread from the sidebar or start a new task."}
+                    ? tr("Choose a thread from the sidebar or start a new thread.")
+                    : tr("Choose a thread from the sidebar or start a new task.")}
             </Text>
             {props.onStartNewTask && !pullRequests && !settings ? (
               Platform.OS === "android" ? (
@@ -76,7 +76,7 @@ export function WorkspaceEmptyDetail(props: {
                   className="mt-2 flex-row items-center gap-2 rounded-full bg-primary px-5 py-3 active:opacity-70"
                   onPress={props.onStartNewTask}
                 >
-                  <Text className="text-base font-t3-bold text-primary-foreground">New thread</Text>
+                  <Text className="text-base font-t3-bold text-primary-foreground">{tr("New thread")}</Text>
                 </Pressable>
               )
             ) : null}

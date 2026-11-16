@@ -137,7 +137,7 @@ describe.each(["repository", "folder", "destination"] as const)("add-project %s"
 it("keeps the caret in place when an edit briefly makes the folder path not a path", async () => {
   await using _screen = await render(<CommandPalette>{null}</CommandPalette>);
   await act(() => openCommandPalette({ open: "add-project" }));
-  await page.getByText("Local folder", { exact: true }).click();
+  await page.getByText("本地文件夹", { exact: true }).click();
   const input = () => page.getByRole("combobox");
   await input().fill("/workspace/project");
   await userEvent.keyboard("{Home}{ArrowRight}{Backspace}");

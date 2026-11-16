@@ -1,4 +1,5 @@
 import { MICROPHONE_PERMISSION_ERROR } from "@t3tools/client-runtime/voice-input";
+import { tr } from "@t3tools/shared/i18n";
 import { CheckIcon, MicIcon, PauseIcon, PlayIcon, RotateCcwIcon, XIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -75,7 +76,7 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
       typeof MediaRecorder === "undefined" ||
       typeof AudioWorkletNode === "undefined"
     ) {
-      setError("Microphone testing is unavailable in this browser. Use HTTPS or the desktop app.");
+      setError(tr("Microphone testing is unavailable in this browser. Use HTTPS or the desktop app."));
       setPhase("idle");
       return;
     }
@@ -104,7 +105,7 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
         releaseCapture();
         setLevel(0);
         if (!blob.size) {
-          setError("No audio was recorded. Try again.");
+          setError(tr("No audio was recorded. Try again."));
           setPhase("idle");
           return;
         }
@@ -116,7 +117,7 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
         if (capture.current !== current) return;
         releaseCapture();
         setLevel(0);
-        setError("Could not record microphone audio. Try again.");
+        setError(tr("Could not record microphone audio. Try again."));
         setPhase("idle");
       };
       recorder.addEventListener("error", onRecordingError);
@@ -125,7 +126,7 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
           "ended",
           () => {
             if (capture.current !== current) return;
-            setError("The microphone disconnected.");
+            setError(tr("The microphone disconnected."));
             if (recorder.state !== "inactive") recorder.stop();
           },
           { once: true },
@@ -171,7 +172,7 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
           ? MICROPHONE_PERMISSION_ERROR
           : cause instanceof Error
             ? cause.message
-            : "Could not access the microphone.",
+            : tr("Could not access the microphone."),
       );
     }
   };
@@ -195,7 +196,7 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
     return (
       <Button size="sm" variant="outline" onClick={() => void start()}>
         <MicIcon />
-        Test microphone
+        {tr("Test microphone")}
       </Button>
     );
   }
@@ -215,7 +216,7 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
       <Button
         size="icon-sm-pill"
         variant="ghost"
-        aria-label="Cancel microphone test"
+        aria-label={tr("Cancel microphone test")}
         onClick={cancel}
       >
         <XIcon />
@@ -226,12 +227,12 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
           <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-primary" />
           <span
             className="shrink-0 text-xs tabular-nums text-muted-foreground"
-            aria-label="Recording time"
+            aria-label={tr("Recording time")}
           >
             {formatTime(elapsed)} / {formatTime(LOOPBACK_SECONDS)}
           </span>
           <meter
-            aria-label="Microphone input level"
+            aria-label={tr("Microphone input level")}
             min={0}
             max={1}
             value={level}
@@ -240,12 +241,12 @@ export function MicrophoneTest({ microphoneId }: { microphoneId: string }) {
         </>
       ) : (
         <span role="status" className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-          Opening microphone…
+          {tr("Opening microphone\u2026")}
         </span>
       )}
       <Button
         size="icon-sm-pill"
-        aria-label="Stop recording"
+        aria-label={tr("Stop recording")}
         disabled={phase !== "recording"}
         onClick={() => {
           const recorder = capture.current?.recorder;
@@ -307,14 +308,14 @@ function MicrophonePlayback({
         <Button
           size="icon-sm-pill"
           variant="ghost"
-          aria-label={playing ? "Pause recording" : "Play recording"}
+          aria-label={playing ? tr("Pause recording") : tr("Play recording")}
           onClick={() => void togglePlayback()}
         >
           {playing ? <PauseIcon /> : <PlayIcon />}
         </Button>
         <input
           type="range"
-          aria-label="Recording playback position"
+          aria-label={tr("Recording playback position")}
           min={0}
           max={duration}
           step={0.01}
@@ -333,16 +334,16 @@ function MicrophonePlayback({
         <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
           {formatTime(position)}
         </span>
-        <Button size="icon-sm-pill" variant="ghost" aria-label="Record again" onClick={onRetry}>
+        <Button size="icon-sm-pill" variant="ghost" aria-label={tr("Record again")} onClick={onRetry}>
           <RotateCcwIcon />
         </Button>
-        <Button size="icon-sm-pill" aria-label="Done" onClick={onDone}>
+        <Button size="icon-sm-pill" aria-label={tr("Done")} onClick={onDone}>
           <CheckIcon />
         </Button>
       </VoiceInputPill>
       {failed ? (
         <p role="alert" className="text-xs text-destructive">
-          Could not play this recording. Try recording again.
+          {tr("Could not play this recording. Try recording again.")}
         </p>
       ) : null}
     </div>

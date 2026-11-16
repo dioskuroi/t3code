@@ -1,4 +1,5 @@
 import { AppBar } from "../../components/ui/AppBar";
+import { tr } from "@t3tools/shared/i18n";
 import { ScreenHeaderButton } from "../../components/ui/ScreenHeaderButton";
 import type { AppBarAction, AppBarMenu } from "../../components/ui/AppBar.types";
 import { useAdaptiveWorkspaceLayout } from "../layout/AdaptiveWorkspaceLayout";
@@ -32,7 +33,7 @@ export function ThreadHeader(props: {
   const actions: AppBarAction[] = props.hasThreadCwd
     ? [
         {
-          accessibilityLabel: filesVisible ? "Close files" : "Open files",
+          accessibilityLabel: filesVisible ? tr("Close files") : tr("Open files"),
           icon: "folder",
           selected: filesVisible,
           disabled: !props.gitControls.canOpenFiles,
@@ -52,7 +53,7 @@ export function ThreadHeader(props: {
       backInSplitView={
         props.onReturnToThread
           ? {
-              accessibilityLabel: "Return to chat",
+              accessibilityLabel: tr("Return to chat"),
               icon: "chevron.left",
               onPress: props.onReturnToThread,
             }
@@ -63,7 +64,7 @@ export function ThreadHeader(props: {
       trailing={
         props.fileInspectorSupported && props.hasThreadCwd ? (
           <ScreenHeaderButton
-            accessibilityLabel={inspectorVisible ? "Hide inspector" : "Show inspector"}
+            accessibilityLabel={inspectorVisible ? tr("Hide inspector") : tr("Show inspector")}
             icon="sidebar.right"
             selected={inspectorVisible}
             onPress={props.onToggleInspector}

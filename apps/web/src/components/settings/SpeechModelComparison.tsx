@@ -1,4 +1,5 @@
 import type { EnvironmentSpeechModel } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { CheckIcon } from "lucide-react";
 
 import { cn } from "../../lib/utils";
@@ -98,7 +99,7 @@ export function ModelBenchmarks({
             {score ? (
               <>
                 <strong className="font-medium text-foreground">{score.grade}</strong> (
-                {score.errorPercent}% error)
+                {score.errorPercent}{tr("% error)")}
               </>
             ) : (
               "not benchmarked"
@@ -108,12 +109,12 @@ export function ModelBenchmarks({
       })}
       {data ? (
         <span>
-          Speed:{" "}
+          {tr("Speed:")}{" "}
           {data.secondsPer30s === null ? (
             "not benchmarked"
           ) : (
             <>
-              <strong className="font-medium text-foreground">{data.secondsPer30s} s</strong> / 30 s
+              <strong className="font-medium text-foreground">{data.secondsPer30s} {tr("s")}</strong> {tr("/ 30 s")}
             </>
           )}
         </span>

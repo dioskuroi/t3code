@@ -2,6 +2,7 @@ import type {
   NativeStackHeaderItem,
   NativeStackHeaderItemMenu,
 } from "@react-navigation/native-stack";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { AppBarMenuItem } from "../../../components/ui/AppBar.types";
 import { withNativeGlassHeaderItem } from "../native-glass-header-items";
@@ -58,8 +59,8 @@ export function createWorkspaceListHeaderItems(input: {
           withNativeGlassHeaderItem({
             type: "button",
             axisBehavior: "horizontalOnly",
-            label: "Settings",
-            accessibilityLabel: "Open settings",
+            label: tr("Settings"),
+            accessibilityLabel: tr("Open settings"),
             icon: sfSymbolIcon("gearshape"),
             onPress: input.onOpenSettings,
           }),

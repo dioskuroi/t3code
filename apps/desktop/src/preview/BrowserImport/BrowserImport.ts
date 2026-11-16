@@ -98,7 +98,7 @@ class BrowserCookieFlushError extends Schema.TaggedError<BrowserCookieFlushError
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Imported cookies could not be flushed to disk.";
+    return tr("Imported cookies could not be flushed to disk.");
   }
 }
 
@@ -198,7 +198,7 @@ export const writeCookies = Effect.fn("BrowserImport.writeCookies")(function* (
       catch: (cause) => new BrowserCookieFlushError({ cause }),
     }).pipe(
       Effect.tapError((error) =>
-        Effect.logWarning("Imported cookies could not be flushed to disk", { cause: error.cause }),
+        Effect.logWarning(tr("Imported cookies could not be flushed to disk"), { cause: error.cause }),
       ),
       Effect.ignore,
     );
@@ -308,7 +308,7 @@ export const make = Effect.gen(function* BrowserImportMake() {
               linuxSecretApplication: definition.linuxSecretApplication,
               ...(platform === "win32" && userDataDirectory !== undefined
                 ? {
-                    windowsLocalStatePath: pathContext.path.join(userDataDirectory, "Local State"),
+                    windowsLocalStatePath: pathContext.path.join(userDataDirectory, tr("Local State")),
                   }
                 : {}),
               platform,

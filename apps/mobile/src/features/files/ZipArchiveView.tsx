@@ -143,8 +143,8 @@ async function openArchive(bytes: ArrayBuffer): Promise<ZipArchive> {
   } catch (cause) {
     throw new ZipFailureError({
       failure: {
-        title: "Couldn't browse this ZIP",
-        detail: `${errorMessage(cause, "It may be incomplete or damaged.")} ${SAVE_ZIP_HINT}`,
+        title: tr("Couldn't browse this ZIP"),
+        detail: `${errorMessage(cause, tr("It may be incomplete or damaged."))} ${SAVE_ZIP_HINT}`,
         retry: false,
       },
     });
@@ -309,11 +309,11 @@ function ZipArchiveHeader(props: {
         if (navigation.canGoBack()) navigation.goBack();
       }}
       actions={[
-        { accessibilityLabel: "Save ZIP", icon: "square.and.arrow.up", onPress: props.onSave },
+        { accessibilityLabel: tr("Save ZIP"), icon: "square.and.arrow.up", onPress: props.onSave },
         ...(props.onRemove
           ? [
               {
-                accessibilityLabel: "Remove from draft",
+                accessibilityLabel: tr("Remove from draft"),
                 icon: "trash" as const,
                 onPress: props.onRemove,
                 destructive: true,
@@ -740,14 +740,14 @@ function ZipEntryView(props: {
         onBack={props.onBack}
         menus={[
           {
-            title: "File actions",
+            title: tr("File actions"),
             icon: "ellipsis",
             items: [
               ...(renderedMode
                 ? [
                     {
                       id: "toggle-rendered",
-                      title: rendered ? "Show source" : "Show preview",
+                      title: rendered ? tr("Show source") : tr("Show preview"),
                       icon: rendered ? "doc.text" : "eye",
                       onPress: () => setRendered((value) => !value),
                     },
@@ -757,7 +757,7 @@ function ZipEntryView(props: {
                 ? [
                     {
                       id: "add-to-chat",
-                      title: "Add to chat",
+                      title: tr("Add to chat"),
                       icon: "plus.bubble",
                       disabled: busy !== null,
                       onPress: addToChat,
@@ -766,7 +766,7 @@ function ZipEntryView(props: {
                 : []),
               {
                 id: "save",
-                title: "Save file",
+                title: tr("Save file"),
                 icon: "square.and.arrow.up",
                 disabled: busy !== null,
                 onPress: save,

@@ -4,6 +4,7 @@ import type {
   VoiceStreamingSession,
   VoiceTranscriptionOptions,
 } from "@t3tools/client-runtime/voice-input";
+import { tr } from "@t3tools/shared/i18n";
 import workletUrl from "./pcmWorklet.ts?worker&url";
 
 type PreparedBrowserTranscription = PreparedVoiceTranscription & {
@@ -54,7 +55,7 @@ export function createBrowserPcmCapture(
     },
     prepareToRecordAsync: async () => {
       const captureSignal = signal;
-      if (!captureSignal) throw new Error("Voice transcription is not prepared.");
+      if (!captureSignal) throw new Error(tr("Voice transcription is not prepared."));
       captureSignal.throwIfAborted();
       if (recordingUri) URL.revokeObjectURL(recordingUri);
       recordingUri = null;
@@ -110,11 +111,11 @@ export function createBrowserPcmCapture(
           else chunks.push(data);
         };
         node.onprocessorerror = () => {
-          stopped?.reject(new Error("Microphone processing failed."));
-          input.onError("Microphone processing failed.");
+          stopped?.reject(new Error(tr("Microphone processing failed.")));
+          input.onError(tr("Microphone processing failed."));
         };
         for (const track of captured.getTracks())
-          track.addEventListener("ended", () => input.onError("The microphone disconnected."), {
+          track.addEventListener("ended", () => input.onError(tr("The microphone disconnected.")), {
             once: true,
           });
         context.createMediaStreamSource(captured).connect(node);
@@ -142,7 +143,7 @@ export function createBrowserPcmCapture(
         stopped = { resolve, reject };
       });
       const timeout = setTimeout(
-        () => stopped?.reject(new Error("Microphone capture did not stop.")),
+        () => stopped?.reject(new Error(tr("Microphone capture did not stop."))),
         5_000,
       );
       // oxlint-disable-next-line unicorn/require-post-message-target-origin -- AudioWorklet MessagePorts do not accept a target origin

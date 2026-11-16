@@ -933,8 +933,8 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
             },
           ]
         : []),
-      { id: "copy-thread", title: "Copy thread", image: "text.bubble" },
-      { id: "copy-thread-id", title: "Copy thread ID", image: "doc.on.doc" },
+      { id: "copy-thread", title: tr("Copy thread"), image: "text.bubble" },
+      { id: "copy-thread-id", title: tr("Copy thread ID"), image: "doc.on.doc" },
     ];
     if (snoozedRow) {
       return layoutThreadListV2RowMenuActions({
@@ -981,7 +981,7 @@ export const ThreadListV2Row = memo(function ThreadListV2Row(props: {
         ...direct,
         CARD_MENU_ACTIONS[0]!,
         ...(swipeActions.secondary === "snooze"
-          ? [{ id: "snooze", title: "Snooze", image: "clock", subactions: snoozePresetActions }]
+          ? [{ id: "snooze", title: tr("Snooze"), image: "clock", subactions: snoozePresetActions }]
           : []),
       ],
       reorder: reorderMenuItems,

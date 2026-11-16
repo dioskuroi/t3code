@@ -55,7 +55,7 @@ function NativeFilePreview(props: {
       delivered.current = images.map((image) => image.uri);
       presentation = NativeControls.presentFiles(
         images.map((image) => image.uri ?? null),
-        images.map((image) => image.name ?? "Preview"),
+        images.map((image) => image.name ?? tr("Preview")),
         selectedIndex,
         images.map((image) => image.sourceIdentifier ?? ""),
         identifier,
@@ -64,7 +64,7 @@ function NativeFilePreview(props: {
       const { uri, name, sourceIdentifier } = presented;
       presentation = NativeControls.presentFile(
         uri,
-        name ?? "Preview",
+        name ?? tr("Preview"),
         sourceIdentifier ?? "",
         identifier,
       );

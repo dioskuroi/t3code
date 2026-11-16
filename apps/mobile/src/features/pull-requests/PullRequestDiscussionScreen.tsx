@@ -1,4 +1,5 @@
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
+import { tr } from "@t3tools/shared/i18n";
 import { useAtomRefresh } from "@effect/atom-react";
 import { useFocusEffect, useNavigation, type StaticScreenProps } from "@react-navigation/native";
 import {
@@ -144,7 +145,7 @@ function Discussion({ params }: { params: PullRequestParams & { readonly discuss
     <PullRequestMarkdownRepository params={params} changeRequest={detail.data}>
       <KeyboardAvoidingView automaticOffset behavior="height" className="flex-1 bg-screen">
         <AppBar
-          title="Discussion"
+          title={tr("Discussion")}
           subtitle={`#${params.number}`}
           onBack={() => navigation.goBack()}
           actions={
@@ -242,7 +243,7 @@ function Discussion({ params }: { params: PullRequestParams & { readonly discuss
               className="flex-row items-end gap-1 p-1"
             >
               <TextInput
-                accessibilityLabel="Discussion reply"
+                accessibilityLabel={tr("Discussion reply")}
                 selection={completions.selection}
                 onSelectionChange={completions.onSelectionChange}
                 onBlur={completions.onBlur}

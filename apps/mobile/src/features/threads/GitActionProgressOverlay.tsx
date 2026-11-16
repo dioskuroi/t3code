@@ -1,4 +1,5 @@
 import { tryOpenExternalUrl } from "../../lib/openExternalUrl";
+import { tr } from "@t3tools/shared/i18n";
 import Animated, { FadeIn, FadeOut, ReduceMotion } from "react-native-reanimated";
 import { Toast } from "../../components/ui/Toast";
 import { useBarInset } from "../../components/ui/useBarInset";

@@ -209,7 +209,7 @@ describe("searchSettings", () => {
 
 describe("settings search targets", () => {
   it("requires an environment for the resolved telemetry export destination", () => {
-    const result = searchSettings("OpenTelemetry export").find(
+    const result = searchSettings("OpenTelemetry 导出").find(
       (item) => item.id === "telemetry-export",
     )!;
     const target = getSettingsSearchTargetScope(result.targetId ?? result.id)!;

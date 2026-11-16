@@ -370,7 +370,7 @@ export const readMedia = DesktopIpc.makeIpcMethod({
         }
         return { status: response.status, mimeType, data: Buffer.concat(chunks) };
       },
-      catch: (cause) => new MediaReadError({ message: "Could not read media.", cause }),
+      catch: (cause) => new MediaReadError({ message: tr("Could not read media."), cause }),
     }).pipe(Effect.orElseSucceed(() => null));
   }),
 });

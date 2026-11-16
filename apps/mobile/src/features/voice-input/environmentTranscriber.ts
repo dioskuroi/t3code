@@ -4,6 +4,7 @@ import {
   throwIfVoiceTranscriptionAborted,
   type VoiceTranscriber,
 } from "@t3tools/client-runtime/voice-input";
+import { tr } from "@t3tools/shared/i18n";
 
 const pcmBytesPerSecond = 16_000 * 2;
 const maxPcmBytes = pcmBytesPerSecond * VOICE_RECORDING_LIMIT_SECONDS;
@@ -19,7 +20,7 @@ export function createEnvironmentTranscriber(input: {
     if (!input.canSend()) {
       throw new VoiceTranscriptionError({
         code: "cancelled",
-        message: "Your transcription choice changed.",
+        message: tr("Your transcription choice changed."),
       });
     }
   }
@@ -41,7 +42,7 @@ export function createEnvironmentTranscriber(input: {
           ) {
             throw new VoiceTranscriptionError({
               code: "transcription-failed",
-              message: "This recording couldn’t be read. Try recording again.",
+              message: tr("This recording couldn\u2019t be read. Try recording again."),
             });
           }
           // A timed native stop can include a final encoder packet beyond the recording limit.

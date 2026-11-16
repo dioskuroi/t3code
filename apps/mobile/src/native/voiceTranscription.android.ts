@@ -1,4 +1,5 @@
 import { requireOptionalNativeModule } from "expo";
+import { tr } from "@t3tools/shared/i18n";
 import type { RecorderState, RecordingStatus } from "expo-audio";
 import { Platform } from "react-native";
 import type { NativeVoiceRecorder } from "../features/voice-input/lazyVoiceRecorder";
@@ -100,8 +101,8 @@ async function runOperation<T>(
       message:
         (typeof code === "string" ? nativeErrorMessages[code] : undefined) ??
         (fallbackCode === "preparation-failed"
-          ? "Voice transcription could not prepare this language. Check Google speech services and try again."
-          : "Voice transcription failed."),
+          ? tr("Voice transcription could not prepare this language. Check Google speech services and try again.")
+          : tr("Voice transcription failed.")),
       cause: error,
     });
   } finally {

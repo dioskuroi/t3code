@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Equal from "effect/Equal";
 import * as Hash from "effect/Hash";
 import * as Schema from "effect/Schema";
@@ -37,7 +38,7 @@ class ImagePreviewCacheError extends Schema.TaggedError<ImagePreviewCacheError>(
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not cache an image preview.";
+    return tr("Could not cache an image preview.");
   }
 }
 

@@ -149,8 +149,8 @@ export function buildComposerSlashCommandItems(input: {
   if (!input.atMessageStart) return items;
   if (input.offersSideChat) {
     for (const [command, description] of [
-      ["side", "Ask a side question in a new side chat"],
-      ["btw", "Same as /side"],
+      ["side", tr("Ask a side question in a new side chat")],
+      ["btw", tr("Same as /side")],
     ] as const) {
       if (!command.includes(query)) continue;
       items.push({
@@ -168,7 +168,7 @@ export function buildComposerSlashCommandItems(input: {
       type: "slash-command",
       command: "clear",
       label: "/clear",
-      description: "Start a fresh session",
+      description: tr("Start a fresh session"),
     });
   }
   for (const command of input.selectedProviderStatus?.slashCommands ?? []) {

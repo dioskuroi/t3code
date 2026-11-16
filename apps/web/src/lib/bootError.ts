@@ -193,8 +193,8 @@ function copyText(target: HTMLElement, onCopied: () => void, onBlocked: (hint: s
     if (copySelection()) return onCopied();
     onBlocked(
       /Mac|iPhone|iPad/.test(navigator.platform)
-        ? tr("Press \u2318C to copy")
-        : tr("Press Ctrl+C to copy"),
+        ? "按 ⌘C 复制"
+        : "按 Ctrl+C 复制",
     );
   };
   const clipboard = window.isSecureContext ? navigator.clipboard : undefined;
@@ -214,10 +214,10 @@ function mountUpdateButton(
     button.hidden = action === null;
     // aria-disabled keeps keyboard focus on the button while the download runs.
     button.setAttribute("aria-disabled", String(action?.kind === "downloading"));
-    if (action?.kind === "download") button.textContent = tr("Download update");
+    if (action?.kind === "download") button.textContent = "下载更新";
     if (action?.kind === "downloading")
-      button.textContent = tr("Downloading update ({percent}%)", { percent: action.percent });
-    if (action?.kind === "install") button.textContent = tr("Restart to update");
+      button.textContent = `正在下载更新（${action.percent}%）`;
+    if (action?.kind === "install") button.textContent = "重启以更新";
     const failure = !action
       ? ""
       : state.errorContext === "download"
@@ -278,11 +278,11 @@ export function showBootError(error: unknown) {
   };
 
   const message = element("div", {}, [
-    element("h1", { textContent: tr("T3 Code failed to start") }),
+    element("h1", { textContent: "T3 Code 启动失败" }),
     element("p", {
       textContent: offline
-        ? tr("This browser appears to be offline. Check the connection, then reload.")
-        : tr("We are not sure why. Try a reload first."),
+        ? "浏览器似乎已离线。请检查连接后重载。"
+        : "原因不明。请先尝试重载。",
     }),
   ]);
   message.setAttribute("role", "alert");
@@ -290,7 +290,7 @@ export function showBootError(error: unknown) {
   const reload = element("button", {
     id: "boot-error-reload",
     type: "button",
-    textContent: tr("Reload"),
+    textContent: "重载",
   });
   reload.addEventListener("click", () => window.location.reload());
   const update = element("button", { id: "boot-error-update", type: "button", hidden: true });
@@ -301,18 +301,18 @@ export function showBootError(error: unknown) {
   const copyCommand = element("button", {
     className: "boot-error-icon",
     type: "button",
-    title: tr("Copy command"),
+    title: "复制命令",
     innerHTML: COPY_ICON,
   });
-  copyCommand.setAttribute("aria-label", tr("Copy command"));
+  copyCommand.setAttribute("aria-label", "复制命令");
   copyCommand.addEventListener("click", () =>
     copyText(
       command,
       () => {
         copyCommand.innerHTML = CHECK_ICON;
-        copyCommand.title = tr("Copied");
-        copyCommand.setAttribute("aria-label", tr("Copied"));
-        announce(tr("Copied to clipboard."));
+        copyCommand.title = "已复制";
+        copyCommand.setAttribute("aria-label", "已复制");
+        announce("已复制到剪贴板。");
       },
       (hint) => {
         copyCommand.textContent = hint;
@@ -331,13 +331,13 @@ export function showBootError(error: unknown) {
     console.warn("Could not describe the startup error.", reportError);
   }
   const details = element("pre", { id: "boot-error-details", tabIndex: 0, textContent: report });
-  const copyDetails = element("button", { type: "button", textContent: tr("Copy error details") });
+  const copyDetails = element("button", { type: "button", textContent: "复制错误详情" });
   copyDetails.addEventListener("click", () =>
     copyText(
       details,
       () => {
-        copyDetails.textContent = tr("Copied");
-        announce(tr("Copied to clipboard."));
+        copyDetails.textContent = "已复制";
+        announce("已复制到剪贴板。");
       },
       (hint) => {
         copyDetails.textContent = hint;
@@ -348,7 +348,7 @@ export function showBootError(error: unknown) {
 
   const issue = new URL(ISSUE_URL);
   issue.searchParams.set("template", "bug_report.yml");
-  issue.searchParams.set("title", tr("T3 Code failed to start"));
+  issue.searchParams.set("title", "T3 Code 启动失败");
   issue.searchParams.set("area", "apps/web");
   issue.searchParams.set("version", `${environment.version} (${environment.channel})`);
   issue.searchParams.set("environment", `${environment.surface}, ${environment.platform}`);
@@ -357,33 +357,32 @@ export function showBootError(error: unknown) {
   const nightly = environment.channel === "nightly";
 
   const more = element("details", { open: isRepeatFailure(Date.now()) }, [
-    element("summary", { textContent: tr("More options if it keeps failing") }),
+    element("summary", { textContent: "持续失败时的更多选项" }),
     ...(bridge
       ? [
           link(
             nightly ? `${DOWNLOAD_URL}?channel=nightly` : DOWNLOAD_URL,
             nightly
-              ? tr("Download and reinstall the latest nightly build")
-              : tr("Download and reinstall T3 Code"),
+              ? "下载并重装最新 Nightly 版本"
+              : "下载并重装 T3 Code",
           ),
         ]
       : []),
     element("div", {}, [
       element("p", {
-        textContent: tr(
-          "Run this on the computer that runs T3 Code. Your agent can check the local logs and help you file a bug report.",
-        ),
+        textContent:
+          "在运行 T3 Code 的电脑上执行此命令。你的 agent 可以查看本地日志并帮你提交错误报告。",
       }),
       element("div", { id: "boot-error-command" }, [command, copyCommand]),
     ]),
     element("div", {}, [
       details,
       element("p", {
-        textContent: tr("Details may include local file paths and names. Check before sharing."),
+        textContent: "详情可能包含本地文件路径与名称。分享前请先检查。",
       }),
       element("div", { id: "boot-error-report" }, [
         copyDetails,
-        link(issue.href, tr("File a bug report on GitHub")),
+        link(issue.href, "在 GitHub 上提交错误报告"),
       ]),
     ]),
   ]);

@@ -225,7 +225,7 @@ describe("DevicePanel discovery warning", () => {
     currentState = withCause("first cause");
     await using screen = await render(devicePanel(threadA), { container });
 
-    await screen.getByRole("button", { name: "Dismiss device warning for This Mac" }).click();
+    await screen.getByRole("button", { name: "忽略 This Mac 的设备警告" }).click();
     await screen.rerender(devicePanel(threadA));
     await expect.element(screen.getByText(warning)).not.toBeInTheDocument();
 

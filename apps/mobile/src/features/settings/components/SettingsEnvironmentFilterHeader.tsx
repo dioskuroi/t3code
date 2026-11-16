@@ -1,4 +1,5 @@
 import { resolveEnvironmentMachineKind } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 
 import type { AppBarMenu } from "../../../components/ui/AppBar.types";
 import { ENVIRONMENT_MACHINE_SYMBOLS } from "../../../components/EnvironmentMachineSymbol";
@@ -17,7 +18,7 @@ export function useSettingsEnvironmentMenu(): AppBarMenu {
     selectProject,
   } = useSettingsEnvironmentFilter();
   return {
-    title: "Filter settings environments and projects",
+    title: tr("Filter settings environments and projects"),
     icon:
       selectedIds === null && selectedProjectKey === null
         ? "line.3.horizontal.decrease"
@@ -27,12 +28,12 @@ export function useSettingsEnvironmentMenu(): AppBarMenu {
         id: "environments",
         title:
           selectedIds === null
-            ? "All environments"
+            ? tr("All environments")
             : `${selectedTargets.length} ${selectedTargets.length === 1 ? "environment" : "environments"}`,
         items: [
           {
             id: "all",
-            title: "All connected environments",
+            title: tr("All connected environments"),
             selected: selectedIds === null,
             onPress: selectAll,
           },
@@ -50,11 +51,11 @@ export function useSettingsEnvironmentMenu(): AppBarMenu {
         id: "projects",
         title:
           selectableProjectGroups.find((group) => group.key === selectedProjectKey)?.label ??
-          (selectedProjectKey === null ? "All projects" : "Unavailable project"),
+          (selectedProjectKey === null ? tr("All projects") : tr("Unavailable project")),
         items: [
           {
             id: "project:all",
-            title: "All projects",
+            title: tr("All projects"),
             selected: selectedProjectKey === null,
             onPress: () => selectProject(null),
           },

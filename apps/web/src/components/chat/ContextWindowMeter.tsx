@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { Button } from "../ui/button";
 import type { ContextWindowSnapshot } from "@t3tools/client-runtime/state/context-window";
 import { formatContextWindowTokens } from "~/lib/contextWindow";

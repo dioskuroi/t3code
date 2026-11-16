@@ -191,23 +191,23 @@ it("tests the selected model after download and preserves its transcript across 
               <VoiceSettingsPanel />
             </SettingsScopeProvider>,
           );
-          const testModel = screen.getByRole("button", { name: "Test model", exact: true });
-          const download = screen.getByRole("button", { name: "Download", exact: true });
+          const testModel = screen.getByRole("button", { name: "测试模型", exact: true });
+          const download = screen.getByRole("button", { name: "下载", exact: true });
           await expect.element(download).toBeVisible();
           expect(testModel.query()).toBeNull();
-          expect(screen.getByRole("button", { name: "Set up voice input" }).query()).toBeNull();
+          expect(screen.getByRole("button", { name: "设置语音输入" }).query()).toBeNull();
           await userEvent.click(download);
           await expect.element(testModel).toBeVisible();
-          expect(screen.getByRole("button", { name: "Set up voice input" }).query()).toBeNull();
+          expect(screen.getByRole("button", { name: "设置语音输入" }).query()).toBeNull();
           await userEvent.click(testModel);
-          const result = screen.getByRole("status", { name: "Test transcript" });
+          const result = screen.getByRole("status", { name: "测试转录" });
           await expect.element(result).toHaveTextContent(transcript);
 
-          const search = screen.getByRole("textbox", { name: "Search transcription models" });
+          const search = screen.getByRole("textbox", { name: "搜索转录模型" });
           await userEvent.fill(search, "no matching model");
-          await expect.element(screen.getByText("No models match.")).toBeVisible();
+          await expect.element(screen.getByText("没有匹配的模型。")).toBeVisible();
           await userEvent.clear(search);
-          await userEvent.fill(screen.getByRole("textbox", { name: "Search languages" }), "fr");
+          await userEvent.fill(screen.getByRole("textbox", { name: "搜索语言" }), "fr");
           const french = screen.getByRole("button", { name: "French", exact: true });
           await userEvent.click(french);
           await expect.element(screen.getByText("Bilingual", { exact: true })).toBeVisible();
@@ -217,7 +217,7 @@ it("tests the selected model after download and preserves its transcript across 
           await expect.element(result).toBeVisible();
           await vi.waitFor(() =>
             expect(
-              screen.container.querySelector('[aria-label="Test transcript"]')?.textContent,
+              screen.container.querySelector('[aria-label="测试转录"]')?.textContent,
             ).toBe(transcript),
           );
         },
@@ -360,7 +360,7 @@ it("recovers from a failed download progress poll without notifying, but reports
         </SettingsScopeProvider>
       );
       await using screen = await render(panel("first"));
-      await expect.element(screen.getByRole("button", { name: "Use model" })).toBeVisible();
+      await expect.element(screen.getByRole("button", { name: "使用模型" })).toBeVisible();
       expect(readModels.mock.calls.map(([withBenchmarks]) => withBenchmarks)).toEqual([
         true,
         false,
@@ -370,7 +370,7 @@ it("recovers from a failed download progress poll without notifying, but reports
       await screen.rerender(panel("reopened"));
       await vi.waitFor(() =>
         expect(notify).toHaveBeenCalledWith(
-          expect.objectContaining({ title: "Could not load transcription models" }),
+          expect.objectContaining({ title: "无法加载转录模型" }),
         ),
       );
     },
@@ -396,10 +396,10 @@ it.each([
     );
     await vi.waitFor(() => expect(document.activeElement?.id).toBe(prerequisite));
     await expect
-      .element(screen.getByRole("combobox", { name: "Transcribe with" }))
-      .toHaveTextContent("Off");
+      .element(screen.getByRole("combobox", { name: "转录使用：" }))
+      .toHaveTextContent("关闭");
     await expect
-      .element(screen.getByRole("switch", { name: "Clean up transcripts with a provider" }))
+      .element(screen.getByRole("switch", { name: "使用 Provider 清理转录" }))
       .not.toBeChecked();
   },
 );
@@ -415,9 +415,9 @@ it("keeps a missing destination selected without claiming it cannot transcribe",
     </SettingsScopeProvider>,
   );
   await expect
-    .element(screen.getByRole("combobox", { name: "Transcribe with" }))
-    .toHaveTextContent("Chosen environment (unavailable)");
-  await expect.element(screen.getByText(/can’t transcribe audio/)).not.toBeInTheDocument();
+    .element(screen.getByRole("combobox", { name: "转录使用：" }))
+    .toHaveTextContent("所选环境（不可用）");
+  await expect.element(screen.getByText(/无法转录音频/)).not.toBeInTheDocument();
 });
 
 it("shows the model's effective language and restores the saved preference when supported again", async () => {
@@ -426,7 +426,7 @@ it("shows the model's effective language and restores the saved preference when 
   cleanup.defer(() => __setClientSettingsForTests(previous));
   __setClientSettingsForTests({ ...previous, speechLanguage: "fr" });
   await using screen = await render(<SpeechLanguageSelect model={{ languages: ["en"] }} />);
-  const picker = screen.getByRole("combobox", { name: "Transcription language" });
+  const picker = screen.getByRole("combobox", { name: "转录语言" });
   await expect.element(picker).toHaveTextContent("English (French unavailable)");
   await screen.rerender(
     <SpeechLanguageSelect model={{ languages: ["en", "de"], supportsLanguageDetection: true }} />,
@@ -448,13 +448,13 @@ it("keeps punctuation in a saved dictionary term and its alias", async () => {
     </SettingsScopeProvider>,
   );
   await userEvent.type(
-    screen.getByRole("textbox", { name: "Add a word or phrase to the dictionary" }),
+    screen.getByRole("textbox", { name: "向 dictionary 添加词语或短语" }),
     "O'Reilly{Enter}",
   );
   expect(getClientSettings().speechCustomWords[0]?.term).toBe("O'Reilly");
-  await userEvent.click(screen.getByRole("button", { name: "Add an alias for O'Reilly" }));
+  await userEvent.click(screen.getByRole("button", { name: "为 O'Reilly 添加别名" }));
   await userEvent.type(
-    screen.getByRole("textbox", { name: "Alias for O'Reilly" }),
+    screen.getByRole("textbox", { name: "O'Reilly 的别名" }),
     '"Oh Really"{Enter}',
   );
   expect(getClientSettings().speechCustomWords).toEqual([

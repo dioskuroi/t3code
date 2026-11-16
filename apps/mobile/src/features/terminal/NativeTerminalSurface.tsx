@@ -229,7 +229,7 @@ const ReadyTerminalSurface = memo(function ReadyTerminalSurface({
     focusKeyboard: () => {},
     resetInput: () => {
       void nativeRef.current?.resetInput?.().catch((error: unknown) => {
-        console.error("Terminal input reset failed", error);
+        console.error(tr("Terminal input reset failed"), error);
       });
     },
   }));

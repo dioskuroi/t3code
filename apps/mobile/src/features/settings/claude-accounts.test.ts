@@ -112,6 +112,6 @@ describe("planClaudeAccountSave", () => {
         instanceId: work,
         draft: { name: "Work", configDir: "~/.claude-other" },
       }),
-    ).toEqual({ error: "Managed by Example Corp." });
+    ).toEqual({ error: "由 Example Corp 管理。" });
   });
 });

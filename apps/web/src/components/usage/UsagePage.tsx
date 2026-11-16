@@ -894,10 +894,10 @@ function UsageOverview({
             <thead>
               <tr className="border-b border-border text-right text-xs text-muted-foreground">
                 <th className="py-2 pr-3 pl-2 text-left font-normal">#</th>
-                <th className="w-full py-2 text-left font-normal">Model</th>
-                <th className="py-2 pl-6 font-normal">Cost</th>
-                <th className="hidden py-2 pl-6 font-normal sm:table-cell">Share</th>
-                <th className="py-2 pr-2 pl-6 font-normal">Tokens</th>
+                <th className="w-full py-2 text-left font-normal">{tr("Model")}</th>
+                <th className="py-2 pl-6 font-normal">{tr("Cost")}</th>
+                <th className="hidden py-2 pl-6 font-normal sm:table-cell">{tr("Share")}</th>
+                <th className="py-2 pr-2 pl-6 font-normal">{tr("Tokens")}</th>
               </tr>
             </thead>
             <tbody>
@@ -976,14 +976,14 @@ function UsageOverview({
               </colgroup>
               <thead>
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="py-2 pl-2 font-normal">{shownHourly ? "Hour" : "Day"}</th>
+                  <th className="py-2 pl-2 font-normal">{shownHourly ? tr("Hour") : tr("Day")}</th>
                   {activeProviders.map((provider) => (
                     <th key={provider} className="py-2 pl-4 text-right font-normal">
                       {PROVIDER_PRESENTATION[provider].label}
                     </th>
                   ))}
-                  <th className="py-2 pl-4 text-right font-normal">Total</th>
-                  <th className="py-2 pr-2 pl-4 text-right font-normal">Tokens</th>
+                  <th className="py-2 pl-4 text-right font-normal">{tr("Total")}</th>
+                  <th className="py-2 pr-2 pl-4 text-right font-normal">{tr("Tokens")}</th>
                 </tr>
               </thead>
               <tbody>

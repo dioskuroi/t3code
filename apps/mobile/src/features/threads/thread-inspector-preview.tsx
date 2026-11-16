@@ -1,4 +1,5 @@
 import { useIsFocused, useNavigation, type StaticScreenProps } from "@react-navigation/native";
+import { tr } from "@t3tools/shared/i18n";
 import { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import { type ReactNode } from "react";
 import { View } from "react-native";
@@ -30,7 +31,7 @@ export function ThreadInspectorHeader(
         title={props.title}
         actions={[
           {
-            accessibilityLabel: "Maximize thread",
+            accessibilityLabel: tr("Maximize thread"),
             icon: "arrow.up.left.and.arrow.down.right",
             onPress: props.onMaximize,
           },
@@ -39,7 +40,7 @@ export function ThreadInspectorHeader(
     );
   }
   return (
-    <SheetHeader title={props.title} onClose={props.onClose} accessibilityLabel="Close thread" />
+    <SheetHeader title={props.title} onClose={props.onClose} accessibilityLabel={tr("Close thread")} />
   );
 }
 

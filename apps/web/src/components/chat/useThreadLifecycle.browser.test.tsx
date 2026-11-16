@@ -65,10 +65,10 @@ function threadInput(threadId: string, branch: string) {
 type ThreadInput = ReturnType<typeof threadInput>;
 
 it.each([
-  { remote: false, approval: false, link: "Open question" },
-  { remote: true, approval: false, link: "Open question" },
+  { remote: false, approval: false, link: "打开提问" },
+  { remote: true, approval: false, link: "打开提问" },
   { remote: true, approval: false, link: "Child" },
-  { remote: true, approval: true, link: "Open approval" },
+  { remote: true, approval: true, link: "打开批准" },
 ])("opens the child in its environment ($remote, $link)", async ({ remote, approval, link }) => {
   setup();
   const parent = threadInput("parent", "main");

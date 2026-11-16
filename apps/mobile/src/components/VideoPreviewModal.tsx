@@ -120,7 +120,7 @@ function OpenVideoPreviewModal(props: {
         <MediaPreviewHeader
           title={props.name}
           media={mediaActions}
-          closeAccessibilityLabel="Close video"
+          closeAccessibilityLabel={tr("Close video")}
           onClose={props.onRequestClose}
         />
         {playback.uri === null && !playback.unavailable ? (

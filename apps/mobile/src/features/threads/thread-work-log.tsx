@@ -1460,7 +1460,7 @@ export function ThreadThinkingRow(props: {
   readonly iconSubtleColor: ColorValue;
   readonly label?: string;
 }) {
-  const label = props.label ?? "Thinking";
+  const label = props.label ?? tr("Thinking");
   return (
     <View
       accessible

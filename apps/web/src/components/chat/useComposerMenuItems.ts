@@ -270,7 +270,7 @@ export function useComposerMenuItems({
                 type: "slash-command",
                 command: "clear",
                 label: "/clear",
-                description: "Start a fresh session; earlier messages stay visible",
+                description: tr("Start a fresh session; earlier messages stay visible"),
               },
             ] as const)
           : []),

@@ -1,4 +1,5 @@
 import { useAtomRefresh, useAtomValue } from "@effect/atom-react";
+import { tr } from "@t3tools/shared/i18n";
 import { useNavigation } from "@react-navigation/native";
 import {
   cancelEnvironmentSpeechModelDownload,
@@ -83,12 +84,12 @@ export function useVoiceModels(environmentId: EnvironmentId, label: string) {
     download: (model: EnvironmentSpeechModel) => {
       if (!ready) return;
       Dialog.confirm({
-        title: `Download ${model.name}?`,
+        title: tr("Download {model}?", { model: model.name }),
         message: `${label} will download ${formatBytes(model.size)} and use it as its transcription model.`,
-        confirmText: "Download",
+        confirmText: tr("Download"),
         onConfirm: () =>
           void run(
-            "Could not download the model",
+            tr("Could not download the model"),
             async () => {
               await runSpeech(downloadEnvironmentSpeechModel(connection, model.id));
               if (model.id !== status.modelId)
@@ -100,13 +101,13 @@ export function useVoiceModels(environmentId: EnvironmentId, label: string) {
     },
     select: (model: EnvironmentSpeechModel) => {
       if (!ready || model.active) return;
-      void run("Could not select the model", () =>
+      void run(tr("Could not select the model"), () =>
         runSpeech(selectEnvironmentSpeechModel(connection, model.id)),
       );
     },
     cancel: (model: EnvironmentSpeechModel) => {
       if (!ready) return;
-      void run("Could not cancel the download", () =>
+      void run(tr("Could not cancel the download"), () =>
         runSpeech(cancelEnvironmentSpeechModelDownload(connection, model.id)),
       );
     },
@@ -138,7 +139,7 @@ function ModelStats(props: { readonly model: EnvironmentSpeechModel; readonly la
             <>
               {languageLabel(code)}{" "}
               <Text className="font-t3-medium text-foreground">{score.grade}</Text> (
-              {score.errorPercent}% error)
+              {score.errorPercent}{tr("% error)")}
             </>,
           ],
         ] as const)
@@ -148,7 +149,7 @@ function ModelStats(props: { readonly model: EnvironmentSpeechModel; readonly la
           [
             "speed",
             <>
-              <Text className="font-t3-medium text-foreground">{data.secondsPer30s} s</Text> / 30 s
+              <Text className="font-t3-medium text-foreground">{data.secondsPer30s} {tr("s")}</Text> {tr("/ 30 s")}
             </>,
           ],
         ] as const)
@@ -242,8 +243,8 @@ export function VoiceModelRow(props: {
           label={model.name}
           description={
             model.state === "verifying"
-              ? "Verifying download…"
-              : `${Math.round((progress ?? 0) * 100)}% downloaded · Tap to cancel`
+              ? tr("Verifying download\u2026")
+              : tr("{percent}% downloaded · Tap to cancel", { percent: Math.round((progress ?? 0) * 100) })
           }
           disabled={!voice.canManage || voice.busy}
           onPress={() => voice.cancel(model)}
@@ -277,7 +278,7 @@ export function VoiceModelSection(props: {
   const voice = useVoiceModels(props.environmentId, props.label);
   const { status } = voice;
   if (!voice.connection || !status) return null;
-  const title = `Transcription model on ${props.label}`;
+  const title = tr("Transcription model on {environment}", { environment: props.label });
   if (!status.supported) {
     return (
       <SettingsSection title={title} footer={status.reason}>
@@ -296,19 +297,24 @@ export function VoiceModelSection(props: {
       footer={
         voice.canManage
           ? undefined
-          : `This connection can’t change settings on ${props.label}. Add a transcription model using T3 Code on that machine.`
+          : tr("This connection can\u2019t change settings on {environment}. Add a transcription model using T3 Code on that machine.", {
+              environment: props.label,
+            })
       }
     >
       <ListRow
-        label={active?.model ?? "No model selected"}
+        label={active?.model ?? tr("No model selected")}
         description={
           pending
             ? pending.state === "verifying"
-              ? `Verifying ${pending.name}…`
-              : `Downloading ${pending.name} · ${Math.round((progress ?? 0) * 100)}%`
+              ? tr("Verifying {model}…", { model: pending.name })
+              : tr("Downloading {model} · {percent}%", {
+                  model: pending.name,
+                  percent: Math.round((progress ?? 0) * 100),
+                })
             : active
               ? formatBytes(active.size)
-              : "Choose a transcription model to dictate on this environment."
+              : tr("Choose a transcription model to dictate on this environment.")
         }
         onPress={() =>
           navigation.navigate("SettingsVoiceModels", { environmentId: props.environmentId })

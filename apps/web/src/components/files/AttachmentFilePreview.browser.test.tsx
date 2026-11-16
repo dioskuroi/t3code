@@ -2528,15 +2528,15 @@ it("keeps a workspace PDF's page, offset and zoom when a new revision reloads it
     const loaded = nextPdfLoad();
     await using screen = await render(preview(original, "one"));
     await loaded;
-    await expect.element(screen.getByText("1 / 3 pages", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("1 / 3 页", { exact: true })).toBeVisible();
     using workers = vi.spyOn(window, "Worker");
     const region = () => screen.getByRole("region", { name: "Planning PDF" }).element();
     const offset = () =>
       region().getBoundingClientRect().top -
-      region().querySelector('canvas[aria-label="Page 2"]')!.getBoundingClientRect().top;
-    await screen.getByRole("button", { name: "Zoom in", exact: true }).click();
-    await screen.getByRole("button", { name: "Next page", exact: true }).click();
-    await expect.element(screen.getByText("2 / 3 pages", { exact: true })).toBeVisible();
+      region().querySelector('canvas[aria-label="第 2 页"]')!.getBoundingClientRect().top;
+    await screen.getByRole("button", { name: "放大", exact: true }).click();
+    await screen.getByRole("button", { name: "下一页", exact: true }).click();
+    await expect.element(screen.getByText("2 / 3 页", { exact: true })).toBeVisible();
     const zoom = screen.container.textContent!.match(/\d+%/)![0];
     const top = region().scrollTop + 100;
     await act(async () => {
@@ -2549,15 +2549,15 @@ it("keeps a workspace PDF's page, offset and zoom when a new revision reloads it
     const savedOffset = offset();
 
     await reload(screen, preview(updated, "two"));
-    await expect.element(screen.getByText("2 / 3 pages", { exact: true })).toBeVisible();
+    await expect.element(screen.getByText("2 / 3 页", { exact: true })).toBeVisible();
     expect(screen.container.textContent).toContain(zoom);
     expect(region().scrollLeft).toBe(80);
     expect(offset()).toBeCloseTo(savedOffset, 0);
     expect(workers).not.toHaveBeenCalled();
 
     await reload(screen, preview(updated, "two", "/repo/another.pdf"));
-    await expect.element(screen.getByText("1 / 3 pages", { exact: true })).toBeVisible();
-    expect(screen.container.textContent).toContain("Fit width");
+    await expect.element(screen.getByText("1 / 3 页", { exact: true })).toBeVisible();
+    expect(screen.container.textContent).toContain("适应宽度");
     expect(region().scrollTop).toBe(0);
   } finally {
     URL.revokeObjectURL(original);

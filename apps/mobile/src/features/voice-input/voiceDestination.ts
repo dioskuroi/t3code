@@ -6,6 +6,7 @@ import {
   DEFAULT_SPEECH_TRANSCRIPTION_OPTIONS,
   type VoiceTranscriptionDestination,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   getEnvironmentSpeechModels,
   getCloudSpeechKeys,
@@ -124,7 +125,7 @@ export function runSpeech<A, E>(
             if (signal?.aborted || !canSend())
               throw new VoiceTranscriptionError({
                 code: "cancelled",
-                message: "Your transcription choice changed.",
+                message: tr("Your transcription choice changed."),
               });
             return expoFetch(url, { ...options, redirect: "error" });
           }),
@@ -156,7 +157,7 @@ function environmentTranscriber(
         throw new VoiceTranscriptionError({
           code: "unavailable",
           message:
-            "Install a transcription model for this environment in Settings → Voice, then try again.",
+            tr("Install a transcription model for this environment in Settings \u2192 Voice, then try again."),
         });
       return status.languages
         ? effectiveSpeechLanguage(
@@ -172,7 +173,7 @@ function environmentTranscriber(
       if (!native?.decodeRecording)
         throw new VoiceTranscriptionError({
           code: "unavailable",
-          message: "Update T3 Code to transcribe on an environment.",
+          message: tr("Update T3 Code to transcribe on an environment."),
         });
       return native.decodeRecording(uri);
     },

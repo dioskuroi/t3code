@@ -246,7 +246,7 @@ it.each([true, false])(
     await using screen = await renderSection({ canList, projects: [] });
     await screen.setProjects([project]);
     const action = screen.getByRole("button", {
-      name: canList ? "List sessions" : "List providers",
+      name: canList ? "列出会话" : "列出 Provider",
     });
     await expect.element(action).toBeEnabled();
     if (!canList) {
@@ -287,12 +287,12 @@ it.each([true, false])(
     await expect
       .element(
         screen.getByRole("combobox", {
-          name: canList ? "Project for ACP sessions" : "Project for ACP providers",
+          name: canList ? "ACP 会话的项目" : "ACP Provider 的项目",
         }),
       )
       .toHaveFocus();
-    if (canList) await screen.getByRole("button", { name: "List sessions" }).click();
-    await screen.getByRole("button", { name: "List providers" }).click();
+    if (canList) await screen.getByRole("button", { name: "列出会话" }).click();
+    await screen.getByRole("button", { name: "列出 Provider" }).click();
     await userEvent.fill(
       screen.getByRole("textbox", { name: "google base URL" }),
       "https://draft.test",
@@ -306,14 +306,14 @@ it.each([true, false])(
     await expect
       .element(
         screen.getByRole("combobox", {
-          name: canList ? "Project for ACP sessions" : "Project for ACP providers",
+          name: canList ? "ACP 会话的项目" : "ACP Provider 的项目",
         }),
       )
       .toHaveTextContent("Second");
     await expect
       .element(screen.getByRole("textbox", { name: "google base URL" }))
       .toHaveValue("https://draft.test");
-    await screen.getByRole("button", { name: "Save", exact: true }).click();
+    await screen.getByRole("button", { name: "保存", exact: true }).click();
     expect(commands.setProvider).toHaveBeenLastCalledWith({
       environmentId,
       input: {
@@ -332,7 +332,7 @@ it.each([true, false])(
     await expect
       .element(screen.getByRole("textbox", { name: "google base URL" }))
       .not.toBeInTheDocument();
-    await screen.getByRole("button", { name: "List providers" }).click();
+    await screen.getByRole("button", { name: "列出 Provider" }).click();
     expect(commands.listProviders).toHaveBeenLastCalledWith({
       environmentId,
       input: { instanceId, projectId },
@@ -346,7 +346,7 @@ it.each([true, false])(
     await expect
       .element(
         screen.getByRole("combobox", {
-          name: canList ? "Project for ACP sessions" : "Project for ACP providers",
+          name: canList ? "ACP 会话的项目" : "ACP Provider 的项目",
         }),
       )
       .toHaveTextContent("Antigravity");
@@ -355,7 +355,7 @@ it.each([true, false])(
       .toHaveValue("https://api.example.test/v1");
 
     await screen.setProjects([]);
-    await expect.element(screen.getByRole("button", { name: "List providers" })).toBeDisabled();
+    await expect.element(screen.getByRole("button", { name: "列出 Provider" })).toBeDisabled();
     await expect
       .element(screen.getByRole("textbox", { name: "google base URL" }))
       .not.toBeInTheDocument();
@@ -371,39 +371,39 @@ it("ignores a late listing after project replacement", async () => {
     }),
   );
   await using screen = await renderSection();
-  await screen.click("List sessions");
+  await screen.click("列出会话");
   await screen.setProjects([replacement]);
   await act(async () =>
     finish({ _tag: "Success", value: { sessions: [session], nextCursor: "old-page" } }),
   );
   await expect.element(screen.getByText(session.title)).not.toBeInTheDocument();
   await expect.element(screen.getByRole("button", { name: "Load more" })).not.toBeInTheDocument();
-  await expect.element(screen.getByRole("button", { name: "List sessions" })).toBeEnabled();
+  await expect.element(screen.getByRole("button", { name: "列出会话" })).toBeEnabled();
 });
 
-it.each(["Save", "Disable"])("does not refetch the old project after a late %s", async (action) => {
+it.each(["保存", "禁用"])("does not refetch the old project after a late %s", async (action) => {
   setup();
-  const command = action === "Save" ? commands.setProvider : commands.disableProvider;
+  const command = action === "保存" ? commands.setProvider : commands.disableProvider;
   let finish!: () => void;
   command.mockReturnValueOnce(
     new Promise<void>((resolve) => {
       finish = resolve;
     }).then(() => ({
       _tag: "Success",
-      value: action === "Save" ? { configured: true } : { disabled: true },
+      value: action === "保存" ? { configured: true } : { disabled: true },
     })),
   );
   await using screen = await renderSection();
-  await screen.click("List providers");
+  await screen.click("列出 Provider");
   await screen.click(action);
   expect(command).toHaveBeenCalledOnce();
   await screen.setProjects([replacement]);
   await act(async () => finish());
   expect(commands.listProviders).toHaveBeenCalledOnce();
-  await expect.element(screen.getByRole("button", { name: "List providers" })).toBeEnabled();
+  await expect.element(screen.getByRole("button", { name: "列出 Provider" })).toBeEnabled();
 });
 
-it.each(["Delete", "Disable"])(
+it.each(["删除", "禁用"])(
   "does not act on a replaced project after confirming %s",
   async (action) => {
     setup();
@@ -414,11 +414,11 @@ it.each(["Delete", "Disable"])(
       }),
     );
     await using screen = await renderSection();
-    await screen.click(action === "Delete" ? "List sessions" : "List providers");
+    await screen.click(action === "删除" ? "列出会话" : "列出 Provider");
     await screen.click(action);
     await screen.setProjects([replacement]);
     await act(async () => finish(true));
-    expect(action === "Delete" ? commands.delete : commands.disableProvider).not.toHaveBeenCalled();
+    expect(action === "删除" ? commands.delete : commands.disableProvider).not.toHaveBeenCalled();
   },
 );
 
@@ -434,14 +434,14 @@ it("keeps logout pending across project replacement and clears replacement sessi
     })),
   );
   await using screen = await renderSection();
-  await screen.click("Log out");
+  await screen.click("登出");
   await screen.setProjects([replacement]);
-  await screen.click("List sessions");
+  await screen.click("列出会话");
   await expect.element(screen.getByText(session.title)).toBeVisible();
-  await expect.element(screen.getByRole("button", { name: "Logging out" })).toBeDisabled();
-  await screen.click("Logging out");
+  await expect.element(screen.getByRole("button", { name: "登出中" })).toBeDisabled();
+  await screen.click("登出中");
   expect(commands.logout).toHaveBeenCalledOnce();
   await act(async () => finish());
   await expect.element(screen.getByText(session.title)).not.toBeInTheDocument();
-  await expect.element(screen.getByRole("button", { name: "Log out", exact: true })).toBeEnabled();
+  await expect.element(screen.getByRole("button", { name: "登出", exact: true })).toBeEnabled();
 });

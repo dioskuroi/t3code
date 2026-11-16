@@ -1,4 +1,5 @@
 import * as Effect from "effect/Effect";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 import { HttpClient } from "effect/http";
 import {

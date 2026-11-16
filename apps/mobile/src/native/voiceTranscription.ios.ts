@@ -60,7 +60,7 @@ async function prepareVoiceTranscription(
   if (!AppleTranscription.isAvailable(locales[0]!)) {
     throw new VoiceTranscriptionError({
       code: "unavailable",
-      message: "Voice transcription requires a supported device with iOS 26 or later.",
+      message: tr("Voice transcription requires a supported device with iOS 26 or later."),
     });
   }
 
@@ -121,7 +121,7 @@ async function prepareLocale(locale: string, signal: AbortSignal): Promise<strin
     if (getNativeErrorCode(error) === "AppleTranscriptionUnsupportedLocale") {
       throw new VoiceTranscriptionError({
         code: "unsupported-locale",
-        message: "Voice transcription does not support any of your languages.",
+        message: tr("Voice transcription does not support any of your languages."),
         cause: error,
       });
     }

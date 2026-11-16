@@ -46,7 +46,7 @@ describe("device setup guidance", () => {
         { ...state, hostStatuses: { remote: { status: "ready", incompletePlatforms: ["ios"] } } },
         "ios",
       ).message,
-    ).toContain("discovery reported a problem");
+    ).toContain("设备发现报告了问题");
   });
 
   it("counts a remote device host when this machine has no simulator tooling", () => {

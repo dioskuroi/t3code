@@ -1,4 +1,5 @@
 import { AppActivityIndicator } from "../../components/ui/AppActivityIndicator";
+import { tr } from "@t3tools/shared/i18n";
 import { ChatGptUsageSummary } from "./ChatGptUsageSummary";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { EnvironmentId, USAGE_CONTRACT_VERSION, type UsageProviderKind } from "@t3tools/contracts";
@@ -55,10 +56,10 @@ const VIEW_OPTIONS = [
 ] as const satisfies readonly { value: UsageView; label: string }[];
 
 const WINDOW_OPTIONS = [
-  { value: 1, label: "24h", accessibilityLabel: tr("Past 24 hours") },
+  { value: 1, label: tr("24h"), accessibilityLabel: tr("Past 24 hours") },
   { value: 7, label: "7d", accessibilityLabel: tr("Past 7 days") },
-  { value: 30, label: "30d", accessibilityLabel: tr("Past 30 days") },
-  { value: 90, label: "90d", accessibilityLabel: tr("Past 90 days") },
+  { value: 30, label: tr("30d"), accessibilityLabel: tr("Past 30 days") },
+  { value: 90, label: tr("90d"), accessibilityLabel: tr("Past 90 days") },
 ] as const;
 
 const CHART_HEIGHT = 180;
@@ -184,7 +185,7 @@ function UsageScreen(props: {
     setSelectedEnvironmentIds((selected) => toggleUsageEnvironment(selected, environments, id));
   };
   const environmentMenu = {
-    title: "Filter usage environments",
+    title: tr("Filter usage environments"),
     icon:
       selectedEnvironmentIds === null
         ? ("line.3.horizontal.decrease" as const)
@@ -192,7 +193,7 @@ function UsageScreen(props: {
     items: [
       {
         id: "all",
-        title: "All environments",
+        title: tr("All environments"),
         selected: selectedEnvironmentIds === null,
         onPress: () => selectEnvironment("all"),
       },
@@ -209,7 +210,7 @@ function UsageScreen(props: {
 
   return (
     <SettingsScreen
-      title="Usage"
+      title={tr("Usage")}
       menus={showEnvironmentFilter ? [environmentMenu] : undefined}
       workspaceRoot={props.workspace}
     >
@@ -526,7 +527,7 @@ function ProviderSection(props: {
   );
 
   return (
-    <SettingsSection title="Providers">
+    <SettingsSection title={tr("Providers")}>
       {ordered.map((provider, index) => {
         const share = metric === "cost" ? provider.costShare : provider.tokenShare;
         return (

@@ -1,4 +1,5 @@
 import { DpopProof } from "@t3tools/client-runtime/relay";
+import { tr } from "@t3tools/shared/i18n";
 import { computeDpopJwkThumbprint, DpopPublicJwk } from "@t3tools/shared/dpop";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
@@ -116,7 +117,7 @@ const generateBrowserDpopKey = Effect.gen(function* () {
   }).pipe(
     Effect.flatMap((jwk) => decodeDpopPublicJwk(jwk)),
     Effect.mapError((cause) =>
-      isBrowserDpopError(cause) ? cause : dpopError("Generated DPoP public key is invalid.", cause),
+      isBrowserDpopError(cause) ? cause : dpopError(tr("Generated DPoP public key is invalid."), cause),
     ),
   );
   const privateKey = yield* Effect.tryPromise({
@@ -124,7 +125,7 @@ const generateBrowserDpopKey = Effect.gen(function* () {
       crypto.subtle.importKey("jwk", privateJwk, { name: "ECDSA", namedCurve: "P-256" }, false, [
         "sign",
       ]),
-    catch: (cause) => dpopError("Could not import DPoP private key.", cause),
+    catch: (cause) => dpopError(tr("Could not import DPoP private key."), cause),
   });
   return {
     privateKey,
@@ -142,7 +143,7 @@ export const loadOrCreateProofKey = Effect.fn("dpop.loadOrCreateProofKey")(funct
   const privateKey = yield* Signature.privateKeyFromCryptoKey(
     Signature.ecdsaP256,
     browserKey.privateKey,
-  ).pipe(Effect.mapError((cause) => dpopError("Could not load DPoP proof key.", cause)));
+  ).pipe(Effect.mapError((cause) => dpopError(tr("Could not load DPoP proof key."), cause)));
   return {
     publicJwk: browserKey.publicJwk,
     sign: (signingInput) =>
@@ -151,7 +152,7 @@ export const loadOrCreateProofKey = Effect.fn("dpop.loadOrCreateProofKey")(funct
         .pipe(
           Effect.mapError(
             (cause) =>
-              new DpopProof.DpopProofError({ message: "Could not sign DPoP proof.", cause }),
+              new DpopProof.DpopProofError({ message: tr("Could not sign DPoP proof."), cause }),
           ),
         ),
   } satisfies DpopProof.DpopProofKey;

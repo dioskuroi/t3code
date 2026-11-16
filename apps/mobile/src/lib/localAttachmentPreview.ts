@@ -105,7 +105,7 @@ const localAttachmentPreviewFamily = Atom.family((key: LocalAttachmentPreviewKey
         try: (signal) => loadLocalAttachmentPreview(key.attachment, signal),
         catch: (cause) =>
           new LocalAttachmentPreviewLoadError({
-            message: cause instanceof Error ? cause.message : "The local file is unavailable.",
+            message: cause instanceof Error ? cause.message : tr("The local file is unavailable."),
             cause,
           }),
       }).pipe(

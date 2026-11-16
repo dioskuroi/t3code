@@ -2,6 +2,7 @@ import type { ProjectIconColor } from "@t3tools/contracts";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import { Atom } from "effect/reactivity";
+import { tr } from "@t3tools/shared/i18n";
 import { useRef, useSyncExternalStore } from "react";
 import { Platform, View } from "react-native";
 import Svg, { Rect, Text } from "react-native-svg";
@@ -74,7 +75,7 @@ class ProjectGlyphRasterizeError extends Schema.TaggedError<ProjectGlyphRasteriz
   { key: Schema.String, cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return `Could not rasterize the project glyph ${this.key}.`;
+    return tr("Could not rasterize the project glyph {key}.", { key: this.key });
   }
 }
 

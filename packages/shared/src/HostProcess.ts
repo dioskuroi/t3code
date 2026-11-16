@@ -4,6 +4,7 @@ import * as Schema from "effect/Schema";
 import * as NodeDns from "node:dns";
 import * as NodeOS from "node:os";
 import * as NodeSea from "node:sea";
+import { tr } from "@t3tools/shared/i18n";
 
 export const Platform = Context.Reference<NodeJS.Platform>("@t3tools/shared/HostProcess/Platform", {
   defaultValue: () => process.platform,
@@ -95,7 +96,7 @@ export class HostnameLookupError extends Schema.TaggedError<HostnameLookupError>
   { hostname: Schema.String, cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return `Could not resolve ${this.hostname}.`;
+    return tr("Could not resolve {hostname}.", { hostname: this.hostname });
   }
 }
 

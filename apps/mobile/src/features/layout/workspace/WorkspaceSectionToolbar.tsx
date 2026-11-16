@@ -1,4 +1,5 @@
 import { selectedNavigationTab, visibleNavigationTabs } from "./navigation-tab-order";
+import { tr } from "@t3tools/shared/i18n";
 import { Toolbar } from "../../../components/ui/Toolbar";
 import { useControlTheme } from "../../../components/ui/useControlTheme";
 import { useDeviceType } from "../../../native/native-layout-metrics";

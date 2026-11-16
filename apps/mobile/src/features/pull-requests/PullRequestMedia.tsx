@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import {
   pullRequestMediaSource,
   pullRequestImageSource,

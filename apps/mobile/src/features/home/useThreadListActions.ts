@@ -250,7 +250,7 @@ export function useThreadListActions(): {
                   return pinThread(thread, step.orderKey);
                 case "snooze": {
                   const failureTitle =
-                    action === "Unpinned"
+                    action === tr("Unpinned")
                       ? tr("Could not undo unpin")
                       : tr("Could not undo settle");
                   if (!checkThreadOperationPermission(thread, failureTitle)) return false;
@@ -316,10 +316,10 @@ export function useThreadListActions(): {
       }
       if (!canSnooze(thread, { now: new Date().toISOString() })) {
         Dialog.alert(
-          "Could not snooze thread",
+          tr("Could not snooze thread"),
           thread.hasPendingApprovals || thread.pendingSubagentRequest != null
-            ? "This thread is waiting on you. Respond to the pending request before snoozing it."
-            : "This thread is still starting a turn. Try again once it's running.",
+            ? tr("This thread is waiting on you. Respond to the pending request before snoozing it.")
+            : tr("This thread is still starting a turn. Try again once it's running."),
         );
         return false;
       }

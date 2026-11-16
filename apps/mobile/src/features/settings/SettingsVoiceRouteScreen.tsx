@@ -81,9 +81,9 @@ const KINDS: Record<
   }
 > = {
   wired: {
-    label: "Wired",
-    row: "Other wired",
-    rowDescription: "Headsets and USB microphones not listed here",
+    label: tr("Wired"),
+    row: tr("Other wired"),
+    rowDescription: tr("Headsets and USB microphones not listed here"),
     icon: "cable.connector",
   },
   bluetooth: {
@@ -91,8 +91,8 @@ const KINDS: Record<
     row: tr("Other Bluetooth"),
     rowDescription:
       Platform.OS === "android"
-        ? "Earbuds, headsets, and cars, including Android Auto, not listed here"
-        : "AirPods, headsets, and cars not listed here",
+        ? tr("Earbuds, headsets, and cars, including Android Auto, not listed here")
+        : tr("AirPods, headsets, and cars not listed here"),
     icon: "headphones",
   },
   builtIn: {
@@ -111,16 +111,16 @@ const KINDS: Record<
 
 const UNAVAILABLE_EXPLANATION =
   Platform.OS === "android"
-    ? "Dictation on this device needs Android 12 or later and Google speech services that support your language. Your keyboard’s voice typing is separate."
-    : "Dictation on this device needs iOS 26 or later, a supported device, and a supported language. Your keyboard’s dictation is separate.";
+    ? tr("Dictation on this device needs Android 12 or later and Google speech services that support your language. Your keyboard\u2019s voice typing is separate.")
+    : tr("Dictation on this device needs iOS 26 or later, a supported device, and a supported language. Your keyboard\u2019s dictation is separate.");
 
 function saveDestination(id: EnvironmentId | null) {
   try {
     chooseVoiceDestination(id);
   } catch {
     Dialog.alert(
-      "Could not save transcription choice",
-      "Dictation on an environment is off for this session. Save again before closing the app, or your previous choice may return when it restarts.",
+      tr("Could not save transcription choice"),
+      tr("Dictation on an environment is off for this session. Save again before closing the app, or your previous choice may return when it restarts."),
     );
   }
 }
@@ -145,21 +145,24 @@ function EnvironmentChoice({
       description={
         !usable
           ? environment.connection.phase !== "connected"
-            ? "Not connected"
-            : "Transcription unavailable"
+            ? tr("Not connected")
+            : tr("Transcription unavailable")
           : status?.supported === false
             ? status.reason
             : status?.state === "missing-model"
-              ? "No transcription model installed"
-              : (environment.displayUrl ?? "Send finished recordings to this environment.")
+              ? tr("No transcription model installed")
+              : (environment.displayUrl ?? tr("Send finished recordings to this environment."))
       }
       separated
       onPress={() => {
         if (!selected)
           Dialog.confirm({
-            title: `Send microphone audio to ${environment.label}?`,
-            message: `Finished recordings will be sent to ${environment.displayUrl ?? environment.label} for transcription. You can switch back to This device at any time.`,
-            confirmText: "Use environment",
+            title: tr("Send microphone audio to {environment}?", { environment: environment.label }),
+            message: tr(
+              "Finished recordings will be sent to {destination} for transcription. You can switch back to This device at any time.",
+              { destination: environment.displayUrl ?? environment.label },
+            ),
+            confirmText: tr("Use environment"),
             onConfirm: () => saveDestination(environment.environmentId),
           });
       }}
@@ -223,7 +226,7 @@ export function SettingsVoiceRouteScreen() {
   const dragTo = drag === null ? -1 : dragFrom + dropSteps(dragFrom, drag.translation);
 
   return (
-    <SettingsScreen title="Voice">
+    <SettingsScreen title={tr("Voice")}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -231,10 +234,10 @@ export function SettingsVoiceRouteScreen() {
         contentContainerClassName="gap-3 px-5 pt-4"
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 18) + 18 }}
       >
-        <SettingsSection title="Transcribe on">
+        <SettingsSection title={tr("Transcribe on")}>
           <ListChoiceRow
-            label="This device"
-            description="Audio stays on this device and is transcribed here."
+            label={tr("This device")}
+            description={tr("Audio stays on this device and is transcribed here.")}
             selected={!grant}
             onPress={() => saveDestination(null)}
           />
@@ -251,8 +254,8 @@ export function SettingsVoiceRouteScreen() {
             ))}
           {isReady && grant && !grantEnvironment ? (
             <ListChoiceRow
-              label="Previously selected environment"
-              description="No longer paired"
+              label={tr("Previously selected environment")}
+              description={tr("No longer paired")}
               separated
               selected
               disabled
@@ -302,8 +305,8 @@ export function SettingsVoiceRouteScreen() {
             </SettingsSection>
             <Text className="px-2 text-sm text-foreground-muted">
               {permission === "ask"
-                ? "Allow microphone access to record and to see your microphones."
-                : "Turn on microphone access for T3 Code in Settings to use voice input."}
+                ? tr("Allow microphone access to record and to see your microphones.")
+                : tr("Turn on microphone access for T3 Code in Settings to use voice input.")}
             </Text>
           </>
         ) : null}
@@ -342,11 +345,9 @@ export function SettingsVoiceRouteScreen() {
           })}
         </SettingsSection>
         <Text className="px-2 text-sm text-foreground-muted">
-          Voice input uses the first connected microphone in this list. A wired or Bluetooth
-          microphone is added by name the first time you dictate with it connected; until then it
-          falls under Other. Swipe left on a named microphone to forget it.
+          {tr("Voice input uses the first connected microphone in this list. A wired or Bluetooth\n          microphone is added by name the first time you dictate with it connected; until then it\n          falls under Other. Swipe left on a named microphone to forget it.")}
           {Platform.OS === "android"
-            ? " Android may still use a different microphone if the preferred one can’t be routed."
+            ? tr(" Android may still use a different microphone if the preferred one can\u2019t be routed.")
             : null}
         </Text>
       </ScrollView>

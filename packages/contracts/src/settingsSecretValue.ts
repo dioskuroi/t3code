@@ -1,6 +1,7 @@
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
+import { tr } from "@t3tools/shared/i18n";
 
 import { TrimmedString } from "./baseSchemas.ts";
 import { SecretReference } from "./secretReference.ts";
@@ -28,7 +29,10 @@ export class SettingsSecretUnresolvedError extends Schema.TaggedError<SettingsSe
   { provider: Schema.String },
 ) {
   override get message(): string {
-    return `Could not read the credential from the secret provider "${this.provider}". Unlock or fix it in Settings, then try again.`;
+    return tr(
+      "Could not read the credential from the secret provider \"{provider}\". Unlock or fix it in Settings, then try again.",
+      { provider: this.provider },
+    );
   }
 }
 

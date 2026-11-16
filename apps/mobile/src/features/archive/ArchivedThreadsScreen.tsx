@@ -53,7 +53,7 @@ function ArchivedThreadsHeader(props: {
   const hasCustomFilter = props.selectedEnvironmentId !== null || props.sortOrder !== "newest";
   return (
     <AppBar
-      title="Archived threads"
+      title={tr("Archived threads")}
       onBack={() => navigation.goBack()}
       search={{
         value: props.searchQuery,
@@ -108,7 +108,7 @@ function ArchivedThreadsHeader(props: {
             },
             {
               id: "refresh",
-              title: "Refresh archived threads",
+              title: tr("Refresh archived threads"),
               onPress: props.onRefresh,
             },
           ],

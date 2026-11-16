@@ -413,7 +413,7 @@ export function NewTaskRouteScreen({ route }: StaticScreenProps<NewTaskRoutePara
                   <View>
                     <Button
                       label={
-                        catalogState.hasReadyEnvironment ? "Add new project" : "Add environment"
+                        catalogState.hasReadyEnvironment ? tr("Add new project") : tr("Add environment")
                       }
                       tone="primary"
                       onPress={() =>
@@ -426,7 +426,7 @@ export function NewTaskRouteScreen({ route }: StaticScreenProps<NewTaskRoutePara
                   {canStartScratch ? (
                     <View>
                       <Button
-                        label="Start without a project"
+                        label={tr("Start without a project")}
                         tone="secondary"
                         onPress={() => void startScratch()}
                       />
@@ -453,7 +453,7 @@ export function NewTaskRouteScreen({ route }: StaticScreenProps<NewTaskRoutePara
                   {canStartScratch ? (
                     <View>
                       <Button
-                        label="Start without a project"
+                        label={tr("Start without a project")}
                         tone="secondary"
                         onPress={() => void startScratch()}
                       />

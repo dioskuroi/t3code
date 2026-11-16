@@ -1,4 +1,5 @@
 import * as Context from "effect/Context";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
@@ -24,7 +25,7 @@ class MacPermissionHelperError extends Schema.TaggedError<MacPermissionHelperErr
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not show the permission helper.";
+    return tr("Could not show the permission helper.");
   }
 }
 
@@ -49,7 +50,7 @@ export const layer = Layer.effect(
             ),
           catch: (cause) => new MacPermissionHelperError({ cause }),
         }).pipe(
-          Effect.catch((cause) => Effect.logWarning("Could not show permission helper", cause)),
+          Effect.catch((cause) => Effect.logWarning(tr("Could not show permission helper"), cause)),
         );
       }),
     });

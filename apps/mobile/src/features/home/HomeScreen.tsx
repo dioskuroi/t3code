@@ -694,7 +694,7 @@ export function HomeScreen(props: HomeScreenProps) {
                 title={emptyState.title}
                 detail={emptyState.detail}
                 actionLabel={
-                  !props.catalogState.hasReadyEnvironment ? "Add environment" : undefined
+                  !props.catalogState.hasReadyEnvironment ? tr("Add environment") : undefined
                 }
                 onAction={
                   !props.catalogState.hasReadyEnvironment ? props.onAddConnection : undefined
@@ -702,7 +702,7 @@ export function HomeScreen(props: HomeScreenProps) {
                 action={
                   Platform.OS === "android" && !props.catalogState.hasReadyEnvironment ? (
                     <FloatingActionButton
-                      label="Add environment"
+                      label={tr("Add environment")}
                       icon="plus"
                       variant="extended"
                       tone="primary"

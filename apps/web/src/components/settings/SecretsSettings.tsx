@@ -1,4 +1,5 @@
 import type { EnvironmentId, SecretProviderConfig, SecretProviderId } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -31,7 +32,7 @@ import { SettingsPageContainer, SettingsRow, SettingsSection } from "./settingsL
 const SECRET_PROVIDER_KINDS: Readonly<
   Record<string, { readonly name: string; readonly icon: Icon }>
 > = {
-  one_password: { name: "1Password", icon: OnePasswordIcon },
+  one_password: { name: tr("1Password"), icon: OnePasswordIcon },
 };
 
 export function SecretsSettingsPanel() {
@@ -217,7 +218,7 @@ function RemoveSecretProviderButton({
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogPopup>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove {label}?</AlertDialogTitle>
+            <AlertDialogTitle>{tr("Remove")} {label}?</AlertDialogTitle>
             <SecretProviderUses environmentId={environmentId} id={id} label={label} />
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -253,14 +254,14 @@ function SecretProviderUses({
   if (uses.length === 0) {
     return (
       <AlertDialogDescription>
-        Nothing reads from {label}. The secrets themselves are untouched.
+        {tr("Nothing reads from")} {label}{tr(". The secrets themselves are untouched.")}
       </AlertDialogDescription>
     );
   }
   return (
     <>
       <AlertDialogDescription>
-        These read from {label} and will be unset. The secrets themselves are untouched.
+        {tr("These read from")} {label} {tr("and will be unset. The secrets themselves are untouched.")}
       </AlertDialogDescription>
       <ul className="max-h-48 list-disc space-y-0.5 overflow-y-auto ps-5 text-sm wrap-anywhere">
         {uses.map((use) => (

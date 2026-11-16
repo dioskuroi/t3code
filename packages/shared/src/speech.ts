@@ -5,6 +5,7 @@ import {
   type SpeechCustomWords,
   SpeechTranscriptionOptions,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import * as Schema from "effect/Schema";
 
 const decodeOptions = Schema.decodeUnknownSync(Schema.fromJsonString(SpeechTranscriptionOptions));
@@ -12,8 +13,11 @@ const encodeOptions = Schema.encodeSync(Schema.fromJsonString(SpeechTranscriptio
 
 export function cloudSpeechDisclosure(provider: CloudSpeechProvider, environment: string) {
   return provider === "openrouter"
-    ? `After you stop, ${environment} sends the recording to OpenRouter. OpenRouter chooses who runs your model. T3 requests zero data retention; your OpenRouter account may allow safety retention.`
-    : `After you stop, ${environment} sends your recording and vocabulary hints, including project names, to ${CLOUD_SPEECH_PROVIDER_NAMES[provider]}.`;
+    ? tr("After you stop, {environment} sends the recording to OpenRouter. OpenRouter chooses who runs your model. T3 requests zero data retention; your OpenRouter account may allow safety retention.", { environment: environment })
+    : tr(
+        "After you stop, {environment} sends your recording and vocabulary hints, including project names, to {provider}.",
+        { environment, provider: CLOUD_SPEECH_PROVIDER_NAMES[provider] },
+      );
 }
 
 // Only offer explicit hints understood by all cloud APIs; other languages can still be detected.
@@ -119,7 +123,7 @@ export function encodeSpeechPcmRequest(
 ): Uint8Array<ArrayBuffer> {
   const metadata = new TextEncoder().encode(encodeOptions(options));
   if (metadata.byteLength > SPEECH_MAX_OPTIONS_BYTES)
-    throw new Error("Speech options are too large.");
+    throw new Error(tr("Speech options are too large."));
   const body = new Uint8Array(4 + metadata.byteLength + pcm.byteLength);
   new DataView(body.buffer).setUint32(0, metadata.byteLength, true);
   body.set(metadata, 4);
@@ -128,10 +132,10 @@ export function encodeSpeechPcmRequest(
 }
 
 export function decodeSpeechPcmRequest(body: Uint8Array) {
-  if (body.byteLength < 4) throw new Error("Missing speech options.");
+  if (body.byteLength < 4) throw new Error(tr("Missing speech options."));
   const length = new DataView(body.buffer, body.byteOffset, body.byteLength).getUint32(0, true);
   if (length > SPEECH_MAX_OPTIONS_BYTES || 4 + length >= body.byteLength)
-    throw new Error("Invalid speech options length.");
+    throw new Error(tr("Invalid speech options length."));
   const options = decodeOptions(
     new TextDecoder("utf-8", { fatal: true }).decode(body.subarray(4, 4 + length)),
   );

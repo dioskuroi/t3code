@@ -40,7 +40,7 @@ class CrashLogReadError extends Schema.TaggedError<CrashLogReadError>()("CrashLo
   cause: Schema.Defect(),
 }) {
   override get message(): string {
-    return "Could not read the expo-updates log.";
+    return tr("Could not read the expo-updates log.");
   }
 }
 

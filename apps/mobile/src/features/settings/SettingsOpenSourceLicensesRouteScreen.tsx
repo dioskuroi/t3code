@@ -1,4 +1,5 @@
 import { NativeScrollView } from "../../native/NativeScrollViewMarker";
+import { tr } from "@t3tools/shared/i18n";
 import { useSearchToolbarInset } from "../../components/ui/useBarInset";
 import { ScreenScrollView as ScrollView } from "../../components/ui/ScreenScrollView";
 import { LegendList } from "@legendapp/list/react-native";
@@ -53,9 +54,9 @@ export function SettingsOpenSourceLicensesRouteScreen() {
   const search = {
     value: query,
     onChangeText: setQuery,
-    placeholder: "Search packages",
-    accessibilityLabel: "Search open-source licenses",
-    clearAccessibilityLabel: "Clear package search",
+    placeholder: tr("Search packages"),
+    accessibilityLabel: tr("Search open-source licenses"),
+    clearAccessibilityLabel: tr("Clear package search"),
   };
   const searchInset = useSearchToolbarInset(search);
   const manifest = useMobileThirdPartyLicenses();
@@ -85,7 +86,7 @@ export function SettingsOpenSourceLicensesRouteScreen() {
   }
 
   return (
-    <SettingsScreen title="Open source licenses" search={search}>
+    <SettingsScreen title={tr("Open source licenses")} search={search}>
       <LegendList
         renderScrollComponent={NativeScrollView}
         className="flex-1"

@@ -1,4 +1,5 @@
 import type * as Signature from "effect/crypto/Signature";
+import { tr } from "@t3tools/shared/i18n";
 import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as JoseError from "effect/jose/JoseError";
@@ -27,8 +28,11 @@ export class RelayJwtError extends Schema.TaggedError<RelayJwtError>()("RelayJwt
 }) {
   override get message(): string {
     return this.typ === undefined
-      ? `Failed to ${this.operation} relay JWT.`
-      : `Failed to ${this.operation} relay JWT of type "${this.typ}".`;
+      ? tr("Failed to {operation} relay JWT.", { operation: this.operation })
+      : tr("Failed to {operation} relay JWT of type \"{typ}\".", {
+          operation: this.operation,
+          typ: this.typ,
+        });
   }
 
   static diagnosticCode(error: RelayJwtError): string {

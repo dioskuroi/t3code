@@ -1,4 +1,5 @@
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
+import { tr } from "@t3tools/shared/i18n";
 import { parsePatchFiles } from "@pierre/diffs/utils/parsePatchFiles";
 import type { FileDiffMetadata } from "@pierre/diffs";
 import { StackActions, useNavigation, type StaticScreenProps } from "@react-navigation/native";
@@ -129,16 +130,19 @@ export function PullRequestGuideStopScreen({ route }: StaticScreenProps<GuideSto
   return (
     <View className="flex-1 bg-screen">
       <AppBar
-        title={`Stop ${route.params.position + 1} of ${guide?.stops.length ?? "…"}`}
+        title={tr("Stop {position} of {total}", {
+          position: route.params.position + 1,
+          total: guide?.stops.length ?? "…",
+        })}
         onBack={() => navigation.goBack()}
         menus={[
           {
-            title: "Guide options",
+            title: tr("Guide options"),
             icon: "ellipsis",
             items: [
               {
                 id: "word-wrap",
-                title: "Word wrap",
+                title: tr("Word wrap"),
                 icon: "text.alignleft",
                 selected: appearance.codeWordBreak,
                 onPress: () => setCodeWordBreak(!appearance.codeWordBreak),

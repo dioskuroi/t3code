@@ -889,7 +889,7 @@ function ScheduledTaskThreadLink({
       params={buildThreadRouteParams(ref)}
       className="max-w-64 truncate underline underline-offset-2 hover:text-foreground"
     >
-      {title || "Open thread"}
+      {title || tr("Open thread")}
     </Link>
   );
 }
@@ -1195,9 +1195,9 @@ function ScheduledTaskEditorDialog({
 }
 
 const THREAD_MODE_LABELS: Record<ScheduledTaskThreadMode, string> = {
-  new_thread: "New thread each run",
-  continue: "One thread, continuing the conversation",
-  fresh_session: "One thread, fresh session each run",
+  new_thread: tr("New thread each run"),
+  continue: tr("One thread, continuing the conversation"),
+  fresh_session: tr("One thread, fresh session each run"),
 };
 
 function ScheduledTaskDestination({
@@ -1222,16 +1222,16 @@ function ScheduledTaskDestination({
   const bound = ref !== null && threadMode !== "new_thread";
   const detail =
     threadMode === "new_thread"
-      ? "Each run starts a new thread with the workspace and model below."
+      ? tr("Each run starts a new thread with the workspace and model below.")
       : !bound
         ? threadMode === "continue"
-          ? "The first run starts a thread with the workspace and model below. Later runs continue that conversation."
-          : "The first run starts a thread with the workspace and model below. Later runs post there, each in a fresh session without earlier runs' context."
+          ? tr("The first run starts a thread with the workspace and model below. Later runs continue that conversation.")
+          : tr("The first run starts a thread with the workspace and model below. Later runs post there, each in a fresh session without earlier runs' context.")
         : threadMode === "continue"
-          ? "Each run continues this conversation, in its workspace and with its current model."
-          : "Each run starts a fresh session in this thread, without earlier runs' context.";
+          ? tr("Each run continues this conversation, in its workspace and with its current model.")
+          : tr("Each run starts a fresh session in this thread, without earlier runs' context.");
   return (
-    <Field label="Destination" htmlFor="scheduled-task-destination">
+    <Field label={tr("Destination")} htmlFor="scheduled-task-destination">
       {onThreadModeChange ? (
         <Select
           value={threadMode}
@@ -1255,7 +1255,7 @@ function ScheduledTaskDestination({
         ) : null}
         <p className="text-muted-foreground">{detail}</p>
         {threadMode !== "new_thread" ? (
-          <p className="text-muted-foreground">Deleting the thread also deletes this task.</p>
+          <p className="text-muted-foreground">{tr("Deleting the thread also deletes this task.")}</p>
         ) : null}
       </div>
     </Field>

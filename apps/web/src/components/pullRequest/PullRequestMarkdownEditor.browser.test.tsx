@@ -1,3 +1,4 @@
+import { tr } from "@t3tools/shared/i18n";
 import { act, render, type Screen } from "../../../test/render";
 import { AuthSourceControlWriteScope, EnvironmentId, ProjectId } from "@t3tools/contracts";
 import { expect, it, vi } from "vite-plus/test";

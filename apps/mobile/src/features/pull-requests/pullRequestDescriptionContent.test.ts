@@ -34,8 +34,8 @@ describe("PR attachments", () => {
     expect(
       pullRequestDescriptionContent({ type: "root" } as MarkdownNode, media).attachments,
     ).toEqual([
-      { uri: "https://drop.example.com/before.mp4", caption: "Video", kind: "video" },
-      { uri: "https://drop.example.com/after.mp4", caption: "Video", kind: "video" },
+      { uri: "https://drop.example.com/before.mp4", caption: "视频", kind: "video" },
+      { uri: "https://drop.example.com/after.mp4", caption: "视频", kind: "video" },
     ]);
   });
 });

@@ -179,7 +179,7 @@ class SnapShotShortcutError extends Schema.TaggedError<SnapShotShortcutError>()(
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not register the SnapShot shortcut.";
+    return tr("Could not register the SnapShot shortcut.");
   }
 }
 
@@ -963,7 +963,7 @@ export const make = Effect.gen(function* () {
       const capturedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
       if (snapshot.linuxActivationFailure) {
         yield* Effect.logWarning(
-          "The compositor could not activate T3 Code after the snapshot",
+          tr("The compositor could not activate T3 Code after the snapshot"),
           snapshot.linuxActivationFailure.cause,
         );
       }
@@ -1236,7 +1236,7 @@ export const make = Effect.gen(function* () {
           const { startNiriCaptureShortcut } = await import("./NiriCaptureShortcut.ts");
           return startNiriCaptureShortcut(linuxAppId, onCurrentShortcut, () => {
             void runPromise(
-              setShortcutFailure("The Niri capture endpoint disconnected. Restart T3 Code."),
+              setShortcutFailure(tr("The Niri capture endpoint disconnected. Restart T3 Code.")),
             ).catch(() => undefined);
           });
         },

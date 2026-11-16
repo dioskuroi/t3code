@@ -110,9 +110,9 @@ const DAYS = [
 ] as const;
 
 const THREAD_MODE_LABELS: Record<ScheduledTaskThreadMode, string> = {
-  new_thread: "New thread each run",
-  continue: "One thread, same conversation",
-  fresh_session: "One thread, fresh session",
+  new_thread: tr("New thread each run"),
+  continue: tr("One thread, same conversation"),
+  fresh_session: tr("One thread, fresh session"),
 };
 
 function describeSchedule(task: ScheduledTask): string {
@@ -422,10 +422,10 @@ export function SettingsScheduledTasksRouteScreen() {
 
   return (
     <SettingsScreen
-      title="Scheduled tasks"
+      title={tr("Scheduled tasks")}
       actions={[
         {
-          accessibilityLabel: "New task",
+          accessibilityLabel: tr("New task"),
           icon: "plus",
           disabled: visibleEnvironments.length === 0,
           onPress: newTask,
@@ -470,8 +470,8 @@ export function SettingsScheduledTasksRouteScreen() {
         ) : (
           <Text className="px-2 text-base text-foreground-muted">
             {availableTargets.length === 0
-              ? "Connect an environment to view and create scheduled tasks."
-              : "No environments match these filters. Change the filter above."}
+              ? tr("Connect an environment to view and create scheduled tasks.")
+              : tr("No environments match these filters. Change the filter above.")}
           </Text>
         )}
       </ScrollView>
@@ -926,19 +926,22 @@ function TaskForm({
 
         {offersThreadModes ? (
           <SettingsSection
-            title="Destination"
+            title={tr("Destination")}
             footer={
-              draft.threadMode === "new_thread"
-                ? "Each run starts a new thread."
-                : `${
+              draft.threadMode === "new_thread" ? (
+                tr("Each run starts a new thread.")
+              ) : (
+                tr("{mode} The first run starts the thread. Deleting it also deletes this task.", {
+                  mode:
                     draft.threadMode === "continue"
-                      ? "Runs continue one conversation."
-                      : "Runs share one thread, each in a fresh session without earlier runs' context."
-                  } The first run starts the thread. Deleting it also deletes this task.`
+                      ? tr("Runs continue one conversation.")
+                      : tr("Runs share one thread, each in a fresh session without earlier runs' context."),
+                })
+              )
             }
           >
             <SelectRow
-              label="Runs go to"
+              label={tr("Runs go to")}
               value={THREAD_MODE_LABELS[draft.threadMode]}
               actions={(Object.keys(THREAD_MODE_LABELS) as ScheduledTaskThreadMode[]).map(
                 (mode) => ({
@@ -955,7 +958,7 @@ function TaskForm({
           </SettingsSection>
         ) : null}
 
-        <SettingsSection title="Workspace">
+        <SettingsSection title={tr("Workspace")}>
           <SelectRow
             label={tr("Run in")}
             value={
@@ -1527,9 +1530,9 @@ function EnvironmentTasks({
             </Pressable>
             <Menu
               actions={[
-                { id: "edit", title: "Edit" },
+                { id: "edit", title: tr("Edit") },
                 ...(task.threadId !== null && scheduledTaskThreadMode(task) !== "new_thread"
-                  ? [{ id: "thread", title: "Open thread" }]
+                  ? [{ id: "thread", title: tr("Open thread") }]
                   : []),
                 {
                   id: "toggle",

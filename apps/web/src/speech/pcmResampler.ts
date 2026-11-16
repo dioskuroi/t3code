@@ -1,4 +1,5 @@
-const TARGET_RATE = 16_000;
+
+import { tr } from "@t3tools/shared/i18n";const TARGET_RATE = 16_000;
 
 /** Low-pass before downsampling, preserving filter and sample phase across capture blocks. */
 export class PcmResampler {
@@ -10,7 +11,7 @@ export class PcmResampler {
 
   constructor(sampleRate: number) {
     if (sampleRate < TARGET_RATE)
-      throw new Error("Microphone sample rate must be at least 16 kHz.");
+      throw new Error(tr("Microphone sample rate must be at least 16 kHz."));
     this.ratio = sampleRate / TARGET_RATE;
     this.coefficients = new Float64Array(sampleRate === TARGET_RATE ? 1 : 63);
     this.history = new Float32Array(this.coefficients.length);

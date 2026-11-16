@@ -269,7 +269,7 @@ function SpreadsheetGrid(props: {
           })
           .catch((cause: unknown) => {
             if (!isSupersededError(cause) && !controller.signal.aborted)
-              setNotice("These cells could not be drawn.");
+              setNotice(tr("These cells could not be drawn."));
           });
       }
       if (

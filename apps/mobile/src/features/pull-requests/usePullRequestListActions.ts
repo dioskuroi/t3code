@@ -79,7 +79,9 @@ export function usePullRequestListActions(
           !pr.capabilities.reviewers.request ||
           !pr.viewerPermissions.requestReviewers
         )
-          throw new Error(`Review requests aren't available for this ${terminology.singular}.`);
+          throw new Error(
+            tr("Review requests aren't available for this {type}.", { type: terminology.singular }),
+          );
         openDetail(
           { name: "PullRequest", params: params(entry) },
           { name: "PullRequestReviewers", params: params(entry) },

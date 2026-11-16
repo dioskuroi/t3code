@@ -25,8 +25,8 @@ import { useRef, useState } from "react";
 import { Tooltip, TooltipTrigger, TooltipPopup } from "../ui/tooltip";
 
 const ARCHIVE_ACTIONS = [
-  { action: "unarchive", label: "Unarchive", Icon: ArchiveX },
-  { action: "delete", label: "Delete", Icon: Trash2Icon },
+  { action: "unarchive", label: tr("Unarchive"), Icon: ArchiveX },
+  { action: "delete", label: tr("Delete"), Icon: Trash2Icon },
 ] as const;
 type ArchiveAction = (typeof ARCHIVE_ACTIONS)[number]["action"];
 
@@ -143,7 +143,7 @@ export function ArchivedThreadsPanel() {
       stackedThreadToast({
         type: "error",
         title,
-        description: error instanceof Error ? error.message : "An error occurred.",
+        description: error instanceof Error ? error.message : tr("An error occurred."),
       }),
     );
   };
@@ -166,7 +166,7 @@ export function ArchivedThreadsPanel() {
       pending.delete(key);
       setPendingKeys(new Set(pending));
     });
-    reportFailure(result._tag === "Failure" ? result : result.value, `Failed to ${action} thread`);
+    reportFailure(result._tag === "Failure" ? result : result.value, tr("Failed to {action} thread", { action: action }));
   };
 
   const handleContextMenu = async (thread: ArchivedThread, position: { x: number; y: number }) => {
@@ -184,7 +184,7 @@ export function ArchivedThreadsPanel() {
       if (clicked === "unarchive" || clicked === "delete")
         await handleThreadAction(clicked, thread);
     });
-    reportFailure(result, "Archived thread action failed");
+    reportFailure(result, tr("Archived thread action failed"));
   };
 
   return (
@@ -233,12 +233,12 @@ export function ArchivedThreadsPanel() {
                     event.preventDefault();
                     void handleContextMenu(thread, { x: event.clientX, y: event.clientY });
                   }}
-                  title={thread.title}
+                  title={threadDisplayTitle(thread.title)}
                   description={
                     <span className={hasMultipleEnvironments ? "block truncate" : undefined}>
                       {hasMultipleEnvironments ? `${thread.environmentLabel} · ` : null}
-                      Archived <RelativeTime timestamp={thread.archivedAt ?? thread.createdAt} />
-                      {" \u00b7 Created "}
+                      {tr("Archived")} <RelativeTime timestamp={thread.archivedAt ?? thread.createdAt} />
+                      {tr(" \u00B7 Created ")}
                       <RelativeTime timestamp={thread.createdAt} />
                     </span>
                   }
@@ -252,7 +252,7 @@ export function ArchivedThreadsPanel() {
                                 type="button"
                                 variant={action === "delete" ? "destructive-outline" : "outline"}
                                 size="icon-sm"
-                                aria-label={`${label} ${thread.title}`}
+                                aria-label={`${label} ${threadDisplayTitle(thread.title)}`}
                                 disabled={pendingKeys.has(threadKey)}
                                 onClick={() => void handleThreadAction(action, thread)}
                               />

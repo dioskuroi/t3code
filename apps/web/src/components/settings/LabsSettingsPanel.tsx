@@ -82,10 +82,10 @@ function BoringSidebarMultilineRow() {
 }
 
 const TOOL_CALL_VISIBILITY_LABELS: Record<ToolCallVisibility, string> = {
-  showAll: "Show all",
-  hideSuccessful: "Hide successful",
-  hideAll: "Hide all",
-  zen: "Zen",
+  showAll: tr("Show all"),
+  hideSuccessful: tr("Hide successful"),
+  hideAll: tr("Hide all"),
+  zen: tr("Zen"),
 };
 
 const isToolCallVisibility = Schema.is(ToolCallVisibility);
@@ -96,7 +96,7 @@ function ToolCallVisibilityRow() {
   return (
     <SettingsRow
       {...searchableSetting("tool-call-visibility")}
-      description="Hide the commands, edits, and searches agents run. Hide successful keeps failures. Zen shows only final answers. Approvals, questions, and errors always show."
+      description={tr("Hide the commands, edits, and searches agents run. Hide successful keeps failures. Zen shows only final answers. Approvals, questions, and errors always show.")}
       control={
         <div className="w-full sm:w-40">
           <Select
@@ -105,14 +105,14 @@ function ToolCallVisibilityRow() {
               if (isToolCallVisibility(value)) updateSettings({ toolCallVisibility: value });
             }}
           >
-            <SelectTrigger size="sm" className="w-full min-w-0" aria-label="Tool calls in chat">
+            <SelectTrigger size="sm" className="w-full min-w-0" aria-label={tr("Tool calls in chat")}>
               <SelectValue>{TOOL_CALL_VISIBILITY_LABELS[settings.toolCallVisibility]}</SelectValue>
             </SelectTrigger>
             <SelectPopup align="end" alignItemWithTrigger={false}>
-              <SelectItem value="showAll">Show all</SelectItem>
-              <SelectItem value="hideSuccessful">Hide successful</SelectItem>
-              <SelectItem value="hideAll">Hide all</SelectItem>
-              <SelectItem value="zen">Zen</SelectItem>
+              <SelectItem value="showAll">{tr("Show all")}</SelectItem>
+              <SelectItem value="hideSuccessful">{tr("Hide successful")}</SelectItem>
+              <SelectItem value="hideAll">{tr("Hide all")}</SelectItem>
+              <SelectItem value="zen">{tr("Zen")}</SelectItem>
             </SelectPopup>
           </Select>
         </div>
@@ -130,7 +130,7 @@ function GuestLinksRowWithSignIn() {
   return (
     <SettingsRow
       {...searchableSetting("guest-links")}
-      description="Share a thread with a guest who watches it live in a browser and sends messages you approve. Sign in to T3 Connect to use guest links."
+      description={tr("Share a thread with a guest who watches it live in a browser and sends messages you approve. Sign in to T3 Connect to use guest links.")}
       control={
         <Button size="sm" variant="outline" onClick={openAuthPrompt}>
           {tr("Sign in")}
@@ -161,12 +161,11 @@ function GuestLinksRow() {
       managed={settings.guestSharingEnabled ? undefined : connectDenial}
       description={
         <>
-          Share a thread with a guest who watches it live in a browser and sends messages you
-          approve. Needs T3 Connect: sign in and link this machine in{" "}
+          {tr("Share a thread with a guest who watches it live in a browser and sends messages you\n          approve. Needs T3 Connect: sign in and link this machine in")}{" "}
           <Link to="/settings/access" className="underline underline-offset-2">
             {tr("Sign in to T3 Connect in Sharing & access")}
           </Link>
-          . Turning it off stops every guest link.
+          {tr(". Turning it off stops every guest link.")}
         </>
       }
       control={
@@ -195,7 +194,7 @@ function LinkedEnvironmentsRow() {
           <Link to="/settings/connections" className="underline underline-offset-2">
             {tr("Turn it on for each machine, then link them in Connections")}
           </Link>
-          . While off, nothing new starts over a link; running tasks finish.
+          {tr(". While off, nothing new starts over a link; running tasks finish.")}
         </>
       }
       control={
@@ -231,7 +230,7 @@ function SimlockHostsRow() {
             rel="noreferrer"
             className="underline underline-offset-2"
           >
-            Simlock
+            {tr("Simlock")}
           </a>{" "}
           <Link to="/settings/devices" className="underline underline-offset-2">
             {tr("Devices")}

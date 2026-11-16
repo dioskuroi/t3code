@@ -112,7 +112,7 @@ function readStoredSidebarOpen(storageKey: string | undefined): boolean | null {
   try {
     return getLocalStorageItem(storageKey, Schema.Boolean);
   } catch (error) {
-    console.error("Could not restore persisted sidebar state.", error);
+    console.error(tr("Could not restore persisted sidebar state."), error);
     return null;
   }
 }
@@ -472,7 +472,7 @@ function SidebarRail({
       });
     };
     widthTargets.forEach((element) => {
-      element.style.setProperty("transition-duration", "0ms");
+      element.style.setProperty("transition-duration", tr("0ms"));
     });
     setTargetWidth(width);
 
@@ -503,7 +503,7 @@ function SidebarRail({
           try {
             setLocalStorageItem(options.storageKey, finalWidth, Schema.Finite);
           } catch (error) {
-            console.error("Could not persist sidebar width.", error);
+            console.error(tr("Could not persist sidebar width."), error);
           }
         }
         options.onResize?.(finalWidth);

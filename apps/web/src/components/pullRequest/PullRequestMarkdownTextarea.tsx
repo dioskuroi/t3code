@@ -5,6 +5,7 @@ import type {
   PullRequestRef,
   PullRequestReferenceCandidate,
 } from "@t3tools/contracts";
+import { tr } from "@t3tools/shared/i18n";
 import {
   debouncedPullRequestCompletionSearch,
   detectPullRequestComposerTrigger,
@@ -100,12 +101,12 @@ function ReferenceStateIcon({ candidate }: { candidate: PullRequestReferenceCand
       ? resolvePullRequestState({ state: candidate.state, isDraft: false })
       : candidate.state === "open"
         ? {
-            label: "Open issue",
+            label: tr("Open issue"),
             Icon: CircleDotIcon,
             toneClassName: PULL_REQUEST_STATE_PRESENTATION.open.toneClassName,
           }
         : {
-            label: "Closed issue",
+            label: tr("Closed issue"),
             Icon: CircleCheckIcon,
             toneClassName: PULL_REQUEST_STATE_PRESENTATION.merged.toneClassName,
           };
@@ -143,16 +144,16 @@ function CompletionRow({ completion }: { completion: PullRequestCompletion }) {
 
 const EMPTY_STATE = {
   mention: {
-    label: "Mention a user",
-    pending: "Searching users...",
-    failed: "Couldn't search users on the host",
-    none: "No matching users",
+    label: tr("Mention a user"),
+    pending: tr("Searching users..."),
+    failed: tr("Couldn't search users on the host"),
+    none: tr("No matching users"),
   },
   reference: {
-    label: "Reference an issue or change request",
+    label: tr("Reference an issue or change request"),
     pending: "Searching...",
-    failed: "Couldn't search the host",
-    none: "No matching issues or change requests",
+    failed: tr("Couldn't search the host"),
+    none: tr("No matching issues or change requests"),
   },
 } as const;
 

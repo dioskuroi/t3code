@@ -1,4 +1,5 @@
 import { cloudSpeechLanguages, effectiveSpeechLanguage } from "@t3tools/shared/speech";
+import { tr } from "@t3tools/shared/i18n";
 import {
   requireCloudSpeechKey,
   transcribeCloudPcm,
@@ -67,7 +68,7 @@ export function createBrowserVoiceInputPlatform(input: {
         if (isVoiceTranscriptionError(cause)) throw cause;
         throw new VoiceTranscriptionError({
           code: "transcription-failed",
-          message: "Voice transcription failed. Check the destination in Settings → Voice.",
+          message: tr("Voice transcription failed. Check the destination in Settings \u2192 Voice."),
           cause,
         });
       }
@@ -76,7 +77,7 @@ export function createBrowserVoiceInputPlatform(input: {
       if (input.cloudProvider === "openrouter" && !input.cloudModel)
         throw new VoiceTranscriptionError({
           code: "unavailable",
-          message: "Choose an OpenRouter model in Settings → Voice.",
+          message: tr("Choose an OpenRouter model in Settings \u2192 Voice."),
         });
       await runEnvironmentSpeech(
         requireCloudSpeechKey(input.prepared, input.cloudProvider),

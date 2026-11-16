@@ -1071,7 +1071,7 @@ export default function GitActionsControl({
   const changesTotals = resolvedChangesTotals ?? { insertions: 0, deletions: 0 };
   const changesBaseLabel = resolvedChangesTotals
     ? resolvedChangesTotals.baseRef === null
-      ? "Uncommitted"
+      ? tr("Uncommitted")
       : `vs ${resolvedChangesTotals.baseRef}`
     : null;
 
@@ -1667,7 +1667,7 @@ export default function GitActionsControl({
         >
           <FileDiffIcon className={THREAD_DETAILS_PANEL_ICON_CLASS} aria-hidden />
           <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
-            <span className="shrink-0">Changes</span>
+            <span className="shrink-0">{tr("Changes")}</span>
             {changesBaseLabel ? (
               <Tooltip>
                 <TooltipTrigger

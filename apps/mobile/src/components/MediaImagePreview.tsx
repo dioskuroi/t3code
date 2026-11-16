@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import { View } from "react-native";
 import ImageViewing from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,9 +23,9 @@ function ImagePreviewHeader(header: { readonly imageIndex: number }) {
   return (
     <View className="bg-black/70" style={{ paddingTop: insets.top }}>
       <MediaPreviewHeader
-        title={source?.name ?? "Image"}
+        title={source?.name ?? tr("Image")}
         media={mediaActions}
-        closeAccessibilityLabel="Close image"
+        closeAccessibilityLabel={tr("Close image")}
         onClose={props.onRequestClose}
       />
     </View>

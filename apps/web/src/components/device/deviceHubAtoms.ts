@@ -1,4 +1,5 @@
 import type { DeviceHubAccess } from "@t3tools/client-runtime/state/deviceHubAccess";
+import { tr } from "@t3tools/shared/i18n";
 import * as Effect from "effect/Effect";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
@@ -48,7 +49,7 @@ class DeviceAxTreeFetchError extends Schema.TaggedError<DeviceAxTreeFetchError>(
   { cause: Schema.Defect() },
 ) {
   override get message(): string {
-    return "Could not read the device accessibility tree.";
+    return tr("Could not read the device accessibility tree.");
   }
 }
 

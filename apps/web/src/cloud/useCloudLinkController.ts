@@ -124,7 +124,7 @@ export function useCloudLinkController(environmentId: EnvironmentId | null) {
     setTunnelLimit(null);
     const target = cloudLinkState.target;
     if (!target) {
-      reportUpdateFailure(new Error("Choose an environment first."));
+      reportUpdateFailure(new Error(tr("Choose an environment first.")));
       return false;
     }
     const environmentId = target.environmentId;

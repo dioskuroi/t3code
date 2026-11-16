@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { tr } from "@t3tools/shared/i18n";
 import type { SearchBarCommands } from "react-native-screens";
 
 import { NativeStackScreenOptions } from "../../../native/StackHeader";
@@ -34,9 +35,9 @@ function SidebarColumnHeader(
   });
   const items = createWorkspaceListHeaderItems({
     filter: {
-      accessibilityLabel: "Filter threads",
+      accessibilityLabel: tr("Filter threads"),
       icon: workspaceListFilterIcon(props.filter.customized),
-      title: "Thread list options",
+      title: tr("Thread list options"),
       items: props.filter.items,
     },
     onOpenSettings: props.onOpenSettings,

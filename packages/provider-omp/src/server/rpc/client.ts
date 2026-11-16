@@ -144,11 +144,9 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
     pending.clear();
   });
 
-  // #39: signal deaths (SIGKILL/SIGTERM — exit code null) surface as exitCode failures
-  // from the spawner, alongside genuine observation defects. Both mean the child is gone
-  // or unverifiable, so every exit observation funnels through one path and notifies
-  // `onExit` fail-closed with the code (null when death came by signal or is unverifiable):
-  // the adapter's crash handling (turn interrupted, thread error) hangs off that callback.
+  // #39: signal deaths (SIGKILL/SIGTERM — exit code null) and observation defects both
+  // mean the child is gone or unverifiable, so every exit observation funnels through one
+  // fail-closed path; the adapter's crash handling hangs off that callback.
   const onExitObserved = Effect.fn("OmpRpc.onExitObserved")(function* (
     raw: number | null,
     detail: string,

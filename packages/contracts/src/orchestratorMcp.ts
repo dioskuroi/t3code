@@ -517,7 +517,7 @@ export const OrchestratorMcpThreadSendInput = Schema.Struct({
   freshContext: Schema.optional(
     Schema.Boolean.annotate({
       description:
-        "Start a new provider session without the thread's earlier context, like /clear. Never steers.",
+        tr("Start a new provider session without the thread's earlier context, like /clear. Never steers."),
     }),
   ),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),
@@ -682,7 +682,7 @@ export const OrchestratorMcpScheduleTaskInput = Schema.Struct({
   freshSession: Schema.optional(
     Schema.Boolean.annotate({
       description:
-        "Runs share one thread but each starts a fresh session without earlier runs' context. Unbound: the first run makes the thread.",
+        tr("Runs share one thread but each starts a fresh session without earlier runs' context. Unbound: the first run makes the thread."),
     }),
   ),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId),
@@ -772,14 +772,14 @@ export const OrchestratorMcpRequestSecretInput = Schema.Struct({
     description: "secretRef (default) for a T3 tool; file for a command.",
   }),
   value: Schema.optional(PastedSecretValue).annotate({
-    description: "Pasted in this thread; no card.",
+    description: tr("Pasted in this thread; no card."),
   }),
   /** Default 10 minutes. */
   timeoutMs: Schema.optional(
     Schema.Int.check(Schema.isBetween({ minimum: 1_000, maximum: 60 * 60 * 1_000 })),
   ),
   clientRequestId: Schema.optional(OrchestratorMcpClientRequestId).annotate({
-    description: "Retry key.",
+    description: tr("Retry key."),
   }),
 });
 export type OrchestratorMcpRequestSecretInput = typeof OrchestratorMcpRequestSecretInput.Type;
@@ -804,7 +804,7 @@ export const OrchestratorMcpRequestSecretResult = Schema.Union([
       description:
         "declined: user chose not to; don't ask again. cancelled: ended with the run. timed_out: no answer in time. After cancelled or timed_out, ask again with a new `clientRequestId` only if still needed.",
     }),
-    note: Schema.optional(Schema.String).annotate({ description: "What to do next." }),
+    note: Schema.optional(Schema.String).annotate({ description: tr("What to do next.") }),
   }),
 ]);
 export type OrchestratorMcpRequestSecretResult = typeof OrchestratorMcpRequestSecretResult.Type;

@@ -227,10 +227,10 @@ function SnoozePopoverNavigation(props: {
         <View style={{ width: props.width, height: props.height }}>
           <StandaloneStack>
             <SheetHeader
-              title="Custom snooze"
+              title={tr("Custom snooze")}
               onCancel={props.onClose}
-              accessibilityLabel="Cancel custom snooze"
-              confirm={{ label: "Snooze", onPress: props.onSubmit }}
+              accessibilityLabel={tr("Cancel custom snooze")}
+              confirm={{ label: tr("Snooze"), onPress: props.onSubmit }}
             />
             <ScrollView
               contentInsetAdjustmentBehavior="automatic"

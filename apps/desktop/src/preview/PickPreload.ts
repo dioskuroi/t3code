@@ -594,7 +594,7 @@ function startAnnotation(
   adjust.className +=
     " h-8 w-8 shrink-0 bg-muted p-0 text-muted-foreground hover:bg-accent hover:text-accent-foreground";
   adjust.innerHTML =
-    '<svg viewBox="0 0 20 20" width="15" height="15" aria-hidden="true"><path d="M4 5h12M4 10h12M4 15h12M7 3v4M13 8v4M9 13v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    "<svg viewBox=\"0 0 20 20\" width=\"15\" height=\"15\" aria-hidden=\"true\"><path d=\"M4 5h12M4 10h12M4 15h12M7 3v4M13 8v4M9 13v4\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\"/></svg>";
   composerRow.appendChild(adjust);
 
   const comment = document.createElement("textarea");
@@ -614,25 +614,25 @@ function startAnnotation(
   let voiceKeyCode: string | null = null;
   let pendingVoiceSubmission: PreviewAnnotationSubmission | null = null;
   let voiceSubmissionReady = false;
-  const voiceButton = createButton("", "Start voice input");
+  const voiceButton = createButton("", tr("Start voice input"));
   voiceButton.innerHTML =
-    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/></svg>';
+    "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 19v3\"/><path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"/><rect x=\"9\" y=\"2\" width=\"6\" height=\"13\" rx=\"3\"/></svg>";
   voiceButton.className += " h-8 w-8 shrink-0 p-0 text-muted-foreground";
   voiceButton.hidden = true;
-  voiceButton.setAttribute("aria-label", "Start voice input");
+  voiceButton.setAttribute("aria-label", tr("Start voice input"));
   composerRow.appendChild(voiceButton);
   const voiceRow = document.createElement("div");
   voiceRow.className = "flex min-w-0 items-center justify-end gap-1 px-2 pb-2";
   voiceRow.hidden = true;
   const voicePill = document.createElement("div");
-  const voiceCancel = createButton("", "Cancel voice input");
+  const voiceCancel = createButton("", tr("Cancel voice input"));
   voiceCancel.innerHTML =
-    '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path d=\"m18 6-12 12M6 6l12 12\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>";
   voiceCancel.className += " h-7 w-7 shrink-0 rounded-full p-0";
-  const voiceFinish = createButton("", "Finish voice input");
+  const voiceFinish = createButton("", tr("Finish voice input"));
   voiceFinish.className +=
     " h-7 w-7 shrink-0 rounded-full border-primary bg-primary p-0 text-primary-foreground hover:bg-primary/90";
-  const voiceSkip = createButton("Skip", "Skip transcript cleanup");
+  const voiceSkip = createButton(tr("Skip"), tr("Skip transcript cleanup"));
   voiceSkip.className += " h-7 shrink-0 rounded-full px-2.5";
   // createButton's rounded-md sorts after rounded-full in the generated CSS, so it would win.
   for (const button of [voiceCancel, voiceFinish, voiceSkip]) button.classList.remove("rounded-md");
@@ -750,7 +750,7 @@ function startAnnotation(
     const wasActive = voicePill.parentElement === composerRow;
     voiceButton.hidden = !state.available || active;
     voiceButton.disabled = voiceBusy;
-    const label = voiceSettings ? "Open voice settings" : "Start voice input";
+    const label = voiceSettings ? tr("Open voice settings") : tr("Start voice input");
     voiceButton.title =
       !voiceSettings && state.shortcutLabel ? `${label} (${state.shortcutLabel})` : label;
     voiceButton.setAttribute("aria-label", label);
@@ -769,9 +769,9 @@ function startAnnotation(
     if (wasActive && !active) resizeComment();
     else if (phaseChanged) queueEditorLayout();
     voiceCancel.title =
-      state.phase === "error" ? "Dismiss voice input error" : "Cancel voice input";
+      state.phase === "error" ? tr("Dismiss voice input error") : tr("Cancel voice input");
     voiceCancel.setAttribute("aria-label", voiceCancel.title);
-    voiceStatus.setAttribute("aria-label", state.status ?? "Voice input");
+    voiceStatus.setAttribute("aria-label", state.status ?? tr("Voice input"));
     voiceStatus.setAttribute("aria-live", recording ? "off" : "polite");
     voiceStatusText.textContent = state.status;
     voiceStatusText.style.color = state.phase === "error" ? "var(--t3-destructive)" : "";
@@ -800,13 +800,13 @@ function startAnnotation(
     voiceSkip.hidden = state.phase !== "post-processing";
     voiceFinish.hidden = !active || state.phase === "post-processing";
     voiceFinish.disabled = !recording;
-    voiceFinish.title = recording ? "Finish voice input" : (state.status ?? "Voice input is busy");
+    voiceFinish.title = recording ? tr("Finish voice input") : (state.status ?? tr("Voice input is busy"));
     if (recording && state.shortcutLabel) voiceFinish.title += ` (${state.shortcutLabel})`;
     voiceFinish.setAttribute("aria-label", voiceFinish.title);
     if (phaseChanged)
       voiceFinish.innerHTML = recording
-        ? '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m5 12 4 4L19 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-        : '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+        ? "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path d=\"m5 12 4 4L19 6\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>"
+        : "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path d=\"M12 2a10 10 0 1 0 10 10\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>";
     if (!active) voicePill.append(voiceStatus, voiceCancel);
     else if (phaseChanged) voicePill.append(voiceCancel, voiceStatus, voiceSkip, voiceFinish);
     voicePreview.textContent = state.preview;
@@ -1131,8 +1131,8 @@ function startAnnotation(
   let aspectRatio = 1;
   const refreshAspectButton = (): void => {
     aspectLock.innerHTML = aspectLocked
-      ? '<svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="M8 6.5 9.5 5A3.5 3.5 0 0 1 14.5 10l-1.5 1.5M12 13.5 10.5 15A3.5 3.5 0 0 1 5.5 10L7 8.5M7.5 12.5l5-5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
-      : '<svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true"><path d="m6 6 8 8M8 6.5 9.5 5A3.5 3.5 0 0 1 14 9M12 13.5 10.5 15A3.5 3.5 0 0 1 6 11" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+      ? "<svg viewBox=\"0 0 20 20\" width=\"14\" height=\"14\" aria-hidden=\"true\"><path d=\"M8 6.5 9.5 5A3.5 3.5 0 0 1 14.5 10l-1.5 1.5M12 13.5 10.5 15A3.5 3.5 0 0 1 5.5 10L7 8.5M7.5 12.5l5-5\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"/></svg>"
+      : "<svg viewBox=\"0 0 20 20\" width=\"14\" height=\"14\" aria-hidden=\"true\"><path d=\"m6 6 8 8M8 6.5 9.5 5A3.5 3.5 0 0 1 14 9M12 13.5 10.5 15A3.5 3.5 0 0 1 6 11\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\"/></svg>";
     aspectLock.setAttribute("aria-pressed", String(aspectLocked));
     aspectLock.classList.toggle("bg-primary/10", aspectLocked);
     aspectLock.classList.toggle("text-primary", aspectLocked);

@@ -1882,7 +1882,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
   });
   const { blocksSubmission: voiceInputActive, submitAfterDictation } = speechInput;
   const voiceSendDisabledReason =
-    sendDisabledReason ?? (speechInput.preparing ? "Preparing voice input" : null);
+    sendDisabledReason ?? (speechInput.preparing ? tr("Preparing voice input") : null);
   const dictationShortcutLabel = useDictationShortcut({
     keybindings,
     speech: speechInput,
@@ -3598,7 +3598,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
 
             {speechInput.preview ? (
               <div
-                aria-label="Live transcription"
+                aria-label={tr("Live transcription")}
                 className="mx-3 mb-3 max-h-32 overflow-y-auto rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap sm:mx-4"
               >
                 <span>{speechInput.preview.committed}</span>
@@ -3699,7 +3699,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                           state={speechInput.state}
                           progress={null}
                           finishShortcutLabel={dictationShortcutLabel}
-                          cancelShortcutLabel="Esc"
+                          cancelShortcutLabel={tr("Esc")}
                           level={speechInput.level}
                           disabled={dictationDisabled}
                           onStart={() => void speechInput.start()}
