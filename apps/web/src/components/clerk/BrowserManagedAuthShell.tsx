@@ -1,3 +1,4 @@
+import { zhCN } from "@clerk/localizations";
 import { ClerkProvider } from "@clerk/react";
 import type { ReactNode } from "react";
 
@@ -13,7 +14,7 @@ export default function BrowserManagedAuthShell({
   readonly children: ReactNode;
 }) {
   return (
-    <ClerkProvider appearance={clerkAppearance} publishableKey={publishableKey}>
+    <ClerkProvider appearance={clerkAppearance} localization={zhCN} publishableKey={publishableKey}>
       <ManagedRelayAuthProvider>{children}</ManagedRelayAuthProvider>
     </ClerkProvider>
   );

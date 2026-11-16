@@ -30,7 +30,7 @@ describe("usageLimitRecoveryBannerItem", () => {
   it("names the day when the reset is tomorrow", () => {
     using _now = vi.spyOn(Date, "now").mockReturnValue(stoppedAt.getTime());
     expect(bannerDescription(new Date(2026, 9, 21, 17, 30), "24-hour")).toBe(
-      "将于 tomorrow at 17:30 重置",
+      "将于 明天 17:30 重置",
     );
   });
 });

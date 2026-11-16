@@ -1,4 +1,5 @@
 import { DayPicker } from "@daypicker/react";
+import { zhCN } from "@daypicker/react/locale/zh-CN";
 import { ChevronLeftIcon, ChevronRightIcon, ChevronsUpDownIcon } from "lucide-react";
 import type * as React from "react";
 import { cn } from "~/lib/utils";
@@ -44,6 +45,7 @@ export function Calendar({
   classNames,
   showOutsideDays = true,
   components: userComponents,
+  locale = zhCN,
   mode = "single",
   ...props
 }: React.ComponentProps<typeof DayPicker>): React.ReactElement {
@@ -99,8 +101,12 @@ export function Calendar({
     components: mergedComponents,
     "data-slot": "calendar",
     formatters: {
-      formatMonthDropdown: (date: Date) => date.toLocaleString("default", { month: "short" }),
+      // Locale-aware short month for the dropdown (zh: 11月); the default
+      // formatter would render the full month name from the active locale.
+      formatMonthDropdown: (date: Date, dateLib) =>
+        dateLib ? dateLib.format(date, "LLL") : date.toLocaleString("default", { month: "short" }),
     } as React.ComponentProps<typeof DayPicker>["formatters"],
+    locale,
     mode,
     showOutsideDays,
     ...props,
