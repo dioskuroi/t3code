@@ -276,9 +276,13 @@ const waitFor = <T extends ProviderAdapter.ProviderAdapterV2Event["type"]>(
     throw new Error(`expected ${type} event never arrived`);
   });
 
-const messageUpdate = (delayMs: number, event: Record<string, unknown>) => ({
+const messageUpdate = (delayMs: number, event: Record<string, unknown>, messageId?: string) => ({
   delayMs,
-  frame: { type: "message_update", assistantMessageEvent: event },
+  frame: {
+    type: "message_update",
+    ...(messageId === undefined ? {} : { messageId }),
+    assistantMessageEvent: event,
+  },
 });
 
 /** omp `select` approval dialog (notes rpc-protocol §5); labels pass through per spec §6. */
@@ -470,6 +474,92 @@ describe("omp adapter session runtime", () => {
       const promptRequest = requests.find((request) => request["type"] === "prompt");
       expect(promptRequest?.["message"]).toBe("hello omp");
       expect(promptRequest?.["streamingBehavior"]).toBe("followUp");
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  // wayfinder regression (thread c353c5ed, 2026-11-12): a turn with tool calls emits
+  // multiple assistant messages; each message_update carries its own messageId and
+  // restarts contentIndex at 0. Drive that shape and assert every message finalizes
+  // (streaming:false) instead of the last one reusing the first one's completed item.
+  live("finalizes every assistant message in a multi-message tool turn (wayfinder)", () =>
+    Effect.gen(function* () {
+      const sessionFile = "/tmp/omp-adapter-fake/sessions/multi-msg.jsonl";
+      const { harness } = yield* startDrivenTurn(
+        {
+          responses: {
+            open_session: {
+              data: { cancelled: false, resumed: false, sessionId: "s-1", sessionFile },
+            },
+          },
+          events: [
+            // First assistant message (messageId msg-a): thinking + text, then a tool call.
+            messageUpdate(20, { type: "thinking_start", contentIndex: 0 }, "msg-a"),
+            messageUpdate(20, { type: "thinking_delta", delta: "plan", contentIndex: 0 }, "msg-a"),
+            messageUpdate(20, { type: "thinking_end", contentIndex: 0 }, "msg-a"),
+            messageUpdate(20, { type: "text_start", contentIndex: 1 }, "msg-a"),
+            messageUpdate(
+              20,
+              { type: "text_delta", delta: "Reading the map", contentIndex: 1 },
+              "msg-a",
+            ),
+            messageUpdate(20, { type: "text_end", contentIndex: 1 }, "msg-a"),
+            { delayMs: 20, frame: { type: "message_end" } },
+            {
+              delayMs: 20,
+              frame: { type: "tool_execution_start", toolCallId: "call-1", name: "read" },
+            },
+            {
+              delayMs: 20,
+              frame: { type: "tool_execution_end", toolCallId: "call-1", name: "read" },
+            },
+            // Second assistant message (msg-b): messageId changes, contentIndex restarts at 0.
+            messageUpdate(20, { type: "thinking_start", contentIndex: 0 }, "msg-b"),
+            messageUpdate(
+              20,
+              { type: "thinking_delta", delta: "wrap up", contentIndex: 0 },
+              "msg-b",
+            ),
+            messageUpdate(20, { type: "thinking_end", contentIndex: 0 }, "msg-b"),
+            messageUpdate(20, { type: "text_start", contentIndex: 1 }, "msg-b"),
+            messageUpdate(
+              20,
+              { type: "text_delta", delta: "Map loaded", contentIndex: 1 },
+              "msg-b",
+            ),
+            messageUpdate(20, { type: "text_end", contentIndex: 1 }, "msg-b"),
+            { delayMs: 20, frame: { type: "message_end" } },
+            { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+            {
+              delayMs: 20,
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+            { delayMs: 20, frame: { type: "session_settled" } },
+          ],
+        },
+        "multimsg",
+      );
+      yield* waitFor(harness, "turn.terminal", (event) => event.status === "completed");
+      const finalItemStates = new Map<string, boolean>();
+      const finalTexts = new Map<string, string>();
+      for (const event of eventsOf(harness, "turn_item.updated")) {
+        const item = event.turnItem;
+        if (item.type !== "assistant_message") continue;
+        finalItemStates.set(item.id, item.streaming);
+        finalTexts.set(item.id, item.type === "assistant_message" ? item.text : "");
+      }
+      // Two distinct assistant messages: each its own item, each finalized.
+      expect(finalItemStates.size).toBe(2);
+      for (const [id, streaming] of finalItemStates) {
+        expect({ id, streaming }).toEqual({ id, streaming: false });
+      }
+      expect([...finalTexts.values()].sort()).toEqual(["Map loaded", "Reading the map"]);
+      // The final message.updated for each message carries streaming:false.
+      const lastByMessage = new Map<string, boolean>();
+      for (const event of eventsOf(harness, "message.updated")) {
+        lastByMessage.set(event.message.id, event.message.streaming);
+      }
+      expect(lastByMessage.size).toBe(2);
+      expect([...lastByMessage.values()]).toEqual([false, false]);
     }).pipe(Effect.provide(NodeTestLayer)),
   );
 
@@ -1690,77 +1780,83 @@ describe("omp adapter session runtime", () => {
     }).pipe(Effect.provide(NodeTestLayer)),
   );
 
-  live("ends a turn interrupted when the child dies by SIGKILL and recovers on the next prompt (#39)", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-sigkill-" });
-      const sessionFile = `${directory}/sessions/sigkill.jsonl`;
-      const requestLog = `${directory}/requests.jsonl`;
-      // Signal death (exit code null) is the real-env crash shape: a coded exit travels a
-      // different watcher branch and used to skip the adapter's crash handling entirely.
-      const command = writeFakeOmp({
-        directory,
-        program: {
-          responses: { open_session: { data: { sessionId: "s-sigkill", sessionFile } } },
-          eventsOnPrompt: [
-            [
-              {
-                delayMs: 10,
-                frame: {
-                  type: "message_update",
-                  assistantMessageEvent: { type: "text_delta", delta: "partial", contentIndex: 0 },
-                },
-              },
-            ],
-          ],
-          crashBySignal: { delayMs: 300 },
-        },
-        env: { FAKE_OMP_REQUEST_LOG: requestLog },
-      });
-      const ids = makeIds("sigkill");
-      yield* Effect.gen(function* () {
-        const harness = yield* openHarness(ids, command);
-        const providerThread = yield* harness.runtime.ensureThread({
-          threadId: ids.threadId,
-          modelSelection: ids.modelSelection,
-          runtimePolicy,
-        });
-        yield* driveTurn(harness, ids, providerThread, 1);
-        // SIGKILL mid-turn: the turn must reach a terminal, not hang as in #39.
-        yield* waitFor(
-          harness,
-          "turn.terminal",
-          (event) => event.runOrdinal === 1 && event.status === "interrupted",
-        );
-        yield* waitFor(
-          harness,
-          "provider_thread.updated",
-          (event) => event.providerThread.status === "error",
-        );
-        // Phase 2: healthy respawn — the next prompt switches back to the same session.
-        writeFakeOmp({
+  live(
+    "ends a turn interrupted when the child dies by SIGKILL and recovers on the next prompt (#39)",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-sigkill-" });
+        const sessionFile = `${directory}/sessions/sigkill.jsonl`;
+        const requestLog = `${directory}/requests.jsonl`;
+        // Signal death (exit code null) is the real-env crash shape: a coded exit travels a
+        // different watcher branch and used to skip the adapter's crash handling entirely.
+        const command = writeFakeOmp({
           directory,
           program: {
             responses: { open_session: { data: { sessionId: "s-sigkill", sessionFile } } },
-            eventsOnPrompt: [completedTurnEvents("revived")],
+            eventsOnPrompt: [
+              [
+                {
+                  delayMs: 10,
+                  frame: {
+                    type: "message_update",
+                    assistantMessageEvent: {
+                      type: "text_delta",
+                      delta: "partial",
+                      contentIndex: 0,
+                    },
+                  },
+                },
+              ],
+            ],
+            crashBySignal: { delayMs: 300 },
           },
           env: { FAKE_OMP_REQUEST_LOG: requestLog },
         });
-        yield* driveTurn(harness, ids, providerThread, 2);
-        yield* waitFor(
-          harness,
-          "turn.terminal",
-          (event) => event.runOrdinal === 2 && event.status === "completed",
-        );
-        const requests = yield* readRequestLog(requestLog);
-        const switches = requests.filter((request) => request["type"] === "switch_session");
-        expect(switches).toHaveLength(1);
-        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
-        expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
-          2,
-        );
-      }).pipe(Effect.scoped);
-    }).pipe(Effect.provide(NodeTestLayer)),
+        const ids = makeIds("sigkill");
+        yield* Effect.gen(function* () {
+          const harness = yield* openHarness(ids, command);
+          const providerThread = yield* harness.runtime.ensureThread({
+            threadId: ids.threadId,
+            modelSelection: ids.modelSelection,
+            runtimePolicy,
+          });
+          yield* driveTurn(harness, ids, providerThread, 1);
+          // SIGKILL mid-turn: the turn must reach a terminal, not hang as in #39.
+          yield* waitFor(
+            harness,
+            "turn.terminal",
+            (event) => event.runOrdinal === 1 && event.status === "interrupted",
+          );
+          yield* waitFor(
+            harness,
+            "provider_thread.updated",
+            (event) => event.providerThread.status === "error",
+          );
+          // Phase 2: healthy respawn — the next prompt switches back to the same session.
+          writeFakeOmp({
+            directory,
+            program: {
+              responses: { open_session: { data: { sessionId: "s-sigkill", sessionFile } } },
+              eventsOnPrompt: [completedTurnEvents("revived")],
+            },
+            env: { FAKE_OMP_REQUEST_LOG: requestLog },
+          });
+          yield* driveTurn(harness, ids, providerThread, 2);
+          yield* waitFor(
+            harness,
+            "turn.terminal",
+            (event) => event.runOrdinal === 2 && event.status === "completed",
+          );
+          const requests = yield* readRequestLog(requestLog);
+          const switches = requests.filter((request) => request["type"] === "switch_session");
+          expect(switches).toHaveLength(1);
+          expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
+          expect(
+            requests.filter((request) => request["type"] === "negotiate_protocol"),
+          ).toHaveLength(2);
+        }).pipe(Effect.scoped);
+      }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("wires child stderr into the server log", () =>
