@@ -117,6 +117,7 @@ contextBridge.exposeInMainWorld("desktopBridge", {
   getLocalEnvironmentBootstraps: () => {
     const result = ipcRenderer.sendSync(IpcChannels.GET_LOCAL_ENVIRONMENT_BOOTSTRAPS_CHANNEL);
     if (!Array.isArray(result)) {
+      console.error("desktopBridge.getLocalEnvironmentBootstraps: non-array result", result);
       return [];
     }
     return result as ReturnType<DesktopBridge["getLocalEnvironmentBootstraps"]>;

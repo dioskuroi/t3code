@@ -147,7 +147,15 @@ export const getLocalEnvironmentBootstraps = DesktopIpc.makeSyncIpcMethod({
           Option.isSome(config) &&
           Option.isSome(config.value.preflightFailure) &&
           (!snapshot.desiredRunning || !snapshot.restartScheduled);
-        if (isPrimary || fatalPreflight || stoppedPreflight) continue;
+        if (isPrimary || fatalPreflight || stoppedPreflight) {
+          if (Option.isSome(config) && Option.isSome(config.value.preflightFailure)) {
+            console.error(
+              "Skipping local environment bootstrap with preflight failure",
+              config.value.preflightFailure.value,
+            );
+          }
+          continue;
+        }
         bootstraps.push({
           id: instance.id,
           label: yield* instance.label,
