@@ -192,7 +192,7 @@ import { resolveLinkTarget } from "../browser/browserLinkTarget";
 import { PullRequestLinkPreview } from "./pullRequest/PullRequestLinkPreview";
 import { MarkdownCodeBlock, SuspenseShikiCodeBlock } from "./chat/MarkdownCodeBlock";
 import { createMarkdownRenderer } from "./chat/markdownRenderer";
-import { splitMarkdownBlocks } from "./chat/markdownStreamBlocks";
+import { isMarkdownBlockClosed, splitMarkdownBlocks } from "./chat/markdownStreamBlocks";
 import { MarkdownMermaidCodeBlock } from "./chat/MarkdownMermaidCodeBlock";
 import { MarkdownTable } from "./chat/MarkdownTable";
 import { MarkdownDetails } from "./chat/MarkdownDetails";
@@ -607,10 +607,10 @@ function useChatMarkdownState({
               isDesktopRenderer: window.desktopBridge !== undefined,
             }).mode !== "local-exec"
           ) {
-            description = tr(
-              "The file was not found on {label} at {path}.",
-              { label: target.label, path: error.checkedPath ?? error.resource.path },
-            );
+            description = tr("The file was not found on {label} at {path}.", {
+              label: target.label,
+              path: error.checkedPath ?? error.resource.path,
+            });
           }
         }
         toastManager.add(
@@ -1260,7 +1260,8 @@ const CHAT_MARKDOWN_COMPONENTS = {
                         operation === "link-pull-request-to-thread"
                           ? tr("Unable to link pull request")
                           : tr("Unable to unlink pull request"),
-                      description: cause instanceof Error ? cause.message : tr("The request failed."),
+                      description:
+                        cause instanceof Error ? cause.message : tr("The request failed."),
                     }),
                   );
                 }
@@ -1706,7 +1707,10 @@ const MarkdownSource = memo(function MarkdownSource({
   rehypePlugins: PluggableList;
   /** The plugins are one of the shared sets. */
   shared: boolean;
-  /** The text will not change again; streamed text would only fill the cache with prefixes. */
+  /**
+   * The text will not change again. While streaming, only blocks a blank line has closed
+   * qualify (see isMarkdownBlockClosed); unclosed streamed prefixes would only fill the cache.
+   */
   cache: boolean;
 }) {
   // Per-instance plugins, such as the incremental parser, set up their state on every render.
@@ -1793,8 +1797,9 @@ function ChatMarkdown({
                 : CHAT_MARKDOWN_LITERAL_HTML_REHYPE_PLUGINS
             }
             shared={!uncachedPlugins}
-            // Every block before the last is finished, so its parse can be reused.
-            cache={!props.isStreaming || index < blocks.length - 1}
+            // Blocks before the last, and streaming blocks a blank line has closed, are finished,
+            // so their parses are reused and streamed prefixes never fill the cache.
+            cache={!props.isStreaming || index < blocks.length - 1 || isMarkdownBlockClosed(source)}
           />
         ))}
       </ChatMarkdownRendererContext>

@@ -213,6 +213,20 @@ it("reuses the parse of a streaming reply's finished blocks when it remounts", a
   expect(parsedSources.filter((source) => source.includes("Finished block"))).toHaveLength(1);
 });
 
+it("keeps closed streaming blocks cached when a delta turns them into history", async () => {
+  setup();
+  const message = (text: string) => <ChatMarkdown cwd="/tmp/project" text={text} isStreaming />;
+  // The delta ends in a blank line, so the block renders as the streaming last block with
+  // cache=true and its parse enters the shared cache. When the next delta appends a new block,
+  // it becomes a history block: same text, same cache, so the memo must hold and the cached
+  // parse must be reused, instead of the false→true cache flip re-parsing it.
+  await using screen = await render(message("First block\n\n"));
+  await expect.element(screen.getByText("First block")).toBeVisible();
+  await screen.rerender(message("First block\n\nSecond block"));
+  await expect.element(screen.getByText("Second block")).toBeVisible();
+  expect(parsedSources.filter((source) => source.includes("First block"))).toHaveLength(1);
+});
+
 it("reuses the parse of a remounted message that has stable extra plugins", async () => {
   setup();
   const parsed = vi.fn();
