@@ -6,6 +6,8 @@ import { createMemoryHistory } from "@tanstack/react-router";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
 import type { ThreadId } from "@t3tools/contracts";
 import { DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts/settings";
+import { tr } from "@t3tools/shared/i18n";
+import { isMacPlatform } from "@t3tools/shared/keybindings";
 import type * as Context from "effect/Context";
 import { expect, it, vi } from "vite-plus/test";
 import { commands, page, userEvent } from "vite-plus/test/browser";
@@ -278,10 +280,15 @@ it("app-switch-thread", async () => {
   await report("app-switch-thread", [await measure(go(B)), await measure(go(A))]);
 });
 
-// Through the diff.toggle shortcut, the same handler as the header's diff button.
+// Through the diff.toggle shortcut, the same handler as the header's diff button. `mod+d`
+// resolves per platform like the app's own matcher (isMacPlatform), so macOS sends Cmd+D —
+// a plain Ctrl+D never matches there and the panel would never open.
+const diffToggleChord = isMacPlatform(navigator.platform)
+  ? "{Meta>}d{/Meta}"
+  : "{Control>}d{/Control}";
 const toggleDiff = (to: "open" | "close") => async () => {
-  await userEvent.keyboard("{Control>}d{/Control}");
-  const diff = page.getByRole("group", { name: "Diff layout" });
+  await userEvent.keyboard(diffToggleChord);
+  const diff = page.getByRole("group", { name: tr("Diff layout") });
   if (to === "open") await expect.element(diff).toBeVisible();
   else await expect.element(diff).not.toBeInTheDocument();
 };
@@ -297,8 +304,9 @@ it("app-toggle-diff-panel", async () => {
 const openSettings =
   (router: AppRouter, to: "/settings/general" | "/settings/appearance") => async () => {
     await act(() => router.navigate({ to }));
-    // A section title from each page, since neither page has a heading that names it.
-    const name = to === "/settings/general" ? "Time format" : "Interface";
+    // A section title from each page, since neither page has a heading that names it; the
+    // app renders localized copy, so the title resolves through tr().
+    const name = to === "/settings/general" ? tr("Time format") : tr("Interface");
     await expect.element(page.getByRole("heading", { name, exact: true })).toBeVisible();
     // Appearance highlights its code font preview off-thread, then attaches it in a shadow root.
     if (to === "/settings/appearance") {
