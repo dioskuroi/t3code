@@ -115,7 +115,10 @@ export default defineConfig({
       entry: ["src/preload.ts"],
       deps: {
         // Sandboxed preloads cannot resolve imports inside ASAR; bundle Clerk's bridge.
-        alwaysBundle: (id) => id === "@clerk/electron" || id.startsWith("@clerk/electron/"),
+        alwaysBundle: (id) =>
+          id === "@clerk/electron" ||
+          id.startsWith("@clerk/electron/") ||
+          id === "@t3tools/shared/i18n",
       },
     },
     {
@@ -129,7 +132,8 @@ export default defineConfig({
         alwaysBundle: (id) =>
           id === "react-grab" ||
           id.startsWith("react-grab/") ||
-          id === "@t3tools/shared/keybindingMatching",
+          id === "@t3tools/shared/keybindingMatching" ||
+          id === "@t3tools/shared/i18n",
       },
     },
     {

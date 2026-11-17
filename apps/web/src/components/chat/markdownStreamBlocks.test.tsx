@@ -6,7 +6,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
 import { describe, expect, it } from "vite-plus/test";
 
-import { splitMarkdownBlocks } from "./markdownStreamBlocks";
+import { isMarkdownBlockClosed, splitMarkdownBlocks } from "./markdownStreamBlocks";
 
 // Whitespace between top-level blocks collapses in the rendered message.
 const html = (source: string) =>
@@ -59,5 +59,52 @@ describe("splitMarkdownBlocks", () => {
     "a\r\n\r\nb",
   ])("keeps text with document-wide syntax whole: %j", (text) => {
     expect(splitMarkdownBlocks(text)).toBeNull();
+  });
+});
+
+describe("isMarkdownBlockClosed", () => {
+  it.each([
+    ["a\n\n", true],
+    ["First paragraph.\n\nSecond one.\n\n", true],
+    ["```\ncode\n```\n\n", true],
+    ["inline `code`\n\n```\nfence\n```\n\n", true],
+    ["a\n  \n", true],
+    ["- item\n\n  ```\n  nested\n\n  ```\n\nlist continues\n\n", true],
+    ["", false],
+    ["a", false],
+    ["a\n", false],
+    // The trailing split artifact (after the final newline) is not a blank line, so "a\n\nb"
+    // keeps growing inside the last paragraph.
+    ["a\n\nb", false],
+    ["word0 word1 ", false],
+    ["  \n  \n", false],
+    ["```\ncode", false],
+    ["```\ncode\n\n", false],
+    ["```\ncode\n```\n", false],
+    // A line left of an indented fence may end the list item holding it, which isn't tracked,
+    // so even a dedented closing fence makes the splitter give up and keeps the block open.
+    ["- a\n\n  ```\n  x\n\n```\n\n", false],
+    ["a[^footnote]\n\n", false],
+    ["a\r\n\r\n", false],
+  ])("answers %j -> %j", (source, closed) => {
+    expect(isMarkdownBlockClosed(source)).toBe(closed);
+  });
+
+  // The verdict and the splitter share their fence and blank-line rules by hand; this pins the
+  // invariant they must agree on: a closed block survives appending a new non-continuation block.
+  it("only closes text that splitting would cut off unchanged", () => {
+    const samples = [
+      "a\n\n",
+      "First paragraph.\n\nSecond one.\n\n",
+      "```\ncode\n```\n\n",
+      "inline `code`\n\n```\nfence\n```\n\n",
+      "a\n  \n",
+      "- item\n\n  ```\n  nested\n\n  ```\n\nlist continues\n\n",
+    ];
+    for (const text of samples) {
+      expect(isMarkdownBlockClosed(text)).toBe(true);
+      const appended = splitMarkdownBlocks(`${text}Next block`);
+      expect(appended?.slice(0, -1).join("")).toBe(text);
+    }
   });
 });

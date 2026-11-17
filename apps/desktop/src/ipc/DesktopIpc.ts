@@ -135,15 +135,22 @@ export const make = (ipcMain: DesktopIpcMain): DesktopIpc["Service"] =>
           try: () => {
             ipcMain.removeAllListeners(channel);
             ipcMain.on(channel, (event) => {
-              event.returnValue = runSync(
-                Effect.gen(function* () {
-                  yield* Effect.annotateCurrentSpan({ channel });
-                  return yield* handler();
-                }).pipe(
-                  Effect.annotateLogs({ channel }),
-                  Effect.withSpan("desktop.ipc.invokeSync"),
-                ),
-              );
+              try {
+                event.returnValue = runSync(
+                  Effect.gen(function* () {
+                    yield* Effect.annotateCurrentSpan({ channel });
+                    return yield* handler();
+                  }).pipe(
+                    Effect.annotateLogs({ channel }),
+                    Effect.withSpan("desktop.ipc.invokeSync"),
+                  ),
+                );
+              } catch (cause) {
+                // A failure escaping this listener would crash the main process while
+                // the renderer's sendSync silently receives nothing; surface it here.
+                console.error(`Desktop sync IPC handler failed on channel ${channel}`, cause);
+                event.returnValue = undefined;
+              }
             });
           },
           catch: (cause) =>

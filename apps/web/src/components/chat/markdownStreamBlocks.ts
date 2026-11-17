@@ -45,3 +45,42 @@ export function splitMarkdownBlocks(text: string): string[] | null {
   blocks.push(text.slice(blockStart));
   return blocks;
 }
+
+/**
+ * Whether appending more streamed text can no longer change how this text renders, so its parse
+ * can enter the shared cache without filling it with streamed prefixes. Uses the same fence and
+ * blank-line rules as {@link splitMarkdownBlocks}, and answers false for texts the splitter
+ * refuses (CR or document-wide syntax), so verdicts stay consistent with splitting.
+ */
+export function isMarkdownBlockClosed(source: string): boolean {
+  if (source.includes("\r") || DOCUMENT_WIDE_SYNTAX.test(source)) return false;
+  const lines = source.split("\n");
+  // A blank line needs a newline terminator; the trailing split artifact (after the final
+  // newline) is not one. "a\n" is a paragraph still growing, "a\n\n" is closed.
+  if (lines.at(-2)?.trim() !== "" || lines.at(-1)?.trim() !== "") {
+    return false;
+  }
+  let fence: string | null = null;
+  let fenceIndent = 0;
+  let hasContent = false;
+  for (const line of lines) {
+    const opener = FENCE_PATTERN.exec(line)?.[1];
+    if (fence !== null) {
+      // A line left of an indented fence may end the list item holding it, which isn't tracked.
+      if (/\S/.test(line.slice(0, fenceIndent))) return false;
+      if (
+        opener &&
+        opener[0] === fence[0] &&
+        opener.length >= fence.length &&
+        line.trim() === opener
+      ) {
+        fence = null;
+      }
+    } else if (line.trim() !== "") {
+      hasContent = true;
+      fence = opener ?? null;
+      if (opener) fenceIndent = line.indexOf(opener);
+    }
+  }
+  return hasContent && fence === null;
+}

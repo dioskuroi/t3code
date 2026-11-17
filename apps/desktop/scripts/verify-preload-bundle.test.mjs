@@ -1,6 +1,6 @@
 import { assert, describe, it } from "vite-plus/test";
 
-import { verifyPreloadBundle } from "./verify-preload-bundle.mjs";
+import { verifyPreloadBundle, verifySandboxedPreloadBundle } from "./verify-preload-bundle.mjs";
 
 const validPreload = `
   const electron = require("electron");
@@ -87,6 +87,19 @@ describe("desktop preload bundle verifier", () => {
         const message = 'require("node:fs")';
         // require("node:path")
       `),
+    );
+  });
+});
+
+describe("sandboxed preload bundle verifier", () => {
+  it("accepts a bundle without the desktopBridge contract", () => {
+    assert.doesNotThrow(() => verifySandboxedPreloadBundle(`require("electron");`));
+  });
+
+  it("rejects external workspace imports", () => {
+    assert.throws(
+      () => verifySandboxedPreloadBundle(`require("@t3tools/shared/i18n");`),
+      /unsupported sandbox imports: @t3tools\/shared\/i18n/,
     );
   });
 });

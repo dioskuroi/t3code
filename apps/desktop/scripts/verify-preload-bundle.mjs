@@ -69,6 +69,9 @@ const createSandboxModules = (exposedGlobals) => {
       exposeInMainWorld: (name, api) => exposedGlobals.set(name, api),
     },
     ipcRenderer,
+    webFrame: {
+      getZoomFactor: () => 1,
+    },
     webUtils: {
       getPathForFile: () => "",
     },
@@ -103,11 +106,25 @@ const executeBundle = (source, sandboxModules) => {
     return sandboxModules.get(moduleName);
   };
 
+  // Sandbox preloads run in the renderer context, where window/document exist
+  // (e.g. the macOS window-controls-inset sync registers listeners on them);
+  // stub only the surface the bundles actually execute.
   NodeVM.runInNewContext(
     source,
     {
       process: sandboxProcess,
       require: requireSandboxModule,
+      window: {
+        addEventListener: () => undefined,
+        localStorage: {},
+      },
+      document: {
+        documentElement: {
+          style: {
+            setProperty: () => undefined,
+          },
+        },
+      },
     },
     {
       filename: "desktop-preload.cjs",
@@ -116,10 +133,9 @@ const executeBundle = (source, sandboxModules) => {
   );
 };
 
-export const verifyPreloadBundle = (source) => {
+const assertSandboxSafeImports = (source) => {
   const runtimeImports = inspectBundle(source);
-  const exposedGlobals = new Map();
-  const sandboxModules = createSandboxModules(exposedGlobals);
+  const sandboxModules = createSandboxModules(new Map());
   const unsupportedImports = [...new Set(runtimeImports)]
     .filter((moduleName) => !sandboxModules.has(moduleName))
     .toSorted();
@@ -129,7 +145,12 @@ export const verifyPreloadBundle = (source) => {
       `Desktop preload bundle contains unsupported sandbox imports: ${unsupportedImports.join(", ")}`,
     );
   }
+};
 
+export const verifyPreloadBundle = (source) => {
+  assertSandboxSafeImports(source);
+  const exposedGlobals = new Map();
+  const sandboxModules = createSandboxModules(exposedGlobals);
   executeBundle(source, sandboxModules);
 
   const desktopBridge = exposedGlobals.get("desktopBridge");
@@ -144,8 +165,27 @@ export const verifyPreloadBundle = (source) => {
   }
 };
 
+// Sandbox-safety-only verification for sandboxed preloads without the desktopBridge
+// contract: they must never carry external requires, which abort evaluation inside
+// the sandboxed renderer.
+export const verifySandboxedPreloadBundle = (source) => {
+  assertSandboxSafeImports(source);
+};
+
+const sandboxedPreloadArtifacts = [
+  "preload.cjs",
+  "preview-pick-preload.cjs",
+  "mac-permission-preload.cjs",
+];
+
 if (process.argv[1] && NodeURL.pathToFileURL(process.argv[1]).href === import.meta.url) {
-  const preloadUrl = new URL("../dist-electron/preload.cjs", import.meta.url);
-  const source = await NodeFSP.readFile(preloadUrl, "utf8");
-  verifyPreloadBundle(source);
+  for (const artifact of sandboxedPreloadArtifacts) {
+    const artifactUrl = new URL(`../dist-electron/${artifact}`, import.meta.url);
+    const source = await NodeFSP.readFile(artifactUrl, "utf8");
+    if (artifact === "preload.cjs") {
+      verifyPreloadBundle(source);
+    } else {
+      verifySandboxedPreloadBundle(source);
+    }
+  }
 }
