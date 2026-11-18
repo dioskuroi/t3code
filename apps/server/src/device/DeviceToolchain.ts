@@ -1,5 +1,6 @@
 import type { DeviceToolVersions } from "@t3tools/contracts";
 // npm exposes entry files before extraction completes; their presence does not prove a usable tree.
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -7,7 +8,7 @@ import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Schema from "effect/Schema";
-import * as Semaphore from "effect/Semaphore";
+import { lock } from "proper-lockfile";
 
 import * as ProcessRunner from "../processRunner.ts";
 import DEVICE_TOOL_VERSIONS from "./deviceToolVersions.json" with { type: "json" };
@@ -18,7 +19,10 @@ const AGENT_DEVICE_PACKAGE = "agent-device";
 export const AGENT_DEVICE_VERSION = DEVICE_TOOL_VERSIONS[AGENT_DEVICE_PACKAGE];
 
 const INSTALL_TIMEOUT = Duration.minutes(10);
-const installLock = Semaphore.makeUnsafe(1);
+const INSTALL_LOCK_STALE_MS = 120_000;
+const INSTALL_LOCK_UPDATE_MS = 10_000;
+// Holder total = npm timeout (10 min) plus probe/sentinel/rename cleanup; give the waiter headroom.
+const INSTALL_LOCK_WAIT = { retries: 660, factor: 1, minTimeout: 1_000, maxTimeout: 1_000 };
 
 export interface DeviceToolPaths {
   readonly installDir: string;
@@ -45,6 +49,56 @@ export class DeviceToolchainInstallError extends Schema.TaggedError<DeviceToolch
     return `Installing ${this.tool} failed while ${this.step}${suffix}.`;
   }
 }
+
+/**
+ * Cross-process mutex for tool installs, following `withChatGptSessionLock`. The in-process
+ * semaphore cannot see manual install scripts or a second T3 Code installation (the official
+ * app and this fork coexist by design); the lock file in the shared tools root coordinates
+ * all three. Stale detection reclaims locks abandoned by a crashed holder.
+ */
+const withToolsInstallLock = <A, E, R>(
+  toolsRoot: string,
+  lockPath: string,
+  tool: string,
+  task: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E | DeviceToolchainInstallError, R> =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const compromised = yield* Deferred.make<never, DeviceToolchainInstallError>();
+      const services = yield* Effect.context<never>();
+      yield* Effect.acquireRelease(
+        Effect.tryPromise({
+          try: () =>
+            lock(toolsRoot, {
+              realpath: false,
+              lockfilePath: lockPath,
+              stale: INSTALL_LOCK_STALE_MS,
+              update: INSTALL_LOCK_UPDATE_MS,
+              retries: INSTALL_LOCK_WAIT,
+              onCompromised: () =>
+                Effect.runSyncWith(services)(
+                  Deferred.fail(
+                    compromised,
+                    new DeviceToolchainInstallError({
+                      tool,
+                      step: "holding the cross-process install lock",
+                    }),
+                  ),
+                ),
+            }),
+          catch: (cause) =>
+            new DeviceToolchainInstallError({
+              tool,
+              step: "acquiring the cross-process install lock",
+              cause,
+            }),
+        }),
+        // Release rejects ERELEASED on the compromised path; ignore the defect too.
+        (release) => Effect.promise(() => release()).pipe(Effect.ignoreCause),
+      );
+      return yield* Effect.raceFirst(task, Deferred.await(compromised));
+    }),
+  );
 
 interface ToolSpec {
   readonly name: string;
@@ -112,6 +166,16 @@ const installTool = Effect.fn("DeviceToolchain.installTool")(function* (
   yield* fs
     .makeDirectory(parentDir, { recursive: true })
     .pipe(Effect.mapError(fail("preparing the install directory")));
+  // Holding the tools lock makes every sibling staging directory an abandoned install.
+  const siblings = yield* fs.readDirectory(parentDir).pipe(Effect.orElseSucceed(() => []));
+  yield* Effect.forEach(
+    siblings.filter((name) => name.startsWith(".staging-")),
+    (name) =>
+      fs
+        .remove(path.join(parentDir, name), { recursive: true, force: true })
+        .pipe(Effect.mapError(fail("recycling an abandoned staging directory"))),
+    { discard: true },
+  );
   const stagingDir = yield* fs
     .makeTempDirectory({ directory: parentDir, prefix: ".staging-" })
     .pipe(Effect.mapError(fail("preparing the install directory")));
@@ -181,9 +245,26 @@ const ensureTool = Effect.fn("DeviceToolchain.ensureTool")(function* (
   spec: ToolSpec,
   select: (paths: DeviceToolchainPaths) => DeviceToolPaths,
 ) {
+  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const paths = deviceToolchainPaths(path, baseDir);
-  return yield* installLock.withPermit(installTool(spec, select(paths)));
+  const toolsRoot = path.join(baseDir, "tools");
+  yield* fs.makeDirectory(toolsRoot, { recursive: true }).pipe(
+    Effect.mapError(
+      (cause) =>
+        new DeviceToolchainInstallError({
+          tool: spec.name,
+          step: "preparing the tools directory",
+          cause,
+        }),
+    ),
+  );
+  return yield* withToolsInstallLock(
+    toolsRoot,
+    path.join(toolsRoot, ".install-lock"),
+    spec.name,
+    installTool(spec, select(paths)),
+  );
 });
 
 export const ensureDeviceHub = (baseDir: string) =>
