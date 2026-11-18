@@ -209,4 +209,5 @@ Architecture and its constraints: `docs/internals/overview.md`. Glossary: `docs/
 
 ## Additional tips
 
+- Never run tests on every core. Cap workers (`--maxWorkers 2`) or pass `--no-file-parallelism` for any `vp test`/`vpr test` run, including full-suite runs; the machine is shared with other work.
 - Security is important, but should not be over-indexed on, especially for dev mode/maintainer-only features.
