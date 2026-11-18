@@ -4,6 +4,7 @@
 // (apps/server OmpAdapterV2.testkit.ts) and the live fixture recorder (#24).
 export { checkOmpProviderStatus } from "./server/status.ts";
 export { makeOmpAdapterV2 } from "./server/adapter.ts";
+export { makeOmpTextGeneration, type OmpTextGenerationOptions } from "./server/textGeneration.ts";
 export { OMP_PROVIDER } from "./server/kind.ts";
 export {
   makeOmpRpcClient,

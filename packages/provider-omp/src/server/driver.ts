@@ -99,7 +99,7 @@ export const OmpDriver: ProviderDriver<OmpSettings, OmpDriverEnv> = {
       enabled,
       snapshot,
       orchestrationAdapter,
-      textGeneration: makeOmpTextGeneration(),
+      textGeneration: yield* makeOmpTextGeneration(),
     } satisfies ProviderInstance;
   }),
 };
