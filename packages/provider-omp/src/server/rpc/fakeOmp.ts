@@ -64,6 +64,13 @@ export interface FakeOmpProgram {
   readonly responses?: Record<string, FakeOmpResponseSpec>;
   /** Frames flushed after stdin EOF, before exit — proves the caller kept draining stdout. */
   readonly framesOnStdinEnd?: ReadonlyArray<Record<string, unknown>>;
+  /**
+   * Rollback-offset tests: the nth `prompt` request appends the nth chunk to
+   * `sessionAppendPath`, simulating omp's append-only session JSONL growth.
+   */
+  readonly appendsOnPrompt?: ReadonlyArray<string>;
+  /** Target file for `appendsOnPrompt` (the scripted omp session file). */
+  readonly sessionAppendPath?: string;
   /** Process exit code once stdin closes (default 0). */
   readonly exitCodeOnStdinEnd?: number;
   /** Simulate a crash: exit with this code after N ms without waiting for stdin EOF. */
@@ -123,6 +130,14 @@ if (process.env.FAKE_OMP_EXIT_LOG) {
 let promptCount = 0;
 const respond = (request) => {
   const type = typeof request.type === "string" ? request.type : "";
+  if (type === "prompt") {
+    // Sequences and appends are indexed by turn (nth prompt → nth entry), no matter
+    // which event mechanism a test drives, so promptCount advances on every prompt.
+    const append = (program.appendsOnPrompt ?? [])[promptCount];
+    if (append !== undefined && program.sessionAppendPath !== undefined) {
+      appendFileSync(program.sessionAppendPath, append);
+    }
+  }
   if (type === "negotiate_protocol") {
     if (program.refuseNegotiation === true) {
       send({ id: request.id, type: "response", command: type, success: false, error: "unsupported protocol" });
@@ -141,14 +156,14 @@ const respond = (request) => {
   }
   const spec = (program.responses ?? {})[type] ?? { success: true, data: {} };
   if (spec.never === true) return;
-  if (type === "prompt" && Array.isArray(program.eventsOnPrompt)) {
-    const sequence = program.eventsOnPrompt[promptCount];
-    promptCount += 1;
+  if (type === "prompt") {
+    const sequence = program.eventsOnPrompt?.[promptCount];
     if (sequence !== undefined) {
       for (const timed of sequence) {
         setTimeout(() => send(timed.frame), timed.delayMs ?? 0);
       }
     }
+    promptCount += 1;
   }
   const payload = JSON.stringify({
     id: request.id,

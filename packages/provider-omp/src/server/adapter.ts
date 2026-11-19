@@ -66,7 +66,7 @@ const OmpProviderCapabilities = {
   threads: {
     canCreateEmptyThread: true,
     canReadThreadSnapshot: true,
-    canRollbackThread: false,
+    canRollbackThread: true,
     canForkThread: false,
     canForkFromTurn: false,
     canForkFromSubagentThread: false,
@@ -134,8 +134,8 @@ const OmpProviderCapabilities = {
   checkpointing: {
     appCanCheckpointFilesystem: false,
     supportsNestedCheckpointScopes: false,
-    providerCanRollbackConversation: false,
-    providerRollbackReturnsSnapshot: false,
+    providerCanRollbackConversation: true,
+    providerRollbackReturnsSnapshot: true,
     providerCanReadConversationSnapshot: false,
   },
   identity: {
@@ -405,7 +405,12 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
               ? Effect.andThen(
                   Effect.suspend(() => {
                     const thread = threads.get(providerThread.id);
-                    return thread === undefined ? Effect.void : armIdleReclaim(thread);
+                    return thread === undefined
+                      ? Effect.void
+                      : Effect.andThen(
+                          recordTurnEndOffset(thread, event.providerTurnId),
+                          armIdleReclaim(thread),
+                        );
                   }),
                   emit(event),
                 )
@@ -499,6 +504,41 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             `omp process for provider thread ${threadId} reclaimed after ${String(idleTimeoutMs)}ms idle (exit ${String(exitCode)})`,
           );
         }).pipe(Effect.forkIn(sessionScope));
+      });
+
+      // Rollback offsets: the append-only session file's size at each turn terminal,
+      // keyed by nativeTurnId in an adapter-owned sidecar next to the sessions. The omp
+      // JSONL itself is never parsed (spec §3) — only byte sizes are recorded.
+      const offsetsPathFor = (sessionFile: string) =>
+        `${cwd}/.t3code/omp-sessions/${sessionFile.split("/").pop() ?? sessionFile}.offsets.json`;
+
+      const recordTurnEndOffset = Effect.fn("OmpAdapter.recordTurnEndOffset")(function* (
+        thread: OmpThreadState,
+        providerTurnId: string,
+      ) {
+        const state = thread.projection.state;
+        const sessionFile = state.providerThread.nativeThreadRef?.nativeId ?? null;
+        const nativeTurnId =
+          state.turns.find((turn) => turn.id === providerTurnId)?.nativeTurnRef?.nativeId ?? null;
+        if (sessionFile === null || nativeTurnId === null) return;
+        const size = yield* fileSystem.stat(sessionFile).pipe(
+          Effect.map((info) => Number(info.size)),
+          Effect.orElseSucceed(() => null),
+        );
+        if (size === null) return; // no session file yet: nothing to anchor the offset on
+        const offsetsPath = offsetsPathFor(sessionFile);
+        const offsets = yield* fileSystem.readFileString(offsetsPath).pipe(
+          Effect.flatMap((contents) =>
+            Effect.try(() => JSON.parse(contents) as Record<string, number>),
+          ),
+          Effect.orElseSucceed(() => ({}) as Record<string, number>),
+        );
+        yield* fileSystem
+          .makeDirectory(`${cwd}/.t3code/omp-sessions`, { recursive: true })
+          .pipe(Effect.ignore);
+        yield* fileSystem
+          .writeFileString(offsetsPath, JSON.stringify({ ...offsets, [nativeTurnId]: size }))
+          .pipe(Effect.ignore);
       });
 
       const spawnProtocolError = (sessionPath: string | null, cause: unknown) =>
@@ -1061,19 +1101,147 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           };
         }),
         rollbackThread: Effect.fn("OmpAdapter.rollbackThread")(function* (rollbackInput) {
-          const thread = threads.get(rollbackInput.providerThread.id);
-          if (thread === undefined) {
-            return yield* new ProviderAdapter.ProviderAdapterRollbackThreadError({
+          const rollbackError = (cause: unknown) =>
+            new ProviderAdapter.ProviderAdapterRollbackThreadError({
               driver: OMP_PROVIDER,
               providerThreadId: rollbackInput.providerThread.id,
-              cause: new Error("omp thread not registered in this session"),
+              ...(rollbackInput.target.type === "provider_turn"
+                ? { checkpointId: rollbackInput.target.checkpointId }
+                : {}),
+              cause,
             });
+          const thread = threads.get(rollbackInput.providerThread.id);
+          if (thread === undefined) {
+            return yield* rollbackError(new Error("omp thread not registered in this session"));
           }
-          thread.projection.state.turns = [];
-          thread.projection.state.messages = [];
-          thread.projection.state.runtimeRequests.clear();
+          if (thread.projection.state.active !== null) {
+            return yield* rollbackError(
+              new Error("cannot roll back an omp thread while a turn is active"),
+            );
+          }
+          if (rollbackInput.target.type !== "provider_turn") {
+            return yield* rollbackError(
+              new Error(
+                "omp rollback needs a provider turn target; thread-start rollback has no recorded session offset",
+              ),
+            );
+          }
+          const target = rollbackInput.target;
+          const nativeTurnId = target.providerTurn.nativeTurnRef?.nativeId ?? null;
+          const state = thread.projection.state;
+          const sessionFile = state.providerThread.nativeThreadRef?.nativeId ?? null;
+          if (sessionFile === null) {
+            return yield* rollbackError(
+              new Error("the thread has no omp session file to roll back"),
+            );
+          }
+          const offsets = yield* fileSystem.readFileString(offsetsPathFor(sessionFile)).pipe(
+            Effect.flatMap((contents) =>
+              Effect.try(() => JSON.parse(contents) as Record<string, number>),
+            ),
+            Effect.orElseSucceed(() => ({}) as Record<string, number>),
+          );
+          if (nativeTurnId === null) {
+            return yield* rollbackError(
+              new Error("the target turn carries no nativeTurnRef to anchor a session offset"),
+            );
+          }
+          const boundary = offsets[nativeTurnId] as number | undefined;
+          if (boundary === undefined) {
+            return yield* rollbackError(
+              new Error(
+                `no recorded session offset for turn ${nativeTurnId}: ` +
+                  "the turn predates the offset sidecar, so the truncation point is unknown",
+              ),
+            );
+          }
+          const bytes = yield* fileSystem
+            .readFile(sessionFile)
+            .pipe(
+              Effect.mapError((cause) =>
+                rollbackError(`cannot read the omp session file ${sessionFile}: ${String(cause)}`),
+              ),
+            );
+          if (boundary > bytes.byteLength) {
+            return yield* rollbackError(
+              new Error(
+                `the omp session file ${sessionFile} is shorter than the recorded offset ` +
+                  `${String(boundary)}; the session was replaced since the turn ended`,
+              ),
+            );
+          }
+          // Parse-free integrity check (never read the JSONL, spec §3): an append-only file
+          // must end a line at every recorded turn boundary. A same-or-larger rewrite (format
+          // migration) slips past the shrink check above; this catches it before truncation.
+          if (boundary > 0 && bytes[boundary - 1] !== 0x0a) {
+            return yield* rollbackError(
+              new Error(
+                `the recorded offset ${String(boundary)} in ${sessionFile} is not a line boundary; ` +
+                  "the session file was rewritten since the turn ended",
+              ),
+            );
+          }
+          // The copy lives in a t3code-owned directory, not omp's sessionDir: omp's resume
+          // picker lists every transcript there, and duplicate rollback copies must not
+          // surface as sessions. switch_session accepts any path, so the copy stays legal.
+          const rollbackDir = `${cwd}/.t3code/omp-rollbacks`;
+          const rollbackPath = `${rollbackDir}/${sessionFile
+            .split("/")
+            .pop()!
+            .replace(/\.jsonl$/, "")}.rollback-${nativeTurnId.replaceAll("/", "-")}.jsonl`;
+          yield* fileSystem
+            .makeDirectory(rollbackDir, { recursive: true })
+            .pipe(Effect.mapError((cause) => rollbackError(cause)));
+          yield* fileSystem
+            .writeFile(rollbackPath, bytes.subarray(0, boundary))
+            .pipe(Effect.mapError((cause) => rollbackError(cause)));
+          // Reset every piece of live thread state, then respawn onto the copy through the
+          // fail-closed switch_session recovery path (D7 seam). A failed respawn restores the
+          // pre-rollback refs so a later D7 recovery lands on the original session, never a
+          // rollback the caller was told had failed.
+          yield* cancelIdleReclaim(thread);
+          yield* disposeClient(thread);
+          const priorThread = state.providerThread;
+          const priorNativeSession = state.nativeSession;
+          const priorTurns = state.turns;
+          const priorMessages = state.messages;
+          const priorRuntimeRequests = [...state.runtimeRequests.entries()];
+          const priorOrphanFrames = state.orphanFrames;
+          const updatedAt = yield* DateTime.now;
+          state.providerThread = {
+            ...state.providerThread,
+            nativeThreadRef: { driver: OMP_PROVIDER, nativeId: rollbackPath, strength: "strong" },
+            nativeConversationHeadRef: target.providerTurn.nativeTurnRef,
+            status: "idle",
+            updatedAt,
+          };
+          if (state.nativeSession !== null) {
+            state.nativeSession = { ...state.nativeSession, sessionFile: rollbackPath };
+          }
+          state.turns = [];
+          state.messages = [];
+          state.runtimeRequests.clear();
+          state.orphanFrames = [];
+          const respawned = yield* Effect.result(openClient(thread, thread.client.approvalMode));
+          if (respawned._tag === "Failure") {
+            state.providerThread = priorThread;
+            state.nativeSession = priorNativeSession;
+            state.turns = priorTurns;
+            state.messages = priorMessages;
+            state.runtimeRequests = new Map(priorRuntimeRequests);
+            state.orphanFrames = priorOrphanFrames;
+            // The half-open child never switched onto a session; drop it so the next prompt
+            // respawns via ensureClient onto the restored original path.
+            yield* disposeClient(thread).pipe(Effect.ignore);
+            return yield* rollbackError(respawned.failure);
+          }
+          yield* emit({
+            type: "provider_thread.updated",
+            driver: OMP_PROVIDER,
+            providerThread: state.providerThread,
+          });
           return {
-            providerThread: thread.projection.state.providerThread,
+            providerThread: state.providerThread,
             providerTurns: [],
             messages: [],
             runtimeRequests: [],

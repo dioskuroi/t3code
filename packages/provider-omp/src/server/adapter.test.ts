@@ -17,6 +17,7 @@ import type {
 import {
   ChatAttachmentId,
   MessageId,
+  CheckpointId,
   ModelSelection,
   NodeId,
   ProviderSessionId,
@@ -219,6 +220,8 @@ const openHarness = Effect.fn("adapterTest.openHarness")(function* (
     readonly clock?: Clock.Clock | undefined;
     /** Overrides the ambient host's attachment resolution (e.g. simulate an unresolvable id). */
     readonly resolveAttachmentPath?: (attachment: ChatAttachment) => string | null;
+    /** Session runtime policy override; rollback tests point cwd at a temp project root. */
+    readonly runtimePolicy?: ProviderAdapter.ProviderAdapterV2RuntimePolicy;
   } = {},
 ) {
   const scope = yield* Effect.scope;
@@ -237,7 +240,7 @@ const openHarness = Effect.fn("adapterTest.openHarness")(function* (
     threadId: ids.threadId,
     providerSessionId: ids.providerSessionId,
     modelSelection: ids.modelSelection,
-    runtimePolicy,
+    runtimePolicy: options.runtimePolicy ?? runtimePolicy,
   });
   const collected: ProviderAdapter.ProviderAdapterV2Event[] = [];
   yield* runtime.events.pipe(
@@ -3566,6 +3569,258 @@ describe("omp adapter session runtime", () => {
           expect(lines[index]).toEqual(argv);
         }
       }).pipe(Effect.scoped);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("records turn-end offsets and rolls an idle thread back to a completed turn (#113)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-rollback-" });
+      const sessionFile = `${directory}/sessions/rollback.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      yield* fs.makeDirectory(`${directory}/sessions`);
+      yield* fs.writeFileString(sessionFile, "session-header\n");
+      const turnOneBytes = "turn-one-events\n";
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: { open_session: { data: { sessionId: "s-rollback", sessionFile } } },
+          sessionAppendPath: sessionFile,
+          appendsOnPrompt: [turnOneBytes, "turn-two-events\n"],
+          eventsPerRequest: {
+            prompt: [
+              {
+                frame: {
+                  type: "message_update",
+                  messageId: "m1",
+                  assistantMessageEvent: { type: "text_start", contentIndex: 0 },
+                },
+              },
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              { frame: { type: "prompt_result", agentInvoked: true, status: "completed" } },
+            ],
+          },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("rollback");
+      const sessionPolicy = { ...runtimePolicy, cwd: directory };
+      const harness = yield* openHarness(ids, command, { runtimePolicy: sessionPolicy });
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy: sessionPolicy,
+      });
+      yield* driveTurn(harness, ids, providerThread, 1);
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 1);
+      const nativeTurnId = `${providerThread.id}:t1:r1`;
+      const sidecar = JSON.parse(
+        yield* fs.readFileString(`${directory}/.t3code/omp-sessions/rollback.jsonl.offsets.json`),
+      ) as Record<string, number>;
+      const boundary = sidecar[nativeTurnId];
+      expect(boundary).toBe("session-header\n".length + turnOneBytes.length);
+
+      const snapshotBefore = yield* harness.runtime.readThreadSnapshot({ providerThread });
+      const firstTurn = snapshotBefore.providerTurns.find((turn) => turn.ordinal === 1);
+      if (firstTurn === undefined) throw new Error("first turn not projected");
+      const rolled = yield* harness.runtime.rollbackThread({
+        providerThread: snapshotBefore.providerThread,
+        target: {
+          type: "provider_turn",
+          checkpointId: CheckpointId.make("ckpt-rollback-first"),
+          appRunOrdinal: 1,
+          providerTurn: firstTurn,
+        },
+        providerThreadTurns: snapshotBefore.providerTurns,
+      });
+      const rollbackFile = `${directory}/.t3code/omp-rollbacks/rollback.rollback-${nativeTurnId.replace(/\//g, "-")}.jsonl`;
+      expect(rolled.providerThread.nativeThreadRef?.nativeId).toBe(rollbackFile);
+      expect(rolled.providerTurns).toEqual([]);
+      expect(rolled.messages).toEqual([]);
+      expect(rolled.runtimeRequests).toEqual([]);
+      const copy = yield* fs.readFile(rollbackFile);
+      expect(copy.byteLength).toBe(boundary);
+      expect(Buffer.from(copy).toString("utf8")).toBe(`session-header\n${turnOneBytes}`);
+      const switches = yield* pollRequestLog(
+        requestLog,
+        (request) => request["type"] === "switch_session",
+      );
+      expect(switches.at(-1)?.["sessionPath"]).toBe(rollbackFile);
+      // The thread keeps working from the truncated copy: a fresh prompt round-trips.
+      yield* driveTurn(harness, ids, rolled.providerThread, 2);
+      yield* pollRequestLog(
+        requestLog,
+        (request) => request["type"] === "prompt" && request["message"] === "prompt 2",
+      );
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("rejects rollback while a turn is active (#113)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({
+        prefix: "omp-adapter-rollback-active-",
+      });
+      const sessionFile = `${directory}/sessions/rollback-active.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: { open_session: { data: { sessionId: "s-active", sessionFile } } },
+          eventsPerRequest: {
+            prompt: [
+              {
+                // No terminal frame: the turn stays active so the rollback guard trips.
+                frame: {
+                  type: "message_update",
+                  messageId: "m1",
+                  assistantMessageEvent: { type: "text_start", contentIndex: 0 },
+                },
+              },
+            ],
+          },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("rollback-active");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* driveTurn(harness, ids, providerThread, 1);
+      yield* waitFor(
+        harness,
+        "provider_turn.updated",
+        (event) => event.providerTurn.status === "running",
+      );
+      const error = yield* harness.runtime
+        .rollbackThread({
+          providerThread,
+          target: {
+            type: "thread_start",
+            checkpointId: CheckpointId.make("ckpt-active"),
+            appRunOrdinal: 0,
+          },
+          providerThreadTurns: [],
+        })
+        .pipe(Effect.flip);
+      expect(error).toBeInstanceOf(ProviderAdapter.ProviderAdapterRollbackThreadError);
+      expect(String(error.cause)).toContain("turn is active");
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("restores the original session refs when the rollback respawn fails (#113)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-rollback-fail-" });
+      const sessionFile = `${directory}/sessions/rollback-fail.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      yield* fs.makeDirectory(`${directory}/sessions`);
+      yield* fs.writeFileString(sessionFile, "session-header\n");
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: { data: { sessionId: "s-fail", sessionFile } },
+            switch_session: { success: false, error: "no such session" },
+          },
+          sessionAppendPath: sessionFile,
+          appendsOnPrompt: ["turn-one-events\n"],
+          eventsPerRequest: {
+            prompt: [
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              { frame: { type: "prompt_result", agentInvoked: true, status: "completed" } },
+            ],
+          },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("rollback-fail");
+      const sessionPolicy = { ...runtimePolicy, cwd: directory };
+      const harness = yield* openHarness(ids, command, { runtimePolicy: sessionPolicy });
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy: sessionPolicy,
+      });
+      yield* driveTurn(harness, ids, providerThread, 1);
+      yield* waitFor(harness, "turn.terminal");
+      const snapshotBefore = yield* harness.runtime.readThreadSnapshot({ providerThread });
+      const firstTurn = snapshotBefore.providerTurns.find((turn) => turn.ordinal === 1);
+      if (firstTurn === undefined) throw new Error("first turn not projected");
+      const error = yield* harness.runtime
+        .rollbackThread({
+          providerThread: snapshotBefore.providerThread,
+          target: {
+            type: "provider_turn",
+            checkpointId: CheckpointId.make("ckpt-fail"),
+            appRunOrdinal: 1,
+            providerTurn: firstTurn,
+          },
+          providerThreadTurns: snapshotBefore.providerTurns,
+        })
+        .pipe(Effect.flip);
+      expect(error).toBeInstanceOf(ProviderAdapter.ProviderAdapterRollbackThreadError);
+      expect(String(error.cause)).toContain("switch_session");
+      // The failed rollback must leave the thread pointing at its original session file.
+      const after = yield* harness.runtime.readThreadSnapshot({ providerThread });
+      expect(after.providerThread.nativeThreadRef?.nativeId).toBe(sessionFile);
+      expect(after.providerTurns.map((turn) => turn.ordinal)).toEqual([1]);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("fails closed when the target turn has no recorded offset (#113)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-rollback-none-" });
+      const sessionFile = `${directory}/sessions/rollback-none.jsonl`;
+      yield* fs.makeDirectory(`${directory}/sessions`);
+      yield* fs.writeFileString(sessionFile, "session-header\n");
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: { open_session: { data: { sessionId: "s-none", sessionFile } } },
+          eventsPerRequest: {
+            prompt: [
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              { frame: { type: "prompt_result", agentInvoked: true, status: "completed" } },
+            ],
+          },
+        },
+      });
+      const ids = makeIds("rollback-none");
+      const sessionPolicy = { ...runtimePolicy, cwd: directory };
+      const harness = yield* openHarness(ids, command, { runtimePolicy: sessionPolicy });
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy: sessionPolicy,
+      });
+      yield* driveTurn(harness, ids, providerThread, 1);
+      yield* waitFor(harness, "turn.terminal");
+      const snapshot = yield* harness.runtime.readThreadSnapshot({ providerThread });
+      const firstTurn = snapshot.providerTurns.find((turn) => turn.ordinal === 1);
+      if (firstTurn === undefined) throw new Error("first turn not projected");
+      // The sidecar is gone, so the target turn has no recorded end offset.
+      yield* fs
+        .remove(`${directory}/.t3code/omp-sessions/rollback-none.jsonl.offsets.json`)
+        .pipe(Effect.ignore);
+      const error = yield* harness.runtime
+        .rollbackThread({
+          providerThread: snapshot.providerThread,
+          target: {
+            type: "provider_turn",
+            checkpointId: CheckpointId.make("ckpt-none"),
+            appRunOrdinal: 1,
+            providerTurn: firstTurn,
+          },
+          providerThreadTurns: snapshot.providerTurns,
+        })
+        .pipe(Effect.flip);
+      expect(error).toBeInstanceOf(ProviderAdapter.ProviderAdapterRollbackThreadError);
+      expect(String(error.cause)).toContain("offset");
     }).pipe(Effect.provide(NodeTestLayer)),
   );
 });
