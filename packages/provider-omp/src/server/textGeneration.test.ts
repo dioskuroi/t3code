@@ -43,9 +43,14 @@ const makeTextGeneration = Effect.fn("textGenTest.makeTextGeneration")(function*
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-textgen-" });
   const requestLog = `${directory}/requests.jsonl`;
-  const command = writeFakeOmp({ directory, program, env: { FAKE_OMP_REQUEST_LOG: requestLog } });
+  const argvLog = `${directory}/argv.jsonl`;
+  const command = writeFakeOmp({
+    directory,
+    program,
+    env: { FAKE_OMP_REQUEST_LOG: requestLog, FAKE_OMP_ARGV_LOG: argvLog },
+  });
   const generation = yield* makeOmpTextGeneration({ command, ...options });
-  return { generation, requestLog, cwd: directory };
+  return { generation, requestLog, cwd: directory, argvLog };
 });
 
 // One assistant reply that answers the core title prompt's JSON contract, then a real
@@ -143,7 +148,8 @@ it.layer(NodeServices.layer)("omp host-side text generation", (it) => {
     "generates a thread title through a one-shot omp RPC session (spawn → prompt → assistant → title)",
     () =>
       Effect.gen(function* () {
-        const { generation, requestLog, cwd } = yield* makeTextGeneration(titleProgram);
+        const { generation, requestLog, cwd, argvLog } = yield* makeTextGeneration(titleProgram);
+        const fs = yield* FileSystem.FileSystem;
         const result = yield* generation.generateThreadTitle({
           cwd,
           message: "Fix the lazy thread feed test that flakes on CI",
@@ -154,6 +160,9 @@ it.layer(NodeServices.layer)("omp host-side text generation", (it) => {
         });
         expect(result.title).toBe("Fix Lazy Thread Feed Test");
         expect(result.needsRefinement).toBeUndefined();
+        const argv = JSON.parse(yield* fs.readFileString(argvLog)) as ReadonlyArray<string>;
+        expect(argv).toContain("--profile");
+        expect(argv).toContain("t3code");
 
         const requests = yield* readRequestLog(requestLog);
         const openSession = requests.find((request) => request["type"] === "open_session");

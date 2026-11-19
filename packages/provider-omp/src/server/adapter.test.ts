@@ -3443,7 +3443,9 @@ describe("omp adapter session runtime", () => {
           runtimePolicy: fullAccess,
         });
         const beforeTurnEnd = yield* pollLogLines(argvLog, 1);
-        expect(beforeTurnEnd).toEqual([["--mode", "rpc", "--approval-mode", "always-ask"]]);
+        expect(beforeTurnEnd).toEqual([
+          ["--mode", "rpc", "--approval-mode", "always-ask", "--profile", "t3code"],
+        ]);
         // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- proving the switch did NOT fire needs a real settle window.
         yield* Effect.sleep(150);
         expect(yield* readRequestLog(requestLog)).toEqual(
@@ -3470,8 +3472,22 @@ describe("omp adapter session runtime", () => {
         expect(terminal.status).toBe("completed");
         // The queued switch fires after the turn settles: drain → exit → respawn + switch_session.
         const afterTurnEnd = yield* pollLogLines(argvLog, 2);
-        expect(afterTurnEnd[0]).toEqual(["--mode", "rpc", "--approval-mode", "always-ask"]);
-        expect(afterTurnEnd[1]).toEqual(["--mode", "rpc", "--approval-mode", "yolo"]);
+        expect(afterTurnEnd[0]).toEqual([
+          "--mode",
+          "rpc",
+          "--approval-mode",
+          "always-ask",
+          "--profile",
+          "t3code",
+        ]);
+        expect(afterTurnEnd[1]).toEqual([
+          "--mode",
+          "rpc",
+          "--approval-mode",
+          "yolo",
+          "--profile",
+          "t3code",
+        ]);
         const switches = yield* pollRequestLog(
           requestLog,
           (request) => request["type"] === "switch_session",
@@ -3510,11 +3526,14 @@ describe("omp adapter session runtime", () => {
       const expected: ReadonlyArray<
         [ProviderAdapter.ProviderAdapterV2RuntimePolicy["runtimeMode"], ReadonlyArray<string>]
       > = [
-        ["approval-required", ["--mode", "rpc", "--approval-mode", "always-ask"]],
-        ["auto-accept-edits", ["--mode", "rpc", "--approval-mode", "write"]],
-        ["full-access", ["--mode", "rpc", "--approval-mode", "yolo"]],
+        [
+          "approval-required",
+          ["--mode", "rpc", "--approval-mode", "always-ask", "--profile", "t3code"],
+        ],
+        ["auto-accept-edits", ["--mode", "rpc", "--approval-mode", "write", "--profile", "t3code"]],
+        ["full-access", ["--mode", "rpc", "--approval-mode", "yolo", "--profile", "t3code"]],
         // auto never declares a native approval mode (stored auto degrades server-side).
-        ["auto", ["--mode", "rpc"]],
+        ["auto", ["--mode", "rpc", "--profile", "t3code"]],
       ];
       yield* Effect.gen(function* () {
         const harness = yield* openHarness(makeIds("argvmap"), `${directory}/omp`);

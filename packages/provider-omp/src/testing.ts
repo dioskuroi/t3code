@@ -8,6 +8,7 @@ export { makeOmpTextGeneration, type OmpTextGenerationOptions } from "./server/t
 export { OMP_PROVIDER } from "./server/kind.ts";
 export {
   makeOmpRpcClient,
+  OmpRpcCredentialError,
   OmpRpcError,
   OmpRpcExitError,
   OmpRpcTimeoutError,

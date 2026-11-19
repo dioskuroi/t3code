@@ -1,5 +1,5 @@
 {"type":"transcript_start","provider":"omp","protocol":"omp.rpc-jsonl","version":"omp/18.18.2","scenario":"turn_interrupt","metadata":{"generatedBy":"live-omp-recorder","ompVersion":"omp/18.18.2","model":"default","ompBinary":"omp"}}
-{"type":"expect_outbound","label":"process_start","frame":{"type":"process_start","args":["--mode","rpc","--approval-mode","yolo"]}}
+{"type":"expect_outbound","label":"process_start","frame":{"type":"process_start","args":["--mode","rpc","--approval-mode","yolo","--profile","t3code"]}}
 {"type":"emit_inbound","label":"ready","frame":{"type":"ready","protocolVersion":1,"supportedProtocolVersions":[1,2],"maxFrameBytes":1048576,"maxReassembledFrameBytes":67108864,"supportsBashExcludeFromContext":true}}
 {"type":"expect_outbound","label":"negotiate_protocol","frame":{"id":"t3-0","type":"negotiate_protocol","protocolVersion":2}}
 {"type":"emit_inbound","label":"extension_ui_request","frame":{"type":"extension_ui_request","id":"15c6f3af510cb73d","method":"setWidget","widgetKey":"autoresearch"}}

@@ -25,6 +25,7 @@ import {
   type OmpRpcFrame,
 } from "./frames.ts";
 import { ompErrorMessage } from "../ompErrors.ts";
+import { OMP_PROFILE_ARGS, OMP_PROFILE_NAME } from "../profile.ts";
 
 // Shared with the short-lived status probe (server/status.ts) so both paths time out at the
 // same values — one definition, same name and value everywhere.
@@ -59,6 +60,24 @@ export class OmpRpcExitError extends Schema.TaggedError<OmpRpcExitError>()("OmpR
 }) {
   override get message(): string {
     return `omp RPC process exited unexpectedly (code ${String(this.exitCode)}): ${this.detail}`;
+  }
+}
+
+// The t3code profile starts credential-free: omp refuses to enter RPC mode without a default
+// model until the default profile's credentials are migrated (docs/fork/omp-profile.md).
+export class OmpRpcCredentialError extends Schema.TaggedError<OmpRpcCredentialError>()(
+  "OmpRpcCredentialError",
+  { exitCode: Schema.NullOr(Schema.Number) },
+) {
+  override get message(): string {
+    return [
+      `omp exited before becoming ready: the ${OMP_PROFILE_NAME} profile has no default model credentials.`,
+      "Migrate credentials from the default profile (adjust the path if your omp home differs):",
+      `  mkdir -p ~/.omp/profiles/${OMP_PROFILE_NAME}/agent`,
+      `  sqlite3 ~/.omp/agent/agent.db ".backup '$HOME/.omp/profiles/${OMP_PROFILE_NAME}/agent/agent.db'"`,
+      `  sqlite3 ~/.omp/agent/models.db ".backup '$HOME/.omp/profiles/${OMP_PROFILE_NAME}/agent/models.db'"`,
+      `Then restart the thread: omp runs isolated under --profile ${OMP_PROFILE_NAME}.`,
+    ].join("\n");
   }
 }
 
@@ -116,13 +135,17 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
   const readyTimeoutMs = options.readyTimeoutMs ?? OMP_READY_TIMEOUT_MS;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const child = yield* spawner.spawn(
-    ChildProcess.make(options.command ?? "omp", [...(options.args ?? ["--mode", "rpc"])], {
-      env: options.env,
-      extendEnv: true,
-      ...(options.shell !== undefined ? { shell: options.shell } : {}),
-      ...(options.cwd !== undefined ? { cwd: options.cwd } : {}),
-      stdin: { stream: "pipe" },
-    }),
+    ChildProcess.make(
+      options.command ?? "omp",
+      [...(options.args ?? ["--mode", "rpc"]), ...OMP_PROFILE_ARGS],
+      {
+        env: options.env,
+        extendEnv: true,
+        ...(options.shell !== undefined ? { shell: options.shell } : {}),
+        ...(options.cwd !== undefined ? { cwd: options.cwd } : {}),
+        stdin: { stream: "pipe" },
+      },
+    ),
   );
 
   let maxFrameBytes = OMP_DEFAULT_MAX_FRAME_BYTES;
@@ -130,6 +153,8 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
   let decoder = makeOmpFrameDecoder({
     maxReassembledFrameBytes: OMP_DEFAULT_MAX_REASSEMBLED_FRAME_BYTES,
   });
+  // Last 2KB of stderr, kept so a pre-ready exit can be classified (credential vs unknown).
+  let stderrTail = "";
   const frames = yield* Queue.unbounded<OmpRpcFrame>();
   const pending = new Map<string, PendingRequest>();
   let exited = false;
@@ -238,6 +263,7 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
     Stream.decodeText(),
     Stream.runForEach((chunk) =>
       Effect.sync(() => {
+        stderrTail = (stderrTail + chunk).slice(-2048);
         if (options.onStderr !== undefined) options.onStderr(chunk);
       }),
     ),
@@ -263,12 +289,13 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
   const ready = yield* Effect.raceFirst(
     takeReadyFrame(),
     Deferred.await(exitDeferred).pipe(
-      Effect.flatMap(
-        (code) =>
-          new OmpRpcExitError({
-            exitCode: code,
-            detail: "exited before sending a ready frame",
-          }),
+      Effect.flatMap((code) =>
+        stderrTail.includes("No default model selected")
+          ? new OmpRpcCredentialError({ exitCode: code })
+          : new OmpRpcExitError({
+              exitCode: code,
+              detail: "exited before sending a ready frame",
+            }),
       ),
     ),
   ).pipe(

@@ -32,12 +32,20 @@ export interface FakeOmpTimedStderr {
   readonly text: string;
 }
 
+/** Exit before the ready frame, writing stderr first — the credential-less profile path. */
+export interface FakeOmpExitBeforeReady {
+  readonly stderr: string;
+  readonly exitCode?: number;
+}
+
 export interface FakeOmpProgram {
   readonly supportedProtocolVersions?: ReadonlyArray<number>;
   readonly maxFrameBytes?: number;
   readonly maxReassembledFrameBytes?: number;
   /** Respond to negotiate_protocol with success:false. */
   readonly refuseNegotiation?: boolean;
+  /** Exit before the ready frame, writing stderr first (credential-less profile). */
+  readonly exitBeforeReady?: FakeOmpExitBeforeReady;
   /** Frames emitted after the ready frame (in order, optional delays). */
   readonly events?: ReadonlyArray<FakeOmpTimedFrame>;
   /**
@@ -73,7 +81,7 @@ export interface FakeOmpProgram {
  */
 function createFakeOmpSource(): string {
   return `
-import { appendFileSync } from "node:fs";
+import { appendFileSync, writeSync } from "node:fs";
 const program = JSON.parse(process.env[${JSON.stringify(FAKE_OMP_PROGRAM_ENV)}] ?? "{}");
 const send = (frame) => process.stdout.write(JSON.stringify(frame) + "\\n");
 const sleep = (ms) => {
@@ -88,6 +96,12 @@ if (process.argv.includes("--version")) {
 // Adapter children log their spawn argv (approval-mode mapping assertions); --version probes skip it.
 if (process.env.FAKE_OMP_ARGV_LOG) {
   appendFileSync(process.env.FAKE_OMP_ARGV_LOG, JSON.stringify(process.argv.slice(2)) + "\\n");
+}
+if (program.exitBeforeReady !== undefined) {
+  // A pipe write can be dropped by process.exit; writeSync(2) keeps the classification
+  // input deterministic for the host's stderr-tail detection.
+  writeSync(2, program.exitBeforeReady.stderr);
+  process.exit(program.exitBeforeReady.exitCode ?? 1);
 }
 send({
   type: "ready",

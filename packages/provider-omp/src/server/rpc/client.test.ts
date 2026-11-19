@@ -12,6 +12,7 @@ import {
   makeOmpFrameDecoder,
   makeOmpRpcClient,
   OmpProtocolUnsupportedError,
+  OmpRpcCredentialError,
   OmpRpcError,
   OmpRpcExitError,
   OmpRpcTimeoutError,
@@ -23,6 +24,7 @@ const isProtocolUnsupported = Schema.is(OmpProtocolUnsupportedError);
 const isRpcError = Schema.is(OmpRpcError);
 const isTimeoutError = Schema.is(OmpRpcTimeoutError);
 const isExitError = Schema.is(OmpRpcExitError);
+const isCredentialError = Schema.is(OmpRpcCredentialError);
 
 const readLines = Effect.fn("clientTest.readLines")(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -52,13 +54,19 @@ it.layer(NodeServices.layer)("omp RPC client", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-rpc-client-" });
       const requestLog = `${directory}/requests.jsonl`;
+      const argvLog = `${directory}/argv.jsonl`;
       const models = [{ provider: "zai", id: "glm-5.3", name: "GLM-5.3" }];
       const client = yield* spawnClient(
         directory,
         { responses: { get_available_models: { data: { models } } } },
-        { FAKE_OMP_REQUEST_LOG: requestLog },
+        { FAKE_OMP_REQUEST_LOG: requestLog, FAKE_OMP_ARGV_LOG: argvLog },
       );
       expect(client.protocolVersion).toBe(2);
+      const argv = JSON.parse(yield* fs.readFileString(argvLog)) as ReadonlyArray<string>;
+      expect(argv).toContain("--mode");
+      expect(argv).toContain("rpc");
+      expect(argv).toContain("--profile");
+      expect(argv).toContain("t3code");
 
       const response = (yield* client.request("get_available_models")) as { models: unknown };
       expect(response.models).toEqual(models);
@@ -78,6 +86,33 @@ it.layer(NodeServices.layer)("omp RPC client", (it) => {
         (request: Record<string, unknown>) => request["type"] === "set_subagent_subscription",
       );
       expect(subagentSubscription?.["level"]).toBe("events");
+    }),
+  );
+
+  it.effect("maps a no-default-model exit before ready to an actionable credential error", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-rpc-client-" });
+      const error = yield* Effect.flip(
+        makeOmpRpcClient({
+          command: writeFakeOmp({
+            directory,
+            program: {
+              exitBeforeReady: {
+                stderr:
+                  "No default model selected. Use /login, set an API key environment variable, or select a local model with /model or --model.\n",
+              },
+            },
+          }),
+          args: ["--mode", "rpc"],
+        }),
+      );
+      expect(isCredentialError(error)).toBe(true);
+      if (isCredentialError(error)) {
+        expect(error.message).toContain("no default model credentials");
+        expect(error.message).toContain(".backup");
+        expect(error.message).toContain("profiles/t3code");
+      }
     }),
   );
 

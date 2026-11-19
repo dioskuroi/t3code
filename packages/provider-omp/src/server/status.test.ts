@@ -235,4 +235,60 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
       expect(snapshot.installed).toBe(false);
     }),
   );
+
+  it.effect("spawns the probe with the t3code profile flag", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const { command, directory } = yield* writeFakeOmpIntoTemp({
+        responses: {
+          get_available_models: {
+            data: {
+              models: [
+                {
+                  provider: "zai",
+                  id: "glm-5.3",
+                  name: "GLM-5.3",
+                  reasoning: true,
+                  contextWindow: 200000,
+                },
+              ],
+            },
+          },
+        },
+      });
+      const argvLog = `${directory}/argv.jsonl`;
+      const snapshot = yield* checkOmpProviderStatus(
+        decodeOmpSettings({}),
+        { ...process.env, FAKE_OMP_ARGV_LOG: argvLog },
+        undefined,
+        command,
+      );
+      expect(snapshot.status).toBe("ready");
+      const argv = JSON.parse(yield* fs.readFileString(argvLog)) as ReadonlyArray<string>;
+      expect(argv).toContain("--profile");
+      expect(argv).toContain("t3code");
+    }),
+  );
+
+  it.effect("surfaces credential migration guidance on the status snapshot", () =>
+    Effect.gen(function* () {
+      const { command } = yield* writeFakeOmpIntoTemp({
+        exitBeforeReady: {
+          stderr:
+            "No default model selected. Use /login, set an API key environment variable, or select a local model with /model or --model.\n",
+        },
+      });
+      const snapshot = yield* checkOmpProviderStatus(
+        decodeOmpSettings({}),
+        process.env,
+        undefined,
+        command,
+      );
+      expect(snapshot.status).toBe("error");
+      expect(snapshot.installed).toBe(true);
+      // The credential guidance must reach the status surface, not just server logs.
+      expect(snapshot.message).toContain("profiles/t3code");
+      expect(snapshot.message).toContain(".backup");
+    }),
+  );
 });

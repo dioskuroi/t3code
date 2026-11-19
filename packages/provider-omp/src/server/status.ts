@@ -40,7 +40,11 @@ const OMP_VERSION_TIMEOUT_MS = 8_000;
 class OmpRpcProbeError extends Schema.TaggedError<OmpRpcProbeError>()("OmpRpcProbeError", {
   operation: Schema.String,
   detail: Schema.String,
-}) {}
+}) {
+  override get message(): string {
+    return `omp probe ${this.operation} failed: ${this.detail}`;
+  }
+}
 
 export const makePendingOmpProvider = Effect.fn("makePendingOmpProvider")(function* (
   settings: OmpSettings,
