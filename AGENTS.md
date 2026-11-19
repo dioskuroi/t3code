@@ -210,4 +210,5 @@ Architecture and its constraints: `docs/internals/overview.md`. Glossary: `docs/
 ## Additional tips
 
 - Never run tests on every core. Cap workers (`--maxWorkers 2`) or pass `--no-file-parallelism` for any `vp test`/`vpr test` run, including full-suite runs; the machine is shared with other work.
+- Multi-task-line sessions: when a focused skill (`/implement`, `/wayfinder`, …) starts in a session that already has pending background task lines, inventory them first and ask the user to rule on each (continue / hand off / abort). When a focused task lands, the first reply states which task line the session is back on, or that none are pending.
 - Security is important, but should not be over-indexed on, especially for dev mode/maintainer-only features.
