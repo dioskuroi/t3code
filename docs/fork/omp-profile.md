@@ -8,17 +8,24 @@ t3code 驱动的 omp 会话统一携带 `--profile t3code`：omp 的 auth、sess
 - 凭据/设置独立：Tern 侧重新登录、改设置不影响 t3code 侧
 - 版本仍随 PATH 解析（Tern 管理的二进制或独立二进制皆可配 profile，互不冲突）
 
-## 首次启用：凭据迁移（一次性）
+## 首次启用：状态迁移（一次性）
 
-新 profile 无凭据，omp 会拒绝进入 RPC 模式（adapter 映射为 `OmpRpcCredentialError`，错误信息内含下述命令）。从默认 profile 迁移凭据（按本机 omp home 调整路径）：
+新 profile 无凭据也无插件态。omp 会拒绝进入 RPC 模式（adapter 映射为 `OmpRpcCredentialError`，错误信息内含下述命令）。从默认 profile 迁移（按本机 omp home 调整路径）：
 
 ```sh
 mkdir -p ~/.omp/profiles/t3code/agent
 sqlite3 ~/.omp/agent/agent.db ".backup '$HOME/.omp/profiles/t3code/agent/agent.db'"
 sqlite3 ~/.omp/agent/models.db ".backup '$HOME/.omp/profiles/t3code/agent/models.db'"
+# 插件（mattpocock 技能等）、插件市场配置、模型配置、插件数据与原生件
+cp -R ~/.omp/plugins ~/.omp/profiles/t3code/plugins
+cp ~/.omp/marketplaces.json ~/.omp/profiles/t3code/marketplaces.json
+cp ~/.omp/models-*.yml ~/.omp/profiles/t3code/
+cp -R ~/.omp/context-mode ~/.omp/profiles/t3code/context-mode 2>/dev/null
+cp ~/.omp/autoqa.db ~/.omp/profiles/t3code/ 2>/dev/null
+cp -R ~/.omp/natives ~/.omp/profiles/t3code/natives 2>/dev/null
 ```
 
-Tern 侧重新登录后如需跟随，重跑这两条命令即可（profile 凭据不自动同步）。
+Tern 侧重新登录后如需跟随，重跑 sqlite3 两条即可（凭据不自动同步）；插件升级在 profile 内独立进行，不与默认态互相同步。
 
 ## 实现位置
 
