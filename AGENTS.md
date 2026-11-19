@@ -211,4 +211,5 @@ Architecture and its constraints: `docs/internals/overview.md`. Glossary: `docs/
 
 - Never run tests on every core. Cap workers (`--maxWorkers 2`) or pass `--no-file-parallelism` for any `vp test`/`vpr test` run, including full-suite runs; the machine is shared with other work.
 - Multi-task-line sessions: when a focused skill (`/implement`, `/wayfinder`, …) starts in a session that already has pending background task lines, inventory them first and ask the user to rule on each (continue / hand off / abort). When a focused task lands, the first reply states which task line the session is back on, or that none are pending.
+- Before implementing an issue labeled `ready-for-agent`, check whether it is already done: `git fetch && git log origin/main --grep <issue-number>` and re-read the issue state and assignee. Another session may have landed the work without closing the ticket — if the commit exists, do not reimplement; verify and take over the ticket close-out instead.
 - Security is important, but should not be over-indexed on, especially for dev mode/maintainer-only features.
