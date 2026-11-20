@@ -3655,6 +3655,103 @@ describe("omp adapter session runtime", () => {
     }).pipe(Effect.provide(NodeTestLayer)),
   );
 
+  live("supports thread-start rollback and chained re-rollback via seeded sidecar (#113)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({
+        prefix: "omp-adapter-rollback-chain-",
+      });
+      const sessionFile = `${directory}/sessions/rollback-chain.jsonl`;
+      const requestLog = `${directory}/requests.jsonl`;
+      const header = "session-header\n";
+      const turnOne = "turn-one-events\n";
+      yield* fs.makeDirectory(`${directory}/sessions`);
+      yield* fs.writeFileString(sessionFile, header);
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: { open_session: { data: { sessionId: "s-chain", sessionFile } } },
+          sessionAppendPath: sessionFile,
+          appendsOnPrompt: [turnOne, "turn-two-events\n"],
+          eventsPerRequest: {
+            prompt: [
+              {
+                frame: {
+                  type: "message_update",
+                  messageId: "m1",
+                  assistantMessageEvent: { type: "text_start", contentIndex: 0 },
+                },
+              },
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              { frame: { type: "prompt_result", agentInvoked: true, status: "completed" } },
+            ],
+          },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("rollback-chain");
+      const sessionPolicy = { ...runtimePolicy, cwd: directory };
+      const harness = yield* openHarness(ids, command, { runtimePolicy: sessionPolicy });
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy: sessionPolicy,
+      });
+      yield* driveTurn(harness, ids, providerThread, 1);
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 1);
+      yield* driveTurn(harness, ids, providerThread, 2);
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 2);
+      const snapshot = yield* harness.runtime.readThreadSnapshot({ providerThread });
+      const turnTwo = snapshot.providerTurns.find((turn) => turn.ordinal === 2);
+      if (turnTwo === undefined) throw new Error("second turn not projected");
+      // First rollback: back to the end of turn one.
+      const rolledOnce = yield* harness.runtime.rollbackThread({
+        providerThread: snapshot.providerThread,
+        target: {
+          type: "provider_turn",
+          checkpointId: CheckpointId.make("ckpt-chain-turn1"),
+          appRunOrdinal: 2,
+          providerTurn: turnTwo,
+        },
+        providerThreadTurns: snapshot.providerTurns,
+      });
+      const copyOne = rolledOnce.providerThread.nativeThreadRef?.nativeId ?? "";
+      expect(copyOne).toContain(".rollback-");
+      // Second rollback against the COPY: an even earlier checkpoint must still work —
+      // the copy's sidecar carries the inherited offsets (chained rollback, review F2).
+      // The target turn comes from the ORIGINAL snapshot: the rolled thread's projection
+      // starts empty, but turn one's nativeTurnRef is still a valid offset in the copy.
+      const turnOneProjected = snapshot.providerTurns.find((turn) => turn.ordinal === 1);
+      if (turnOneProjected === undefined) throw new Error("first turn not in original snapshot");
+      const rolledTwice = yield* harness.runtime.rollbackThread({
+        providerThread: rolledOnce.providerThread,
+        target: {
+          type: "provider_turn",
+          checkpointId: CheckpointId.make("ckpt-chain-turn0"),
+          appRunOrdinal: 1,
+          providerTurn: turnOneProjected,
+        },
+        providerThreadTurns: snapshot.providerTurns,
+      });
+      const copyTwo = rolledTwice.providerThread.nativeThreadRef?.nativeId ?? "";
+      const copyTwoBytes = yield* fs.readFile(copyTwo);
+      expect(Buffer.from(copyTwoBytes).toString("utf8")).toBe(`${header}${turnOne}`);
+      // Thread-start rollback: truncate to the session-open boundary (review F3).
+      const rolledToStart = yield* harness.runtime.rollbackThread({
+        providerThread: rolledTwice.providerThread,
+        target: {
+          type: "thread_start",
+          checkpointId: CheckpointId.make("ckpt-chain-start"),
+          appRunOrdinal: 0,
+        },
+        providerThreadTurns: [],
+      });
+      const startFile = rolledToStart.providerThread.nativeThreadRef?.nativeId ?? "";
+      const startBytes = yield* fs.readFile(startFile);
+      expect(Buffer.from(startBytes).toString("utf8")).toBe(header);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
   live("rejects rollback while a turn is active (#113)", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
