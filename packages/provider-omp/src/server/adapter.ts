@@ -110,7 +110,7 @@ const OmpProviderCapabilities = {
     emitsPlanUpdated: false,
     emitsTodoList: false,
     emitsProposedPlan: false,
-    supportsStructuredQuestions: false,
+    supportsStructuredQuestions: true,
     planDeltasHaveItemIds: false,
   },
   subagents: {
@@ -454,8 +454,8 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
 
       const argsForApprovalMode = (approvalMode: string | null): ReadonlyArray<string> =>
         approvalMode === null
-          ? ["--mode", "rpc"]
-          : ["--mode", "rpc", "--approval-mode", approvalMode];
+          ? ["--mode", "rpc-ui"]
+          : ["--mode", "rpc-ui", "--approval-mode", approvalMode];
 
       // Shared drain (review #4): close stdin, read stdout to EOF, release the child scope
       // (#15). Flags afterwards differ by caller — see disposeClient / recycleClient.
@@ -626,6 +626,17 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           Effect.provideService(Scope.Scope, clientScope),
           Effect.mapError((cause) => spawnProtocolError(sessionPath, cause)),
         );
+        // The `ask` tool blocks the turn until answered: without set_ask_dialog it walks
+        // select/input/editor per field, with it one extension_ui_request carries every
+        // question. Older builds answer with a failed response — keep the per-field fallback.
+        // Explicit id keeps omp transcripts stable across request-count changes.
+        yield* client
+          .request("set_ask_dialog", { id: "set_ask_dialog", enabled: true })
+          .pipe(
+            Effect.catchCause((cause) =>
+              Effect.logWarning(`set_ask_dialog failed: ${String(cause)}`),
+            ),
+          );
         thread.client.client = client;
         thread.client.scope = clientScope;
         // A successful spawn clears the disconnect from a previous crash.
@@ -1058,6 +1069,46 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           if (found.entry.answering) {
             return yield* refusal(new Error("This omp approval is already being answered"));
           }
+          // The structured `ask` dialog: the UI answers per question; map the answers
+          // record to omp's per-question array (option labels / free text).
+          if (found.entry.request.kind === "user_input") {
+            const answeringClient = found.thread.client.client;
+            if (answeringClient === null) {
+              return yield* refusal(new Error("the omp process for this thread is not running"));
+            }
+            found.entry.answering = true;
+            const ompAnswers = Object.entries(requestInput.answers ?? {}).map(([id, value]) => {
+              if (Array.isArray(value)) {
+                return {
+                  id,
+                  selectedOptions: value.filter(
+                    (option): option is string => typeof option === "string",
+                  ),
+                };
+              }
+              const text = typeof value === "string" ? value.trim() : String(value ?? "");
+              return text === "" ? { id } : { id, customInput: text };
+            });
+            const delivered = yield* Effect.result(
+              answeringClient.request("extension_ui_response", {
+                id: found.entry.nativeRequestId,
+                answers: ompAnswers,
+              }),
+            );
+            if (delivered._tag === "Failure") {
+              found.entry.answering = false;
+              return yield* refusal(delivered.failure);
+            }
+            const now = yield* DateTime.now;
+            const entry = found.entry;
+            found.thread.projection.state.runtimeRequests.set(entry.nativeRequestId, {
+              ...entry,
+              request: { ...entry.request, status: "resolved", resolvedAt: now },
+              node: { ...entry.node, status: "completed", completedAt: now },
+              item: { ...entry.item, status: "completed", completedAt: now, updatedAt: now },
+            });
+            return;
+          }
           // Approvals always carry a decision; feedback/user-input flows do not exist in omp MVP.
           if (requestInput.decision === undefined) {
             return yield* refusal(new Error("omp approval requests require a decision"));
@@ -1250,7 +1301,7 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             .writeFile(rollbackPath, bytes.subarray(0, boundary))
             .pipe(Effect.mapError((cause) => rollbackError(cause)));
           // Seed the copy's sidecar with the offsets that survive the truncation, so a
-          // chained rollback to an even earlier checkpoint keeps working (review F2).
+          // chained rollback to an even earlier checkpoint keeps working.
           const inheritedOffsets: Record<string, number> = {};
           for (const [turnKey, turnOffset] of Object.entries(offsets)) {
             if (turnOffset <= boundary) inheritedOffsets[turnKey] = turnOffset;

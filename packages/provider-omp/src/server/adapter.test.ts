@@ -3447,7 +3447,7 @@ describe("omp adapter session runtime", () => {
         });
         const beforeTurnEnd = yield* pollLogLines(argvLog, 1);
         expect(beforeTurnEnd).toEqual([
-          ["--mode", "rpc", "--approval-mode", "always-ask", "--profile", "t3code"],
+          ["--mode", "rpc-ui", "--approval-mode", "always-ask", "--profile", "t3code"],
         ]);
         // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- proving the switch did NOT fire needs a real settle window.
         yield* Effect.sleep(150);
@@ -3477,7 +3477,7 @@ describe("omp adapter session runtime", () => {
         const afterTurnEnd = yield* pollLogLines(argvLog, 2);
         expect(afterTurnEnd[0]).toEqual([
           "--mode",
-          "rpc",
+          "rpc-ui",
           "--approval-mode",
           "always-ask",
           "--profile",
@@ -3485,7 +3485,7 @@ describe("omp adapter session runtime", () => {
         ]);
         expect(afterTurnEnd[1]).toEqual([
           "--mode",
-          "rpc",
+          "rpc-ui",
           "--approval-mode",
           "yolo",
           "--profile",
@@ -3531,12 +3531,15 @@ describe("omp adapter session runtime", () => {
       > = [
         [
           "approval-required",
-          ["--mode", "rpc", "--approval-mode", "always-ask", "--profile", "t3code"],
+          ["--mode", "rpc-ui", "--approval-mode", "always-ask", "--profile", "t3code"],
         ],
-        ["auto-accept-edits", ["--mode", "rpc", "--approval-mode", "write", "--profile", "t3code"]],
-        ["full-access", ["--mode", "rpc", "--approval-mode", "yolo", "--profile", "t3code"]],
+        [
+          "auto-accept-edits",
+          ["--mode", "rpc-ui", "--approval-mode", "write", "--profile", "t3code"],
+        ],
+        ["full-access", ["--mode", "rpc-ui", "--approval-mode", "yolo", "--profile", "t3code"]],
         // auto never declares a native approval mode (stored auto degrades server-side).
-        ["auto", ["--mode", "rpc", "--profile", "t3code"]],
+        ["auto", ["--mode", "rpc-ui", "--profile", "t3code"]],
       ];
       yield* Effect.gen(function* () {
         const harness = yield* openHarness(makeIds("argvmap"), `${directory}/omp`);
@@ -3749,6 +3752,87 @@ describe("omp adapter session runtime", () => {
       const startFile = rolledToStart.providerThread.nativeThreadRef?.nativeId ?? "";
       const startBytes = yield* fs.readFile(startFile);
       expect(Buffer.from(startBytes).toString("utf8")).toBe(header);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  live("projects omp ask dialogs as user_input runtime requests and answers them (#114)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-ask-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const askFrame = {
+        type: "extension_ui_request",
+        id: "ui_ask_1",
+        method: "ask",
+        questions: [
+          {
+            id: "db",
+            question: "Which database?",
+            header: "Storage",
+            options: [{ label: "Postgres", description: "managed cluster" }, { label: "SQLite" }],
+          },
+        ],
+      };
+      const command = writeFakeOmp({
+        directory,
+        program: {
+          responses: {
+            open_session: {
+              data: { sessionId: "s-ask", sessionFile: `${directory}/sessions/ask.jsonl` },
+            },
+          },
+          // The ask dialog arrives mid-turn (released on prompt); the terminal frames stay
+          // held until the host answers the dialog (mirrors real omp: the ask tool blocks
+          // the turn until answered).
+          events: [
+            { afterRequestType: "prompt", frame: askFrame },
+            {
+              afterRequestType: "extension_ui_response",
+              frame: { type: "agent_end", isTerminal: true },
+            },
+            {
+              afterRequestType: "extension_ui_response",
+              frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+            },
+          ],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("ask");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* driveTurn(harness, ids, providerThread, 1);
+      // The ask dialog projects as a pending user_input runtime request.
+      yield* waitFor(
+        harness,
+        "runtime_request.updated",
+        (event) => event.runtimeRequest.kind === "user_input",
+      );
+      const snapshot = yield* harness.runtime.readThreadSnapshot({ providerThread });
+      const pending = snapshot.runtimeRequests.find(
+        (request) => request.kind === "user_input" && request.status === "pending",
+      );
+      if (pending === undefined) throw new Error("pending user_input request not projected");
+      // set_ask_dialog was opted in at spawn (requestLog: the second host frame).
+      yield* pollRequestLog(requestLog, (request) => request["type"] === "set_ask_dialog");
+      // The user answers through the runtime seam; omp receives the wire-shaped answers.
+      yield* harness.runtime.respondToRuntimeRequest({
+        requestId: pending.id,
+        answers: { db: "Postgres" },
+      });
+      const answered = yield* pollRequestLog(
+        requestLog,
+        (request) =>
+          request["type"] === "extension_ui_response" &&
+          JSON.stringify(request["answers"] ?? []) ===
+            JSON.stringify([{ id: "db", customInput: "Postgres" }]),
+      );
+      expect(answered).toHaveLength(1);
+      yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 1);
     }).pipe(Effect.provide(NodeTestLayer)),
   );
 

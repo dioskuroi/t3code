@@ -10,6 +10,7 @@ import type {
   OrchestrationV2ProviderThread,
   OrchestrationV2ProviderTurn,
   OrchestrationV2RuntimeRequest,
+  OrchestrationV2UserInputQuestion,
   OrchestrationV2ProviderTurnTokenUsage,
   OrchestrationV2Subagent,
   OrchestrationV2TurnItem,
@@ -1103,7 +1104,134 @@ export const createOmpThreadProjection = (input: {
     { decision: "decline", label: "Deny" },
   ];
 
+  // The omp `ask` dialog: an extension_ui_request whose questions[] map one-to-one
+  // onto OrchestrationV2UserInputQuestion — projected as a user_input runtime request the
+  // composer already renders for Claude. The ask tool always offers free text.
+  const handleAskDialogRequest = Effect.fnUntraced(function* (frame: OmpRpcFrame) {
+    const nativeRequestId = frameString(frame, "id");
+    if (nativeRequestId === undefined) return;
+    const turn = state.active;
+    // Questions live inside their turn; without one omp answers with its recommended
+    // options after the wire timeout, so there is nothing to project.
+    if (turn === null) return;
+    if (state.runtimeRequests.has(nativeRequestId)) return;
+    const rawQuestions = Array.isArray(frame["questions"]) ? frame["questions"] : [];
+    const questions = rawQuestions.flatMap(
+      (value: unknown, index: number): OrchestrationV2UserInputQuestion[] => {
+        if (typeof value !== "object" || value === null) return [];
+        const record = value as Record<string, unknown>;
+        const id =
+          typeof record.id === "string" && record.id.trim() !== "" ? record.id.trim() : undefined;
+        const question =
+          typeof record.question === "string" && record.question.trim() !== ""
+            ? record.question.trim()
+            : "";
+        if (id === undefined || question === "") return [];
+        const header =
+          typeof record.header === "string" && record.header.trim() !== ""
+            ? record.header.trim()
+            : `Question ${index + 1}`;
+        const options = Array.isArray(record.options)
+          ? record.options.flatMap((option: unknown) => {
+              if (typeof option !== "object" || option === null) return [];
+              const optionRecord = option as Record<string, unknown>;
+              const label =
+                typeof optionRecord.label === "string" && optionRecord.label.trim() !== ""
+                  ? optionRecord.label.trim()
+                  : "";
+              if (label === "") return [];
+              const description =
+                typeof optionRecord.description === "string" ? optionRecord.description.trim() : "";
+              return [
+                {
+                  label,
+                  description: description || label,
+                  ...(typeof optionRecord.preview === "string"
+                    ? { preview: optionRecord.preview }
+                    : {}),
+                },
+              ];
+            })
+          : [];
+        return [
+          {
+            id,
+            header,
+            question,
+            options,
+            ...(record.multi === true ? { multiSelect: true } : {}),
+            allowCustomAnswer: true,
+          },
+        ];
+      },
+    );
+    if (questions.length === 0) return;
+    const now = yield* DateTime.now;
+    const requestId = runtimeRequestIdFromNative(nativeRequestId);
+    const nodeId = IdAllocator.derive.approvalNode({ requestId });
+    const request: OrchestrationV2RuntimeRequest = {
+      id: requestId,
+      nodeId,
+      providerTurnId: turn.providerTurn.id,
+      nativeRequestRef: driverRef(driver, nativeRequestId, "strong"),
+      kind: "user_input",
+      status: "pending",
+      responseCapability: { type: "live", providerSessionId: input.providerSessionId },
+      createdAt: now,
+      resolvedAt: null,
+      questions,
+    };
+    const node: OrchestrationV2ExecutionNode = {
+      id: nodeId,
+      threadId: turn.turnInput.threadId,
+      runId: turn.turnInput.runId,
+      parentNodeId: turn.turnInput.rootNodeId,
+      rootNodeId: turn.turnInput.rootNodeId,
+      kind: "user_input_request",
+      status: "waiting",
+      countsForRun: false,
+      providerThreadId: state.providerThread.id,
+      providerTurnId: turn.providerTurn.id,
+      nativeItemRef: driverRef(driver, nativeRequestId, "strong"),
+      runtimeRequestId: requestId,
+      checkpointScopeId: null,
+      startedAt: now,
+      completedAt: null,
+    };
+    const item: OrchestrationV2TurnItem = {
+      ordinal: turn.nextItemOrdinal++,
+      status: "waiting",
+      title: "Ask user",
+      startedAt: now,
+      completedAt: null,
+      updatedAt: now,
+      type: "user_input_request",
+      requestId,
+      requestKind: "user_input",
+    };
+    state.runtimeRequests.set(nativeRequestId, {
+      request,
+      item,
+      node,
+      nativeRequestId,
+      toolName: "ask",
+      choices: [],
+      answering: false,
+    });
+    yield* input.emit({ type: "node.updated", driver, node });
+    yield* input.emit({
+      type: "runtime_request.updated",
+      driver,
+      threadId: turn.turnInput.threadId,
+      runtimeRequest: request,
+    });
+    yield* input.emit({ type: "turn_item.updated", driver, turnItem: item });
+  });
+
   const handleExtensionUiRequest = Effect.fnUntraced(function* (frame: OmpRpcFrame) {
+    // The structured `ask` dialog: one frame carries every question with options —
+    // projected as a user_input runtime request the UI already renders (Claude precedent).
+    if (frameString(frame, "method") === "ask") return yield* handleAskDialogRequest(frame);
     if (!isOmpApprovalRequestFrame(frame)) return; // setWidget/notify/… stay tolerated (spec §5.5)
     const nativeRequestId = frameString(frame, "id");
     if (nativeRequestId === undefined) return;
