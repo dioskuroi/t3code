@@ -125,6 +125,9 @@ const probeOmpModelCatalog = Effect.fn("OmpProviderStatus.probeOmpModelCatalog")
       ...(input.shell !== undefined ? { shell: input.shell } : {}),
       ...(input.cwd !== undefined ? { cwd: input.cwd } : {}),
       env: input.environment,
+      // Probes fire on settings views: session-level credential follow (ADR-0006) would
+      // pay two sqlite3 children per tick for nothing — threads do the follow.
+      followCredentials: false,
       readyTimeoutMs: OMP_READY_TIMEOUT_MS,
       requestTimeoutMs: OMP_REQUEST_TIMEOUT_MS,
       onEvent: (frame) => {

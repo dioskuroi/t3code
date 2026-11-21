@@ -9,6 +9,7 @@ export { OMP_PROVIDER } from "./server/kind.ts";
 export {
   makeOmpRpcClient,
   OmpRpcCredentialError,
+  OmpRpcCredentialSyncError,
   OmpRpcError,
   OmpRpcExitError,
   OmpRpcTimeoutError,

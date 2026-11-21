@@ -109,9 +109,9 @@ it.layer(NodeServices.layer)("omp RPC client", (it) => {
       );
       expect(isCredentialError(error)).toBe(true);
       if (isCredentialError(error)) {
-        expect(error.message).toContain("no default model credentials");
-        expect(error.message).toContain(".backup");
-        expect(error.message).toContain("profiles/t3code");
+        expect(error.message).toContain("no usable default-model credentials");
+        expect(error.message).toContain("ADR-0006");
+        expect(error.message).toContain("omp-profile.md");
       }
     }),
   );

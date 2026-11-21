@@ -25,6 +25,7 @@ import {
   type OmpRpcFrame,
 } from "./frames.ts";
 import { ompErrorMessage } from "../ompErrors.ts";
+import { followCredentialsIfStale } from "../credentialFollow.ts";
 import { OMP_PROFILE_ARGS, OMP_PROFILE_NAME } from "../profile.ts";
 
 // Shared with the short-lived status probe (server/status.ts) so both paths time out at the
@@ -63,20 +64,37 @@ export class OmpRpcExitError extends Schema.TaggedError<OmpRpcExitError>()("OmpR
   }
 }
 
-// The t3code profile starts credential-free: omp refuses to enter RPC mode without a default
-// model until the default profile's credentials are migrated (docs/fork/omp-profile.md).
+// The t3code profile never logs in (ADR-0006): credentials arrive one-way from the default
+// profile at spawn time. If the follow reported a failure (or the profile was never
+// bootstrapped), omp surfaces it here — point at the follow notice, not the retired
+// manual-migration copy.
 export class OmpRpcCredentialError extends Schema.TaggedError<OmpRpcCredentialError>()(
   "OmpRpcCredentialError",
   { exitCode: Schema.NullOr(Schema.Number) },
 ) {
   override get message(): string {
     return [
-      `omp exited before becoming ready: the ${OMP_PROFILE_NAME} profile has no default model credentials.`,
-      "Migrate credentials from the default profile (adjust the path if your omp home differs):",
-      `  mkdir -p ~/.omp/profiles/${OMP_PROFILE_NAME}/agent`,
-      `  sqlite3 ~/.omp/agent/agent.db ".backup '$HOME/.omp/profiles/${OMP_PROFILE_NAME}/agent/agent.db'"`,
-      `  sqlite3 ~/.omp/agent/models.db ".backup '$HOME/.omp/profiles/${OMP_PROFILE_NAME}/agent/models.db'"`,
-      `Then restart the thread: omp runs isolated under --profile ${OMP_PROFILE_NAME}.`,
+      `omp exited before becoming ready: the ${OMP_PROFILE_NAME} profile has no usable default-model credentials.`,
+      "Credential follow (ADR-0006) replayed the default profile's credentials at spawn; check the",
+      "follow notice in the server log for its outcome. Manual bootstrap for a fresh profile:",
+      "  docs/fork/omp-profile.md  (omp auth export | omp --profile t3code auth import -, plus models.db snapshot)",
+    ].join("\n");
+  }
+}
+
+// Fail-closed (ADR-0006): a needed replay that itself failed means the profile would run
+// on stale credentials — refuse the spawn instead of letting a revoked key surface as a
+// mid-session provider 401 nobody can act on.
+export class OmpRpcCredentialSyncError extends Schema.TaggedError<OmpRpcCredentialSyncError>()(
+  "OmpRpcCredentialSyncError",
+  { reason: Schema.String },
+) {
+  override get message(): string {
+    return [
+      `credential follow failed before spawn: ${this.reason}`,
+      `The ${OMP_PROFILE_NAME} profile would run on stale credentials, so the spawn is refused.`,
+      "Rescue manually (then restart the thread):",
+      `  omp auth export | omp --profile ${OMP_PROFILE_NAME} auth import -`,
     ].join("\n");
   }
 }
@@ -93,6 +111,14 @@ export interface OmpRpcClientSpawnOptions {
   readonly env?: NodeJS.ProcessEnv | undefined;
   /** stderr arrives as raw chunks; wire this to the T3 server log. */
   readonly onStderr?: (chunk: string) => void;
+  /** Human-readable credential-follow outcome (ADR-0006); wire this to the T3 server log. */
+  readonly onFollowNotice?: (message: string) => void;
+  /**
+   * Run the one-way credential follow before spawning (ADR-0006). Default true; the status
+   * probe passes false — follow is session-level semantics and the probe runs on settings
+   * views, too often to pay two sqlite3 children per tick.
+   */
+  readonly followCredentials?: boolean | undefined;
   /** Every decoded event frame (ready/response/chunks excluded) is forwarded here. */
   readonly onEvent?: (frame: OmpRpcFrame) => void;
   /** Fires exactly once when the child exits for any reason; close() is the orderly path. */
@@ -134,6 +160,20 @@ export const makeOmpRpcClient = Effect.fnUntraced(function* (options: OmpRpcClie
   const requestTimeoutMs = options.requestTimeoutMs ?? OMP_REQUEST_TIMEOUT_MS;
   const readyTimeoutMs = options.readyTimeoutMs ?? OMP_READY_TIMEOUT_MS;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  // One-way credential follow (ADR-0006) before every spawn: a default-side relogin replays
+  // whenever this profile's auth_change_revision is behind. UpToDate/Skipped proceed; a
+  // Failed replay refuses the spawn (fail-closed); absent credentials surface via
+  // OmpRpcCredentialError.
+  if (options.followCredentials !== false) {
+    const follow = yield* followCredentialsIfStale({
+      command: options.command ?? "omp",
+      env: options.env,
+      onNotice: options.onFollowNotice,
+    });
+    if (follow._tag === "Failed") {
+      return yield* new OmpRpcCredentialSyncError({ reason: follow.reason });
+    }
+  }
   const child = yield* spawner.spawn(
     ChildProcess.make(
       options.command ?? "omp",

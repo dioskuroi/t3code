@@ -129,6 +129,9 @@ export const makeOmpTextGeneration = Effect.fn("makeOmpTextGeneration")(function
           if (text === "") return;
           Effect.runFork(Effect.logWarning(`omp stderr [${operation}]: ${text}`));
         },
+        onFollowNotice: (message) => {
+          Effect.runFork(Effect.logInfo(`credential follow [${operation}]: ${message}`));
+        },
         onEvent: (frame) => collector.observe(frame),
         onExit: (exit) =>
           collector.fail(`omp process exited during generation (code ${String(exit.exitCode)}).`),

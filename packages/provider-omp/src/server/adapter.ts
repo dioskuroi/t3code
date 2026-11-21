@@ -599,6 +599,12 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
               Effect.logWarning(`omp stderr [${state.providerThread.id}]: ${text}`),
             );
           },
+          onFollowNotice: (message) => {
+            // Credential-follow outcome (ADR-0006) lands in the same server log.
+            Effect.runForkWith(services)(
+              Effect.logWarning(`credential follow [${state.providerThread.id}]: ${message}`),
+            );
+          },
           onEvent: (frame) => {
             // Directory frames project immediately regardless of turn state (spec §5.5/§7):
             // omp pushes the startup catalog before any turn. Client-visible completion flows

@@ -287,8 +287,9 @@ it.layer(NodeServices.layer)("omp status check", (it) => {
       expect(snapshot.status).toBe("error");
       expect(snapshot.installed).toBe(true);
       // The credential guidance must reach the status surface, not just server logs.
-      expect(snapshot.message).toContain("profiles/t3code");
-      expect(snapshot.message).toContain(".backup");
+      expect(snapshot.message).toContain("no usable default-model credentials");
+      expect(snapshot.message).toContain("ADR-0006");
+      expect(snapshot.message).toContain("omp-profile.md");
     }),
   );
 });
