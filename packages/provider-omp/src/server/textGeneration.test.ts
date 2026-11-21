@@ -56,12 +56,7 @@ const makeTextGeneration = Effect.fn("textGenTest.makeTextGeneration")(function*
 // One assistant reply that answers the core title prompt's JSON contract, then a real
 // terminal sequence (message_end inside the stream, terminal agent_end, prompt_result).
 const titleProgram: FakeOmpProgram = {
-  responses: {
-    open_session: {
-      success: true,
-      data: { sessionId: "gen-1", sessionFile: `${"stub"}/session.json` },
-    },
-  },
+  responses: {},
   eventsPerRequest: {
     prompt: [
       {
@@ -105,12 +100,7 @@ const titleProgram: FakeOmpProgram = {
 
 // Commit-schema assistant reply: exercises a different outputSchema than the title flow.
 const commitProgram: FakeOmpProgram = {
-  responses: {
-    open_session: {
-      success: true,
-      data: { sessionId: "gen-1", sessionFile: "stub/session.json" },
-    },
-  },
+  responses: {},
   eventsPerRequest: {
     prompt: [
       {
@@ -165,8 +155,14 @@ it.layer(NodeServices.layer)("omp host-side text generation", (it) => {
         expect(argv).toContain("t3code");
 
         const requests = yield* readRequestLog(requestLog);
-        const openSession = requests.find((request) => request["type"] === "open_session");
-        expect(openSession?.["sessionDir"]).toBe(`${cwd}/.t3code/omp-generation`);
+        // The one-shot session attaches via switch_session onto a unique
+        // thread-private file — never a bare open_session directory pick.
+        const switches = requests.filter((request) => request["type"] === "switch_session");
+        expect(switches).toHaveLength(1);
+        const sessionPath = String(switches[0]?.["sessionPath"]);
+        expect(sessionPath.startsWith(`${cwd}/.t3code/omp-generation/generation-`)).toBe(true);
+        expect(sessionPath.endsWith(".jsonl")).toBe(true);
+        expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
         const prompt = requests.find((request) => request["type"] === "prompt");
         expect(typeof prompt?.["message"]).toBe("string");
         expect(prompt?.["message"]).toContain("Fix the lazy thread feed test that flakes on CI");
@@ -197,11 +193,11 @@ it.layer(NodeServices.layer)("omp host-side text generation", (it) => {
       const prompt = requests.find((request) => request["type"] === "prompt");
       expect(prompt?.["message"]).toContain("You write concise git commit messages.");
       // Adapter protocol order: the session exists before the model is applied.
-      const openSessionIndex = requests.findIndex((request) => request["type"] === "open_session");
+      const switchIndex = requests.findIndex((request) => request["type"] === "switch_session");
       const setModelIndex = requests.findIndex((request) => request["type"] === "set_model");
       const promptIndex = requests.findIndex((request) => request["type"] === "prompt");
-      expect(openSessionIndex).toBeGreaterThanOrEqual(0);
-      expect(openSessionIndex).toBeLessThan(setModelIndex);
+      expect(switchIndex).toBeGreaterThanOrEqual(0);
+      expect(switchIndex).toBeLessThan(setModelIndex);
       expect(setModelIndex).toBeLessThan(promptIndex);
     }),
   );

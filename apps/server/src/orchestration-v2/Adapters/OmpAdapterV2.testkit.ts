@@ -100,6 +100,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/** Session-attach outbound frames: open_session (legacy) and switch_session are equivalent. */
+const OMP_REPLAY_ATTACH_TYPES: Record<string, true> = {
+  open_session: true,
+  switch_session: true,
+};
+
 function replayValueMatches(expected: unknown, actual: unknown): boolean {
   if (expected === OMP_REPLAY_ANY) return true;
   if (Array.isArray(expected)) {
@@ -111,6 +117,19 @@ function replayValueMatches(expected: unknown, actual: unknown): boolean {
   }
   if (isRecord(expected)) {
     if (!isRecord(actual)) return false;
+    // Attach frames normalize only ACROSS spellings (legacy open_session tape vs
+    // switch_session): the tape pins THAT a spawn attaches here; spelling and target
+    // path are owned by the provider-omp contract suite. Same-type frames keep the
+    // full payload comparison.
+    if (
+      expected.type !== actual.type &&
+      typeof expected.type === "string" &&
+      typeof actual.type === "string" &&
+      OMP_REPLAY_ATTACH_TYPES[expected.type] === true &&
+      OMP_REPLAY_ATTACH_TYPES[actual.type] === true
+    ) {
+      return true;
+    }
     const keys = new Set([...Object.keys(expected), ...Object.keys(actual)]);
     return [...keys].every((key) => replayValueMatches(expected[key], actual[key]));
   }

@@ -31,11 +31,6 @@ import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
 import type { OmpRpcFrame } from "./rpc/frames.ts";
 import { frameRecord, frameString } from "./frameFields.ts";
 
-export interface OmpNativeSession {
-  readonly sessionId: string;
-  readonly sessionFile: string;
-}
-
 /** "default" defers to omp's own resolution (settings default role → first authed provider). */
 export const OMP_INHERIT_MODEL_SLUG = "default";
 
@@ -130,7 +125,6 @@ export interface OmpThreadProjectionState {
   active: OmpActiveTurn | null;
   /** Frames that landed between turns (fake-harness races); replayed at the next turn start. */
   orphanFrames: ReadonlyArray<OmpRpcFrame>;
-  nativeSession: OmpNativeSession | null;
   /**
    * The model the omp process currently runs on (#17). Written after a successful set_model /
    * switch_session restore and on `model_changed` frames; `null` = omp's own resolution. The

@@ -204,6 +204,15 @@ const protocolError = (detail: string, cause?: unknown, reason?: "previous_turn_
 export const OMP_IDLE_RECLAIM_TIMEOUT_MS = 5 * 60_000;
 
 /**
+ * Deterministic per-thread session file: t3code owns session identity, never omp's
+ * autoResume directory pick. Derived from the persisted provider-thread id, so it is
+ * recomputable after any crash or restart; `switch_session` resumes this exact file or
+ * creates it there. Non-filename characters are flattened to `-`.
+ */
+export const deterministicSessionFileFor = (cwd: string, providerThreadId: string): string =>
+  `${cwd}/.t3code/omp-sessions/pt-${providerThreadId.replace(/[^A-Za-z0-9._-]/g, "-")}.jsonl`;
+
+/**
  * Fail-closed model guidance (#17): omp's raw error plus an explicit re-selection hint. Shared
  * by set_model selections and switch_session restores so both surface the same contract.
  */
@@ -384,7 +393,6 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           messages: [],
           active: null,
           orphanFrames: [],
-          nativeSession: null,
           appliedModel: null,
           runtimeRequests: new Map<string, OmpPendingRuntimeRequest>(),
           appliedThinking: null,
@@ -567,7 +575,11 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           yield* disposeClient(thread);
         }
         const state = thread.projection.state;
-        const sessionPath = state.providerThread.nativeThreadRef?.nativeId ?? null;
+        // Deterministic session identity: a thread without a stored native id gets a
+        // path derived from its own persisted provider-thread id — never a directory pick.
+        const storedSessionPath = state.providerThread.nativeThreadRef?.nativeId ?? null;
+        const sessionPath =
+          storedSessionPath ?? deterministicSessionFileFor(cwd, state.providerThread.id);
         thread.client.closing = false;
         // A freshly spawned child has not exited; the stale flag from a drained corpse (#18)
         // must not mark the replacement dead.
@@ -642,74 +654,19 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
         // A successful spawn clears the disconnect from a previous crash.
         thread.crashed = false;
         thread.client.approvalMode = approvalMode;
-        if (sessionPath === null) {
-          // omp requires an explicit session directory (real omp rejects a bare open_session;
-          // migration notes rpc-protocol.md §4): this thread's sessions live in a t3code-owned
-          // folder under the project root, which omp creates on first open.
-          const opened = (yield* client
-            .request("open_session", { sessionDir: `${cwd}/.t3code/omp-sessions` })
-            .pipe(Effect.mapError((cause) => protocolError("open_session failed", cause)))) as {
-            sessionId?: unknown;
-            sessionFile?: unknown;
-          };
-          if (
-            typeof opened?.sessionId !== "string" ||
-            typeof opened.sessionFile !== "string" ||
-            opened.sessionFile === ""
-          ) {
-            return yield* protocolError("open_session returned no sessionId/sessionFile");
-          }
-          state.nativeSession = { sessionId: opened.sessionId, sessionFile: opened.sessionFile };
-          // Anchor for thread-start rollbacks (review F3): the session file's size at open.
-          // The real omp creates the file on open; the fake test double pre-creates it.
-          const openStat = yield* fileSystem.stat(opened.sessionFile).pipe(
-            Effect.map((info) => Number(info.size)),
-            Effect.orElseSucceed(() => 0),
-          );
-          const openOffsetsPath = offsetsPathFor(opened.sessionFile);
-          // The fake test double does not create omp's sessionDir; the real omp does.
-          yield* fileSystem
-            .makeDirectory(`${cwd}/.t3code/omp-sessions`, { recursive: true })
-            .pipe(Effect.ignore);
-          const openOffsets = yield* fileSystem.readFileString(openOffsetsPath).pipe(
-            Effect.flatMap((contents) =>
-              Effect.try(() => JSON.parse(contents) as Record<string, number>),
-            ),
-            Effect.orElseSucceed(() => ({}) as Record<string, number>),
-          );
-          if (openOffsets[SESSION_OPEN_OFFSET_KEY] === undefined) {
-            yield* fileSystem
-              .writeFileString(
-                openOffsetsPath,
-                JSON.stringify({ ...openOffsets, [SESSION_OPEN_OFFSET_KEY]: openStat }),
-              )
-              .pipe(Effect.ignore);
-          }
-          const updatedAt = yield* DateTime.now;
-          state.providerThread = {
-            ...state.providerThread,
-            nativeThreadRef: {
-              driver: OMP_PROVIDER,
-              nativeId: opened.sessionFile,
-              strength: "strong",
-            },
-            updatedAt,
-          };
-          yield* emit({
-            type: "provider_thread.updated",
-            driver: OMP_PROVIDER,
-            providerThread: state.providerThread,
-          });
-          return;
-        }
-        // Fail-closed recovery: always the explicit sessionPath, never "continue latest".
+        // Session attach is ALWAYS an explicit switch_session: an existing file means
+        // "resume exactly this thread's transcript", a missing one "create it here"
+        // (verified against a real omp smoke run). Bare open_session never fires —
+        // autoResume would hand this thread another thread's latest transcript.
+        yield* fileSystem
+          .makeDirectory(`${cwd}/.t3code/omp-sessions`, { recursive: true })
+          .pipe(Effect.ignore);
         // A thread that selected a model carries it in thread metadata (#17): pass the
-        // provider+modelId pair so omp restores exactly that model — an unknown pair fails the
-        // restore (surfaced fail-closed), never a silent default fallback.
-        const restoreModel =
-          sessionPath === null
-            ? null
-            : parseOmpModelSlug(state.providerThread.nativeMetadata?.modelSelection?.model ?? "");
+        // provider+modelId pair so omp restores exactly that model — an unknown pair fails
+        // the restore (surfaced fail-closed), never a silent default fallback.
+        const restoreModel = parseOmpModelSlug(
+          state.providerThread.nativeMetadata?.modelSelection?.model ?? "",
+        );
         yield* client
           .request(
             "switch_session",
@@ -729,6 +686,46 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
               modelRestoreError(`switch_session failed for ${sessionPath}`, restoreModel, cause),
             ),
           );
+        // Persist the session identity the moment omp confirmed the switch: a
+        // thread that dies between spawn and its first turn must already carry a strong
+        // nativeThreadRef, so recovery recomputes nothing and never falls back to a
+        // directory pick.
+        if (storedSessionPath !== sessionPath) {
+          const updatedAt = yield* DateTime.now;
+          state.providerThread = {
+            ...state.providerThread,
+            nativeThreadRef: { driver: OMP_PROVIDER, nativeId: sessionPath, strength: "strong" },
+            updatedAt,
+          };
+          yield* emit({
+            type: "provider_thread.updated",
+            driver: OMP_PROVIDER,
+            providerThread: state.providerThread,
+          });
+        }
+        // Anchor for thread-start rollbacks (review F3): the session file's size at
+        // attach. Only a thread's FIRST attach may seed the anchor — a resumed session
+        // whose sidecar lost the key stays without one, so thread-start rollback keeps
+        // failing closed instead of silently anchoring at the current full size.
+        const openStat = yield* fileSystem.stat(sessionPath).pipe(
+          Effect.map((info) => Number(info.size)),
+          Effect.orElseSucceed(() => 0),
+        );
+        const openOffsetsPath = offsetsPathFor(sessionPath);
+        const openOffsets = yield* fileSystem.readFileString(openOffsetsPath).pipe(
+          Effect.flatMap((contents) =>
+            Effect.try(() => JSON.parse(contents) as Record<string, number>),
+          ),
+          Effect.orElseSucceed(() => ({}) as Record<string, number>),
+        );
+        if (openOffsets[SESSION_OPEN_OFFSET_KEY] === undefined && storedSessionPath === null) {
+          yield* fileSystem
+            .writeFileString(
+              openOffsetsPath,
+              JSON.stringify({ ...openOffsets, [SESSION_OPEN_OFFSET_KEY]: openStat }),
+            )
+            .pipe(Effect.ignore);
+        }
       });
 
       const applyTurnModel = Effect.fn("OmpAdapter.applyTurnModel")(function* (
@@ -1286,14 +1283,27 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           // picker lists every transcript there, and duplicate rollback copies must not
           // surface as sessions. switch_session accepts any path, so the copy stays legal.
           const rollbackDir = `${cwd}/.t3code/omp-rollbacks`;
-          // Thread-start rollbacks carry no nativeTurnRef: the stem falls back to the
-          // reserved session-open marker instead of a turn id.
-          const rollbackStem =
-            nativeTurnId === null ? "session-start" : nativeTurnId.replaceAll("/", "-");
-          const rollbackPath = `${rollbackDir}/${sessionFile
+          // Bounded rollback-copy name: deterministic pt- session stems are long, and
+          // chained copies must not compound the stem (ENAMETOOLONG at depth 3). Strip any
+          // previous .rollback- suffix and key the copy by the native turn's tail — unique
+          // within the thread, whose id is already encoded in the session stem.
+          const sessionBase = sessionFile
             .split("/")
             .pop()!
-            .replace(/\.jsonl$/, "")}.rollback-${rollbackStem}.jsonl`;
+            .replace(/\.jsonl$/, "");
+          const rollbackMarker = sessionBase.indexOf(".rollback-");
+          const originalStem =
+            rollbackMarker === -1 ? sessionBase : sessionBase.slice(0, rollbackMarker);
+          const rollbackStem =
+            nativeTurnId === null
+              ? "session-start"
+              : nativeTurnId
+                  .split(":")
+                  .slice(-2)
+                  .join(":")
+                  .replaceAll(":", "-")
+                  .replaceAll("/", "-");
+          const rollbackPath = `${rollbackDir}/${originalStem}.rollback-${rollbackStem}.jsonl`;
           yield* fileSystem
             .makeDirectory(rollbackDir, { recursive: true })
             .pipe(Effect.mapError((cause) => rollbackError(cause)));
@@ -1316,7 +1326,6 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           yield* cancelIdleReclaim(thread);
           yield* disposeClient(thread);
           const priorThread = state.providerThread;
-          const priorNativeSession = state.nativeSession;
           const priorTurns = state.turns;
           const priorMessages = state.messages;
           const priorRuntimeRequests = [...state.runtimeRequests.entries()];
@@ -1330,9 +1339,6 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
             status: "idle",
             updatedAt,
           };
-          if (state.nativeSession !== null) {
-            state.nativeSession = { ...state.nativeSession, sessionFile: rollbackPath };
-          }
           state.turns = [];
           state.messages = [];
           state.runtimeRequests.clear();
@@ -1341,7 +1347,6 @@ export const makeOmpAdapterV2 = Effect.fn("makeOmpAdapterV2")(function* (input: 
           const respawned = yield* Effect.result(openClient(thread, thread.client.approvalMode));
           if (respawned._tag === "Failure") {
             state.providerThread = priorThread;
-            state.nativeSession = priorNativeSession;
             state.turns = priorTurns;
             state.messages = priorMessages;
             state.runtimeRequests = new Map(priorRuntimeRequests);

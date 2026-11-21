@@ -4,6 +4,7 @@
 // guide stays unreachable — one-shot sessions cannot guarantee read-only investigation.
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -11,6 +12,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import { TextGenerationError } from "@t3tools/contracts";
 import type { ProviderTextGeneration } from "@t3tools/provider-core/server/textGeneration";
 import * as TextGenerationOperations from "@t3tools/provider-core/server/textGenerationOperations";
+import { randomUuidV4 } from "@t3tools/provider-core/server/randomUuid";
 
 import { frameRecord, frameString } from "./frameFields.ts";
 import { OMP_INHERIT_MODEL_SLUG, parseOmpModelSlug } from "./projection.ts";
@@ -105,6 +107,7 @@ export const makeOmpTextGeneration = Effect.fn("makeOmpTextGeneration")(function
   options: OmpTextGenerationOptions = {},
 ) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const fileSystem = yield* FileSystem.FileSystem;
   // Whole-operation fail-closed timeout rides the RPC client's 30s convention (one value,
   // spec §5.2); tests shorten it via the option.
   const timeoutMs = options.timeoutMs ?? OMP_REQUEST_TIMEOUT_MS;
@@ -131,10 +134,12 @@ export const makeOmpTextGeneration = Effect.fn("makeOmpTextGeneration")(function
           collector.fail(`omp process exited during generation (code ${String(exit.exitCode)}).`),
       }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner));
 
-      // Protocol order mirrors the adapter's verified lifecycle (adapter.ts): the session
-      // must exist before set_model — without it omp rejects the model or open_session
-      // resets a fresh session back to its default model.
-      yield* client.request("open_session", { sessionDir: `${cwd}/.t3code/omp-generation` });
+      // One-shot, thread-private session identity: a bare open_session{sessionDir} would
+      // resume the directory's LATEST transcript (autoResume) and let concurrent
+      // generations adopt each other's sessions. Each run switches onto its own unique
+      // file (omp creates it exactly there); the session exists before set_model.
+      const generationSessionPath = `${cwd}/.t3code/omp-generation/generation-${yield* randomUuidV4}.jsonl`;
+      yield* client.request("switch_session", { sessionPath: generationSessionPath });
       // Model selection rides the adapter convention: a concrete omp slug applies via
       // set_model; "default" keeps the fresh session on omp's own resolution.
       const slug = modelSelection.model;
@@ -154,9 +159,12 @@ export const makeOmpTextGeneration = Effect.fn("makeOmpTextGeneration")(function
       const outcome = yield* Deferred.await(completed);
       // Orderly teardown: close stdin and drain to EOF before the run scope tears down.
       yield* client.close.pipe(Effect.ignore);
+      // One-shot transcript hygiene: the throwaway session file is removed on success so
+      // `.t3code/omp-generation` stays bounded; failed runs keep theirs for diagnosis.
       if (outcome.status === "failed") {
         return yield* new TextGenerationError({ operation, detail: outcome.detail });
       }
+      yield* fileSystem.remove(generationSessionPath).pipe(Effect.ignore);
       return yield* TextGenerationOperations.decodeJsonReply(request, "omp", outcome.text);
     },
     // Wrapper: whole-operation 30s fail-closed timeout, TextGenerationError mapping, and a

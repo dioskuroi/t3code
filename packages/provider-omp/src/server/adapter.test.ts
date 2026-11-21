@@ -35,7 +35,11 @@ import * as ProviderHost from "@t3tools/provider-core/server/ProviderHost";
 import * as TestProviderHost from "@t3tools/provider-testing/TestProviderHost";
 
 import * as IdAllocator from "@t3tools/provider-core/server/IdAllocator";
-import { makeOmpAdapterV2, OMP_IDLE_RECLAIM_TIMEOUT_MS } from "./adapter.ts";
+import {
+  deterministicSessionFileFor,
+  makeOmpAdapterV2,
+  OMP_IDLE_RECLAIM_TIMEOUT_MS,
+} from "./adapter.ts";
 import { OMP_PROVIDER } from "./kind.ts";
 import { writeFakeOmp, type FakeOmpProgram, type FakeOmpTimedFrame } from "../testing.ts";
 
@@ -56,7 +60,19 @@ const NodeTestLayer = Layer.mergeAll(
   TestProviderHost.layer().pipe(Layer.provide(NodeServices.layer)),
 );
 
-const makeIds = (suffix: string) => {
+/** Named shape of {@linkcode makeIds} — the ids one adapter-test thread needs. */
+interface TestThreadIds {
+  readonly instanceId: ProviderInstanceId;
+  readonly threadId: ThreadId;
+  readonly providerSessionId: ProviderSessionId;
+  readonly runId: RunId;
+  readonly attemptId: RunAttemptId;
+  readonly rootNodeId: NodeId;
+  readonly messageId: MessageId;
+  readonly modelSelection: ModelSelection;
+}
+
+const makeIds = (suffix: string): TestThreadIds => {
   const instanceId = decodeProviderInstanceId("omp-test-instance");
   return {
     instanceId,
@@ -396,14 +412,9 @@ const startDrivenTurn = Effect.fn("adapterTest.startDrivenTurn")(function* (
 describe("omp adapter session runtime", () => {
   live("projects a completed streaming turn (D2) with paired message events", () =>
     Effect.gen(function* () {
-      const sessionFile = "/tmp/omp-adapter-fake/sessions/d2.jsonl";
-      const { harness, ids, requestLog } = yield* startDrivenTurn(
+      const { harness, ids, requestLog, providerThread } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { cancelled: false, resumed: false, sessionId: "s-1", sessionFile },
-            },
-          },
+          responses: {},
           events: [
             messageUpdate(20, { type: "text_start", contentIndex: 0 }),
             messageUpdate(20, { type: "text_delta", delta: "Hello", contentIndex: 0 }),
@@ -460,20 +471,24 @@ describe("omp adapter session runtime", () => {
       const threadEvents = eventsOf(harness, "provider_thread.updated").map(
         (event) => event.providerThread,
       );
-      expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(sessionFile);
+      // The stored identity is the thread's own deterministic session file.
+      expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(
+        deterministicSessionFileFor("/tmp", providerThread.id),
+      );
       expect(threadEvents.at(-1)?.status).toBe("idle");
       // Contract: the adapter never builds the user message or the root node.
       const nodes = eventsOf(harness, "node.updated").map((event) => event.node);
       expect(nodes.every((node) => node.kind !== "root_turn")).toBe(true);
       expect(messages.every((message) => message.role === "assistant")).toBe(true);
       const requests = yield* readRequestLog(requestLog);
-      const openSessionRequest = requests.find((request) => request["type"] === "open_session");
-      // open_session carries the t3code-owned session dir: first spawn lets omp create it.
-      expect(openSessionRequest).toEqual({
-        id: expect.any(String),
-        type: "open_session",
-        sessionDir: expect.stringContaining("/.t3code/omp-sessions"),
-      });
+      // The first spawn switches onto the deterministic session file; bare open_session
+      // (omp autoResume directory pick) never fires.
+      const switches = requests.filter((request) => request["type"] === "switch_session");
+      expect(switches).toHaveLength(1);
+      expect(switches[0]?.["sessionPath"]).toBe(
+        deterministicSessionFileFor("/tmp", providerThread.id),
+      );
+      expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
       const promptRequest = requests.find((request) => request["type"] === "prompt");
       expect(promptRequest?.["message"]).toBe("hello omp");
       expect(promptRequest?.["streamingBehavior"]).toBe("followUp");
@@ -486,14 +501,9 @@ describe("omp adapter session runtime", () => {
   // (streaming:false) instead of the last one reusing the first one's completed item.
   live("finalizes every assistant message in a multi-message tool turn (wayfinder)", () =>
     Effect.gen(function* () {
-      const sessionFile = "/tmp/omp-adapter-fake/sessions/multi-msg.jsonl";
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { cancelled: false, resumed: false, sessionId: "s-1", sessionFile },
-            },
-          },
+          responses: {},
           events: [
             // First assistant message (messageId msg-a): thinking + text, then a tool call.
             messageUpdate(20, { type: "thinking_start", contentIndex: 0 }, "msg-a"),
@@ -594,14 +604,10 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-resume-" });
-      const sessionFile = `${directory}/sessions/multi-thread-a.jsonl`;
       const requestLog = `${directory}/requests.jsonl`;
       void writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: { data: { sessionId: "s-a", sessionFile } },
-          },
           events: [
             messageUpdate(20, { type: "text_delta", delta: "ok", contentIndex: 0 }),
             messageUpdate(20, { type: "text_end", contentIndex: 0 }),
@@ -623,6 +629,7 @@ describe("omp adapter session runtime", () => {
           modelSelection: ids.modelSelection,
           runtimePolicy,
         });
+        const expectedSessionFile = deterministicSessionFileFor("/tmp", providerThread.id);
         yield* first.runtime.startTurn({
           appThread: appThreadFor(ids.threadId),
           threadId: ids.threadId,
@@ -638,7 +645,7 @@ describe("omp adapter session runtime", () => {
         });
         yield* waitFor(first, "turn.terminal");
         const storedThread = eventsOf(first, "provider_thread.updated").at(-1)?.providerThread;
-        expect(storedThread?.nativeThreadRef?.nativeId).toBe(sessionFile);
+        expect(storedThread?.nativeThreadRef?.nativeId).toBe(expectedSessionFile);
         // Fresh session runtime (as after a process teardown): resume must switch explicitly.
         const adapter = yield* makeOmpAdapterV2({ instanceId: ids.instanceId, command });
         const runtime2 = yield* adapter.openSession({
@@ -654,24 +661,154 @@ describe("omp adapter session runtime", () => {
         });
         const requests = yield* readRequestLog(requestLog);
         const switches = requests.filter((request) => request["type"] === "switch_session");
-        expect(switches).toHaveLength(1);
-        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
-        // First spawn legitimately used open_session; recovery afterwards never does.
-        expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
+        expect(switches).toHaveLength(2);
+        // First spawn AND recovery both switch onto the thread's own deterministic file —
+        // never a directory pick, never "continue latest".
+        for (const request of switches) {
+          expect(request["sessionPath"]).toBe(expectedSessionFile);
+        }
+        expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
       }).pipe(Effect.scoped);
     }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  // The session identity must persist the moment omp confirms the switch — a thread that
+  // dies before its first turn settles (or at all) must already carry a strong
+  // nativeThreadRef, so recovery recomputes nothing and never falls back to a dir pick.
+  live("persists the session ref before the first turn settles (#116)", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-ref-timing-" });
+      const requestLog = `${directory}/requests.jsonl`;
+      const command = writeFakeOmp({
+        directory,
+        // No terminal frames on purpose: the turn stays in flight for the whole test.
+        program: {
+          eventsOnPrompt: [[{ delayMs: 10, frame: { type: "agent_start" } }]],
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
+      const ids = makeIds("ref-timing");
+      const harness = yield* openHarness(ids, command);
+      const providerThread = yield* harness.runtime.ensureThread({
+        threadId: ids.threadId,
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      yield* harness.runtime.startTurn({
+        appThread: appThreadFor(ids.threadId),
+        threadId: ids.threadId,
+        runId: ids.runId,
+        runOrdinal: 1,
+        providerTurnOrdinal: 1,
+        attemptId: ids.attemptId,
+        rootNodeId: ids.rootNodeId,
+        providerThread,
+        message: turnMessage("still running"),
+        modelSelection: ids.modelSelection,
+        runtimePolicy,
+      });
+      // The spawn attached (switch on the wire) while the turn is still unsettled.
+      yield* pollRequestLog(requestLog, (request) => request["type"] === "prompt");
+      const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
+      expect(storedThread?.nativeThreadRef?.strength).toBe("strong");
+      expect(storedThread?.nativeThreadRef?.nativeId).toBe(
+        deterministicSessionFileFor("/tmp", providerThread.id),
+      );
+      // The turn genuinely never settled in this test: no terminal event may exist.
+      expect(eventsOf(harness, "turn.terminal")).toHaveLength(0);
+    }).pipe(Effect.provide(NodeTestLayer)),
+  );
+
+  // Contract: t3code owns session identity. omp's autoResume makes a bare
+  // open_session{sessionDir} resume the directory's LATEST transcript — the mechanism
+  // that stacked three conversations into one file. Every thread must spawn through
+  // switch_session onto its own deterministic pt-<providerThreadId>.jsonl, ref immediate.
+  live(
+    "gives every thread its own deterministic session file; bare open_session never fires (#116)",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-isolation-" });
+        const requestLog = `${directory}/requests.jsonl`;
+        const command = writeFakeOmp({
+          directory,
+          // If the adapter ever fell back to open_session, omp (per autoResume) would hand
+          // BOTH threads this same transcript — the exact cross-thread leak being fixed.
+          program: {
+            responses: {},
+            events: [
+              messageUpdate(20, { type: "text_delta", delta: "ok", contentIndex: 0 }),
+              messageUpdate(20, { type: "text_end", contentIndex: 0 }),
+              { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
+              {
+                delayMs: 20,
+                frame: { type: "prompt_result", agentInvoked: true, status: "completed" },
+              },
+            ],
+          },
+          env: { FAKE_OMP_REQUEST_LOG: requestLog },
+        });
+        const threads: Array<{
+          readonly ids: TestThreadIds;
+          providerThreadId?: string;
+          nativeId?: string;
+        }> = [makeIds("iso-a"), makeIds("iso-b")].map((ids) => ({ ids }));
+        yield* Effect.gen(function* () {
+          for (const entry of threads) {
+            const harness = yield* openHarness(entry.ids, command);
+            const providerThread = yield* harness.runtime.ensureThread({
+              threadId: entry.ids.threadId,
+              modelSelection: entry.ids.modelSelection,
+              runtimePolicy,
+            });
+            entry.providerThreadId = providerThread.id;
+            yield* harness.runtime.startTurn({
+              appThread: appThreadFor(entry.ids.threadId),
+              threadId: entry.ids.threadId,
+              runId: entry.ids.runId,
+              runOrdinal: 1,
+              providerTurnOrdinal: 1,
+              attemptId: entry.ids.attemptId,
+              rootNodeId: entry.ids.rootNodeId,
+              providerThread,
+              message: turnMessage("first"),
+              modelSelection: entry.ids.modelSelection,
+              runtimePolicy,
+            });
+            yield* waitFor(harness, "turn.terminal");
+            const storedThread = eventsOf(harness, "provider_thread.updated").at(
+              -1,
+            )?.providerThread;
+            if (storedThread === undefined) throw new Error("no provider_thread.updated event");
+            // The session identity persists immediately with the switch confirmation.
+            expect(storedThread.nativeThreadRef?.strength).toBe("strong");
+            entry.nativeId = storedThread.nativeThreadRef?.nativeId ?? "";
+          }
+        }).pipe(Effect.scoped);
+        const requests = yield* readRequestLog(requestLog);
+        expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(0);
+        const switches = requests.filter((request) => request["type"] === "switch_session");
+        expect(switches).toHaveLength(threads.length);
+        const sessionPaths = switches.map((request) => request["sessionPath"]);
+        for (const entry of threads) {
+          expect(sessionPaths).toContain(entry.nativeId);
+          // Deterministic: derived from the persisted provider-thread id, under the
+          // t3code-owned sessions dir — recomputable after any crash or restart.
+          expect(entry.nativeId).toBe(
+            deterministicSessionFileFor("/tmp", entry.providerThreadId ?? ""),
+          );
+          expect(entry.nativeId).toMatch(/^\/tmp\/\.t3code\/omp-sessions\/pt-.+\.jsonl$/);
+        }
+        expect(new Set(sessionPaths).size).toBe(threads.length);
+      }).pipe(Effect.provide(NodeTestLayer)),
   );
 
   live("maps abort to an interrupted terminal", () =>
     Effect.gen(function* () {
       const { harness, requestLog, providerThread, turnId } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-abort", sessionFile: "/tmp/fake-abort.jsonl" },
-            },
-            abort: { data: { stopped: true } },
-          },
+          responses: { abort: { data: { stopped: true } } },
           events: [
             messageUpdate(20, { type: "text_delta", delta: "partial", contentIndex: 0 }),
             {
@@ -708,11 +845,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-error", sessionFile: "/tmp/fake-error.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             {
               delayMs: 20,
@@ -741,11 +874,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-think", sessionFile: "/tmp/fake-think.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             messageUpdate(20, { type: "thinking_start", contentIndex: 0 }),
             messageUpdate(20, { type: "thinking_delta", delta: "ponder", contentIndex: 0 }),
@@ -780,11 +909,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-tool", sessionFile: "/tmp/fake-tool.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             {
               delayMs: 20,
@@ -829,11 +954,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-term", sessionFile: "/tmp/fake-term.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             { delayMs: 20, frame: { type: "agent_end", isTerminal: false } },
             {
@@ -855,11 +976,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-queue", sessionFile: "/tmp/fake-queue.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             { delayMs: 20, frame: { type: "queue_update", steering: ["m1"], followUp: [] } },
             { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
@@ -882,11 +999,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-crash", sessionFile: "/tmp/fake-crash.jsonl" },
-            },
-          },
+          responses: {},
           events: [messageUpdate(20, { type: "text_delta", delta: "partial", contentIndex: 0 })],
           crash: { delayMs: 40, exitCode: 3 },
         },
@@ -909,11 +1022,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-tol", sessionFile: "/tmp/fake-tol.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             { delayMs: 20, frame: { type: "available_commands_update", commands: [] } },
             { delayMs: 20, frame: { type: "extension_ui_request", id: "u1", method: "setWidget" } },
@@ -943,9 +1052,6 @@ describe("omp adapter session runtime", () => {
       const { harness } = yield* startDrivenTurn(
         {
           responses: {
-            open_session: {
-              data: { sessionId: "s-usage", sessionFile: "/tmp/fake-usage.jsonl" },
-            },
             get_state: {
               data: {
                 isSettled: true,
@@ -1025,9 +1131,6 @@ describe("omp adapter session runtime", () => {
         const { harness } = yield* startDrivenTurn(
           {
             responses: {
-              open_session: {
-                data: { sessionId: "s-compact", sessionFile: "/tmp/fake-compact.jsonl" },
-              },
               get_state: {
                 data: {
                   isSettled: true,
@@ -1190,12 +1293,6 @@ describe("omp adapter session runtime", () => {
         const { harness } = yield* startDrivenTurn(
           {
             responses: {
-              open_session: {
-                data: {
-                  sessionId: "s-compact-outcome",
-                  sessionFile: "/tmp/fake-compact-outcome.jsonl",
-                },
-              },
               // No contextUsage in get_state: no meter reading may be fabricated.
               get_state: { data: { isSettled: true } },
             },
@@ -1283,11 +1380,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-sub", sessionFile: "/tmp/fake-sub.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             {
               delayMs: 20,
@@ -1351,11 +1444,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-subp", sessionFile: "/tmp/fake-subp.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             {
               delayMs: 20,
@@ -1389,11 +1478,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-sube", sessionFile: "/tmp/fake-sube.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             {
               delayMs: 20,
@@ -1430,12 +1515,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness, requestLog, providerThread } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-cancel", sessionFile: "/tmp/fake-cancel.jsonl" },
-            },
-            cancel_subagent: { data: { cancelled: true } },
-          },
+          responses: { cancel_subagent: { data: { cancelled: true } } },
           events: [
             {
               delayMs: 20,
@@ -1515,12 +1595,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness, requestLog, ids, providerThread, turnId } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-steer", sessionFile: "/tmp/fake-steer.jsonl" },
-            },
-            steer: { data: { queued: true } },
-          },
+          responses: { steer: { data: { queued: true } } },
           events: [
             messageUpdate(20, { type: "text_delta", delta: "working", contentIndex: 0 }),
             { afterRequestType: "steer", frame: { type: "agent_end", isTerminal: true } },
@@ -1607,7 +1682,8 @@ describe("omp adapter session runtime", () => {
         expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
           1,
         );
-        expect(requests.filter((request) => request["type"] === "switch_session")).toHaveLength(0);
+        // The FIRST spawn switched onto the deterministic file; reuse never switches again.
+        expect(requests.filter((request) => request["type"] === "switch_session")).toHaveLength(1);
         expect(yield* fs.exists(drainMarker)).toBe(false);
 
         // Idle past the full timeout with no prompt: stdin closes, stdout drains to EOF, exit 0.
@@ -1619,7 +1695,9 @@ describe("omp adapter session runtime", () => {
           (event) => event.providerThread,
         );
         expect(threadEvents.at(-1)?.status).toBe("idle");
-        expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(sessionFile);
+        expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(
+          deterministicSessionFileFor("/tmp", providerThread.id),
+        );
 
         // The T3 snapshot survives the reclaim untouched.
         const snapshot = yield* harness.runtime.readThreadSnapshot({ providerThread });
@@ -1631,10 +1709,15 @@ describe("omp adapter session runtime", () => {
         yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 3);
         requests = yield* readRequestLog(requestLog);
         const switches = requests.filter((request) => request["type"] === "switch_session");
-        expect(switches).toHaveLength(1);
-        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
-        // First spawn legitimately used open_session; only the revival respawns.
-        expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
+        // Spawn switch + revival switch, both onto the thread's own deterministic file.
+        expect(switches).toHaveLength(2);
+        for (const request of switches) {
+          expect(request["sessionPath"]).toBe(
+            deterministicSessionFileFor("/tmp", providerThread.id),
+          );
+        }
+        // bare open_session never fires, not even for the first spawn.
+        expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
         expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
           2,
         );
@@ -1651,11 +1734,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-active", sessionFile: "/tmp/fake-active.jsonl" },
-            },
-          },
+          responses: {},
           eventsOnPrompt: [
             [
               {
@@ -1749,7 +1828,7 @@ describe("omp adapter session runtime", () => {
         );
         const storedSession = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread
           .nativeThreadRef?.nativeId;
-        expect(storedSession).toBe(sessionFile);
+        expect(storedSession).toBe(deterministicSessionFileFor("/tmp", providerThread.id));
         // Phase 2: same fake path, healthy behavior — models the operator fixing the crash.
         writeFakeOmp({
           directory,
@@ -1768,9 +1847,14 @@ describe("omp adapter session runtime", () => {
         );
         const requests = yield* readRequestLog(requestLog);
         const switches = requests.filter((request) => request["type"] === "switch_session");
-        expect(switches).toHaveLength(1);
-        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
-        expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
+        // Spawn switch + crash-recovery switch, both onto the deterministic file.
+        expect(switches).toHaveLength(2);
+        for (const request of switches) {
+          expect(request["sessionPath"]).toBe(
+            deterministicSessionFileFor("/tmp", providerThread.id),
+          );
+        }
+        expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
         expect(requests.filter((request) => request["type"] === "negotiate_protocol")).toHaveLength(
           2,
         );
@@ -1778,7 +1862,9 @@ describe("omp adapter session runtime", () => {
           (event) => event.providerThread,
         );
         expect(threadEvents.at(-1)?.status).toBe("idle");
-        expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(sessionFile);
+        expect(threadEvents.at(-1)?.nativeThreadRef?.nativeId).toBe(
+          deterministicSessionFileFor("/tmp", providerThread.id),
+        );
       }).pipe(Effect.scoped);
     }).pipe(Effect.provide(NodeTestLayer)),
   );
@@ -1853,8 +1939,14 @@ describe("omp adapter session runtime", () => {
           );
           const requests = yield* readRequestLog(requestLog);
           const switches = requests.filter((request) => request["type"] === "switch_session");
-          expect(switches).toHaveLength(1);
-          expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
+          // Spawn switch + recovery switch, both onto the deterministic file.
+          expect(switches).toHaveLength(2);
+          for (const request of switches) {
+            expect(request["sessionPath"]).toBe(
+              deterministicSessionFileFor("/tmp", providerThread.id),
+            );
+          }
+          expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
           expect(
             requests.filter((request) => request["type"] === "negotiate_protocol"),
           ).toHaveLength(2);
@@ -1871,11 +1963,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-stderr", sessionFile: "/tmp/fake-stderr.jsonl" },
-            },
-          },
+          responses: {},
           eventsOnPrompt: [completedTurnEvents("logged")],
           stderrOnReady: [{ delayMs: 20, text: `${stderrText}\n` }],
         },
@@ -1913,11 +2001,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-slash", sessionFile: "/tmp/fake-slash.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             {
               delayMs: 20,
@@ -1998,12 +2082,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness, requestLog, ids, providerThread, turnId } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-plan", sessionFile: "/tmp/fake-plan.jsonl" },
-            },
-            steer: { data: { queued: true } },
-          },
+          responses: { steer: { data: { queued: true } } },
           events: [
             messageUpdate(20, { type: "text_delta", delta: "planning", contentIndex: 0 }),
             { afterRequestType: "steer", frame: { type: "agent_end", isTerminal: true } },
@@ -2043,12 +2122,7 @@ describe("omp adapter session runtime", () => {
       Effect.gen(function* () {
         const { harness, requestLog } = yield* startDrivenTurn(
           {
-            responses: {
-              open_session: {
-                data: { sessionId: "s-model", sessionFile: "/tmp/fake-model.jsonl" },
-              },
-              set_model: { data: { id: "glm-5.3", provider: "zai" } },
-            },
+            responses: { set_model: { data: { id: "glm-5.3", provider: "zai" } } },
             events: [
               { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
               {
@@ -2086,11 +2160,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-switch", sessionFile: "/tmp/fake-switch.jsonl" },
-            },
-          },
+          responses: {},
           eventsPerRequest: {
             prompt: [
               { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
@@ -2154,11 +2224,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-default", sessionFile: "/tmp/fake-default.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
             {
@@ -2196,11 +2262,16 @@ describe("omp adapter session runtime", () => {
       yield* waitFor(harness, "turn.terminal");
       const requests = yield* readRequestLog(requestLog);
       expect(requests.some((request) => request["type"] === "set_model")).toBe(false);
-      expect(requests.find((request) => request["type"] === "open_session")).toEqual({
-        id: expect.any(String),
-        type: "open_session",
-        sessionDir: expect.stringContaining("/.t3code/omp-sessions"),
-      });
+      // The first spawn switches onto the thread's own deterministic session file;
+      // bare open_session never fires.
+      const switches = requests.filter((request) => request["type"] === "switch_session");
+      expect(switches).toHaveLength(1);
+      expect(switches[0]?.["sessionPath"]).toBe(
+        deterministicSessionFileFor("/tmp", providerThread.id),
+      );
+      expect(switches[0]?.["provider"]).toBeUndefined();
+      expect(switches[0]?.["modelId"]).toBeUndefined();
+      expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
       // A default thread stores no model metadata — omp keeps resolving on its own.
       const storedThread = eventsOf(harness, "provider_thread.updated").at(-1)?.providerThread;
       expect(storedThread?.nativeMetadata?.modelSelection).toBeUndefined();
@@ -2215,12 +2286,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-notfound", sessionFile: "/tmp/fake-notfound.jsonl" },
-            },
-            set_model: { success: false, error: "Model not found: zai/ghost-model" },
-          },
+          responses: { set_model: { success: false, error: "Model not found: zai/ghost-model" } },
           events: [],
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
@@ -2283,12 +2349,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-thinking", sessionFile: "/tmp/fake-thinking.jsonl" },
-            },
-            set_thinking_level: { data: { level: "high" } },
-          },
+          responses: { set_thinking_level: { data: { level: "high" } } },
           events: [
             { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
             {
@@ -2349,11 +2410,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-thinkkeep", sessionFile: "/tmp/fake-thinkkeep.jsonl" },
-            },
-          },
+          responses: {},
           eventsPerRequest: {
             prompt: [
               { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
@@ -2414,9 +2471,6 @@ describe("omp adapter session runtime", () => {
         directory,
         program: {
           responses: {
-            open_session: {
-              data: { sessionId: "s-thinkfail", sessionFile: "/tmp/fake-thinkfail.jsonl" },
-            },
             set_thinking_level: { success: false, error: "Unknown thinking level: xhigh" },
           },
           events: [],
@@ -2470,7 +2524,6 @@ describe("omp adapter session runtime", () => {
         directory,
         program: {
           responses: {
-            open_session: { data: { sessionId: "s-restore", sessionFile } },
             switch_session: { data: { sessionId: "s-restore", sessionFile, resumed: true } },
           },
           events: [
@@ -2523,14 +2576,18 @@ describe("omp adapter session runtime", () => {
           modelSelection: ids.modelSelection,
           runtimePolicy,
         });
+        const expectedSessionFile = deterministicSessionFileFor("/tmp", storedThread!.id);
         const switches = (yield* readRequestLog(requestLog)).filter(
           (request) => request["type"] === "switch_session",
         );
+        // Switch #1: the first spawn (no model metadata yet — omp keeps its resolution).
+        // Switch #2: recovery — the metadata model rides the switch_session restore.
         expect(switches).toEqual([
+          { id: expect.any(String), type: "switch_session", sessionPath: expectedSessionFile },
           {
             id: expect.any(String),
             type: "switch_session",
-            sessionPath: sessionFile,
+            sessionPath: expectedSessionFile,
             provider: "zai",
             modelId: "glm-5.3",
           },
@@ -2549,7 +2606,6 @@ describe("omp adapter session runtime", () => {
         directory,
         program: {
           responses: {
-            open_session: { data: { sessionId: "s-ghost", sessionFile } },
             // omp's fail-closed restore error: the saved model vanished from the catalog.
             switch_session: { success: false, error: "Could not restore model moonshot/kimi-k2" },
           },
@@ -2625,11 +2681,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-busy", sessionFile: "/tmp/fake-busy.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             messageUpdate(20, { type: "text_delta", delta: "slow", contentIndex: 0 }),
             // Hold the terminal until abort: the first turn stays active for the probe.
@@ -2710,11 +2762,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-changed", sessionFile: "/tmp/fake-changed.jsonl" },
-            },
-          },
+          responses: {},
           eventsPerRequest: {
             prompt: [
               { delayMs: 20, frame: { type: "model_changed", model: "moonshot/kimi-k2" } },
@@ -2789,16 +2837,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: {
-                cancelled: false,
-                resumed: false,
-                sessionId: "s-images",
-                sessionFile: "/tmp/fake-images.jsonl",
-              },
-            },
-          },
+          responses: {},
           eventsOnPrompt: [completedTurnEvents("seen")],
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
@@ -2877,16 +2916,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: {
-                cancelled: false,
-                resumed: false,
-                sessionId: "s-snap",
-                sessionFile: "/tmp/fake-snap.jsonl",
-              },
-            },
-          },
+          responses: {},
           eventsOnPrompt: [completedTurnEvents("ok")],
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
@@ -2958,16 +2988,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: {
-                cancelled: false,
-                resumed: false,
-                sessionId: "s-files",
-                sessionFile: "/tmp/fake-files.jsonl",
-              },
-            },
-          },
+          responses: {},
           eventsOnPrompt: [completedTurnEvents("read it")],
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
@@ -3033,16 +3054,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: {
-                cancelled: false,
-                resumed: false,
-                sessionId: "s-missing",
-                sessionFile: "/tmp/fake-missing.jsonl",
-              },
-            },
-          },
+          responses: {},
           eventsOnPrompt: [completedTurnEvents("noted")],
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
@@ -3096,16 +3108,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: {
-                cancelled: false,
-                resumed: false,
-                sessionId: "s-big",
-                sessionFile: "/tmp/fake-big.jsonl",
-              },
-            },
-          },
+          responses: {},
           // No events: the prompt must never reach omp.
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
@@ -3172,16 +3175,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: {
-                cancelled: false,
-                resumed: false,
-                sessionId: "s-near",
-                sessionFile: "/tmp/fake-near.jsonl",
-              },
-            },
-          },
+          responses: {},
           eventsOnPrompt: [completedTurnEvents("received")],
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
@@ -3233,11 +3227,7 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const { harness, requestLog } = yield* startDrivenTurn(
         {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-approval", sessionFile: "/tmp/fake-approval.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             {
               afterRequestType: "prompt",
@@ -3387,15 +3377,12 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-modeswitch-" });
-      const sessionFile = `${directory}/sessions/mode-switch.jsonl`;
       const requestLog = `${directory}/requests.jsonl`;
       const argvLog = `${directory}/argv.jsonl`;
       void writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: { data: { sessionId: "s-mode", sessionFile } },
-          },
+          responses: {},
           events: [
             messageUpdate(20, { type: "text_delta", delta: "long turn", contentIndex: 0 }),
             { afterRequestType: "steer", frame: { type: "agent_end", isTerminal: true } },
@@ -3449,10 +3436,15 @@ describe("omp adapter session runtime", () => {
         expect(beforeTurnEnd).toEqual([
           ["--mode", "rpc-ui", "--approval-mode", "always-ask", "--profile", "t3code"],
         ]);
-        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- proving the switch did NOT fire needs a real settle window.
+        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- proving the switch did NOT fire mid-turn needs a real settle window.
         yield* Effect.sleep(150);
-        expect(yield* readRequestLog(requestLog)).toEqual(
-          expect.not.arrayContaining([expect.objectContaining({ type: "switch_session" })]),
+        // The only switch so far is the first spawn's; the queued one must not fire.
+        const beforeSwitches = (yield* readRequestLog(requestLog)).filter(
+          (request) => request["type"] === "switch_session",
+        );
+        expect(beforeSwitches).toHaveLength(1);
+        expect(beforeSwitches[0]?.["sessionPath"]).toBe(
+          deterministicSessionFileFor("/tmp", providerThread.id),
         );
         const stillOneProcess = yield* pollLogLines(argvLog, 1);
         expect(stillOneProcess).toHaveLength(1);
@@ -3491,14 +3483,26 @@ describe("omp adapter session runtime", () => {
           "--profile",
           "t3code",
         ]);
-        const switches = yield* pollRequestLog(
-          requestLog,
-          (request) => request["type"] === "switch_session",
-        );
-        expect(switches).toHaveLength(1);
-        expect(switches[0]?.["sessionPath"]).toBe(sessionFile);
+        // Two switches total: the first spawn and the queued respawn — both onto the
+        // thread's own deterministic file. The respawn's switch lands after a real
+        // drain → exit → spawn cycle, so poll for the second one.
+        let switches: Array<Record<string, unknown>> = [];
+        // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the respawned child switches after a real process cycle; no in-runtime event signals it.
+        for (let attempt = 0; attempt < 500; attempt += 1) {
+          switches = (yield* readRequestLog(requestLog)).filter(
+            (request) => request["type"] === "switch_session",
+          );
+          if (switches.length >= 2) break;
+          // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- bounded wait for the respawn cycle.
+          yield* Effect.sleep(10);
+        }
+        const expectedSessionFile = deterministicSessionFileFor("/tmp", providerThread.id);
+        expect(switches).toHaveLength(2);
+        for (const request of switches) {
+          expect(request["sessionPath"]).toBe(expectedSessionFile);
+        }
         const requests = yield* readRequestLog(requestLog);
-        expect(requests.filter((request) => request["type"] === "open_session")).toHaveLength(1);
+        expect(requests.some((request) => request["type"] === "open_session")).toBe(false);
       }).pipe(Effect.scoped);
     }).pipe(Effect.provide(NodeTestLayer)),
   );
@@ -3511,11 +3515,7 @@ describe("omp adapter session runtime", () => {
       void writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-argv", sessionFile: "/tmp/fake-argv.jsonl" },
-            },
-          },
+          responses: {},
           events: [
             { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
             {
@@ -3579,15 +3579,23 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-rollback-" });
-      const sessionFile = `${directory}/sessions/rollback.jsonl`;
+      // The session file IS the thread's deterministic session file: the rollback
+      // source must be the very path the adapter switches onto.
+      const ids = makeIds("rollback");
+      const sessionFile = deterministicSessionFileFor(
+        directory,
+        IdAllocator.derive.providerThread({
+          driver: OMP_PROVIDER,
+          nativeThreadId: `omp-${ids.threadId}`,
+        }),
+      );
       const requestLog = `${directory}/requests.jsonl`;
-      yield* fs.makeDirectory(`${directory}/sessions`);
+      yield* fs.makeDirectory(`${directory}/.t3code/omp-sessions`, { recursive: true });
       yield* fs.writeFileString(sessionFile, "session-header\n");
       const turnOneBytes = "turn-one-events\n";
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: { open_session: { data: { sessionId: "s-rollback", sessionFile } } },
           sessionAppendPath: sessionFile,
           appendsOnPrompt: [turnOneBytes, "turn-two-events\n"],
           eventsPerRequest: {
@@ -3606,7 +3614,6 @@ describe("omp adapter session runtime", () => {
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
       });
-      const ids = makeIds("rollback");
       const sessionPolicy = { ...runtimePolicy, cwd: directory };
       const harness = yield* openHarness(ids, command, { runtimePolicy: sessionPolicy });
       const providerThread = yield* harness.runtime.ensureThread({
@@ -3617,9 +3624,10 @@ describe("omp adapter session runtime", () => {
       yield* driveTurn(harness, ids, providerThread, 1);
       yield* waitFor(harness, "turn.terminal", (event) => event.runOrdinal === 1);
       const nativeTurnId = `${providerThread.id}:t1:r1`;
-      const sidecar = JSON.parse(
-        yield* fs.readFileString(`${directory}/.t3code/omp-sessions/rollback.jsonl.offsets.json`),
-      ) as Record<string, number>;
+      const sidecar = JSON.parse(yield* fs.readFileString(`${sessionFile}.offsets.json`)) as Record<
+        string,
+        number
+      >;
       const boundary = sidecar[nativeTurnId];
       expect(boundary).toBe("session-header\n".length + turnOneBytes.length);
 
@@ -3636,7 +3644,10 @@ describe("omp adapter session runtime", () => {
         },
         providerThreadTurns: snapshotBefore.providerTurns,
       });
-      const rollbackFile = `${directory}/.t3code/omp-rollbacks/rollback.rollback-${nativeTurnId.replace(/\//g, "-")}.jsonl`;
+      const rollbackFile = `${directory}/.t3code/omp-rollbacks/${sessionFile
+        .split("/")
+        .pop()!
+        .replace(/\.jsonl$/, "")}.rollback-t1-r1.jsonl`;
       expect(rolled.providerThread.nativeThreadRef?.nativeId).toBe(rollbackFile);
       expect(rolled.providerTurns).toEqual([]);
       expect(rolled.messages).toEqual([]);
@@ -3644,10 +3655,18 @@ describe("omp adapter session runtime", () => {
       const copy = yield* fs.readFile(rollbackFile);
       expect(copy.byteLength).toBe(boundary);
       expect(Buffer.from(copy).toString("utf8")).toBe(`session-header\n${turnOneBytes}`);
-      const switches = yield* pollRequestLog(
-        requestLog,
-        (request) => request["type"] === "switch_session",
-      );
+      // Two switches: the first spawn (pt file) and the rollback respawn (truncated copy).
+      // The respawned child switches after a real process cycle — poll for the last one.
+      let switches: Array<Record<string, unknown>> = [];
+      // oxlint-disable-next-line t3code/no-polling-loop-in-tests -- the respawned child switches after a real process cycle; no in-runtime event signals it.
+      for (let attempt = 0; attempt < 500; attempt += 1) {
+        switches = (yield* readRequestLog(requestLog)).filter(
+          (request) => request["type"] === "switch_session",
+        );
+        if (switches.at(-1)?.["sessionPath"] === rollbackFile) break;
+        // oxlint-disable-next-line t3code/no-real-time-wait-in-tests -- bounded wait for the respawn cycle.
+        yield* Effect.sleep(10);
+      }
       expect(switches.at(-1)?.["sessionPath"]).toBe(rollbackFile);
       // The thread keeps working from the truncated copy: a fresh prompt round-trips.
       yield* driveTurn(harness, ids, rolled.providerThread, 2);
@@ -3664,16 +3683,23 @@ describe("omp adapter session runtime", () => {
       const directory = yield* fs.makeTempDirectoryScoped({
         prefix: "omp-adapter-rollback-chain-",
       });
-      const sessionFile = `${directory}/sessions/rollback-chain.jsonl`;
+      // The session file IS the thread's deterministic session file.
+      const ids = makeIds("rollback-chain");
+      const sessionFile = deterministicSessionFileFor(
+        directory,
+        IdAllocator.derive.providerThread({
+          driver: OMP_PROVIDER,
+          nativeThreadId: `omp-${ids.threadId}`,
+        }),
+      );
       const requestLog = `${directory}/requests.jsonl`;
       const header = "session-header\n";
       const turnOne = "turn-one-events\n";
-      yield* fs.makeDirectory(`${directory}/sessions`);
+      yield* fs.makeDirectory(`${directory}/.t3code/omp-sessions`, { recursive: true });
       yield* fs.writeFileString(sessionFile, header);
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: { open_session: { data: { sessionId: "s-chain", sessionFile } } },
           sessionAppendPath: sessionFile,
           appendsOnPrompt: [turnOne, "turn-two-events\n"],
           eventsPerRequest: {
@@ -3692,7 +3718,6 @@ describe("omp adapter session runtime", () => {
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
       });
-      const ids = makeIds("rollback-chain");
       const sessionPolicy = { ...runtimePolicy, cwd: directory };
       const harness = yield* openHarness(ids, command, { runtimePolicy: sessionPolicy });
       const providerThread = yield* harness.runtime.ensureThread({
@@ -3776,11 +3801,7 @@ describe("omp adapter session runtime", () => {
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: {
-              data: { sessionId: "s-ask", sessionFile: `${directory}/sessions/ask.jsonl` },
-            },
-          },
+          responses: {},
           // The ask dialog arrives mid-turn (released on prompt); the terminal frames stay
           // held until the host answers the dialog (mirrors real omp: the ask tool blocks
           // the turn until answered).
@@ -3896,17 +3917,21 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-rollback-fail-" });
-      const sessionFile = `${directory}/sessions/rollback-fail.jsonl`;
+      // The session file IS the thread's deterministic session file.
+      const ids = makeIds("rollback-fail");
+      const sessionFile = deterministicSessionFileFor(
+        directory,
+        IdAllocator.derive.providerThread({
+          driver: OMP_PROVIDER,
+          nativeThreadId: `omp-${ids.threadId}`,
+        }),
+      );
       const requestLog = `${directory}/requests.jsonl`;
-      yield* fs.makeDirectory(`${directory}/sessions`);
+      yield* fs.makeDirectory(`${directory}/.t3code/omp-sessions`, { recursive: true });
       yield* fs.writeFileString(sessionFile, "session-header\n");
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: {
-            open_session: { data: { sessionId: "s-fail", sessionFile } },
-            switch_session: { success: false, error: "no such session" },
-          },
           sessionAppendPath: sessionFile,
           appendsOnPrompt: ["turn-one-events\n"],
           eventsPerRequest: {
@@ -3918,7 +3943,6 @@ describe("omp adapter session runtime", () => {
         },
         env: { FAKE_OMP_REQUEST_LOG: requestLog },
       });
-      const ids = makeIds("rollback-fail");
       const sessionPolicy = { ...runtimePolicy, cwd: directory };
       const harness = yield* openHarness(ids, command, { runtimePolicy: sessionPolicy });
       const providerThread = yield* harness.runtime.ensureThread({
@@ -3931,6 +3955,14 @@ describe("omp adapter session runtime", () => {
       const snapshotBefore = yield* harness.runtime.readThreadSnapshot({ providerThread });
       const firstTurn = snapshotBefore.providerTurns.find((turn) => turn.ordinal === 1);
       if (firstTurn === undefined) throw new Error("first turn not projected");
+      // Phase 2: make every switch_session fail — the rollback respawn cannot reattach.
+      writeFakeOmp({
+        directory,
+        program: {
+          responses: { switch_session: { success: false, error: "no such session" } },
+        },
+        env: { FAKE_OMP_REQUEST_LOG: requestLog },
+      });
       const error = yield* harness.runtime
         .rollbackThread({
           providerThread: snapshotBefore.providerThread,
@@ -3956,13 +3988,18 @@ describe("omp adapter session runtime", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const directory = yield* fs.makeTempDirectoryScoped({ prefix: "omp-adapter-rollback-none-" });
-      const sessionFile = `${directory}/sessions/rollback-none.jsonl`;
-      yield* fs.makeDirectory(`${directory}/sessions`);
-      yield* fs.writeFileString(sessionFile, "session-header\n");
+      // The session file IS the thread's deterministic session file.
+      const ids = makeIds("rollback-none");
+      const sessionFile = deterministicSessionFileFor(
+        directory,
+        IdAllocator.derive.providerThread({
+          driver: OMP_PROVIDER,
+          nativeThreadId: `omp-${ids.threadId}`,
+        }),
+      );
       const command = writeFakeOmp({
         directory,
         program: {
-          responses: { open_session: { data: { sessionId: "s-none", sessionFile } } },
           eventsPerRequest: {
             prompt: [
               { delayMs: 20, frame: { type: "agent_end", isTerminal: true } },
@@ -3971,7 +4008,6 @@ describe("omp adapter session runtime", () => {
           },
         },
       });
-      const ids = makeIds("rollback-none");
       const sessionPolicy = { ...runtimePolicy, cwd: directory };
       const harness = yield* openHarness(ids, command, { runtimePolicy: sessionPolicy });
       const providerThread = yield* harness.runtime.ensureThread({
@@ -3985,9 +4021,7 @@ describe("omp adapter session runtime", () => {
       const firstTurn = snapshot.providerTurns.find((turn) => turn.ordinal === 1);
       if (firstTurn === undefined) throw new Error("first turn not projected");
       // The sidecar is gone, so the target turn has no recorded end offset.
-      yield* fs
-        .remove(`${directory}/.t3code/omp-sessions/rollback-none.jsonl.offsets.json`)
-        .pipe(Effect.ignore);
+      yield* fs.remove(`${sessionFile}.offsets.json`).pipe(Effect.ignore);
       const error = yield* harness.runtime
         .rollbackThread({
           providerThread: snapshot.providerThread,
