@@ -11,6 +11,7 @@ import {
   createPackageWithOptions,
   extractAll,
   getRawHeader,
+  listPackage,
   statFile,
   type DirectoryRecord,
 } from "@electron/asar";
@@ -3544,6 +3545,69 @@ export class MacPackagedAppMissingError extends Schema.TaggedError<MacPackagedAp
   }
 }
 
+// Guard against the omp.5 bad-package race: electron-builder snapshotted app.asar while
+// the vite build (clean: true) was mid-rebuild of dist-electron, shipping an archive
+// without main.cjs and the snapShot workers (crash on launch). The manifest mirrors the
+// good omp.4 reference package (19 entries); hash-suffixed assets assert by glob pattern.
+export class MacDistElectronPayloadError extends Schema.TaggedError<MacDistElectronPayloadError>()(
+  "MacDistElectronPayloadError",
+  { asarPath: Schema.String, missing: Schema.Array(Schema.String) },
+) {
+  override get message(): string {
+    return [
+      `Packaged app.asar has a truncated apps/desktop/dist-electron payload (${this.missing.length} missing):`,
+      ...this.missing.map((entry) => `  - ${entry}`),
+      `This is the omp.5 bad-package failure mode (#108): the asar snapshot raced a concurrent`,
+      `dist-electron rebuild. Rebuild the artifact without a dev stack rebuilding the same tree.`,
+    ].join("\n");
+  }
+}
+
+const MAC_DIST_ELECTRON_REQUIRED_FILES = [
+  "apps/desktop/dist-electron/main.cjs",
+  "apps/desktop/dist-electron/boot.cjs",
+] as const;
+
+const MAC_DIST_ELECTRON_REQUIREMENTS = [
+  {
+    glob: "apps/desktop/dist-electron/**/*Worker.cjs",
+    minimum: 3,
+    label: "*Worker.cjs (3 expected)",
+  },
+  { glob: "apps/desktop/dist-electron/snapShot-*.cjs", minimum: 1, label: "snapShot-*.cjs" },
+  {
+    glob: "apps/desktop/dist-electron/rolldown-runtime-*.cjs",
+    minimum: 1,
+    label: "rolldown-runtime-*.cjs",
+  },
+] as const;
+
+export const validateMacDistElectronPayload = Effect.fn(
+  "desktopArtifact.validateMacDistElectronPayload",
+)(function* (input: { readonly asarPath: string }) {
+  const entries = listPackage(input.asarPath)
+    .map((entry) => (entry.startsWith("/") ? entry.slice(1) : String(entry)))
+    .filter((entry) => entry.startsWith("apps/desktop/dist-electron/"));
+  const missing: string[] = [];
+  for (const required of MAC_DIST_ELECTRON_REQUIRED_FILES) {
+    if (!entries.includes(required)) missing.push(required);
+  }
+  for (const requirement of MAC_DIST_ELECTRON_REQUIREMENTS) {
+    const pattern = new RegExp(
+      `^${requirement.glob.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, "[^/]*")}$`,
+    );
+    const found = entries.filter((entry) => pattern.test(entry)).length;
+    if (found < requirement.minimum) {
+      missing.push(
+        `${requirement.glob} (${String(found)} of ${String(requirement.minimum)} found)`,
+      );
+    }
+  }
+  if (missing.length > 0) {
+    return yield* new MacDistElectronPayloadError({ asarPath: input.asarPath, missing });
+  }
+});
+
 export const validateMacPackagedPayload = Effect.fn("desktopArtifact.validateMacPackagedPayload")(
   function* (input: { readonly stageDistDir: string; readonly verbose?: boolean }) {
     const fs = yield* FileSystem.FileSystem;
@@ -3564,6 +3628,9 @@ export const validateMacPackagedPayload = Effect.fn("desktopArtifact.validateMac
     }
     for (const asarPath of asarPaths) {
       yield* verifyPackagedBundleIsSelfContained({ asarPath, verbose: input.verbose ?? false });
+      // Gate: run before release/ is written, so a truncated dist-electron payload
+      // (the omp.5 race) fails the build instead of reaching the installer.
+      yield* validateMacDistElectronPayload({ asarPath });
     }
     yield* Effect.log(
       `[desktop-artifact] Validated macOS payload (${String(asarPaths.length)} app bundle(s)).`,

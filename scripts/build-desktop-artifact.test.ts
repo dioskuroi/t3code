@@ -47,6 +47,7 @@ import {
   ancestorNodeModulesPaths,
   copyDirectoryPreservingSymlinks,
   LinuxBrowserSecretHostError,
+  MacDistElectronPayloadError,
   MacPackagedAppMissingError,
   stageBrowserSecret,
   validateMacPackagedPayload,
@@ -217,6 +218,8 @@ const makeWindowsPayloadFixture = Effect.fn("test.makeWindowsPayloadFixture")(fu
 
 const makeMacPayloadFixture = Effect.fn("test.makeMacPayloadFixture")(function* (input: {
   readonly serverEntrySource?: string;
+  /** Relative paths (to dist-electron/) to OMIT from the default good manifest, for bad-package tests. */
+  readonly omitDistElectron?: ReadonlyArray<string>;
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -225,6 +228,24 @@ const makeMacPayloadFixture = Effect.fn("test.makeMacPayloadFixture")(function* 
   const serverEntryPath = path.join(sourceDir, "apps/server/dist/bin.mjs");
   yield* fs.makeDirectory(path.dirname(serverEntryPath), { recursive: true });
   yield* fs.writeFileString(serverEntryPath, input.serverEntrySource ?? "console.log('server');\n");
+
+  // Minimal good dist-electron manifest, mirroring the omp.4 reference package: entry
+  // chain, the snapShot worker trio, and the hash-suffixed shared assets.
+  const distElectronFiles: Record<string, string> = {
+    "boot.cjs": "require('./main.cjs');",
+    "main.cjs": "console.log('main');",
+    "electron/GlobalShiftShortcutWorker.cjs": "console.log('w1');",
+    "electron/RegionSnapShotWorker.cjs": "console.log('w2');",
+    "electron/SnapShotAccessibilityWorker.cjs": "console.log('w3');",
+    "snapShot-BJG0LtxW.cjs": "console.log('snap');",
+    "rolldown-runtime-CmQyd0Gu.cjs": "console.log('runtime');",
+  };
+  for (const omitted of input.omitDistElectron ?? []) delete distElectronFiles[omitted];
+  for (const [relative, content] of Object.entries(distElectronFiles)) {
+    const entryPath = path.join(sourceDir, "apps/desktop/dist-electron", relative);
+    yield* fs.makeDirectory(path.dirname(entryPath), { recursive: true });
+    yield* fs.writeFileString(entryPath, content);
+  }
 
   const stageDistDir = path.join(tempDir, "dist");
   const resourcesDir = path.join(stageDistDir, "mac-arm64/T3 Code.app/Contents/Resources");
@@ -1355,6 +1376,66 @@ it.layer(NodeServices.layer)("build-desktop-artifact", (it) => {
       Effect.gen(function* () {
         const fixture = yield* makeMacPayloadFixture({});
         yield* validateMacPackagedPayload({ stageDistDir: fixture.stageDistDir });
+      }),
+    ),
+  );
+
+  it.effect(
+    "rejects a mac package missing dist-electron entry points (omp.5 bad-package race)",
+    () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const fixture = yield* makeMacPayloadFixture({
+            omitDistElectron: ["main.cjs", "boot.cjs"],
+          });
+          const error = yield* validateMacPackagedPayload({
+            stageDistDir: fixture.stageDistDir,
+          }).pipe(Effect.flip);
+
+          assert.instanceOf(error, MacDistElectronPayloadError);
+          assert.deepEqual(error.missing, [
+            "apps/desktop/dist-electron/main.cjs",
+            "apps/desktop/dist-electron/boot.cjs",
+          ]);
+          assert.include(error.message, "main.cjs");
+          assert.include(error.message, "dist-electron");
+        }),
+      ),
+  );
+
+  it.effect("rejects a mac package missing the snapShot worker trio", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fixture = yield* makeMacPayloadFixture({
+          omitDistElectron: [
+            "electron/RegionSnapShotWorker.cjs",
+            "electron/SnapShotAccessibilityWorker.cjs",
+          ],
+        });
+        const error = yield* validateMacPackagedPayload({
+          stageDistDir: fixture.stageDistDir,
+        }).pipe(Effect.flip);
+
+        assert.instanceOf(error, MacDistElectronPayloadError);
+        assert.include(error.message, "Worker.cjs");
+        assert.include(error.message, "1 of 3");
+      }),
+    ),
+  );
+
+  it.effect("rejects a mac package missing the hash-suffixed shared assets", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fixture = yield* makeMacPayloadFixture({
+          omitDistElectron: ["snapShot-BJG0LtxW.cjs", "rolldown-runtime-CmQyd0Gu.cjs"],
+        });
+        const error = yield* validateMacPackagedPayload({
+          stageDistDir: fixture.stageDistDir,
+        }).pipe(Effect.flip);
+
+        assert.instanceOf(error, MacDistElectronPayloadError);
+        assert.include(error.message, "snapShot-*.cjs");
+        assert.include(error.message, "rolldown-runtime-*.cjs");
       }),
     ),
   );
