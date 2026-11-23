@@ -57,6 +57,9 @@ import * as MuseSdk from "../../../../packages/provider-muse/src/server/sdk.ts";
 import { MuseUsageHome } from "@t3tools/provider-muse/server";
 import { makeScanCacheWriter, SCAN_CACHE_FILE_NAME } from "./usageScanCache.ts";
 
+// This fork's intranet build never fetches the rate table (../intranet.ts); this suite covers the opt-in.
+process.env.T3CODE_REMOTE_USAGE_RATES = "1";
+
 vi.mock("node:fs/promises", { spy: true });
 vi.mock("../../../../packages/provider-muse/src/server/sdk.ts", async (importOriginal) => {
   const original = await importOriginal<typeof MuseSdk>();
@@ -526,6 +529,35 @@ describe("Codex usage history", () => {
 });
 
 describe("UsageService", () => {
+  it.effect("never fetches the rate table unless the remote rates are opted into", () => {
+    const optedIn = process.env.T3CODE_REMOTE_USAGE_RATES;
+    delete process.env.T3CODE_REMOTE_USAGE_RATES;
+    const restore = () => {
+      if (optedIn === undefined) delete process.env.T3CODE_REMOTE_USAGE_RATES;
+      else process.env.T3CODE_REMOTE_USAGE_RATES = optedIn;
+    };
+    let requests = 0;
+    return Effect.gen(function* () {
+      const { home, settings } = yield* setup;
+      yield* Effect.gen(function* () {
+        const service = yield* UsageService.make;
+        assert.strictEqual((yield* service.refreshRates).status, "unavailable");
+        assert.strictEqual(requests, 0);
+      }).pipe(
+        Effect.provide(
+          layerService({
+            prefix: "intranet-rates",
+            home,
+            settings,
+            onRatesFetch: () => {
+              requests += 1;
+            },
+          }),
+        ),
+      );
+    }).pipe(Effect.scoped, Effect.ensuring(Effect.sync(restore)));
+  });
+
   it.effect("keeps pricing metadata paired with the rates used during a concurrent refresh", () =>
     Effect.gen(function* () {
       const { home, settings } = yield* setup;

@@ -32,6 +32,7 @@ import { formatMalformedUsageWarning } from "@t3tools/shared/usageFormat";
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import { BUILT_IN_USAGE_DRIVERS, type BuiltInUsageReadersEnv } from "../provider/builtInDrivers.ts";
+import { remoteUsageRatesEnabled } from "../intranet.ts";
 import type { ProviderDriver } from "@t3tools/provider-core/server/driver";
 import { mergeProviderInstanceEnvironment } from "@t3tools/provider-core/server/instanceEnvironment";
 import type {
@@ -301,6 +302,8 @@ export const make = Effect.gen(function* () {
     const now = yield* Clock.currentTimeMillis;
     const maxAgeMs = force ? RATES_REFRESH_FLOOR_MS : RATES_TTL_MS;
     yield* loadSavedRates;
+    // Intranet builds never fetch the rate table unless opted in: a cached or empty table is final.
+    if (!remoteUsageRatesEnabled()) return;
     if (ratesFetchedAtMs !== null && now - ratesFetchedAtMs < maxAgeMs) return;
     if (ratesLastFailedAtMs !== null && now - ratesLastFailedAtMs < RATES_REFRESH_FLOOR_MS) return;
 
