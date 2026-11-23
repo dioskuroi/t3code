@@ -32,6 +32,8 @@
       "entry": [
         // These fixture scripts are injected into a browser page by path.
         "fixtures/*/*.js",
+        // intranet-dry-run/run.sh starts these by path.
+        "intranet-dry-run/*.cjs",
         "knip-schemas.ts",
         "linux-after-pack.ts",
         "mobile-behavior/run.ts",
