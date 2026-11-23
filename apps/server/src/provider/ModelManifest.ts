@@ -17,6 +17,7 @@ import { HttpClient, HttpClientResponse } from "effect/http";
 import { writeFileStringAtomically } from "@t3tools/shared/atomicWrite";
 import { ServerConfig } from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
+import { remoteModelManifestEnabled } from "../intranet.ts";
 import { hasValidClaudeManifestAdapters } from "./ClaudeModelManifest.ts";
 import bundledManifestJson from "./model-manifest.json" with { type: "json" };
 import {
@@ -241,6 +242,8 @@ export const make = Effect.gen(function* () {
     ttlMs = MANIFEST_TTL_MS,
   ) {
     yield* ensureDiskCacheLoaded;
+    // Intranet builds have no route to the manifest CDN unless opted in: the bundle is final.
+    if (!remoteModelManifestEnabled()) return manifest;
     const now = yield* Clock.currentTimeMillis;
     // Expire future timestamps after clock rollback; disk caches cross restarts, ruling out monotonic time.
     const isWithin = (sinceMs: number | null, windowMs: number) =>

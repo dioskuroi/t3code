@@ -13,6 +13,9 @@ import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as ModelManifest from "./ModelManifest.ts";
 
+// This fork's intranet build keeps the bundled manifest (../intranet.ts); the service tests cover the opt-in.
+process.env.T3CODE_REMOTE_MODEL_MANIFEST = "1";
+
 describe("resolveProviderCatalog", () => {
   it.each([
     { releasedAt: "2026-01-01", now: "2026-01-01T00:00:00Z", badge: "new" },
@@ -266,6 +269,34 @@ const layerService = (input: {
   );
 
 describe("ModelManifest service", () => {
+  it.effect("stays on the bundled manifest unless the remote refresh is opted into", () => {
+    const optedIn = process.env.T3CODE_REMOTE_MODEL_MANIFEST;
+    delete process.env.T3CODE_REMOTE_MODEL_MANIFEST;
+    const restore = () => {
+      if (optedIn === undefined) delete process.env.T3CODE_REMOTE_MODEL_MANIFEST;
+      else process.env.T3CODE_REMOTE_MODEL_MANIFEST = optedIn;
+    };
+    let requests = 0;
+    return Effect.gen(function* () {
+      const service = yield* ModelManifest.make;
+      assert.deepStrictEqual(yield* service.refresh, ModelManifest.BUNDLED_MODEL_MANIFEST);
+      assert.deepStrictEqual(yield* service.forceRefresh, ModelManifest.BUNDLED_MODEL_MANIFEST);
+      assert.strictEqual(requests, 0);
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        layerService({
+          prefix: "model-manifest-bundled-only-test",
+          response: () => {
+            requests += 1;
+            return Response.json(REMOTE_MANIFEST);
+          },
+        }),
+      ),
+      Effect.ensuring(Effect.sync(restore)),
+    );
+  });
+
   it.effect("prefers a fetched manifest over the bundle and caches it to disk", () =>
     Effect.gen(function* () {
       const service = yield* ModelManifest.make;
