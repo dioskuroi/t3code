@@ -213,6 +213,7 @@ export const make = Effect.gen(function* () {
   const config = yield* ServerConfig;
   const settingsService = yield* ServerSettings.ServerSettingsService;
   const httpClient = yield* HttpClient.HttpClient;
+  const remoteModelManifestAllowed = yield* remoteModelManifestEnabled;
   const serviceScope = yield* Effect.scope;
 
   const cachePath = path.join(config.stateDir, "model-manifest.json");
@@ -243,7 +244,7 @@ export const make = Effect.gen(function* () {
   ) {
     yield* ensureDiskCacheLoaded;
     // Intranet builds have no route to the manifest CDN unless opted in: the bundle is final.
-    if (!remoteModelManifestEnabled()) return manifest;
+    if (!remoteModelManifestAllowed) return manifest;
     const now = yield* Clock.currentTimeMillis;
     // Expire future timestamps after clock rollback; disk caches cross restarts, ruling out monotonic time.
     const isWithin = (sinceMs: number | null, windowMs: number) =>

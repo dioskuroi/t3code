@@ -177,6 +177,7 @@ export const make = Effect.gen(function* () {
   const settingsService = yield* ServerSettings.ServerSettingsService;
   const httpClient = yield* HttpClient.HttpClient;
   const hostEnvironment = yield* HostProcess.Environment;
+  const remoteUsageRatesAllowed = yield* remoteUsageRatesEnabled;
   const hostPlatform = yield* HostProcess.Platform;
   const hostScope = hostEnvironment[DESKTOP_HOST_SCOPE_ENV]?.trim();
   // A mount or a directory's on-disk name does not change under a running server.
@@ -303,7 +304,7 @@ export const make = Effect.gen(function* () {
     const maxAgeMs = force ? RATES_REFRESH_FLOOR_MS : RATES_TTL_MS;
     yield* loadSavedRates;
     // Intranet builds never fetch the rate table unless opted in: a cached or empty table is final.
-    if (!remoteUsageRatesEnabled()) return;
+    if (!remoteUsageRatesAllowed) return;
     if (ratesFetchedAtMs !== null && now - ratesFetchedAtMs < maxAgeMs) return;
     if (ratesLastFailedAtMs !== null && now - ratesLastFailedAtMs < RATES_REFRESH_FLOOR_MS) return;
 

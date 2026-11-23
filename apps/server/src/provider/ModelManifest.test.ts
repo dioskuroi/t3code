@@ -8,13 +8,11 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as TestClock from "effect/testing/TestClock";
 import { HttpClient, HttpClientResponse } from "effect/http";
+import * as HostProcess from "@t3tools/shared/HostProcess";
 
 import * as ServerConfig from "../config.ts";
 import * as ServerSettings from "../serverSettings.ts";
 import * as ModelManifest from "./ModelManifest.ts";
-
-// This fork's intranet build keeps the bundled manifest (../intranet.ts); the service tests cover the opt-in.
-process.env.T3CODE_REMOTE_MODEL_MANIFEST = "1";
 
 describe("resolveProviderCatalog", () => {
   it.each([
@@ -261,41 +259,43 @@ const layerService = (input: {
   readonly prefix: string;
   readonly response: () => Response;
   readonly settings?: Parameters<typeof ServerSettings.layerTest>[0];
+  readonly environment?: NodeJS.ProcessEnv;
 }) =>
   ServerConfig.layerTest(process.cwd(), { prefix: input.prefix }).pipe(
     Layer.provideMerge(NodeServices.layer),
     Layer.provideMerge(ServerSettings.layerTest(input.settings ?? {})),
     Layer.provideMerge(layerHttpClient(input.response)),
+    // This fork's intranet build keeps the bundled manifest (../intranet.ts); the service tests
+    // cover the opt-in.
+    Layer.provideMerge(
+      Layer.succeed(HostProcess.Environment, {
+        T3CODE_REMOTE_MODEL_MANIFEST: "1",
+        ...input.environment,
+      }),
+    ),
   );
 
 describe("ModelManifest service", () => {
-  it.effect("stays on the bundled manifest unless the remote refresh is opted into", () => {
-    const optedIn = process.env.T3CODE_REMOTE_MODEL_MANIFEST;
-    delete process.env.T3CODE_REMOTE_MODEL_MANIFEST;
-    const restore = () => {
-      if (optedIn === undefined) delete process.env.T3CODE_REMOTE_MODEL_MANIFEST;
-      else process.env.T3CODE_REMOTE_MODEL_MANIFEST = optedIn;
-    };
-    let requests = 0;
-    return Effect.gen(function* () {
-      const service = yield* ModelManifest.make;
+  it.effect("stays on the bundled manifest unless the remote refresh is opted into", () =>
+    Effect.gen(function* () {
+      let requests = 0;
+      const service = yield* ModelManifest.make.pipe(
+        Effect.provide(
+          layerService({
+            prefix: "model-manifest-bundled-only-test",
+            environment: { T3CODE_REMOTE_MODEL_MANIFEST: "" },
+            response: () => {
+              requests += 1;
+              return Response.json(REMOTE_MANIFEST);
+            },
+          }),
+        ),
+      );
       assert.deepStrictEqual(yield* service.refresh, ModelManifest.BUNDLED_MODEL_MANIFEST);
       assert.deepStrictEqual(yield* service.forceRefresh, ModelManifest.BUNDLED_MODEL_MANIFEST);
       assert.strictEqual(requests, 0);
-    }).pipe(
-      Effect.scoped,
-      Effect.provide(
-        layerService({
-          prefix: "model-manifest-bundled-only-test",
-          response: () => {
-            requests += 1;
-            return Response.json(REMOTE_MANIFEST);
-          },
-        }),
-      ),
-      Effect.ensuring(Effect.sync(restore)),
-    );
-  });
+    }).pipe(Effect.scoped),
+  );
 
   it.effect("prefers a fetched manifest over the bundle and caches it to disk", () =>
     Effect.gen(function* () {
