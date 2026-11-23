@@ -83,4 +83,5 @@ printf 'CHROME_VERSION=%s\nT3CODE_VERSION=%s\n' "$VERSION" "$APP_VERSION" > "$RO
 mkdir -p "$OUT"
 tar -C "$STAGE" -czf "$OUT/$NAME.tar.gz" "$NAME"
 (cd "$OUT" && shasum -a 256 "$NAME.tar.gz" > "$NAME.tar.gz.sha256")
+rm -rf "$STAGE"
 echo "wrote $OUT/$NAME.tar.gz"

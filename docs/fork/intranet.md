@@ -29,17 +29,23 @@
 
 ## 构建
 
-在外网机器上、`intranet/main` 检出下执行：
+在外网机器上、`intranet/main` 检出下执行（依赖装过一次后可省略 `vp i`）：
 
 ```sh
 vp i
-node scripts/build-desktop-artifact.ts --platform mac --target dmg --arch arm64
-sh scripts/build-intranet-bundle.sh --omp-kit <t3code-migration 检出>/intranet-config/omp-acp
-sh scripts/intranet-patch-budget.sh
+sh scripts/build-intranet.sh --omp-kit <t3code-migration 检出>/intranet-config/omp-acp
 ```
 
-- Node 与 pnpm 版本以根 `package.json` 的 `engines` / `packageManager` 为准。
-- 构建环境里不要设置上面列出的四个变量；没有签名证书时会打出未签名的 dmg。
+- 一条命令依次完成：补丁面守门、写入版本号（取 `intranet/base` 所指的 tag）、构建出 `.app`、重做 adhoc
+  签名并校验、生成 dmg、组装资源包、还原版本号。
+- Node 与 pnpm 版本以根 `package.json` 的 `engines` / `packageManager` 为准，`vp` 与 Node 需在 PATH 上。
+- 构建环境里不要设置上面列出的四个变量，脚本检测到会直接报错退出。
+- 为什么重签名：本地没有签名证书时，打包出的 app 沿用 Electron 原始二进制的 adhoc 签名，资源封印与包内
+  文件对不上，`codesign --verify` 不通过；这样的 app 一旦带上隔离属性，macOS 会直接报「已损坏」。脚本把
+  整个包重签为自洽的 adhoc 签名。adhoc 不是苹果认可的开发商签名：文件带隔离属性时（例如经浏览器
+  下载），首次打开需在「系统设置 → 隐私与安全性」里点「仍要打开」；经普通文件拷贝的一般不带该属性。
+- 为什么自制 dmg：上游带背景图的 dmg 流程（dmg-builder）在编写本脚本的机器上卡在 `hdiutil create`，
+  所以脚本用 `hdiutil create -srcfolder` 生成朴素 dmg。
 - 产物：`release/` 下的 dmg，以及 `t3code-intranet-bundle-<版本>-mac-arm64.tar.gz`（预览浏览器种子 +
   omp 配置包 + `install.sh`）。
 - 资源包脚本会按 `PreviewBrowser.ts` 里写死的字节数和 SHA-256 校验浏览器安装包，所以资源包与 dmg
