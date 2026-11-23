@@ -1,21 +1,29 @@
 #!/bin/sh
-# t3code 内网资源包安装脚本（macOS）。幂等，可重复执行。
-# 只做一件事：把 t3code 预览浏览器需要的 chrome-headless-shell 落位到 T3 home。
-# 不修改 ~/.omp，也不修改 t3code 的任何设置。
+# Places the preview browser that t3code would otherwise download from the internet.
+# Idempotent: a completed copy is left alone and an interrupted one is replaced.
 set -eu
 
 HERE=$(cd "$(dirname "$0")" && pwd)
 . "$HERE/bundle.env"
 
 T3_HOME="${T3CODE_HOME:-$HOME/.t3}"
-TARGET="$T3_HOME/tools/chrome-headless-shell/mac-arm64/$CHROME_VERSION"
+PARENT="$T3_HOME/tools/chrome-headless-shell/mac-arm64"
+TARGET="$PARENT/$CHROME_VERSION"
 
-if [ -x "$TARGET/chrome-headless-shell" ]; then
+if [ -f "$TARGET/.bundle-complete" ] && [ -x "$TARGET/chrome-headless-shell" ]; then
   echo "chrome-headless-shell $CHROME_VERSION 已就位：$TARGET"
 else
-  mkdir -p "$TARGET"
-  cp -Rp "$HERE/chrome-headless-shell/." "$TARGET/"
-  chmod +x "$TARGET/chrome-headless-shell"
+  mkdir -p "$PARENT"
+  rm -rf "$PARENT"/.staging.*
+  STAGING=$(mktemp -d "$PARENT/.staging.XXXXXX")
+  cp -Rp "$HERE/chrome-headless-shell/." "$STAGING/" || {
+    rm -rf "$STAGING"
+    exit 1
+  }
+  chmod +x "$STAGING/chrome-headless-shell"
+  touch "$STAGING/.bundle-complete"
+  rm -rf "$TARGET"
+  mv "$STAGING" "$TARGET"
   echo "已落位 chrome-headless-shell $CHROME_VERSION：$TARGET"
 fi
 

@@ -1,20 +1,8 @@
 #!/bin/sh
-# Builds everything that goes into the intranet, from an intranet/main checkout:
-#
-#   release/T3-Code-<version>-intranet-arm64.dmg
-#   release/t3code-intranet-bundle-<version>-mac-arm64.tar.gz (and .sha256)
-#
-#   sh scripts/build-intranet.sh --omp-kit <dir> [--version <version>] [--archive <zip>]
-#
-# The version defaults to the tag intranet/base points at, without its leading "v". It is stamped
-# into the package manifests for the build and restored afterwards. Login, updates and T3 Connect
-# are compiled out only when the upstream cloud variables below stay unset in this shell.
-#
-# Local builds have no signing certificate. The packaged app then keeps the ad-hoc signature of
-# the stock Electron binaries, whose resource seal no longer matches: macOS reports such an app as
-# damaged as soon as it carries a quarantine attribute. The script therefore re-signs the whole
-# bundle ad-hoc, which verifies clean, and makes a plain dmg itself. Upstream's styled dmg step
-# (dmg-builder) is not used; it stalled at `hdiutil create` on the machine this was written on.
+# Builds the intranet app, bundle, checksums and install note into release/.
+# See docs/operations/intranet-build.md for what is checked, why the app is re-signed, and why
+# the dmg is made here rather than by upstream's dmg-builder.
+# Usage: sh scripts/build-intranet.sh --omp-kit <dir> [--version <version>] [--archive <zip>]
 set -eu
 
 usage() {
@@ -22,14 +10,18 @@ usage() {
   exit 2
 }
 
+needs_value() {
+  [ "$#" -ge 2 ] && [ -n "$2" ] || usage
+}
+
 OMP_KIT=""
 VERSION=""
 ARCHIVE=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --omp-kit) OMP_KIT="$2"; shift 2 ;;
-    --version) VERSION="$2"; shift 2 ;;
-    --archive) ARCHIVE="$2"; shift 2 ;;
+    --omp-kit) needs_value "$@"; OMP_KIT="$2"; shift 2 ;;
+    --version) needs_value "$@"; VERSION="$2"; shift 2 ;;
+    --archive) needs_value "$@"; ARCHIVE="$2"; shift 2 ;;
     *) usage ;;
   esac
 done
@@ -47,12 +39,27 @@ if [ -z "$VERSION" ]; then
   VERSION=${TAG#v}
 fi
 
-for name in GITHUB_REPOSITORY T3CODE_RELAY_URL T3CODE_CLERK_PUBLISHABLE_KEY \
-  T3CODE_CLERK_CLI_OAUTH_CLIENT_ID T3CODE_DESKTOP_UPDATE_REPOSITORY; do
-  if printenv "$name" >/dev/null 2>&1; then
+# Login, updates and T3 Connect are compiled out only while none of these has a value. The build
+# also reads them from a repo-root .env / .env.local and through the VITE_* aliases
+# (scripts/lib/public-config.ts).
+CLOUD_VARIABLES="T3CODE_RELAY_URL T3CODE_CLERK_PUBLISHABLE_KEY T3CODE_CLERK_CLI_OAUTH_CLIENT_ID
+  GITHUB_REPOSITORY T3CODE_DESKTOP_UPDATE_REPOSITORY VITE_T3CODE_RELAY_URL
+  VITE_CLERK_PUBLISHABLE_KEY VITE_CLERK_CLI_OAUTH_CLIENT_ID"
+for name in $CLOUD_VARIABLES; do
+  eval "value=\${$name-}"
+  if [ -n "$value" ]; then
     echo "$name is set; unset it before building the intranet app" >&2
     exit 1
   fi
+done
+for file in .env .env.local; do
+  [ -f "$file" ] || continue
+  for name in $CLOUD_VARIABLES; do
+    if grep -Eq "^[[:space:]]*(export[[:space:]]+)?${name}=[[:space:]]*[^[:space:]]" "$file"; then
+      echo "$file gives $name a value; remove it before building the intranet app" >&2
+      exit 1
+    fi
+  done
 done
 
 MANIFESTS="apps/desktop/package.json apps/server/package.json apps/web/package.json packages/contracts/package.json"
@@ -62,23 +69,31 @@ git diff --quiet -- $MANIFESTS || {
 }
 
 sh scripts/intranet-patch-budget.sh
-node scripts/update-release-package-versions.ts "$VERSION"
-trap 'git checkout -q -- $MANIFESTS' EXIT
 
 STAGE=$(mktemp -d)
+DONE="$STAGE/done"
 restore() {
   git checkout -q -- $MANIFESTS
   rm -rf "$STAGE"
 }
 trap 'restore' EXIT
+DMG="T3-Code-$VERSION-intranet-arm64.dmg"
+BUNDLE="t3code-intranet-bundle-$VERSION-mac-arm64.tar.gz"
 
-# The build runs in a subshell with errexit, so the first failure stops it, and the manifests are
-# restored here either way. An EXIT trap alone is not enough: `sh scripts/...` does not run it on
-# every shell.
-result=0
+# Errexit stays off from here on, so the manifests are restored on every path without relying on
+# the trap above (it only covers signals). The steps run in a plain subshell with errexit, where the
+# first failure stops the rest. That subshell must not sit in a `||` or `if` condition: there the
+# shell ignores errexit for the whole subshell even after `set -e`, and a failed step would be
+# followed by the next one. Success is judged by the marker the last step writes.
+set +e
+node scripts/update-release-package-versions.ts "$VERSION" || {
+  restore
+  exit 1
+}
 (
   set -eu
   rm -rf release/mac-arm64
+  rm -f "release/$DMG" "release/$BUNDLE" release/SHA256SUMS release/安装说明.md
   node scripts/build-desktop-artifact.ts --platform mac --target dir --arch arm64
 
   APP=$(ls -d release/mac-arm64/*.app | head -1)
@@ -86,17 +101,33 @@ result=0
     echo "no packaged .app under release/mac-arm64" >&2
     exit 1
   }
+  RESOURCES="$APP/Contents/Resources"
+  [ ! -e "$RESOURCES/app-update.yml" ] || {
+    echo "app-update.yml is present: the app would look for updates" >&2
+    exit 1
+  }
+  if grep -a -q -E 'pk_(live|test)_[A-Za-z0-9]{10,}' "$RESOURCES/app.asar"; then
+    echo "a Clerk publishable key is compiled into app.asar: the login surface is not off" >&2
+    exit 1
+  fi
   codesign --force --deep --sign - --timestamp=none "$APP"
   codesign --verify --deep --strict "$APP"
 
   cp -Rp "$APP" "$STAGE/"
   ln -s /Applications "$STAGE/Applications"
-  DMG="release/T3-Code-$VERSION-intranet-arm64.dmg"
-  rm -f "$DMG" "$DMG.sha256"
-  hdiutil create -volname "T3 Code $VERSION" -srcfolder "$STAGE" -ov -format UDZO -fs HFS+ "$DMG" >/dev/null
-  (cd release && shasum -a 256 "$(basename "$DMG")" > "$(basename "$DMG").sha256")
+  hdiutil create -volname "T3 Code $VERSION" -srcfolder "$STAGE" -ov -format UDZO -fs HFS+ \
+    "release/$DMG" >/dev/null
 
   sh scripts/build-intranet-bundle.sh --omp-kit "$OMP_KIT" ${ARCHIVE:+--archive "$ARCHIVE"}
-) || result=$?
+  cp packaging/intranet/安装说明.md release/安装说明.md
+  (cd release && shasum -a 256 "$DMG" "$BUNDLE" > SHA256SUMS && shasum -a 256 -c SHA256SUMS)
+  : > "$DONE"
+)
+ok=no
+[ -f "$DONE" ] && ok=yes
 restore
-exit "$result"
+if [ "$ok" != yes ]; then
+  rm -f "release/$DMG" "release/$BUNDLE"
+  echo "intranet build failed; see the output above" >&2
+  exit 1
+fi
