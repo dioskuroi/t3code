@@ -124,19 +124,33 @@ JSON
   }
   echo "server: listening"
 
-  "$EXE" "$BIN" project add "$WORK/ws" > "$WORK/step-project.log" 2>&1 || {
-    echo "project add failed:" >&2
-    tail -20 "$WORK/step-project.log" >&2
-    return 1
-  }
+  # Right after listening, the server has not yet published the record the CLI finds it by; on a
+  # loaded machine that takes longer. Only that failure is retried.
+  attempt=0
+  until "$EXE" "$BIN" project add "$WORK/ws" > "$WORK/step-project.log" 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge 20 ] || ! grep -q "ServerAlreadyRunningError" "$WORK/step-project.log"; then
+      echo "project add failed:" >&2
+      tail -20 "$WORK/step-project.log" >&2
+      return 1
+    fi
+    sleep 2
+  done
   echo "project add: ok"
 
-  "$EXE" "$BIN" thread start --provider acpRegistry_omp --model intranet/glm-5.3-flash --wait "$WORK/ws" \
-    "Reply with exactly: OK" > "$WORK/step-thread.log" 2>&1 || {
-    echo "thread start failed:" >&2
-    tail -20 "$WORK/step-thread.log" >&2
-    return 1
-  }
+  # The server asks omp for its models in the background once the project exists; on a loaded
+  # machine that takes longer than getting here. Only that failure is retried.
+  attempt=0
+  until "$EXE" "$BIN" thread start --provider acpRegistry_omp --model intranet/glm-5.3-flash --wait "$WORK/ws" \
+    "Reply with exactly: OK" > "$WORK/step-thread.log" 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge 20 ] || ! grep -q "is not advertised" "$WORK/step-thread.log"; then
+      echo "thread start failed:" >&2
+      tail -20 "$WORK/step-thread.log" >&2
+      return 1
+    fi
+    sleep 2
+  done
   THREAD=$(sed -n 's/^Thread \(mcp:[0-9a-f-]*\)$/\1/p' "$WORK/step-thread.log" | head -1)
   echo "thread reply: $(tail -1 "$WORK/step-thread.log")"
   if [ -n "$THREAD" ]; then
