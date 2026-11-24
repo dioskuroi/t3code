@@ -90,9 +90,9 @@ sh scripts/intranet-dry-run/run.sh --omp-kit <t3code-migration 检出>/intranet-
 t3code 这一列是确定的。omp 的外联有两类，都没有设置能整体关掉，失败后都回退内置目录，对话照常完成：
 
 - `catalog.stencil.so:443`：获取共享模型目录，每次启动都有。
-- 内置云端 provider 的模型列表地址：启动时的模型刷新在没有凭据时也会偶发去拉，与时序有关。已观察到
-  `coding-intl.dashscope.aliyuncs.com:443`（`alibaba-coding-plan`）和 `hyper.charm.land:443`（`charm-hyper`）：
-  出厂默认下约 16 次出现 1 次，打开三个开关时约 11 次出现 10 次。
+- 内置云端 provider 的模型列表地址：启动时的模型刷新在没有凭据时也会偶发去拉。已观察到
+  `coding-intl.dashscope.aliyuncs.com:443`（`alibaba-coding-plan`）和 `hyper.charm.land:443`（`charm-hyper`）。
+  频率不稳定，同一天出厂默认下实测过 16 次出现 1 次，也实测过 8 次出现 6 次。
 
 配置包设的 `enabledProviders` 只影响模型选择器，两类都挡不住；`disabledProviders` 能挡住点到名的 provider，但探测会
 落到别的内置 provider 上。所以要多跑几次再对照基线，单次结果不算数。出现上表以外的主机，说明上游或 omp 新增了外联，
